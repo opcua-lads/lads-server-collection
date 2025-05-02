@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "skipLibCheck": true,
+        "target": "esnext",
+        "esModuleInterop": true,
+        "module": "commonjs",
+        "lib": [
+            "ES7"
+        ],
+        "outDir": "out",
+        "moduleResolution": "node",
+        "strictNullChecks": false,
+        "sourceMap": true,
+        "baseUrl": ".",
+        "paths": {
+            "@utils": ["utils/src"],
+            "@interfaces": ["interfaces/src"],
+            "@afo": ["packages/afo/src"],
+            "@asm": ["packages/asm/src"],
+        }
+    },
+}

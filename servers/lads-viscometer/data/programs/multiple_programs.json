@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Analytical Method A (30rpm)",
+        "author": "AixEngineers",
+        "description": "Viscosity measurement at different temperatures and constant speed.",
+        "created": "2025-03-31T12:00:00.0Z",
+        "modified": "2025-03-31T12:00:00.0Z",
+        "steps": [
+            {"name": "Viscosity 30°C", "dt": 10000, "tsp": 30, "nsp": 30},
+            {"name": "Viscosity 40°C", "dt": 10000, "tsp": 40, "nsp": 30},
+            {"name": "Viscosity 50°C", "dt": 10000, "tsp": 50, "nsp": 30},
+            {"name": "Viscosity 60°C", "dt": 10000, "tsp": 60, "nsp": 30},
+            {"name": "Viscosity 80°C", "dt": 10000, "tsp": 80, "nsp": 30},
+            {"name": "Viscosity 100°C", "dt": 10000, "tsp": 100, "nsp": 30}
+        ]
+    },
+    {
+        "name": "Analytical Method B (50rpm)",
+        "author": "AixEngineers",
+        "description": "Viscosity measurement at different temperatures and constant speed.",
+        "created": "2025-03-31T12:00:00.0Z",
+        "modified": "2025-03-31T12:00:00.0Z",
+        "steps": [
+            {"name": "Viscosity 30°C", "dt": 10000, "tsp": 30, "nsp": 50},
+            {"name": "Viscosity 40°C", "dt": 10000, "tsp": 40, "nsp": 50},
+            {"name": "Viscosity 50°C", "dt": 10000, "tsp": 50, "nsp": 50},
+            {"name": "Viscosity 60°C", "dt": 10000, "tsp": 60, "nsp": 50},
+            {"name": "Viscosity 80°C", "dt": 10000, "tsp": 80, "nsp": 50},
+            {"name": "Viscosity 100°C", "dt": 10000, "tsp": 100, "nsp": 50}
+        ]
+    },
+    {
+        "name": "Analytical Method C (short)",
+        "author": "AixEngineers",
+        "description": "Short viscosity measurement.",
+        "created": "2025-03-31T12:00:00.0Z",
+        "modified": "2025-03-31T12:00:00.0Z",
+        "steps": [
+            {"name": "Viscosity 30°C", "dt": 10000, "tsp": 30, "nsp": 50}
+        ]
+    }
+]

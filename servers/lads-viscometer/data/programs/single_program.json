@@ -1,0 +1,15 @@
+{
+    "name": "Analytical Method D (30°C, shear)",
+    "author": "AixEngineers",
+    "description": "Viscosity measurement at different speeds and constant temperature.",
+    "created": "2025-03-31T12:00:00.0Z",
+    "modified": "2025-03-31T12:00:00.0Z",
+    "steps": [
+        {"name": "Viscosity 10rpm", "dt": 10000, "tsp": 30, "nsp": 10},
+        {"name": "Viscosity 20rpm", "dt": 10000, "tsp": 30, "nsp": 20},
+        {"name": "Viscosity 30rpm", "dt": 10000, "tsp": 30, "nsp": 30},
+        {"name": "Viscosity 40rpm", "dt": 10000, "tsp": 30, "nsp": 40},
+        {"name": "Viscosity 50rpm", "dt": 10000, "tsp": 30, "nsp": 50},
+        {"name": "Viscosity 60rpm", "dt": 10000, "tsp": 30, "nsp": 60}
+    ]
+}

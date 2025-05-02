@@ -1,0 +1,41 @@
+# — Core Node.js —
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# — Package‑manager lockfiles (keep if you want deterministic installs) —
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# — TypeScript build output —
+out/
+dist/
+build/
+*.js
+*.js.map
+*.d.ts
+*.tsbuildinfo
+
+# — Test & coverage artifacts —
+coverage/
+*.lcov
+
+# — Env & local config —
+.env
+.env.*              # e.g. .env.local, .env.test
+*.local.json         # local config overrides
+
+# — Editor / OS clutter —
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# — Logs —
+logs/
+*.log

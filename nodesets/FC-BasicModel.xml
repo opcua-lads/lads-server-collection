@@ -1,0 +1,1112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" LastModified="2025-04-08T06:00:00Z" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd">
+	<NamespaceUris>
+		<Uri>http://opcfoundation.org/UA/</Uri>
+		<!-- ns=0 -->
+		<Uri>http://opcfoundation.org/UA/DI/</Uri>
+		<!-- ns=1 -->
+		<Uri>http://opcfoundation.org/UA/AMB/</Uri>
+		<!-- ns=2 -->
+		<Uri>http://opcfoundation.org/UA/LADS/</Uri>
+		<!-- ns=3 -->
+		<Uri>http://fluics.com/OPCUA/</Uri>
+		<!-- ns=4 -->
+	</NamespaceUris>
+	<Models>
+		<Model ModelUri="http://fluics.com/OPCUA/" Version="1.0.0" PublicationDate="2025-04-08T06:00:00Z">
+			<RequiredModel ModelUri="http://opcfoundation.org/UA/" Version="1.05.03" PublicationDate="2023-12-15T00:00:00Z"/>
+			<RequiredModel ModelUri="http://opcfoundation.org/UA/DI/" Version="1.04.0" PublicationDate="2022-11-03T00:00:00Z"/>
+			<RequiredModel ModelUri="http://opcfoundation.org/UA/AMB/" Version="1.01.1" PublicationDate="2024-02-27T00:00:00Z"/>
+			<RequiredModel ModelUri="http://opcfoundation.org/UA/LADS/" Version="1.0.0" PublicationDate="2023-11-30T00:00:00Z"/>
+		</Model>
+	</Models>
+	<Aliases>
+		<!-- UA Aliases -->
+		<Alias Alias="Boolean">i=1</Alias>
+		<Alias Alias="Int32">i=6</Alias>
+		<Alias Alias="UInt32">i=7</Alias>
+		<Alias Alias="Double">i=11</Alias>
+		<Alias Alias="String">i=12</Alias>
+		<Alias Alias="DateTime">i=13</Alias>
+		<Alias Alias="UtcTime">i=294</Alias>
+		<Alias Alias="Guid">i=14</Alias>
+		<Alias Alias="LocalizedText">i=21</Alias>
+		<Alias Alias="Structure">i=22</Alias>
+		<Alias Alias="BaseDataType">i=24</Alias>
+		<Alias Alias="Enumeration">i=29</Alias>
+		<Alias Alias="Organizes">i=35</Alias>
+		<Alias Alias="HasModellingRule">i=37</Alias>
+		<Alias Alias="HasEncoding">i=38</Alias>
+		<Alias Alias="HasDescription">i=39</Alias>
+		<Alias Alias="HasTypeDefinition">i=40</Alias>
+		<Alias Alias="HasSubtype">i=45</Alias>
+		<Alias Alias="HasProperty">i=46</Alias>
+		<Alias Alias="HasComponent">i=47</Alias>
+		<Alias Alias="BaseObjectType">i=58</Alias>
+		<Alias Alias="FolderType">i=61</Alias>
+		<Alias Alias="BaseDataVariableType">i=63</Alias>
+		<Alias Alias="PropertyType">i=68</Alias>
+		<Alias Alias="DataTypeEncodingType">i=76</Alias>
+		<Alias Alias="Mandatory">i=78</Alias>
+		<Alias Alias="Optional">i=80</Alias>
+		<Alias Alias="Argument">i=296</Alias>
+		<Alias Alias="EnumValueType">i=7616</Alias>
+		<Alias Alias="ObjectsFolder">i=85</Alias>
+		<Alias Alias="OptionalPlaceholder">i=11508</Alias>
+		<Alias Alias="UriString">i=23751</Alias>
+		<!-- DI Aliases (ns=1) -->
+		<Alias Alias="FunctionalGroupType">ns=1;i=1005</Alias>
+		<Alias Alias="Identification">ns=1;i=6071</Alias>
+		<!-- BrowseName for Identification Object -->
+		<Alias Alias="ProductInstanceUri">ns=1;i=6078</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="AssetId">ns=1;i=6084</Alias>
+		<!-- BrowseName for Property -->
+		<!-- AMB Aliases (ns=2) -->
+		<Alias Alias="HierarchicalLocations">ns=2;i=5021</Alias>
+		<!-- NodeId of Folder Instance -->
+		<Alias Alias="HierarchicalContains">ns=2;i=4003</Alias>
+		<!-- ReferenceType -->
+		<Alias Alias="HierarchicalLocatedIn">ns=2;i=4003</Alias>
+		<!-- Inverse Name of HierarchicalContains -->
+		<!-- LADS Aliases (ns=3 - kept for potential future use) -->
+		<Alias Alias="LADSDeviceType">ns=3;i=1002</Alias>
+		<Alias Alias="FunctionalUnitType">ns=3;i=1003</Alias>
+		<!-- FC Aliases (ns=4) -->
+		<Alias Alias="FluicsPrinterStatusDataType">ns=4;i=1001</Alias>
+		<Alias Alias="FluicsObjectClassDataType">ns=4;i=1004</Alias>
+		<Alias Alias="FluicsPrintLabelStatusDataType">ns=4;i=1007</Alias>
+		<Alias Alias="FluicsPrintJobResultDataType">ns=4;i=1011</Alias>
+		<Alias Alias="FluicsPropertyDataType">ns=4;i=1020</Alias>
+		<Alias Alias="FluicsConfigurationDataType">ns=4;i=1021</Alias>
+		<Alias Alias="FluicsPrinterType">ns=4;i=1012</Alias>
+		<Alias Alias="Fluics_LocationType">ns=4;i=1030</Alias>
+		<Alias Alias="Fluics_ItemType">ns=4;i=1040</Alias>
+		<Alias Alias="Fluics_PropertyVariableType">ns=4;i=1050</Alias>
+		<Alias Alias="FluicsProperties">ns=4;i=6050</Alias>
+		<!-- BrowseName for Properties Folder -->
+		<Alias Alias="FluicsID">ns=4;i=6051</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="FluicsTeamID">ns=4;i=6052</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="LID">ns=4;i=6053</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="IsDeleted">ns=4;i=6054</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="CreatedTimestampUTC">ns=4;i=6055</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="ModifiedTimestampUTC">ns=4;i=6056</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="StoredTimestamp">ns=4;i=6057</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="FluicsOwnerID">ns=4;i=6058</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="OwnerName">ns=4;i=6059</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="FluicsSeriesID">ns=4;i=6060</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="PrintedCount">ns=4;i=6061</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="IsFavorite">ns=4;i=6062</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="ChildLocationCount">ns=4;i=6063</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="ItemCount">ns=4;i=6064</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="FluicsPropertyID">ns=4;i=6065</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="FluicsDataTypeID">ns=4;i=6066</Alias>
+		<!-- BrowseName for Property -->
+		<Alias Alias="Unit">ns=4;i=6067</Alias>
+		<!-- BrowseName for Property -->
+	</Aliases>
+	<!-- 1. Enumeration DataTypes -->
+	<UADataType NodeId="ns=4;i=1001" BrowseName="4:FluicsPrinterStatusDataType">
+		<DisplayName>FluicsPrinterStatusDataType</DisplayName>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">Enumeration</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=6001</Reference>
+			<!-- EnumStrings -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6002</Reference>
+			<!-- EnumValues -->
+		</References>
+		<Definition Name="FluicsPrinterStatusDataType">
+			<Field Name="Online" Value="0"/>
+			<Field Name="PrinterOffline" Value="1"/>
+			<Field Name="ConnectBoxOffline" Value="2"/>
+			<Field Name="Error" Value="3"/>
+			<Field Name="Warning" Value="4"/>
+		</Definition>
+	</UADataType>
+	<UAVariable NodeId="ns=4;i=6001" BrowseName="EnumStrings" ParentNodeId="ns=4;i=1001" DataType="LocalizedText" ValueRank="1">
+		<DisplayName>EnumStrings</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1001</Reference>
+		</References>
+		<!-- Value populated by server based on Definition -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6002" BrowseName="EnumValues" ParentNodeId="ns=4;i=1001" DataType="EnumValueType" ValueRank="1">
+		<DisplayName>EnumValues</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1001</Reference>
+		</References>
+		<!-- Value populated by server based on Definition -->
+	</UAVariable>
+	<UADataType NodeId="ns=4;i=1004" BrowseName="4:FluicsObjectClassDataType">
+		<DisplayName>FluicsObjectClassDataType</DisplayName>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">Enumeration</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=6003</Reference>
+			<!-- EnumStrings -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6004</Reference>
+			<!-- EnumValues -->
+		</References>
+		<Definition Name="FluicsObjectClassDataType">
+			<Field Name="Location" Value="0"/>
+			<Field Name="Series" Value="1"/>
+			<Field Name="Item" Value="2"/>
+		</Definition>
+	</UADataType>
+	<UAVariable NodeId="ns=4;i=6003" BrowseName="EnumStrings" ParentNodeId="ns=4;i=1004" DataType="LocalizedText" ValueRank="1">
+		<DisplayName>EnumStrings</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1004</Reference>
+		</References>
+		<!-- Value populated by server based on Definition -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6004" BrowseName="EnumValues" ParentNodeId="ns=4;i=1004" DataType="EnumValueType" ValueRank="1">
+		<DisplayName>EnumValues</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1004</Reference>
+		</References>
+		<!-- Value populated by server based on Definition -->
+	</UAVariable>
+	<UADataType NodeId="ns=4;i=1007" BrowseName="4:FluicsPrintLabelStatusDataType">
+		<DisplayName>FluicsPrintLabelStatusDataType</DisplayName>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">Enumeration</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=6005</Reference>
+			<!-- EnumStrings -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6006</Reference>
+			<!-- EnumValues -->
+		</References>
+		<Definition Name="FluicsPrintLabelStatusDataType">
+			<Field Name="SentToPrint" Value="0"/>
+			<Field Name="Ok" Value="1"/>
+			<Field Name="Error" Value="2"/>
+		</Definition>
+	</UADataType>
+	<UAVariable NodeId="ns=4;i=6005" BrowseName="EnumStrings" ParentNodeId="ns=4;i=1007" DataType="LocalizedText" ValueRank="1">
+		<DisplayName>EnumStrings</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1007</Reference>
+		</References>
+		<!-- Value populated by server based on Definition -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6006" BrowseName="EnumValues" ParentNodeId="ns=4;i=1007" DataType="EnumValueType" ValueRank="1">
+		<DisplayName>EnumValues</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1007</Reference>
+		</References>
+		<!-- Value populated by server based on Definition -->
+	</UAVariable>
+	<!-- 2. Structure DataTypes (for Methods) -->
+	<UADataType NodeId="ns=4;i=1011" BrowseName="4:FluicsPrintJobResultDataType">
+		<DisplayName>FluicsPrintJobResultDataType</DisplayName>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">Structure</Reference>
+			<Reference ReferenceType="HasEncoding">ns=4;i=5003</Reference>
+			<Reference ReferenceType="HasEncoding">ns=4;i=5004</Reference>
+		</References>
+		<Definition Name="FluicsPrintJobResultDataType">
+			<Field Name="JobId" DataType="Guid"/>
+			<Field Name="LID" DataType="String" IsOptional="true"/>
+			<Field Name="Status" DataType="FluicsPrintLabelStatusDataType"/>
+			<Field Name="PrinterStatusMessage" DataType="String" IsOptional="true"/>
+		</Definition>
+	</UADataType>
+	<UAObject NodeId="ns=4;i=5003" BrowseName="Default Binary" SymbolicName="FluicsPrintJobResultDataType_Encoding_DefaultBinary">
+		<References>
+			<Reference ReferenceType="HasEncoding" IsForward="false">ns=4;i=1011</Reference>
+			<Reference ReferenceType="HasTypeDefinition">DataTypeEncodingType</Reference>
+		</References>
+	</UAObject>
+	<UAObject NodeId="ns=4;i=5004" BrowseName="Default XML" SymbolicName="FluicsPrintJobResultDataType_Encoding_DefaultXml">
+		<References>
+			<Reference ReferenceType="HasEncoding" IsForward="false">ns=4;i=1011</Reference>
+			<Reference ReferenceType="HasTypeDefinition">DataTypeEncodingType</Reference>
+		</References>
+	</UAObject>
+	<UADataType NodeId="ns=4;i=1020" BrowseName="4:FluicsPropertyDataType">
+		<DisplayName>FluicsPropertyDataType</DisplayName>
+		<Description>Structure representing a property from the FLUICS API, primarily for method arguments/outputs.</Description>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">Structure</Reference>
+			<Reference ReferenceType="HasEncoding">ns=4;i=5005</Reference>
+			<Reference ReferenceType="HasEncoding">ns=4;i=5006</Reference>
+		</References>
+		<Definition Name="FluicsPropertyDataType">
+			<Field Name="Id" DataType="Guid"/>
+			<Field Name="Name" DataType="String"/>
+			<Field Name="Value" DataType="BaseDataType"/>
+			<Field Name="Unit" DataType="String" IsOptional="true"/>
+			<Field Name="DataTypeId" DataType="Int32"/>
+		</Definition>
+	</UADataType>
+	<UAObject NodeId="ns=4;i=5005" BrowseName="Default Binary" SymbolicName="FluicsPropertyDataType_Encoding_DefaultBinary">
+		<References>
+			<Reference ReferenceType="HasEncoding" IsForward="false">ns=4;i=1020</Reference>
+			<Reference ReferenceType="HasTypeDefinition">DataTypeEncodingType</Reference>
+		</References>
+	</UAObject>
+	<UAObject NodeId="ns=4;i=5006" BrowseName="Default XML" SymbolicName="FluicsPropertyDataType_Encoding_DefaultXml">
+		<References>
+			<Reference ReferenceType="HasEncoding" IsForward="false">ns=4;i=1020</Reference>
+			<Reference ReferenceType="HasTypeDefinition">DataTypeEncodingType</Reference>
+		</References>
+	</UAObject>
+	<UADataType NodeId="ns=4;i=1021" BrowseName="4:FluicsConfigurationDataType">
+		<DisplayName>FluicsConfigurationDataType</DisplayName>
+		<Description>Configuration parameters for the FLUICS OPC UA Server connection.</Description>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">Structure</Reference>
+			<Reference ReferenceType="HasEncoding">ns=4;i=5007</Reference>
+			<Reference ReferenceType="HasEncoding">ns=4;i=5008</Reference>
+		</References>
+		<Definition Name="FluicsConfigurationDataType">
+			<Field Name="BaseURL" DataType="String"/>
+			<Field Name="KeyId" DataType="String"/>
+			<Field Name="DefaultPrinterId" DataType="Int32" IsOptional="true"/>
+		</Definition>
+	</UADataType>
+	<UAObject NodeId="ns=4;i=5007" BrowseName="Default Binary" SymbolicName="FluicsConfigurationDataType_Encoding_DefaultBinary">
+		<References>
+			<Reference ReferenceType="HasEncoding" IsForward="false">ns=4;i=1021</Reference>
+			<Reference ReferenceType="HasTypeDefinition">DataTypeEncodingType</Reference>
+		</References>
+	</UAObject>
+	<UAObject NodeId="ns=4;i=5008" BrowseName="Default XML" SymbolicName="FluicsConfigurationDataType_Encoding_DefaultXml">
+		<References>
+			<Reference ReferenceType="HasEncoding" IsForward="false">ns=4;i=1021</Reference>
+			<Reference ReferenceType="HasTypeDefinition">DataTypeEncodingType</Reference>
+		</References>
+	</UAObject>
+	<!-- 3. Custom VariableType -->
+	<UAVariableType NodeId="ns=4;i=1050" BrowseName="4:Fluics_PropertyVariableType" IsAbstract="true">
+		<DisplayName>Fluics_PropertyVariableType</DisplayName>
+		<Description>Represents a specific property associated with a FLUICS Item or Location.</Description>
+		<References>
+			<!-- Correctly defines inheritance from BaseDataVariableType -->
+			<Reference ReferenceType="HasSubtype" IsForward="false">BaseDataVariableType</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=6065</Reference>
+			<!-- FluicsPropertyID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6066</Reference>
+			<!-- FluicsDataTypeID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6067</Reference>
+			<!-- Unit -->
+		</References>
+	</UAVariableType>
+	<UAVariable NodeId="ns=4;i=6065" BrowseName="4:FluicsPropertyID" DataType="Guid" ParentNodeId="ns=4;i=1050">
+		<DisplayName>FluicsPropertyID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1050</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6066" BrowseName="4:FluicsDataTypeID" DataType="Int32" ParentNodeId="ns=4;i=1050">
+		<DisplayName>FluicsDataTypeID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1050</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6067" BrowseName="4:Unit" DataType="String" ParentNodeId="ns=4;i=1050">
+		<DisplayName>Unit</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1050</Reference>
+		</References>
+	</UAVariable>
+	<!-- 4. Custom ObjectTypes -->
+	<UAObjectType NodeId="ns=4;i=1030" BrowseName="4:Fluics_LocationType">
+		<DisplayName>Fluics_LocationType</DisplayName>
+		<Description>Represents a FLUICS Location object.</Description>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">BaseObjectType</Reference>
+			<!-- Identification -->
+			<Reference ReferenceType="HasComponent">ns=4;i=5030</Reference>
+			<!-- Identification Object Placeholder -->
+			<!-- FLUICS Specific Properties -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6051</Reference>
+			<!-- FluicsID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6052</Reference>
+			<!-- FluicsTeamID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6053</Reference>
+			<!-- LID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6054</Reference>
+			<!-- IsDeleted -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6055</Reference>
+			<!-- CreatedTimestampUTC -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6056</Reference>
+			<!-- ModifiedTimestampUTC -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6063</Reference>
+			<!-- ChildLocationCount -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6064</Reference>
+			<!-- ItemCount -->
+			<!-- Properties Folder -->
+			<Reference ReferenceType="HasComponent">ns=4;i=5031</Reference>
+			<!-- FluicsProperties Folder Placeholder -->
+		</References>
+	</UAObjectType>
+	<!-- Components of Fluics_LocationType -->
+	<UAObject NodeId="ns=4;i=5030" BrowseName="1:Identification" ParentNodeId="ns=4;i=1030">
+		<DisplayName>Identification</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FunctionalGroupType</Reference>
+			<!-- DI FunctionalGroupType -->
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=6030</Reference>
+			<!-- ProductInstanceUri -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6031</Reference>
+			<!-- AssetId -->
+		</References>
+	</UAObject>
+	<UAVariable NodeId="ns=4;i=6030" BrowseName="1:ProductInstanceUri" DataType="UriString" ParentNodeId="ns=4;i=5030">
+		<DisplayName>ProductInstanceUri</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6031" BrowseName="1:AssetId" DataType="String" ParentNodeId="ns=4;i=5030">
+		<DisplayName>AssetId</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+			<!-- Mapping unclear, make optional -->
+		</References>
+	</UAVariable>
+	<UAObject NodeId="ns=4;i=5031" BrowseName="4:FluicsProperties" ParentNodeId="ns=4;i=1030">
+		<DisplayName>FluicsProperties</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FolderType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="Organizes">ns=4;i=5032</Reference>
+			<!-- Placeholder for properties -->
+		</References>
+	</UAObject>
+	<UAVariable NodeId="ns=4;i=5032" BrowseName="4:&lt;FluicsProperty&gt;" ParentNodeId="ns=4;i=5031" SymbolicName="FluicsPropertyPlaceholder_Location">
+		<DisplayName>&lt;FluicsProperty&gt;</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">ns=4;i=5031</Reference>
+			<Reference ReferenceType="HasTypeDefinition">Fluics_PropertyVariableType</Reference>
+			<Reference ReferenceType="HasModellingRule">OptionalPlaceholder</Reference>
+		</References>
+	</UAVariable>
+	<!-- FLUICS Specific Properties -->
+	<UAVariable NodeId="ns=4;i=6051" BrowseName="4:FluicsID" DataType="Guid" ParentNodeId="ns=4;i=1030">
+		<DisplayName>FluicsID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6052" BrowseName="4:FluicsTeamID" DataType="Guid" ParentNodeId="ns=4;i=1030">
+		<DisplayName>FluicsTeamID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6053" BrowseName="4:LID" DataType="String" ParentNodeId="ns=4;i=1030">
+		<DisplayName>LID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6054" BrowseName="4:IsDeleted" DataType="Boolean" ParentNodeId="ns=4;i=1030">
+		<DisplayName>IsDeleted</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6055" BrowseName="4:CreatedTimestampUTC" DataType="UtcTime" ParentNodeId="ns=4;i=1030">
+		<DisplayName>CreatedTimestampUTC</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6056" BrowseName="4:ModifiedTimestampUTC" DataType="UtcTime" ParentNodeId="ns=4;i=1030">
+		<DisplayName>ModifiedTimestampUTC</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6063" BrowseName="4:ChildLocationCount" DataType="UInt32" ParentNodeId="ns=4;i=1030">
+		<DisplayName>ChildLocationCount</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6064" BrowseName="4:ItemCount" DataType="UInt32" ParentNodeId="ns=4;i=1030">
+		<DisplayName>ItemCount</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1030</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<UAObjectType NodeId="ns=4;i=1040" BrowseName="4:Fluics_ItemType">
+		<DisplayName>Fluics_ItemType</DisplayName>
+		<Description>Represents a FLUICS Item object.</Description>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">BaseObjectType</Reference>
+			<!-- Identification -->
+			<Reference ReferenceType="HasComponent">ns=4;i=5040</Reference>
+			<!-- Identification Object Placeholder -->
+			<!-- FLUICS Specific Properties -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6051</Reference>
+			<!-- FluicsID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6052</Reference>
+			<!-- FluicsTeamID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6053</Reference>
+			<!-- LID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6054</Reference>
+			<!-- IsDeleted -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6055</Reference>
+			<!-- CreatedTimestampUTC -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6056</Reference>
+			<!-- ModifiedTimestampUTC -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6057</Reference>
+			<!-- StoredTimestamp -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6058</Reference>
+			<!-- FluicsOwnerID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6059</Reference>
+			<!-- OwnerName -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6060</Reference>
+			<!-- FluicsSeriesID -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6061</Reference>
+			<!-- PrintedCount -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6062</Reference>
+			<!-- IsFavorite -->
+			<!-- Properties Folder -->
+			<Reference ReferenceType="HasComponent">ns=4;i=5041</Reference>
+			<!-- FluicsProperties Folder Placeholder -->
+			<!-- Methods -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7000</Reference>
+			<!-- PrintLabel Method -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7003</Reference>
+			<!-- UpdateLocation Method -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7006</Reference>
+			<!-- UpdateProperty Method (Example) -->
+		</References>
+	</UAObjectType>
+	<!-- Components of Fluics_ItemType -->
+	<UAObject NodeId="ns=4;i=5040" BrowseName="1:Identification" ParentNodeId="ns=4;i=1040">
+		<DisplayName>Identification</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FunctionalGroupType</Reference>
+			<!-- DI FunctionalGroupType -->
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=6040</Reference>
+			<!-- ProductInstanceUri -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6041</Reference>
+			<!-- AssetId -->
+		</References>
+	</UAObject>
+	<UAVariable NodeId="ns=4;i=6040" BrowseName="1:ProductInstanceUri" DataType="UriString" ParentNodeId="ns=4;i=5040">
+		<DisplayName>ProductInstanceUri</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6041" BrowseName="1:AssetId" DataType="String" ParentNodeId="ns=4;i=5040">
+		<DisplayName>AssetId</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+			<!-- Mapping unclear, make optional -->
+		</References>
+	</UAVariable>
+	<UAObject NodeId="ns=4;i=5041" BrowseName="4:FluicsProperties" ParentNodeId="ns=4;i=1040">
+		<DisplayName>FluicsProperties</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FolderType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="Organizes">ns=4;i=5042</Reference>
+			<!-- Placeholder for properties -->
+		</References>
+	</UAObject>
+	<UAVariable NodeId="ns=4;i=5042" BrowseName="4:&lt;FluicsProperty&gt;" ParentNodeId="ns=4;i=5041" SymbolicName="FluicsPropertyPlaceholder_Item">
+		<DisplayName>&lt;FluicsProperty&gt;</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">ns=4;i=5041</Reference>
+			<Reference ReferenceType="HasTypeDefinition">Fluics_PropertyVariableType</Reference>
+			<Reference ReferenceType="HasModellingRule">OptionalPlaceholder</Reference>
+		</References>
+	</UAVariable>
+	<!-- FLUICS Specific Properties -->
+	<!-- Reuse NodeIds 6051-6062 from LocationType where applicable -->
+	<UAVariable NodeId="ns=4;i=6057" BrowseName="4:StoredTimestamp" DataType="DateTime" ParentNodeId="ns=4;i=1040">
+		<DisplayName>StoredTimestamp</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6058" BrowseName="4:FluicsOwnerID" DataType="Int32" ParentNodeId="ns=4;i=1040">
+		<DisplayName>FluicsOwnerID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6059" BrowseName="4:OwnerName" DataType="String" ParentNodeId="ns=4;i=1040">
+		<DisplayName>OwnerName</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6060" BrowseName="4:FluicsSeriesID" DataType="Guid" ParentNodeId="ns=4;i=1040">
+		<DisplayName>FluicsSeriesID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6061" BrowseName="4:PrintedCount" DataType="UInt32" ParentNodeId="ns=4;i=1040">
+		<DisplayName>PrintedCount</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6062" BrowseName="4:IsFavorite" DataType="Boolean" ParentNodeId="ns=4;i=1040">
+		<DisplayName>IsFavorite</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<!-- Methods on Fluics_ItemType -->
+	<UAMethod NodeId="ns=4;i=7000" BrowseName="4:PrintLabel" ParentNodeId="ns=4;i=1040">
+		<DisplayName>PrintLabel</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7001</Reference>
+			<!-- Input -->
+			<Reference ReferenceType="HasProperty">ns=4;i=7002</Reference>
+			<!-- Output -->
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7001" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7000">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7000</Reference>
+		</References>
+		<!-- Arguments: PrinterId (Int32), NumberOfCopies (UInt32) -->
+		<!-- Value defined by server implementation -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7002" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7000">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7000</Reference>
+		</References>
+		<!-- Output: PrintResult (FluicsPrintJobResultDataType) -->
+		<!-- Value defined by server implementation -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7003" BrowseName="4:UpdateLocation" ParentNodeId="ns=4;i=1040">
+		<DisplayName>UpdateLocation</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7004</Reference>
+			<!-- Input -->
+			<Reference ReferenceType="HasProperty">ns=4;i=7005</Reference>
+			<!-- Output -->
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7004" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7003">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7003</Reference>
+		</References>
+		<!-- Arguments: NewLocationId (Guid) -->
+		<!-- Value defined by server implementation -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7005" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7003">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7003</Reference>
+		</References>
+		<!-- Output: Success (Boolean) -->
+		<!-- Value defined by server implementation -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7006" BrowseName="4:UpdateProperty" ParentNodeId="ns=4;i=1040">
+		<DisplayName>UpdateProperty</DisplayName>
+		<Description>Updates a specific FLUICS property value. Use EditProperty method on Management object instead if preferred.</Description>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1040</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+			<!-- Or Mandatory if this is the primary way -->
+			<Reference ReferenceType="HasProperty">ns=4;i=7007</Reference>
+			<!-- Input -->
+			<Reference ReferenceType="HasProperty">ns=4;i=7008</Reference>
+			<!-- Output -->
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7007" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7006">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7006</Reference>
+		</References>
+		<!-- Arguments: PropertyId (Guid), NewValue (BaseDataType) -->
+		<!-- Value defined by server implementation -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7008" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7006">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7006</Reference>
+		</References>
+		<!-- Output: Success (Boolean) -->
+		<!-- Value defined by server implementation -->
+	</UAVariable>
+	<!-- Refined FluicsPrinterType -->
+	<UAObjectType NodeId="ns=4;i=1012" BrowseName="4:FluicsPrinterType">
+		<DisplayName>FluicsPrinterType</DisplayName>
+		<References>
+			<Reference ReferenceType="HasSubtype" IsForward="false">BaseObjectType</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=6010</Reference>
+			<!-- PrinterId -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6011</Reference>
+			<!-- Name -->
+			<Reference ReferenceType="HasComponent">ns=4;i=6012</Reference>
+			<!-- Status -->
+			<Reference ReferenceType="HasProperty">ns=4;i=6013</Reference>
+			<!-- LastPrintedLID -->
+			<!-- Method moved to ItemType or Management Object -->
+		</References>
+	</UAObjectType>
+	<UAVariable NodeId="ns=4;i=6010" BrowseName="4:PrinterId" DataType="Int32" ParentNodeId="ns=4;i=1012">
+		<DisplayName>PrinterId</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1012</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6011" BrowseName="4:Name" DataType="String" ParentNodeId="ns=4;i=1012">
+		<DisplayName>Name</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1012</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6012" BrowseName="4:Status" DataType="FluicsPrinterStatusDataType" ParentNodeId="ns=4;i=1012">
+		<DisplayName>Status</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=1012</Reference>
+			<Reference ReferenceType="HasTypeDefinition">BaseDataVariableType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+		</References>
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=6013" BrowseName="4:LastPrintedLID" DataType="String" ParentNodeId="ns=4;i=1012">
+		<DisplayName>LastPrintedLID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=1012</Reference>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Optional</Reference>
+		</References>
+	</UAVariable>
+	<!-- 5. Instance Hierarchy -->
+	<!-- Root Folder for FLUICS Interface -->
+	<UAObject NodeId="ns=4;i=5000" BrowseName="4:FluicsConnectInterface" ParentNodeId="ObjectsFolder">
+		<DisplayName>FLUICS Connect Interface</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">ObjectsFolder</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FolderType</Reference>
+			<!-- Organize standard AMB Locations folder -->
+			<Reference ReferenceType="Organizes">HierarchicalLocations</Reference>
+			<!-- Organize custom folders/objects -->
+			<Reference ReferenceType="Organizes">ns=4;i=5100</Reference>
+			<!-- Printers Folder -->
+			<Reference ReferenceType="Organizes">ns=4;i=5200</Reference>
+			<!-- Management Folder -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7100</Reference>
+			<!-- GetConfiguration Method -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7103</Reference>
+			<!-- SetConfiguration Method -->
+		</References>
+	</UAObject>
+	<!-- Standard AMB Locations Folder Instance -->
+	<UAObject NodeId="ns=2;i=5021" BrowseName="2:HierarchicalLocations">
+		<DisplayName>HierarchicalLocations</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">FolderType</Reference>
+			<Reference ReferenceType="Organizes" IsForward="false">ns=4;i=5000</Reference>
+			<!-- Placeholder for top-level Fluics_LocationType instances -->
+			<Reference ReferenceType="Organizes">ns=4;i=5010</Reference>
+		</References>
+	</UAObject>
+	<!-- Placeholder for Location Instance -->
+	<UAObject NodeId="ns=4;i=5010" BrowseName="4:&lt;LocationInstance&gt;" ParentNodeId="HierarchicalLocations" SymbolicName="LocationInstancePlaceholder">
+		<DisplayName>&lt;LocationInstance&gt;</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">HierarchicalLocations</Reference>
+			<Reference ReferenceType="HasTypeDefinition">Fluics_LocationType</Reference>
+			<Reference ReferenceType="HasModellingRule">OptionalPlaceholder</Reference>
+			<!-- Example of containing another location -->
+			<Reference ReferenceType="Organizes">ns=4;i=5011</Reference>
+			<!-- Example of containing an item -->
+			<Reference ReferenceType="HierarchicalContains">ns=4;i=5020</Reference>
+		</References>
+	</UAObject>
+	<!-- Placeholder for Sub-Location Instance -->
+	<UAObject NodeId="ns=4;i=5011" BrowseName="4:&lt;SubLocationInstance&gt;" ParentNodeId="ns=4;i=5010" SymbolicName="SubLocationInstancePlaceholder">
+		<DisplayName>&lt;SubLocationInstance&gt;</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">ns=4;i=5010</Reference>
+			<Reference ReferenceType="HasTypeDefinition">Fluics_LocationType</Reference>
+			<Reference ReferenceType="HasModellingRule">OptionalPlaceholder</Reference>
+		</References>
+	</UAObject>
+	<!-- Placeholder for Item Instance -->
+	<UAObject NodeId="ns=4;i=5020" BrowseName="4:&lt;ItemInstance&gt;" SymbolicName="ItemInstancePlaceholder">
+		<DisplayName>&lt;ItemInstance&gt;</DisplayName>
+		<References>
+			<!-- Note: Items are typically NOT Organized under locations directly in AMB, -->
+			<!-- they are referenced via HierarchicalContains from the location. -->
+			<!-- This node is just a placeholder to show the reference target. -->
+			<Reference ReferenceType="HierarchicalContains" IsForward="false">ns=4;i=5010</Reference>
+			<!-- Link back to containing location -->
+			<Reference ReferenceType="HasTypeDefinition">Fluics_ItemType</Reference>
+			<Reference ReferenceType="HasModellingRule">OptionalPlaceholder</Reference>
+		</References>
+	</UAObject>
+	<!-- Printers Folder -->
+	<UAObject NodeId="ns=4;i=5100" BrowseName="4:Printers" ParentNodeId="ns=4;i=5000">
+		<DisplayName>Printers</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">ns=4;i=5000</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FolderType</Reference>
+			<Reference ReferenceType="Organizes">ns=4;i=5101</Reference>
+			<!-- Placeholder -->
+		</References>
+	</UAObject>
+	<UAObject NodeId="ns=4;i=5101" BrowseName="4:&lt;PrinterInstance&gt;" ParentNodeId="ns=4;i=5100" SymbolicName="PrinterInstancePlaceholder">
+		<DisplayName>&lt;PrinterInstance&gt;</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">ns=4;i=5100</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FluicsPrinterType</Reference>
+			<Reference ReferenceType="HasModellingRule">OptionalPlaceholder</Reference>
+		</References>
+	</UAObject>
+	<!-- Management Folder -->
+	<UAObject NodeId="ns=4;i=5200" BrowseName="4:Management" ParentNodeId="ns=4;i=5000">
+		<DisplayName>Management</DisplayName>
+		<References>
+			<Reference ReferenceType="Organizes" IsForward="false">ns=4;i=5000</Reference>
+			<Reference ReferenceType="HasTypeDefinition">FolderType</Reference>
+			<Reference ReferenceType="HasComponent">ns=4;i=7200</Reference>
+			<!-- GetObjectByLID -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7203</Reference>
+			<!-- GetObjectByID -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7206</Reference>
+			<!-- CreateObject -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7209</Reference>
+			<!-- CreateProperty -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7212</Reference>
+			<!-- EditProperty -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7215</Reference>
+			<!-- GetObjectByScanData -->
+			<Reference ReferenceType="HasComponent">ns=4;i=7218</Reference>
+			<!-- GetPrintJobStatus -->
+		</References>
+	</UAObject>
+	<!-- Management Methods -->
+	<UAMethod NodeId="ns=4;i=7200" BrowseName="4:GetObjectByLID" ParentNodeId="ns=4;i=5200">
+		<DisplayName>GetObjectByLID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5200</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7201</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7202</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7201" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7200">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7200</Reference>
+		</References>
+		<!-- Value: LID (String) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7202" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7200">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7200</Reference>
+		</References>
+		<!-- Value: ObjectNodeId (NodeId) or ObjectData (Structure - TBD) -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7203" BrowseName="4:GetObjectByID" ParentNodeId="ns=4;i=5200">
+		<DisplayName>GetObjectByID</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5200</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7204</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7205</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7204" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7203">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7203</Reference>
+		</References>
+		<!-- Value: ID (Guid), Fields (String, Optional) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7205" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7203">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7203</Reference>
+		</References>
+		<!-- Value: ObjectNodeId (NodeId) or ObjectData (Structure - TBD) -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7206" BrowseName="4:CreateObject" ParentNodeId="ns=4;i=5200">
+		<DisplayName>CreateObject</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5200</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7207</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7208</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7207" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7206">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7206</Reference>
+		</References>
+		<!-- Value: FullName (String), ObjectType (Enum), LocationId (Guid, Opt), SeriesId (Guid, Opt), Stored (DateTime, Opt), Id (Guid, Opt) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7208" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7206">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7206</Reference>
+		</References>
+		<!-- Value: NewObjectNodeId (NodeId) or NewObjectData (Structure - TBD) -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7209" BrowseName="4:CreateProperty" ParentNodeId="ns=4;i=5200">
+		<DisplayName>CreateProperty</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5200</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7210</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7211</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7210" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7209">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7209</Reference>
+		</References>
+		<!-- Value: ObjectId (Guid), Name (String), Value (BaseDataType), Unit (String, Opt), DataTypeId (Int32, Opt) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7211" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7209">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7209</Reference>
+		</References>
+		<!-- Value: NewPropertyNodeId (NodeId) or NewPropertyData (Structure - TBD) -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7212" BrowseName="4:EditProperty" ParentNodeId="ns=4;i=5200">
+		<DisplayName>EditProperty</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5200</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7213</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7214</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7213" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7212">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7212</Reference>
+		</References>
+		<!-- Value: PropertyId (Guid), NewValue (BaseDataType) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7214" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7212">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7212</Reference>
+		</References>
+		<!-- Value: Success (Boolean) -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7215" BrowseName="4:GetObjectByScanData" ParentNodeId="ns=4;i=5200">
+		<DisplayName>GetObjectByScanData</DisplayName>
+		<Description>Retrieves object details using the full scanned QR code string.</Description>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5200</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7216</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7217</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7216" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7215">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7215</Reference>
+		</References>
+		<!-- Value: ScanData (String) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7217" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7215">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7215</Reference>
+		</References>
+		<!-- Value: ObjectNodeId (NodeId) or ObjectData (Structure - TBD) -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7218" BrowseName="4:GetPrintJobStatus" ParentNodeId="ns=4;i=5200">
+		<DisplayName>GetPrintJobStatus</DisplayName>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5200</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7219</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7220</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7219" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7218">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7218</Reference>
+		</References>
+		<!-- Value: JobId (Guid) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7220" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7218">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7218</Reference>
+		</References>
+		<!-- Value: JobStatus (FluicsPrintJobResultDataType) -->
+	</UAVariable>
+	<!-- Configuration Methods (under FluicsConnectInterface) -->
+	<UAMethod NodeId="ns=4;i=7100" BrowseName="4:GetConfiguration" ParentNodeId="ns=4;i=5000">
+		<DisplayName>GetConfiguration</DisplayName>
+		<Description>Retrieves the current server configuration (excluding secret).</Description>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5000</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7101</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7101" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7100">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7100</Reference>
+		</References>
+		<!-- Value: Configuration (FluicsConfigurationDataType) -->
+	</UAVariable>
+	<UAMethod NodeId="ns=4;i=7103" BrowseName="4:SetConfiguration" ParentNodeId="ns=4;i=5000">
+		<DisplayName>SetConfiguration</DisplayName>
+		<Description>Sets the server configuration (excluding secret).</Description>
+		<References>
+			<Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5000</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7104</Reference>
+			<Reference ReferenceType="HasProperty">ns=4;i=7105</Reference>
+		</References>
+	</UAMethod>
+	<UAVariable NodeId="ns=4;i=7104" BrowseName="InputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7103">
+		<DisplayName>InputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7103</Reference>
+		</References>
+		<!-- Value: Configuration (FluicsConfigurationDataType) -->
+	</UAVariable>
+	<UAVariable NodeId="ns=4;i=7105" BrowseName="OutputArguments" DataType="Argument" ValueRank="1" ParentNodeId="ns=4;i=7103">
+		<DisplayName>OutputArguments</DisplayName>
+		<References>
+			<Reference ReferenceType="HasTypeDefinition">PropertyType</Reference>
+			<Reference ReferenceType="HasModellingRule">Mandatory</Reference>
+			<Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7103</Reference>
+		</References>
+		<!-- Value: Success (Boolean) -->
+	</UAVariable>
+</UANodeSet>

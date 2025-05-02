@@ -1,0 +1,46 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/ph/REC/2025/03/ph-sensor.manifest",
+  "pH monitoring aggregate document": {
+    "device system document": {
+      "device document": [
+        {
+          "device identifier": "serial-number",
+          "device type": "pH point sensor",
+          "equipment serial number": "serial-number"
+        }
+      ]
+    },
+    "pH monitoring document": [
+      {
+        "measurement aggregate document": {
+          "analyst": "Amgentoaks1",
+          "experiment identifier": "413befdd-c7e2-4edd-9e9b-06cf1cb0283f",
+          "measurement document": [
+            {
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "device type": "pH sensor"
+                  }
+                ]
+              },
+              "pH": {
+                "unit": "pH",
+                "value": 3.2
+              },
+              "sample document": {
+                "batch identifier": "batch-number",
+                "sample identifier": "unknown-10"
+              },
+              "temperature": {
+                "unit": "degC",
+                "value": 28.6
+              }
+            }
+          ],
+          "measurement time": "2015-09-24T03:47:13.001Z"
+        }
+      }
+    ]
+  }
+}

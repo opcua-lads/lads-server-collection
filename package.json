@@ -1,0 +1,27 @@
+{
+  "name": "lads-ft-nir",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^20.2.3",
+    "csv-parser": "^3.2.0",
+    "exceljs": "^4.4.0",
+    "node-opcua": "^2.103.0",
+    "node-opcua-file-transfer": "^2.150.0",
+    "node-opcua-nodeset-di": "^2.103.0",
+    "typescript": "^5.0.4",
+    "xmlbuilder2": "^3.1.1"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.15",
+    "tsconfig-paths": "^4.2.0"
+  }
+}

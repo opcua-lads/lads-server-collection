@@ -1,0 +1,275 @@
+{
+  "$asm.manifest": "http://purl.allotrope.org/manifests/rheometry/REC/2024/12/rheometry.manifest",
+  "rheometry aggregate document": {
+    "rheometry document": [
+      {
+        "measurement aggregate document": {
+          "analyst": "AA",
+          "measurement document": [
+            {
+              "device control aggregate document": {
+                "device control document": [
+                  {
+                    "brand name": "Rheometer",
+                    "detection type": "---",
+                    "device identifier": "5332-0197",
+                    "device type": "rotational rheometer",
+                    "equipment serial number": "---",
+                    "firmware version": "1.0.0",
+                    "model number": "---",
+                    "product manufacturer": "Rheometer manufacturer"
+                  }
+                ]
+              },
+              "experimental data identifier": "---",
+              "measurement chamber document": {
+                "gap length": {
+                  "unit": "µm",
+                  "value": 800.04
+                },
+                "measurement chamber type": "plate-plate",
+                "radius": {
+                  "unit": "mm",
+                  "value": 40
+                }
+              },
+              "measurement identifier": "---",
+              "measurement method identifier": "---",
+              "measurement time": "2024-08-09T19:39:00Z",
+              "rheometry curve data cube": {
+                "cube-structure": {
+                  "dimensions": [
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "elapsed time",
+                      "unit": "s"
+                    },
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "step time",
+                      "unit": "s"
+                    },
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "shear rate",
+                      "unit": "s-1"
+                    }
+                  ],
+                  "measures": [
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "shear stress",
+                      "unit": "Pa"
+                    },
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "viscosity",
+                      "unit": "Pa.s"
+                    },
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "torque",
+                      "unit": "N.m"
+                    },
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "angular velocity",
+                      "unit": "rad/s"
+                    },
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "gap length",
+                      "unit": "µm"
+                    },
+                    {
+                      "@componentDatatype": "double",
+                      "concept": "temperature",
+                      "unit": "degC"
+                    }
+                  ]
+                },
+                "data": {
+                  "dimensions": [
+                    [
+                      10.22,
+                      30.72,
+                      61.43,
+                      102.21,
+                      154.01,
+                      217.18,
+                      292.9,
+                      381.52,
+                      481.48,
+                      596.35,
+                      732.02,
+                      897.65,
+                      1107.81,
+                      1385.5,
+                      1767.4,
+                      2311.45
+                    ],
+                    [
+                      10.22,
+                      20.5,
+                      30.71,
+                      40.78,
+                      51.8,
+                      63.17,
+                      75.72,
+                      88.62,
+                      99.96,
+                      114.87,
+                      135.67,
+                      165.63,
+                      210.16,
+                      277.69,
+                      381.9,
+                      544.05
+                    ],
+                    [
+                      1000.02,
+                      630.968,
+                      398.127,
+                      251.198,
+                      158.489,
+                      100.004,
+                      63.099,
+                      39.8109,
+                      25.1193,
+                      15.8497,
+                      10.0002,
+                      6.30969,
+                      3.98116,
+                      2.51195,
+                      1.58494,
+                      1.00003
+                    ]
+                  ],
+                  "measures": [
+                    [
+                      149.6355,
+                      146.1615,
+                      140.237,
+                      129.3685,
+                      113.3545,
+                      92.0823,
+                      69.7079,
+                      49.31455,
+                      33.1941,
+                      21.80975,
+                      14.1088,
+                      8.99675,
+                      5.69663,
+                      3.59852,
+                      2.264205,
+                      1.422965
+                    ],
+                    [
+                      0.1496625,
+                      0.2316875,
+                      0.352312,
+                      0.515108,
+                      0.715329,
+                      0.9209605,
+                      1.10496,
+                      1.23894,
+                      1.321695,
+                      1.3763,
+                      1.411095,
+                      1.42613,
+                      1.431155,
+                      1.432795,
+                      1.428815,
+                      1.42316
+                    ],
+                    [
+                      1880.38,
+                      1836.72,
+                      1762.275,
+                      1625.69,
+                      1424.455,
+                      1157.14,
+                      875.975,
+                      619.7045,
+                      417.1295,
+                      274.0695,
+                      177.2965,
+                      113.0565,
+                      71.586,
+                      45.2203,
+                      28.4528,
+                      17.88155
+                    ],
+                    [
+                      39.9949,
+                      25.23525,
+                      15.92235,
+                      10.04635,
+                      6.338825,
+                      3.99952,
+                      2.52352,
+                      1.59224,
+                      1.004625,
+                      0.633881,
+                      0.399954,
+                      0.252349,
+                      0.159223,
+                      0.1004645,
+                      0.063388,
+                      0.0399952
+                    ],
+                    [
+                      800.04,
+                      800.0325,
+                      800.024,
+                      800.0385,
+                      800.033,
+                      800.03,
+                      800.027,
+                      800.051,
+                      800.0275,
+                      800.021,
+                      800.0325,
+                      800.0275,
+                      800.031,
+                      800.0305,
+                      800.0275,
+                      800.03
+                    ],
+                    [
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25,
+                      25
+                    ]
+                  ]
+                },
+                "label": "New Material"
+              },
+              "sample document": {
+                "batch identifier": "---",
+                "description": "ABC 123",
+                "sample identifier": "---",
+                "sample role type": "experiment sample role",
+                "written name": "New Material"
+              }
+            }
+          ],
+          "submitter": "---"
+        }
+      }
+    ]
+  }
+}
