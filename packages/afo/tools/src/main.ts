@@ -1,3 +1,14 @@
+// SPDX-FileCopyrightText: 2024 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-License-Identifier: MIT
+
+/**
+ *
+ * Copyright (c) 2024 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 import csv from 'csv-parser';
