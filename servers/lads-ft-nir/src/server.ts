@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2024 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 // SPDX-License-Identifier: MIT
 
 /**
