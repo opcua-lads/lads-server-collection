@@ -1,6 +1,9 @@
+// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-License-Identifier: MIT
+
 /**
  *
- * Copyright (c) 2024 - 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+ * Copyright (c) 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
