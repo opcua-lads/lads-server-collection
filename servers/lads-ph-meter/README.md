@@ -9,7 +9,7 @@ A fully simulated pH-meter implementation featuring:
 
 ## Gateway mode
 Currently supports serial connectivity to Mettler Toledo SevenEasy pH-meter.
-* on startup of the application provide the serial port via argument **-p <serialport>**
+* on startup of the application provide the serial port via argument **-p serialport**
 * due to the device's capabilities remote calibration is not supported
 
 ## FAIR result data
