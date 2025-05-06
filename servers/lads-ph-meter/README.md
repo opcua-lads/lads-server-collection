@@ -12,9 +12,9 @@ Currently supports serial connectivity to Mettler Toledo SevenEasy pH-meter.
 * on startup of the application provide the serial port via argument **-p serialport**
 * due to the device's capabilities remote calibration is not supported
 
-## FAIR result data
+## FAIR data
 * rich **AFO** metadata, and
-* **ASM** result payloads for profile and end-point measurements in accordance with pH-Meter schema.
+* **ASM** result payloads for profile and end-point measurements in accordance with the ASM pH-Meter schema.
 
 ## Licence
 All LADS OPC UA servers of this collection which provide gateway capabilities are licensed under AGPL v3
