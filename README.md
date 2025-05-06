@@ -1,4 +1,4 @@
-# LADS OPC UA Servers  (Repository Root)
+# LADS OPC UA Servers Collection (Repository Root)
 
 This folder collects individual **OPC UA LADS servers** for distinct device classes.  
 Each server
@@ -10,7 +10,7 @@ Each server
 | Device type | Folder | Highlights | Port |
 |-------------|--------|------------|------|
 | Viscometer  | [`servers/lads-viscometer`](./servers/lads-viscometer/README.md) | Rheometry simulation (temperature & shear-rate dependent viscosity) |  4840  |
-| pH-Meter    | [`servers/lads-ph-meter`](./servers/lads-ph-meter/README.md) | Nernst-based pH simulation with temperature compensation and slope/offset calibration helpers |  4841  |
+| pH-Meter    | [`servers/lads-ph-meter`](./servers/lads-ph-meter/README.md) | pH sensor simulation/real world device gateway with temperature compensation and slope/offset calibration (simulation only) |  4841  |
 | ULT Freezer | [`servers/lads-freezer`](./servers/lads-freezer/README.md) | Door state machine + 2-point temperature control simulation |  4842  |
 
 > **Status:** All servers are proof-of-concept simulators intended for demos, integration testing and reference implementations.  
