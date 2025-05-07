@@ -79,7 +79,7 @@ class SerialPhMeterParser extends EventEmitter {
         if (!line) return;
 
         const reading: Reading = { timestamp: new Date() }
-        const l = line.split(/\s+/).map(s => s.trim())
+        const l = line.trim().split(/\s+/)
         l.forEach(s => {
             const value = parseFloat(s.slice(0, -2))
             if (!Number.isNaN(value)) {
