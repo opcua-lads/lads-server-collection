@@ -14,37 +14,68 @@ import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, Qualified
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
 
-export function getBooleanValue(variable: UAVariable): boolean {
-    if (!variable) return false
+// ----------------------------------------------------------------------------
+// Variable getters
+// ----------------------------------------------------------------------------
+
+export function getBooleanValue(variable: UAVariable, defaultValue = false): boolean {
+    if (!variable) return defaultValue
     return variable.readValue().value.value
 }
+
+export function getNumericValue(variable: UAVariable, defaultValue = 0): number {
+    if (!variable) return defaultValue
+    return variable.readValue().value.value
+}
+
+export function getNumericArrayValue(variable: UAVariable, defaultValue = []): number[] {
+    if (!variable) return defaultValue
+    return variable.readValue().value.value
+}
+
+export function getStringValue(variable: UAVariable, defaultValue = ""): string {
+    if (!variable) return defaultValue
+    const value = variable.readValue().value.value
+    const dataType = variable.dataTypeObj.basicDataType
+    switch (dataType) {
+        case DataType.String:
+            return value;
+        case DataType.LocalizedText:
+            return (<LocalizedText>value).text
+        case DataType.QualifiedName:
+            return (<QualifiedName>value).name
+        default:
+            return defaultValue
+    }
+}
+
+export function getItem<T>(item: T | null, propertyName: string): T {
+    if (!item) {
+        throw new Error(`Failed to get ${propertyName}`);
+    }
+    return item as T
+}
+
+// ----------------------------------------------------------------------------
+// Variable setters
+// ----------------------------------------------------------------------------
+const NumericDataTypes = new Set<number>([DataType.Int16, DataType.Int32, DataType.Int64, DataType.UInt16, DataType.UInt32, DataType.UInt64, DataType.Byte, DataType.Float, DataType.Double])
 
 export function setBooleanValue(variable: UAVariable, value: boolean, statusCode = StatusCodes.Good) {
     if (!variable) return
-    variable.setValueFromSource({dataType: DataType.Boolean, value: value}, statusCode)
+    variable.setValueFromSource({ dataType: DataType.Boolean, value: value }, statusCode)
 }
 
-export function getNumericValue(variable: UAVariable): number {
-    if (!variable) return 0
-    return variable.readValue().value.value
-}
-
-export function getNumericArrayValue(variable: UAVariable): number[] {
-    if (!variable) return []
-    return variable.readValue().value.value
-}
-
-const NumericDataTypes = new Set<number>([DataType.Int16, DataType.Int32, DataType.Int64, DataType.UInt16, DataType.UInt32, DataType.UInt64, DataType.Byte, DataType.Float, DataType.Double])
 export function setNumericValue(variable: UAVariable, value: number, statusCode = StatusCodes.Good) {
     if (!variable) return
     const dataTypeObject = variable.dataTypeObj
     const dataType = dataTypeObject.basicDataType
     try {
         assert(NumericDataTypes.has(dataType))
-    } catch(err) {
+    } catch (err) {
         console.debug(err)
     }
-    variable.setValueFromSource({dataType: dataType, value: value}, statusCode)
+    variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
 }
 
 export function setNumericArrayValue(variable: UAVariable, value: number[], statusCode = StatusCodes.Good) {
@@ -54,41 +85,27 @@ export function setNumericArrayValue(variable: UAVariable, value: number[], stat
     const isArray = variable.valueRank === VariantArrayType.Array
     try {
         assert(NumericDataTypes.has(dataType) && isArray)
-    } catch(err) {
+    } catch (err) {
         console.debug(err)
     }
-    variable.setValueFromSource({dataType: dataType, value: value}, statusCode)
+    variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
 }
 
 export function setStringValue(variable: UAVariable, value: string, statusCode = StatusCodes.Good) {
     if (!variable) return
     const dataType = variable.dataTypeObj.basicDataType
     assert((dataType === DataType.String) || (dataType === DataType.LocalizedText))
-    variable.setValueFromSource({dataType: dataType, value: value}, statusCode)
+    variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
 }
 
 export function setStatusCodeValue(variable: UAVariable, value: StatusCode, statusCode = StatusCodes.Good) {
     if (!variable) return
-    variable.setValueFromSource({dataType: DataType.StatusCode, value: value}, statusCode)
+    variable.setValueFromSource({ dataType: DataType.StatusCode, value: value }, statusCode)
 }
 
 export function setDateTimeValue(variable: UAVariable, value: Date, statusCode = StatusCodes.Good) {
     if (!variable) return
-    variable.setValueFromSource({dataType: DataType.DateTime, value: value}, statusCode)
-}
-
-export function getStringValue(variable: UAVariable, defaultValue = ""): string {
-    if (!variable) return defaultValue
-    const value =  variable.readValue().value.value
-    const dataType = variable.dataTypeObj.basicDataType
-    switch (dataType) {
-        case DataType.String:
-            return value; 
-        case DataType.LocalizedText:
-            return (<LocalizedText>value).text
-        case DataType.QualifiedName:
-            return (<QualifiedName>value).name
-    }
+    variable.setValueFromSource({ dataType: DataType.DateTime, value: value }, statusCode)
 }
 
 export function setPropertiesValue(variable: UAVariable, properties: LADSProperty[]) {
@@ -101,13 +118,9 @@ export function setSamplesValue(variable: UAVariable, samples: LADSSampleInfo[])
     variable?.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructSamplesExtensionObject(variable.addressSpace, samples), arrayType: VariantArrayType.Array })
 }
 
-export function getItem<T>(item: T | null, propertyName: string): T {
-    if (!item) {
-        throw new Error(`Failed to get ${propertyName}`);
-    }
-    return item as T
-}
-
+// ----------------------------------------------------------------------------
+// Create variables at runtime
+// ----------------------------------------------------------------------------
 export function addStringVariable(parent: UAObject, name: string, value = ""): UABaseDataVariable<string, DataType.String> {
     if (!parent) return undefined
     const namespace = parent.namespace
@@ -115,7 +128,7 @@ export function addStringVariable(parent: UAObject, name: string, value = ""): U
         browseName: name,
         componentOf: parent,
         dataType: DataType.String,
-        value: { dataType: DataType.String, value: value}
+        value: { dataType: DataType.String, value: value }
     })
 }
 
@@ -126,7 +139,7 @@ export function addUInt32Variable(parent: UAObject, name: string, value = 0): UA
         browseName: name,
         componentOf: parent,
         dataType: DataType.UInt32,
-        value: { dataType: DataType.UInt32, value: value}
+        value: { dataType: DataType.UInt32, value: value }
     })
 }
 
@@ -137,22 +150,22 @@ export function addBooleanVariable(parent: UAObject, name: string, value = false
         browseName: name,
         componentOf: parent,
         dataType: DataType.Boolean,
-        value: { dataType: DataType.Boolean, value: value}
+        value: { dataType: DataType.Boolean, value: value }
     })
 }
 
 export function addMultiStateDiscreteVariable(parent: UAObject, name: string, value: number, enumStrings: string[]): UAMultiStateDiscrete<number, DataType.UInt32> {
     if (!parent) return undefined
     const namespace = parent.namespace
-    const variable =  <UAMultiStateDiscrete<number, DataType.UInt32>>namespace.addVariable({
+    const variable = <UAMultiStateDiscrete<number, DataType.UInt32>>namespace.addVariable({
         browseName: name,
         typeDefinition: coerceNodeId(VariableTypeIds.MultiStateDiscreteType),
         componentOf: parent,
         dataType: DataType.UInt32,
-        value: { dataType: DataType.UInt32, value: value},
+        value: { dataType: DataType.UInt32, value: value },
     })
     const l = enumStrings.map((value: string) => (new LocalizedText(value)))
-    variable.enumStrings?.setValueFromSource({arrayType: VariantArrayType.Array, dataType: DataType.LocalizedText, value: l})
+    variable.enumStrings?.setValueFromSource({ arrayType: VariantArrayType.Array, dataType: DataType.LocalizedText, value: l })
     return variable
 }
 
@@ -163,7 +176,7 @@ export function addDoubleVariable(parent: UAObject, name: string, value = 0): UA
         browseName: name,
         componentOf: parent,
         dataType: DataType.Double,
-        value: { dataType: DataType.Double, value: value}
+        value: { dataType: DataType.Double, value: value }
     })
 }
 
@@ -174,7 +187,7 @@ export function addStatusCodeVariable(parent: UAObject, name: string, value = St
         browseName: name,
         componentOf: parent,
         dataType: DataType.StatusCode,
-        value: { dataType: DataType.StatusCode, value: value}
+        value: { dataType: DataType.StatusCode, value: value }
     })
 }
 
