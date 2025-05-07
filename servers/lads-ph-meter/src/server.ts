@@ -23,7 +23,7 @@ import { ApplicationType, assert, coerceNodeId, DataType, OPCUAServer, UAObject 
 import { join } from "path"
 import { DIObjectIds, getChildObjects } from "@utils"
 import { pHMeterDevice } from "./ph-meter-interfaces"
-import { pHMeterDeviceImpl } from "./ph-meter-device-impl"
+import { pHMeterDeviceImpl } from "./ph-meter-device"
 
 //---------------------------------------------------------------
 export const IncludeAFO = true

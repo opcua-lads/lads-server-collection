@@ -29,7 +29,7 @@ import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnal
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, constructPropertiesExtensionObject, constructSamplesExtensionObject, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, UAVariable, AccessLevelFlag, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
 import { join } from "path"
-import { pHMeterDeviceImpl } from "./ph-meter-device-impl"
+import { pHMeterDeviceImpl } from "./ph-meter-device"
 import { pHMeterFunctionalUnit, pHMeterFunctionSet } from "./ph-meter-interfaces"
 
 //---------------------------------------------------------------
@@ -79,20 +79,20 @@ interface CurrentRunOptions {
     runtimeInterval?: NodeJS.Timer
 }
 
-class ProgramTemplateIds {
+export class ProgramTemplateIds {
     static readonly Measure = "Measure"
     static readonly CalibrateOffset = "Calibrate Offset"
     static readonly CalibrateSlope = "Calibrate Slope"
 }
 
-class Constants {
+export class Constants {
     static readonly R = 8.314
     static readonly F = 96485
     static readonly T0 = 273.15
 }
 
 //---------------------------------------------------------------
-export class pHMeterUnitImpl {
+export abstract class pHMeterUnitImpl {
     parent: pHMeterDeviceImpl
     functionalUnit: pHMeterFunctionalUnit
     functionalUnitState: UAStateMachineEx
@@ -103,15 +103,6 @@ export class pHMeterUnitImpl {
     currentRunOptions: CurrentRunOptions
     programTemplatesElements: ProgramTemplateElement[] = []
 
-    simpHPV: UAVariable
-    simpHOfs: UAVariable
-    simpHSlope: UAVariable
-    simpHRaw: UAVariable
-    simTPV: UAVariable
-    simTOfs: UAVariable
-    simTSlope: UAVariable
-    simTRaw: UAVariable
-
     constructor(parent: pHMeterDeviceImpl, functionalUnit: pHMeterFunctionalUnit) {
         this.parent = parent
 
@@ -121,6 +112,7 @@ export class pHMeterUnitImpl {
         stateMachine.start.bindMethod(this.start.bind(this))
         stateMachine.startProgram.bindMethod(this.startProgram.bind(this))
         stateMachine.stop.bindMethod(this.stop.bind(this))
+        
         stateMachine.abort.bindMethod(this.abort.bind(this))
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
@@ -137,52 +129,6 @@ export class pHMeterUnitImpl {
         this.temperatureSensor.sensorValue.historizing = true
         addressSpace.installHistoricalDataNode(this.temperatureSensor.sensorValue)
 
-        // init simulator
-        if (this.simulationMode) {
-            const namespace = functionalUnit.namespace
-            const simulator = namespace.addObject({
-                componentOf: functionalUnit,
-                browseName: "Simulator"
-            })
-            this.simpHPV = namespace.addVariable({
-                componentOf: simulator,
-                browseName: "pH.PV",
-                dataType: DataType.Double,
-                value: { dataType: DataType.Double, value: 6.0 }
-            })
-            this.simpHSlope = namespace.addVariable({
-                componentOf: simulator,
-                browseName: "pH.Slope",
-                dataType: DataType.Double,
-                value: { dataType: DataType.Double, value: 100.0 }
-            })
-            this.simpHOfs = namespace.addVariable({
-                componentOf: simulator,
-                browseName: "pH.Offset",
-                dataType: DataType.Double,
-                value: { dataType: DataType.Double, value: 0.0 }
-            })
-            this.simpHRaw = namespace.addVariable({
-                componentOf: simulator,
-                browseName: "pH.Raw",
-                dataType: DataType.Double,
-                value: { dataType: DataType.Double, value: 0.0 },
-                accessLevel: AccessLevelFlag.CurrentRead
-            })
-            this.simTPV = namespace.addVariable({
-                componentOf: simulator,
-                browseName: "T.PV",
-                dataType: DataType.Double,
-                value: { dataType: DataType.Double, value: 25.0 },
-            })
-            this.simTRaw = namespace.addVariable({
-                componentOf: simulator,
-                browseName: "T.Raw",
-                dataType: DataType.Double,
-                value: { dataType: DataType.Double, value: 1000.0 },
-                accessLevel: AccessLevelFlag.CurrentRead
-            })
-        }
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.pH_measurement)
         AFODictionary.addSensorFunctionReferences(this.pHSensor, AFODictionaryIds.pH_measurement, AFODictionaryIds.pH)
         AFODictionary.addReferences(this.pHSensor.compensationValue, AFODictionaryIds.temperature)
@@ -191,52 +137,9 @@ export class pHMeterUnitImpl {
         // init program manager
         this.initProgramTemplates()
 
-        // start run loop
-        if (this.simulationMode) {
-            const dT = 200
-            setInterval(() => { this.evaluate(dT) }, dT)
-        }
     }
 
-    get simulationMode(): boolean { return true }
-
-    private evaluate(dT: number) {
-        if (!this.simulationMode) return
-
-        const R0 = 1000
-        const lastpH = getNumericValue(this.pHSensor.sensorValue)
-        const lastT = getNumericValue(this.temperatureSensor.sensorValue)
-
-        // compute simulated sensor values
-        const simpH = getNumericValue(this.simpHPV)
-        const simSlope = getNumericValue(this.simpHSlope)
-        const simOfs = getNumericValue(this.simpHOfs)
-        const simT = getNumericValue(this.simTPV)
-        const simRaw = 1000.0 * Math.log(10) * Constants.R * (simT + Constants.T0) / Constants.F * (7.0 + simOfs - simpH) * 0.01 * simSlope // mV
-        const simR = R0 * (1 + 0.00385 * simT) // Ohm
-        setNumericValue(this.simpHRaw, simRaw)
-        setNumericValue(this.simTRaw, simR)
-
-        // set sensor raw values with some additional noise
-        const snsRaw = simRaw + 0.5 * (Math.random() - 0.5)
-        const snsR = simR + 0.1 * (Math.random() - 0.5)
-        setNumericValue(this.pHSensor.rawValue, snsRaw)
-        setNumericValue(this.temperatureSensor.rawValue, snsR)
-
-        // compute sensor values
-        const cf = dT / 5000 // filter constant 5s
-        const T = ((snsR / R0) - 1) / 0.00385
-        const snsT = (1.0 - cf) * lastT + cf * T
-        setNumericValue(this.temperatureSensor.sensorValue, snsT)
-        setNumericValue(this.pHSensor.compensationValue, snsT)
-
-        const cal: number[] = getNumericArrayValue(this.pHSensor.calibrationValues)
-        const snsOfs = cal[0]
-        const snsSlope = cal[1]
-        const pH = 7.0 + snsOfs - 0.001 * snsRaw / (0.01 * snsSlope) * Constants.F / (Math.log(10) * Constants.R * (snsT + Constants.T0))
-        const snspH = (1.0 - cf) * lastpH + cf * pH
-        setNumericValue(this.pHSensor.sensorValue, snspH)
-    }
+    abstract get simulationMode(): boolean
 
     //---------------------------------------------------------------
     // program manager implementation
@@ -307,21 +210,9 @@ export class pHMeterUnitImpl {
         }
     }
 
-    private enterMeasuring() {
-        const addressSpace = this.functionalUnit.addressSpace
+    protected enterMeasuring() {
         const options = this.currentRunOptions
         raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
-
-        // set simulated pH
-        const pHValues: { id: string, value: number }[] = [
-            { id: ProgramTemplateIds.Measure, value: 7.0 + 6.0 * (Math.random() - 0.5) },
-            { id: ProgramTemplateIds.CalibrateOffset, value: 7 },
-            { id: ProgramTemplateIds.CalibrateSlope, value: 4 },
-        ]
-        const pHPropertyKey = options.programTemplateId === ProgramTemplateIds.Measure ? "ph" : "buffer"
-        const pHProperty = options.properties?.find(property => property.key.toLowerCase().includes(pHPropertyKey))
-        options.referenceValue = pHProperty ? Number(pHProperty.value) : pHValues.find(value => value.id === options.programTemplateId).value
-        setNumericValue(this.simpHPV, options.referenceValue)
 
         // additional references for calibration
         const referenceIds: string[] = [AFODictionaryIds.pH_measurement, AFODictionaryIds.pH_monitoring_aggregate_document]

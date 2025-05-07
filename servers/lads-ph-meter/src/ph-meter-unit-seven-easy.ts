@@ -24,11 +24,11 @@ import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
 import { setNumericValue } from '@utils'
 import { pHMeterFunctionalUnit } from './ph-meter-interfaces';
-import { pHMeterDeviceImpl } from './ph-meter-device-impl';
-import { pHMeterUnitImpl } from './ph-meter-unit-impl';
+import { pHMeterDeviceImpl } from './ph-meter-device';
+import { pHMeterUnitImpl } from './ph-meter-unit';
 
 //---------------------------------------------------------------
-export class SevenEasyUnitImpl extends pHMeterUnitImpl {
+export class pHMeterSevenEasyUnitImpl extends pHMeterUnitImpl {
 
     constructor(parent: pHMeterDeviceImpl, functionalUnit: pHMeterFunctionalUnit, serialPort: string) {
         super(parent, functionalUnit)

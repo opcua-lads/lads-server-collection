@@ -27,8 +27,8 @@ import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponent } from "@interfaces"
 import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper } from "@utils"
 import { pHMeterDevice, pHMeterFunctionalUnit, pHMeterFunctionalUnitSet } from "./ph-meter-interfaces"
-import { pHMeterUnitImpl } from "./ph-meter-unit-impl"
-import { SevenEasyUnitImpl } from "./seven-easy-unit-impl"
+import { pHMeterSevenEasyUnitImpl } from "./ph-meter-unit-seven-easy"
+import { pHMeterSimulatorUnitImpl } from "./ph-meter-unit-simulator"
 
 //---------------------------------------------------------------
 export class pHMeterDeviceImpl {
@@ -40,7 +40,7 @@ export class pHMeterDeviceImpl {
         this.serialPort = serialPort
 
         const functionalUnit = this.getFunctionalUnit()
-        const functionalUnitImpl = serialPort.length == 0?new pHMeterUnitImpl(this, functionalUnit):new SevenEasyUnitImpl(this, functionalUnit, serialPort)
+        const functionalUnitImpl = serialPort.length == 0?new pHMeterSimulatorUnitImpl(this, functionalUnit):new pHMeterSevenEasyUnitImpl(this, functionalUnit, serialPort)
 
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
