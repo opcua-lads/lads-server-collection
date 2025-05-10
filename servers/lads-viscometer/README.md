@@ -16,6 +16,9 @@ A simulated viscometer that
 | AFO annotations | generic and reheometry specific |
 | ASM output | results available in accordance with rheometry schema as variable or downloadabe as file via OPC UA services |
 
+## Licence
+LADS OPC UA servers of this collection which represent real world, non generic, device types are licensed under AGPL v3
+
 ## Running
 
 ```bash

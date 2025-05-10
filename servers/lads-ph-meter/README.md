@@ -17,7 +17,7 @@ Currently supports serial connectivity to Mettler Toledo SevenEasy pH-meter.
 * **ASM** result payloads for profile and end-point measurements in accordance with the ASM pH-Meter schema.
 
 ## Licence
-All LADS OPC UA servers of this collection which provide gateway capabilities are licensed under AGPL v3
+LADS OPC UA servers of this collection which represent real world, non generic, device types are licensed under AGPL v3
 
 ## Quick run
 
