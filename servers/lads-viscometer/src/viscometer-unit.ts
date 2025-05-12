@@ -19,13 +19,13 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, LocalizedText, SessionContext, setNamespaceMetaData, StatusCode, StatusCodes, UAObject, UAStateMachineEx, UAVariable, Variant, VariantArrayType, VariantLike } from "node-opcua"
+import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, LocalizedText, SessionContext, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
 import { ViscometerFunctionalUnit } from "./viscometer-interfaces"
 import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./viscometer-device"
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, constructNameNodeIdExtensionObject, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
 
@@ -239,17 +239,17 @@ export abstract class ViscometerUnitImpl {
         const names = ViscometerSpindles.map(spindle => new LocalizedText({text: spindle.name}) )
         const codes = ViscometerSpindles.map(spindle => new LocalizedText({text: (spindle.code < 10)?`0${spindle.code}`:`${spindle.code}`}))
         const spindle = this.functionalUnit.functionSet.spindle
-        spindle.targetValue.enumStrings.setValueFromSource({dataType: DataType.LocalizedText, arrayType: VariantArrayType.Array, value: names})
-        spindle.currentValue.enumStrings.setValueFromSource({dataType: DataType.LocalizedText, arrayType: VariantArrayType.Array, value: codes})
+        setStringArrayValue(spindle.targetValue.enumStrings, names)
+        setStringArrayValue(spindle.currentValue.enumStrings, codes)
         const index = ViscometerSpindles.findIndex(spindle => (spindle.name == "SC4-31"))
         const value = index >= 0?index:0
         spindle.targetValue.on("value_changed", this.setCurrentSpindle.bind(this))
-        spindle.targetValue.setValueFromSource({dataType: DataType.UInt32, value: value})
+        setNumericValue(spindle.targetValue, value)
     }
 
     private setCurrentSpindle(dataValue: DataValue) {
         const index = Number(dataValue.value.value)
-        this.functionalUnit.functionSet.spindle.currentValue.setValueFromSource({dataType: DataType.UInt32, value: index})
+        setNumericValue(this.functionalUnit.functionSet.spindle.currentValue, index)
         this.spindle = ViscometerSpindles[index]
         raiseEvent(this.functionalUnit, `Spindle changed to type ${this.spindle.name} w/ code ${this.spindle.code}`)
     }
@@ -286,11 +286,11 @@ export abstract class ViscometerUnitImpl {
             const viscometerProgram = this.viscometerPrograms[index]
             const description = getDescriptionVariable(programTemplate)
             this.programTemplates.push(programTemplate)
-            programTemplate.author.setValueFromSource({dataType: DataType.String, value: viscometerProgram.author })
-            programTemplate.deviceTemplateId.setValueFromSource({dataType: DataType.String, value: name })
-            description.setValueFromSource({dataType: DataType.LocalizedText, value: viscometerProgram.description })
-            viscometerProgram.created?programTemplate.created.setValueFromSource({dataType: DataType.DateTime, value: new Date(viscometerProgram.created)}):0
-            viscometerProgram.modified?programTemplate.modified.setValueFromSource({dataType: DataType.DateTime, value: new Date(viscometerProgram.modified)}):0
+            setStringValue(programTemplate.author, viscometerProgram.author)
+            setStringValue(programTemplate.deviceTemplateId, name)
+            setStringValue(description, viscometerProgram.description)
+            viscometerProgram.created?setDateTimeValue(programTemplate.created, new Date(viscometerProgram.created)):0
+            viscometerProgram.modified?setDateTimeValue(programTemplate.modified, new Date(viscometerProgram.modified)):0
 
             // Allotrope Foundation Ontology
             AFODictionary.addDefaultProgramTemplateReferences(programTemplate)
@@ -363,15 +363,7 @@ export abstract class ViscometerUnitImpl {
         const programTemplateId: string = inputArguments[0].value
         const programTemplate = this.findProgramTemplate(programTemplateId)
         if (programTemplate) {
-            const value = constructNameNodeIdExtensionObject(
-                this.parent.addressSpace,
-                programTemplateId, 
-                programTemplate.nodeId 
-            )
-            activeProgram?.currentProgramTemplate?.setValueFromSource({
-                dataType: DataType.ExtensionObject, 
-                value: value,
-            })
+            setNameNodeIdValue(activeProgram?.currentProgramTemplate, programTemplateId, programTemplate.nodeId)
         }
         const program: ViscometerProgram = programTemplate?this.viscometerPrograms.find((program) => (programTemplate.browseName.name.includes(program.name))):this.viscometerPrograms[0]
 
@@ -387,7 +379,7 @@ export abstract class ViscometerUnitImpl {
                     if (property) {
                         const variable = property.variable
                         const dataType = variable.dataTypeObj
-                        variable.setValueFromSource({dataType: dataType.browseName.name , value: keyValue.value})
+                        setStringValue(variable, keyValue.value)
                     }
                 }
                 catch(err) {
@@ -416,12 +408,12 @@ export abstract class ViscometerUnitImpl {
         }
         
         // set context information provided by input-arguments
-        getDescriptionVariable(result).setValueFromSource({dataType: DataType.LocalizedText, value: `Run based on template ${programTemplateId}, started ${startedTimestamp.toLocaleDateString()}.`})
+        setStringValue(getDescriptionVariable(result), `Run based on template ${programTemplateId}, started ${startedTimestamp.toLocaleDateString()}.`)
         result.properties?.setValueFromSource(inputArguments[1])
         result.supervisoryJobId?.setValueFromSource(inputArguments[2])
         result.supervisoryTaskId?.setValueFromSource(inputArguments[3])
         result.samples?.setValueFromSource(inputArguments[4])
-        result.started?.setValueFromSource({ dataType: DataType.DateTime, value: startedTimestamp })
+        setDateTimeValue(result.started, startedTimestamp )
         copyProgramTemplate(programTemplate, result.programTemplate)
 
         // Allotrope Foundation Ontology
@@ -432,10 +424,10 @@ export abstract class ViscometerUnitImpl {
         // initialize active-program runtime properties
         const steps = program.steps
         const estimatedRuntime = steps.reduce((time, step) => time + step.dt, 0)
-        activeProgram.currentRuntime?.setValueFromSource({ dataType: DataType.Double, value: 0 })
-        activeProgram.estimatedRuntime?.setValueFromSource({ dataType: DataType.Double, value: estimatedRuntime })
-        activeProgram.estimatedStepNumbers?.setValueFromSource({ dataType: DataType.UInt32, value: steps.length })
-        activeProgram.deviceProgramRunId?.setValueFromSource({ dataType: DataType.String, value: deviceProgramRunId })
+        setNumericValue(activeProgram.currentRuntime, 0)
+        setNumericValue(activeProgram.estimatedRuntime, estimatedRuntime )
+        setNumericValue(activeProgram.estimatedStepNumbers, steps.length )
+        setStringValue(activeProgram.deviceProgramRunId, deviceProgramRunId )
 
         // create recorders
         const endPointRecorder = new VariableDataRecorder("End-points", [
@@ -468,21 +460,21 @@ export abstract class ViscometerUnitImpl {
             const step = steps[index]
             raiseEvent(this.functionalUnit, `Starting step ${step.name}`)
             // set step specific information
-            activeProgram.currentStepName?.setValueFromSource({ dataType: DataType.LocalizedText, value: step.name })
-            activeProgram.currentStepNumber?.setValueFromSource({ dataType: DataType.UInt32, value: index + 1 })
-            activeProgram.currentStepRuntime?.setValueFromSource({ dataType: DataType.Double, value: 0 })
-            activeProgram.estimatedStepRuntime?.setValueFromSource({ dataType: DataType.Double, value: step.dt })
+            setStringValue(activeProgram.currentStepName, step.name)
+            setNumericValue(activeProgram.currentStepNumber, index + 1)
+            setNumericValue(activeProgram.currentStepRuntime, 0)
+            setNumericValue(activeProgram.estimatedStepRuntime, step.dt)
 
             // set target-values
-            this.speedController.targetValue.setValueFromSource({dataType: DataType.Double, value: step.nsp})
-            this.temperatureController.targetValue.setValueFromSource({dataType: DataType.Double, value: step.tsp})
+            setNumericValue(this.speedController.targetValue, step.nsp)
+            setNumericValue(this.temperatureController.targetValue, step.tsp)
 
             // wait and update
             const tsStepRuntime = Date.now()
             const updateInterval = setInterval(() => { 
                 const now = Date.now()
-                activeProgram.currentRuntime?.setValueFromSource({ dataType: DataType.Double, value: now - tsRuntime })
-                activeProgram.currentStepRuntime?.setValueFromSource({ dataType: DataType.Double, value: now - tsStepRuntime })
+                setNumericValue(activeProgram.currentRuntime, now - tsRuntime)
+                setNumericValue(activeProgram.currentStepRuntime, now - tsStepRuntime)
             }, 200)
             await sleepMilliSeconds(step.dt)
             clearInterval(updateInterval)
@@ -504,7 +496,7 @@ export abstract class ViscometerUnitImpl {
 
         // finalize
         //console.log(resultRecorder.createCSVString())
-        result.stopped?.setValueFromSource({ dataType: DataType.DateTime, value: new Date() })
+        setDateTimeValue(result.stopped, new Date())
         this.stopViscometer()
         clearInterval(trendRecorderInterval)
 

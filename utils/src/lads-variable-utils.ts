@@ -10,9 +10,9 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
-import { constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
+import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
 
 // ----------------------------------------------------------------------------
 // Variable getters
@@ -91,10 +91,24 @@ export function setNumericArrayValue(variable: UAVariable, value: number[], stat
     variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
 }
 
-export function setStringValue(variable: UAVariable, value: string, statusCode = StatusCodes.Good) {
+export function setStringValue(variable: UAVariable, value: string | LocalizedText, statusCode = StatusCodes.Good) {
     if (!variable) return
     const dataType = variable.dataTypeObj.basicDataType
     assert((dataType === DataType.String) || (dataType === DataType.LocalizedText))
+    variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
+}
+
+export function setStringArrayValue(variable: UAVariable, value: string[] | LocalizedText[], statusCode = StatusCodes.Good) {
+    if (!variable) return
+    const dataTypeObject = variable.dataTypeObj
+    const dataType = dataTypeObject.basicDataType
+    const isString = (dataType === DataType.String) || (dataType === DataType.LocalizedText)
+    const isArray = variable.valueRank === VariantArrayType.Array
+    try {
+        assert(isString && isArray)
+    } catch (err) {
+        console.debug(err)
+    }
     variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
 }
 
@@ -110,13 +124,19 @@ export function setDateTimeValue(variable: UAVariable, value: Date, statusCode =
 
 export function setPropertiesValue(variable: UAVariable, properties: LADSProperty[]) {
     if (!variable) return
-    variable?.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructPropertiesExtensionObject(variable.addressSpace, properties), arrayType: VariantArrayType.Array })
+    variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructPropertiesExtensionObject(variable.addressSpace, properties), arrayType: VariantArrayType.Array })
 }
 
 export function setSamplesValue(variable: UAVariable, samples: LADSSampleInfo[]) {
     if (!variable) return
-    variable?.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructSamplesExtensionObject(variable.addressSpace, samples), arrayType: VariantArrayType.Array })
+    variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructSamplesExtensionObject(variable.addressSpace, samples), arrayType: VariantArrayType.Array })
 }
+
+export function setNameNodeIdValue(variable: UAVariable, name: string, nodeId: NodeId) {
+    if (!variable) return
+    variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructNameNodeIdExtensionObject(variable.addressSpace, name, nodeId)})
+}
+
 
 // ----------------------------------------------------------------------------
 // Create variables at runtime
