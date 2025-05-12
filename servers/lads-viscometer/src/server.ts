@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { join } from 'path'
 import assert from "assert"
-import { ApplicationType, DataType, OPCUAServer, UAObject, coerceNodeId, } from "node-opcua"
-import { DIObjectIds, } from "@utils"
+import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, } from "node-opcua"
+import { DIObjectIds, setStringValue, } from "@utils"
 import { ViscometerDevice } from './viscometer-interfaces'
 import { ViscometerDeviceImpl } from './viscometer-device'
 
@@ -97,7 +97,7 @@ class ViscometerServerImpl {
                 componentOf: deviceSet,
                 browseName: name,
             })
-            deviceObject.serialNumber.setValueFromSource({dataType: DataType.String, value: (4711 + index).toString()})
+            setStringValue(deviceObject.serialNumber, (4711 + index).toString())
             const deviceImpl = new ViscometerDeviceImpl(deviceObject, serialPort)
         })
 
