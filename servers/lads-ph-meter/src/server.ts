@@ -36,10 +36,10 @@ class pHMeterServerImpl {
 
     constructor(port: number) {
         const uri = "LADS-pH-Meter-Server"
-        console.log(`${uri} starting ${IncludeAFO?"with AFO support (takes some time to load) ..":".."}`);
+        console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
         // provide paths for the nodeset files
-        const nodeset_path = join(__dirname, '../../../../nodesets')
+        const nodeset_path = join(__dirname, '../../../nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
         const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
         const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
@@ -50,7 +50,7 @@ class pHMeterServerImpl {
 
         try {
             // list of node-set files
-            const node_set_filenames = IncludeAFO?[nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_phmeter,]:[nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_phmeter,]
+            const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_phmeter,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_phmeter,]
 
             // build the server object
             this.server = new OPCUAServer({
@@ -98,7 +98,7 @@ class pHMeterServerImpl {
             if (device.typeDefinitionObj === deviceType) {
                 const pHMeterDevice = device as pHMeterDevice
                 const index = deviceImplementations.length
-                pHMeterDevice.serialNumber.setValueFromSource({dataType: DataType.String, value: (4711 + index).toString()})
+                pHMeterDevice.serialNumber.setValueFromSource({ dataType: DataType.String, value: (4711 + index).toString() })
                 deviceImplementations.push(new pHMeterDeviceImpl(pHMeterDevice, serialPort))
             }
         })
@@ -123,5 +123,3 @@ export async function main() {
 }
 
 main()
-
-

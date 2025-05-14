@@ -39,7 +39,7 @@ class ViscometerServerImpl {
 
     constructor(port: number) {
         // provide paths for the nodeset files
-        const nodeset_path = join(__dirname, '../../../../nodesets')
+        const nodeset_path = join(__dirname, '../../../nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
         const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
         const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
@@ -50,7 +50,7 @@ class ViscometerServerImpl {
 
         try {
             // list of node-set files
-            const node_set_filenames = IncludeAFO?[nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_viscometer,]:[nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_viscometer,]
+            const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_viscometer,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_viscometer,]
 
             // build the server object
             const uri = "LADS-Viscometer-Server"
@@ -92,7 +92,7 @@ class ViscometerServerImpl {
         const deviceSet = <UAObject>addressSpace.findNode(coerceNodeId(DIObjectIds.deviceSet, nameSpaceDI.index))
         assert(deviceSet)
         serialPorts.forEach((serialPort, index) => {
-            const name = serialPorts.length == 1?"myViscometer":`myViscometer${index + 1}`
+            const name = serialPorts.length == 1 ? "myViscometer" : `myViscometer${index + 1}`
             const deviceObject = <ViscometerDevice>deviceType.instantiate({
                 componentOf: deviceSet,
                 browseName: name,

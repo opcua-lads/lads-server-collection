@@ -134,7 +134,7 @@ export function setSamplesValue(variable: UAVariable, samples: LADSSampleInfo[])
 
 export function setNameNodeIdValue(variable: UAVariable, name: string, nodeId: NodeId) {
     if (!variable) return
-    variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructNameNodeIdExtensionObject(variable.addressSpace, name, nodeId)})
+    variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructNameNodeIdExtensionObject(variable.addressSpace, name, nodeId) })
 }
 
 
@@ -210,4 +210,3 @@ export function addStatusCodeVariable(parent: UAObject, name: string, value = St
         value: { dataType: DataType.StatusCode, value: value }
     })
 }
-

@@ -22,4 +22,4 @@ LADS OPC UA servers of this collection which represent real world, non generic, 
 ## Running
 
 ```bash
-npm start             # opc.tcp://localhost:4840
+npm run lads-viscometer      # opc.tcp://localhost:4840

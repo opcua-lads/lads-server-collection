@@ -37,10 +37,7 @@ For information on third-party components:
 # 1. install dependencies (workspace root)
 npm install   # or npm/yarn
 
-# 2. pick a server
-cd servers/viscometer      # ph-meter / ult-freezer also work
+# 2. run it
+npm run <server-name>       # see individual READMEs for options
 
-# 3. run it
-npm start                 # see individual READMEs for options
-
-# 4. point any OPC UA client to  opc.tcp://localhost:<port>
+# 3. point any OPC UA client to  opc.tcp://localhost:<port>

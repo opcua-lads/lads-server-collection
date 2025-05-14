@@ -44,7 +44,7 @@ class FreezerServerImpl {
 
     constructor(port: number) {
         // provide paths for the nodeset files
-        const nodeset_path = join(__dirname, '../../../../nodesets')
+        const nodeset_path = join(__dirname, '../../../nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
         const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
         const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
@@ -85,7 +85,7 @@ class FreezerServerImpl {
     }
 
     async start() {
-        
+
         // get objects
         await this.server.initialize()
         const addressSpace = this.server.engine.addressSpace
@@ -132,7 +132,7 @@ class FreezerDeviceImpl {
         initComponent(device, deviceOptions)
         this.freezerUnit = new FreezerUnitImpl(device.functionalUnitSet.freezerUnit)
         const dT = 500
-        setInterval(() => {this.freezerUnit.evaluate(dT)}, dT)
+        setInterval(() => { this.freezerUnit.evaluate(dT) }, dT)
     }
 }
 
@@ -163,7 +163,7 @@ class FreezerUnitImpl {
         this.doorStateMachine.setState(LADSCoverState.Closed)
         stateMachine.open.bindMethod(this.open.bind(this))
         stateMachine.close.bindMethod(this.close.bind(this))
-        
+
         // history
         const sensorValue = this.temperatureSensor.sensorValue
         sensorValue.historizing = true
@@ -172,12 +172,12 @@ class FreezerUnitImpl {
 
     private async open(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         this.doorStateMachine.setState(LADSCoverState.Opened)
-        return {statusCode: StatusCodes.Good }
+        return { statusCode: StatusCodes.Good }
     }
 
     private async close(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         this.doorStateMachine.setState(LADSCoverState.Closed)
-        return {statusCode: StatusCodes.Good }
+        return { statusCode: StatusCodes.Good }
     }
 
     evaluate(dT: number) {
@@ -191,12 +191,12 @@ class FreezerUnitImpl {
 
         // heat tranfer model
         const dtAmbient = tAmbient - tpv
-        const gAmbient = doorIsOpen?gDoorOpen:gDoorClosed 
-        const qCompressor = this.compressorRunning?-1000:0 // Watt
+        const gAmbient = doorIsOpen ? gDoorOpen : gDoorClosed
+        const qCompressor = this.compressorRunning ? -1000 : 0 // Watt
         const qAmbient = dtAmbient * gAmbient
-        const t = tpv + (qCompressor + qAmbient) / heatCapacity * 0.001 * dT 
-        this.temperatureSensor.sensorValue.setValueFromSource({dataType: DataType.Double, value: t})
-        this.temperatureController.currentValue.setValueFromSource({dataType: DataType.Double, value: t})
+        const t = tpv + (qCompressor + qAmbient) / heatCapacity * 0.001 * dT
+        this.temperatureSensor.sensorValue.setValueFromSource({ dataType: DataType.Double, value: t })
+        this.temperatureController.currentValue.setValueFromSource({ dataType: DataType.Double, value: t })
 
         // 2-poi-t compressor controller
         if (this.compressorRunning) {

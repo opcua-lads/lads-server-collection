@@ -15,8 +15,9 @@
         "paths": {
             "@utils": ["utils/src"],
             "@interfaces": ["interfaces/src"],
-            "@afo": ["packages/afo/src"],
-            "@asm": ["packages/asm/src"],
+            "@afo": ["lib/afo/src"],
+            "@afo/*": ["lib/afo/src/*"],
+            "@asm": ["lib/asm/src"],
         }
     },
 }
