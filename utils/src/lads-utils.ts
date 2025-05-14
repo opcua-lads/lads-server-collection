@@ -29,7 +29,7 @@ import {
     VariantLike,
     coerceNodeId,
     promoteToStateMachine,
-    ExtensionObject, 
+    ExtensionObject,
     NodeId,
     UAFiniteStateMachine,
     UAState,
@@ -42,14 +42,15 @@ import {
     UAAliasNameCategory,
     UAProperty,
     UAEventType,
-    UADataType} from "node-opcua"
-import { 
-    LADSDevice, 
-    LADSDeviceState, 
-    LADSFunction, 
+    UADataType
+} from "node-opcua"
+import {
+    LADSDevice,
+    LADSDeviceState,
+    LADSFunction,
     LADSBaseControlFunction,
-    LADSFunctionalState, 
-    MachineryItemState, 
+    LADSFunctionalState,
+    MachineryItemState,
     MachineryOperationMode,
     LADSAnalogScalarSensorFunction,
     LADSAnalogControlFunction,
@@ -60,12 +61,10 @@ import {
     LADSProgramTemplate,
     LADSSampleInfo,
     LADSProperty,
-    MachineIdentificationType,
-    LADSDeviceStateMachine} from "@interfaces"
+    MachineIdentificationType
+} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from "node-opcua-nodeset-di"
 import { setStringValue } from "./lads-variable-utils"
-import { UAFolder } from "node-opcua-nodeset-ua/source/ua_folder"
-import { UABaseDataVariable } from "node-opcua-nodeset-ua/source/ua_base_data_variable"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -88,15 +87,15 @@ export function touchNodes(...nodes: UAObject[]) {
                 node.setEventNotifier(EventNotifierFlagSubscribeToEvents)
             }
             node.raiseEvent(BaseModelChangedEventType, {})
-            node.nodeVersion?.setValueFromSource({dataType: DataType.String, value: new Date().toISOString()})
-        } catch {}
+            node.nodeVersion?.setValueFromSource({ dataType: DataType.String, value: new Date().toISOString() })
+        } catch { }
     })
 }
 
 export function raiseEvent(node: UAObject, message: string, severity: number = 0) {
     if (!node) return
     const eventType = node.addressSpace.findObjectType("BaseEventType")
-    node.raiseEvent(eventType, {message: {dataType: DataType.String, value: message}, severity: {dataType: DataType.UInt16, value: severity}})
+    node.raiseEvent(eventType, { message: { dataType: DataType.String, value: message }, severity: { dataType: DataType.UInt16, value: severity } })
 }
 
 //---------------------------------------------------------------
@@ -121,7 +120,7 @@ export function constructNameNodeIdExtensionObject(addressSpace: IAddressSpace, 
     const ns = getAMBNamespace(addressSpace)
     const dt = addressSpace.findDataType("NameNodeIdDataType", ns.index)
     assert(dt)
-    const result = addressSpace.constructExtensionObject(dt, { Name: name, NodeId: nodeId})
+    const result = addressSpace.constructExtensionObject(dt, { Name: name, NodeId: nodeId })
     return result
 }
 
@@ -172,7 +171,7 @@ export function getLADSNode(addressSpace: IAddressSpace, id: number): BaseNode |
 }
 
 export function getParents(node: BaseNode, rootNodeId: NodeIdLike = ObjectIds.ObjectsFolder): BaseNode[] {
-    const rootNode = rootNodeId instanceof NodeId?rootNodeId:makeNodeId(rootNodeId)
+    const rootNode = rootNodeId instanceof NodeId ? rootNodeId : makeNodeId(rootNodeId)
     if (sameNodeId(node.nodeId, rootNode))
         return [node]
     const parentNodeId = node.parentNodeId
@@ -184,7 +183,7 @@ export function getParents(node: BaseNode, rootNodeId: NodeIdLike = ObjectIds.Ob
             parents.push(node)
             return parents
         }
-        catch(error) {
+        catch (error) {
             console.log(error)
             return [node]
         }
@@ -242,7 +241,7 @@ export function getLADSFunctions(parent: LADSFunctionalUnit | LADSFunction, recu
     assert(hasChildReferencesType)
     assert(hasNotifierType)
     if (addHasNotifierReferences) {
-        parent.addReference({referenceType: hasNotifierType, nodeId:functionSet.nodeId})
+        parent.addReference({ referenceType: hasNotifierType, nodeId: functionSet.nodeId })
         parent.setEventNotifier(notifierFlags)
         functionSet.setEventNotifier(notifierFlags)
     }
@@ -255,7 +254,7 @@ export function getLADSFunctions(parent: LADSFunctionalUnit | LADSFunction, recu
                 if (addHasNotifierReferences) {
                     if (!(notifierReferences.includes(ladsFunction))) {
                         ladsFunction.setEventNotifier(notifierFlags)
-                        functionSet.addReference({referenceType: hasNotifierType, nodeId:ladsFunction})
+                        functionSet.addReference({ referenceType: hasNotifierType, nodeId: ladsFunction })
                     }
                 }
                 functions.push(ladsFunction)
@@ -269,19 +268,19 @@ export function getLADSFunctions(parent: LADSFunctionalUnit | LADSFunction, recu
     return functions
 }
 
-export interface LADSKeyVariable {key: string, variable: UAVariable}
+export interface LADSKeyVariable { key: string, variable: UAVariable }
 export function getLADSSupportedProperties(functionalUnit: LADSFunctionalUnit): LADSKeyVariable[] {
     const result: LADSKeyVariable[] = []
     const supportedPropertiesSet = functionalUnit?.supportedPropertiesSet
     if (supportedPropertiesSet) {
         const organizesType = functionalUnit.addressSpace.findReferenceType(ReferenceTypeIds.Organizes)
-        const properties =  getChildObjects(<UAObject><unknown>supportedPropertiesSet)
+        const properties = getChildObjects(<UAObject><unknown>supportedPropertiesSet)
         properties.forEach((property) => {
             const key = property.browseName.name
             const references = property.findReferencesAsObject(organizesType)
             if (references.length > 0) {
                 const variable = references[0] as UAVariable
-                result.push({key: key, variable: variable})
+                result.push({ key: key, variable: variable })
             }
         })
     }
@@ -301,15 +300,15 @@ export function copyProgramTemplate(source: LADSProgramTemplate, target: LADSPro
     target.created.setValueFromSource(source.created.readValue().value)
     target.modified.setValueFromSource(source.modified.readValue().value)
     target.deviceTemplateId.setValueFromSource(source.deviceTemplateId.readValue().value)
-    target.version?.setValueFromSource(source.version?.readValue().value)    
+    target.version?.setValueFromSource(source.version?.readValue().value)
 }
 
 //---------------------------------------------------------------
 // LADS nameplate support
 //---------------------------------------------------------------
-export const defaultLocation= "N 51.257315 E 6.740885"
+export const defaultLocation = "N 51.257315 E 6.740885"
 
-export interface LADSComponentOptions{
+export interface LADSComponentOptions {
     manufacturer?: string
     manufacturerUri?: string
     model?: string
@@ -328,22 +327,22 @@ export interface LADSComponentOptions{
 
 export function initComponent(component: UAComponent, options: LADSComponentOptions) {
     if (!component) return
-    options.manufacturer?setStringValue(component.manufacturer, options.manufacturer):0
-    options.manufacturerUri?setStringValue(component.manufacturerUri, options.manufacturerUri):0
-    options.model?setStringValue(component.model, options.model):0
-    options.softwareRevision?setStringValue(component.softwareRevision, options.softwareRevision):0
-    options.deviceRevision?setStringValue(component.deviceRevision, options.deviceRevision):0
-    options.productCode?setStringValue(component.productCode, options.productCode):0
-    options.deviceManual?setStringValue(component.deviceManual, options.deviceManual):0
-    options.deviceClass?setStringValue(component.deviceClass, options.deviceClass):0
-    options.serialNumber?setStringValue(component.serialNumber, options.serialNumber):0
-    options.productInstanceUri?setStringValue(component.productInstanceUri, options.productInstanceUri):0
-    options.revisionCounter?setStringValue(component.revisionCounter, options.revisionCounter):0
-    options.assetId?setStringValue(component.assetId, options.assetId):0
-    options.componentName?setStringValue(component.componentName, options.componentName):0
+    options.manufacturer ? setStringValue(component.manufacturer, options.manufacturer) : 0
+    options.manufacturerUri ? setStringValue(component.manufacturerUri, options.manufacturerUri) : 0
+    options.model ? setStringValue(component.model, options.model) : 0
+    options.softwareRevision ? setStringValue(component.softwareRevision, options.softwareRevision) : 0
+    options.deviceRevision ? setStringValue(component.deviceRevision, options.deviceRevision) : 0
+    options.productCode ? setStringValue(component.productCode, options.productCode) : 0
+    options.deviceManual ? setStringValue(component.deviceManual, options.deviceManual) : 0
+    options.deviceClass ? setStringValue(component.deviceClass, options.deviceClass) : 0
+    options.serialNumber ? setStringValue(component.serialNumber, options.serialNumber) : 0
+    options.productInstanceUri ? setStringValue(component.productInstanceUri, options.productInstanceUri) : 0
+    options.revisionCounter ? setStringValue(component.revisionCounter, options.revisionCounter) : 0
+    options.assetId ? setStringValue(component.assetId, options.assetId) : 0
+    options.componentName ? setStringValue(component.componentName, options.componentName) : 0
     const mi = component as MachineIdentificationType
-    options.location?setStringValue(mi.location, options.location):0
-    component.identification?initComponent(component.identification, options):0
+    options.location ? setStringValue(mi.location, options.location) : 0
+    component.identification ? initComponent(component.identification, options) : 0
 }
 
 //---------------------------------------------------------------
@@ -354,10 +353,10 @@ export function getAliasName(node: BaseNode): string {
     const nodes = getParents(node, DIObjectIds.deviceSet)
     const names = nodes.map((node) => {
         const name = node.browseName.name
-        return name?name:"unknown"
+        return name ? name : "unknown"
     })
-    const filteredNames = names.filter((name) => (!(["DeviceSet", "FunctionalUnitSet", "FunctionSet", "Components", "TaskSet", 
-    "DeviceState", "FunctionalUnitState", "ProgramManager", "ControlFunctionState", "CoverState", "unknown"].includes(name))))
+    const filteredNames = names.filter((name) => (!(["DeviceSet", "FunctionalUnitSet", "FunctionSet", "Components", "TaskSet",
+        "DeviceState", "FunctionalUnitState", "ProgramManager", "ControlFunctionState", "CoverState", "unknown"].includes(name))))
     return filteredNames.join("_")
 }
 
@@ -416,7 +415,7 @@ function addFunctionalUnitAliases(functionalUnit: LADSFunctionalUnit) {
 
 function addFunctionsAliases(functions: LADSFunction[]) {
     if (!functions) return
-    functions.forEach( (ladsFunction: LADSFunction) => {
+    functions.forEach((ladsFunction: LADSFunction) => {
         addTagVariable((<LADSAnalogScalarSensorFunction>ladsFunction).sensorValue)
         addTagVariable((<LADSBaseControlFunction>ladsFunction).controlFunctionState?.currentState)
         addTagVariable((<LADSAnalogControlFunction>ladsFunction).targetValue)
@@ -430,9 +429,9 @@ function addFunctionsAliases(functions: LADSFunction[]) {
 //---------------------------------------------------------------
 // buildLADSEventNotifierTree()
 //
-// Utility function to build a tree of HasNotifier references: 
-// - The device including including all its functional-units via the functional-unit-set, 
-// - For each functional-unit all underlying functions in a recursive way via the function-set 
+// Utility function to build a tree of HasNotifier references:
+// - The device including including all its functional-units via the functional-unit-set,
+// - For each functional-unit all underlying functions in a recursive way via the function-set
 // All mentioned objects will be marked as EventNotifier.
 // This allows a client to subscribe to events within a sub-tree scope:
 // - subscribing to a device includes all events of its functional-units and functions
@@ -440,7 +439,7 @@ function addFunctionsAliases(functions: LADSFunction[]) {
 // - subscribing to a function includes events of all underlying functions
 //---------------------------------------------------------------
 
-export function buildLADSEventNotifierTree(device: LADSDevice) { 
+export function buildLADSEventNotifierTree(device: LADSDevice) {
     if (!device) return
     const addressSpace = device.addressSpace
     const hasNotifierType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.HasNotifier))
@@ -448,13 +447,13 @@ export function buildLADSEventNotifierTree(device: LADSDevice) {
     const functionalUnitSet = <UAObject><unknown>device.functionalUnitSet
     const functionalUnits = getLADSFunctionalUnits(device)
     const notifierReferences = device.findReferencesAsObject(hasNotifierType)
-    device.addReference({referenceType: hasNotifierType, nodeId:functionalUnitSet.nodeId})
+    device.addReference({ referenceType: hasNotifierType, nodeId: functionalUnitSet.nodeId })
     device.setEventNotifier(1)
     functionalUnitSet.setEventNotifier(1)
     functionalUnits.forEach((functionalUnit) => {
         if (!notifierReferences.includes(functionalUnit)) {
-            functionalUnit.setEventNotifier(1)            
-            functionalUnitSet.addReference({referenceType: hasNotifierType, nodeId:functionalUnit})
+            functionalUnit.setEventNotifier(1)
+            functionalUnitSet.addReference({ referenceType: hasNotifierType, nodeId: functionalUnit })
         }
         const ladsFunctions = getLADSFunctions(functionalUnit, true, true)
     })
@@ -466,7 +465,7 @@ export function buildLADSEventNotifierTree(device: LADSDevice) {
 // Helper object to provide several features for a device object:
 // - automatically add an Organizes reference to the device within the Machines folder
 // - automatically add HasEventNotifier references to the device sub-tree as decribed above
-// - example implementation of state-machine logic and behavior as 
+// - example implementation of state-machine logic and behavior as
 //   described in Annex B of LADS OPC UA 30500-1
 // - optionally raise events whenever one of the state-machine states changes
 //---------------------------------------------------------------
@@ -485,13 +484,13 @@ export class LADSFiniteStateMachineHelper {
         this.stateMachine.currentState.on("value_changed", this.onCurrentStateChanged.bind(this))
         this.parentStateMachineHelper = parentStateMachineHelper
     }
-    
+
     setEffectiveDisplayName(states: UAState[]) {
         const effectiveDisplayName = this.stateMachine.currentState.effectiveDisplayName
         if (effectiveDisplayName) {
             const names = states.map((state) => state.displayName[0].text)
             const name = names.join(".")
-            effectiveDisplayName.setValueFromSource({dataType: DataType.LocalizedText, value: name})
+            effectiveDisplayName.setValueFromSource({ dataType: DataType.LocalizedText, value: name })
         }
         if (this.parentStateMachineHelper) {
             const parentState = this.parentStateMachineHelper.stateMachine.currentStateNode
@@ -506,9 +505,9 @@ export class LADSFiniteStateMachineHelper {
         const stateName = dataValue.value.value.text
         assert(stateName)
         const states = this.stateMachine.getStates()
-        const state = states.find((value: UAState) => (stateName?.includes(value.browseName.name?value.browseName.name:"")))
-        if(state) {
-            this.stateMachine.currentState.id.setValueFromSource({value: state.nodeId, dataType: DataType.NodeId})
+        const state = states.find((value: UAState) => (stateName?.includes(value.browseName.name ? value.browseName.name : "")))
+        if (state) {
+            this.stateMachine.currentState.id.setValueFromSource({ value: state.nodeId, dataType: DataType.NodeId })
             this.setEffectiveDisplayName([state])
         }
     }
@@ -535,11 +534,11 @@ export class LADSDeviceHelper {
         const addressSpace = device.addressSpace
 
         // provide some geographical location
-        device.operationalLocation?.setValueFromSource({dataType: DataType.String, value: "N 51 E 6.2"})
+        device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "N 51 E 6.2" })
 
         // prepare event bubble up propagation
         buildLADSEventNotifierTree(device)
-        
+
         // find event type
         if (!LADSDeviceHelper.eventType) {
             const eventType = addressSpace.findEventType(coerceNodeId(ObjectTypeIds.BaseEventType))
@@ -550,14 +549,14 @@ export class LADSDeviceHelper {
         // provide link to device in machines folder
         const organizesType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.Organizes))
         assert(organizesType)
-        const machineryNamespaceIndex= getMachineryNamespace(addressSpace).index
+        const machineryNamespaceIndex = getMachineryNamespace(addressSpace).index
         const machinesFolder = addressSpace.findNode(coerceNodeId(1001, machineryNamespaceIndex))
-        machinesFolder?.addReference({referenceType: organizesType, nodeId: device.nodeId})
+        machinesFolder?.addReference({ referenceType: organizesType, nodeId: device.nodeId })
 
         // get and promote state-machines
         this.deviceStateMachine = promoteToFiniteStateMachine(device.deviceState)
-        this.machineryItemState = device.machineryItemState?promoteToFiniteStateMachine(device.machineryItemState):undefined
-        this.machineryOperationMode = device.machineryOperationMode?promoteToFiniteStateMachine(device.machineryOperationMode):undefined
+        this.machineryItemState = device.machineryItemState ? promoteToFiniteStateMachine(device.machineryItemState) : undefined
+        this.machineryOperationMode = device.machineryOperationMode ? promoteToFiniteStateMachine(device.machineryOperationMode) : undefined
         const functionalUnits = getLADSFunctionalUnits(device)
         functionalUnits.forEach((functionalUnit) => {
             const functionalUnitStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState)
@@ -585,33 +584,33 @@ export class LADSDeviceHelper {
 
     raiseEvent(message: string) {
         if (!this.options.raiseEvents) return
-        this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value:`${this.device.getDisplayName()} ${message}`} })
+        this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: `${this.device.getDisplayName()} ${message}` } })
     }
 
     async onGotoOperating(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         this.enterDeviceOperating()
-        return {statusCode: StatusCodes.Good}
+        return { statusCode: StatusCodes.Good }
     }
 
     async onGotoSleep(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         this.enterDeviceSleep()
-        return {statusCode: StatusCodes.Good}
+        return { statusCode: StatusCodes.Good }
     }
 
     async onGotoShutdown(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         this.enterDeviceShutdown()
-        return {statusCode: StatusCodes.Good}
+        return { statusCode: StatusCodes.Good }
     }
 
     async onGotoOperationMode(this: LADSDeviceHelper, operationMode: string, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         this.machineryOperationMode?.setState(operationMode)
-        return {statusCode: StatusCodes.Good}
+        return { statusCode: StatusCodes.Good }
     }
 
     enterDeviceInitialzation() {
         this.deviceStateMachine.setState(LADSDeviceState.Initialization)
         this.machineryOperationMode?.setState(MachineryOperationMode.None)
-        sleepMilliSeconds(this.options?.initializationTime?this.options.initializationTime:50).then(() => this.enterDeviceOperating())
+        sleepMilliSeconds(this.options?.initializationTime ? this.options.initializationTime : 50).then(() => this.enterDeviceOperating())
     }
 
     enterDeviceOperating() {
@@ -628,10 +627,10 @@ export class LADSDeviceHelper {
     enterDeviceShutdown() {
         this.deviceStateMachine.setState(LADSDeviceState.Shutdown)
         this.machineryOperationMode?.setState(MachineryOperationMode.None)
-        sleepMilliSeconds(this.options?.shutdownTime?this.options.shutdownTime:1000).then(() => { this.enterDeviceInitialzation() })
+        sleepMilliSeconds(this.options?.shutdownTime ? this.options.shutdownTime : 1000).then(() => { this.enterDeviceInitialzation() })
     }
 
-    async onDeviceStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>){ 
+    async onDeviceStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
         const state = dataValue.value.value.text
         if (!state) return
         this.raiseEvent(`state changed to ${state} .. `)
@@ -640,7 +639,7 @@ export class LADSDeviceHelper {
         }
     }
 
-    async onDeviceHealthChanged(dataValue: DataValueT<EnumDeviceHealth, DataType.UInt32>) { 
+    async onDeviceHealthChanged(dataValue: DataValueT<EnumDeviceHealth, DataType.UInt32>) {
         const value = dataValue.value.value
         const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
         this.raiseEvent(`health changed to ${key} .. `)
@@ -655,13 +654,13 @@ export class LADSDeviceHelper {
         }
     }
 
-    async onMachineryOperationModeChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>){ 
+    async onMachineryOperationModeChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
         const state = dataValue.value.value.text
         if (!state) return
         this.raiseEvent(`operation mode changed to ${state} .. `)
     }
 
-    async onMachineryItemStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>){ 
+    async onMachineryItemStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
         const state = dataValue.value.value.text
         if (!state) return
         this.raiseEvent(`item state changed to ${state} .. `)
@@ -669,19 +668,19 @@ export class LADSDeviceHelper {
 
     adjustMachineryItemState(): number {
         const functionalUnitStates = this.functionalUnitStateMachines.map((stateMachine => (state2str(stateMachine.getCurrentState()))))
-        const functionalUnitsRunnning = functionalUnitStates.reduce((count, state) => { return state.includes(LADSFunctionalState.Running)?count +1:count }, 0)    
-        this.machineryItemState?.setState(functionalUnitsRunnning>0?MachineryItemState.Executing:MachineryItemState.NotExecuting)
+        const functionalUnitsRunnning = functionalUnitStates.reduce((count, state) => { return state.includes(LADSFunctionalState.Running) ? count + 1 : count }, 0)
+        this.machineryItemState?.setState(functionalUnitsRunnning > 0 ? MachineryItemState.Executing : MachineryItemState.NotExecuting)
         return functionalUnitsRunnning
     }
 
-    async onFunctionalUnitStateChanged(functionalUnit: UAObject, stateMachine: UAStateMachineEx, dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) { 
+    async onFunctionalUnitStateChanged(functionalUnit: UAObject, stateMachine: UAStateMachineEx, dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
         const state = dataValue.value.value.text
         if (!state) return
         this.raiseEvent(`${functionalUnit.getDisplayName()} state changed to ${state} ..`)
         sleepMilliSeconds(50).then(() => {
             this.adjustMachineryItemState()
-        })        
+        })
     }
 }
 
-function state2str(value: string | null) {return value?value:''}
+function state2str(value: string | null) { return value ? value : '' }

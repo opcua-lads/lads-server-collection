@@ -22,4 +22,4 @@ LADS OPC UA servers of this collection which represent real world, non generic, 
 ## Quick run
 
 ```bash
-npm start             # opc.tcp://localhost:4841
+npm run lads-ph-meter             # opc.tcp://localhost:4841

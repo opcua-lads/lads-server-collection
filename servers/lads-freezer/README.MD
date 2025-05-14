@@ -8,4 +8,4 @@ A minimalistic ULT-freezer simulator that demonstrates:
 ## Running
 
 ```bash
-npm start             # opc.tcp://localhost:4842
+npm run lads-freezer             # opc.tcp://localhost:4842

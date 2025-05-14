@@ -83,7 +83,7 @@ class FtNirServerImpl {
 
     constructor(port: number = 4840) {
         // provide paths for the nodeset files
-        const nodeset_path = join(__dirname, '../../../../nodesets')
+        const nodeset_path = join(__dirname, '../../../nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
         const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
         const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
@@ -124,7 +124,7 @@ class FtNirServerImpl {
     }
 
     async start() {
-        
+
         // get objects
         await this.server.start()
         const addressSpace = this.server.engine.addressSpace
@@ -181,7 +181,7 @@ class FtNirDeviceImpl {
         assert(this.results)
 
         // initialize device
-        const deviceHelper = new LADSDeviceHelper(this.device, {initializationTime: 2000, shutdownTime: 2000, raiseEvents: true})
+        const deviceHelper = new LADSDeviceHelper(this.device, { initializationTime: 2000, shutdownTime: 2000, raiseEvents: true })
 
         // intialize functional unit
         const stateMachine = this.functionalUnit.functionalUnitState
@@ -199,18 +199,18 @@ class FtNirDeviceImpl {
         this.initCarouselPositionNames(this.carouselContoller.currentValue)
         this.runCarouselController()
     }
-    
-    private initPogramTemplates(){
+
+    private initPogramTemplates() {
         // build some fake program templates
         const programTemplateType = getLADSObjectType(this.addressSpace, "ProgramTemplateType")
         const programTemplateSetNode = <UAObject>this.functionalUnit.programManager.programTemplateSet
         const programTemplatNames: string[] = ["Analytical Method 1", "Analytical Method 2"]
         programTemplatNames.forEach((name) => {
-            const programTemplate = <LADSProgramTemplate>programTemplateType.instantiate({ 
+            const programTemplate = <LADSProgramTemplate>programTemplateType.instantiate({
                 componentOf: programTemplateSetNode,
                 browseName: name,
             })
-            programTemplate.author?.setValueFromSource({dataType: DataType.String, value: "AixEngineers"})
+            programTemplate.author?.setValueFromSource({ dataType: DataType.String, value: "AixEngineers" })
             this.programTemplates.push(programTemplate)
         })
     }
@@ -263,28 +263,29 @@ class FtNirDeviceImpl {
         const startedTimestamp = new Date()
         const resultType = getLADSObjectType(this.addressSpace, "ResultType")
         const resultSetNode = <UAObject>this.functionalUnit.programManager.resultSet
-        const result = <LADSResult><unknown>resultType.instantiate({ 
+        const result = <LADSResult><unknown>resultType.instantiate({
             componentOf: resultSetNode,
-            browseName: deviceProgramRunId, 
-            optionals: ["SupervisoryJobId", "SupervisoryTaskId"] })
-        resultSetNode.nodeVersion?.setValueFromSource({dataType: DataType.String, value: startedTimestamp.toISOString()})
+            browseName: deviceProgramRunId,
+            optionals: ["SupervisoryJobId", "SupervisoryTaskId"]
+        })
+        resultSetNode.nodeVersion?.setValueFromSource({ dataType: DataType.String, value: startedTimestamp.toISOString() })
 
 
         // get program template-id
         const activeProgram = this.activeProgram
         const programTemplateId: string = inputArguments[0].value
-        const programTemplateSet = <UAObject>this.functionalUnit.programManager.programTemplateSet            
+        const programTemplateSet = <UAObject>this.functionalUnit.programManager.programTemplateSet
         const programTemplateReferences = programTemplateSet.findReferencesExAsObject(coerceNodeId(ReferenceTypeIds.Aggregates))
         const programTemplates = programTemplateReferences.map((template) => <LADSProgramTemplate>template)
         const programTemplate = programTemplates.find((template) => (template.browseName.name == programTemplateId))
         if (programTemplate) {
             const value = constructNameNodeIdExtensionObject(
                 this.addressSpace,
-                programTemplateId, 
-                programTemplate.nodeId 
+                programTemplateId,
+                programTemplate.nodeId
             )
             activeProgram?.currentProgramTemplate?.setValueFromSource({
-                dataType: DataType.ExtensionObject, 
+                dataType: DataType.ExtensionObject,
                 value: value,
             })
         }
@@ -294,17 +295,17 @@ class FtNirDeviceImpl {
         if (properties?.arrayType === VariantArrayType.Array) {
             const keyVariables = getLADSSupportedProperties(this.functionalUnit)
             const keyValues = properties.value as Variant[]
-            keyValues?.forEach((item) =>{
+            keyValues?.forEach((item) => {
                 try {
-                    const keyValue: {key: string, value: string} = <any>item
+                    const keyValue: { key: string, value: string } = <any>item
                     const property = keyVariables.find(keyVariable => (keyVariable.key == keyValue.key))
                     if (property) {
                         const variable = property.variable
                         const dataType = variable.dataTypeObj
-                        variable.setValueFromSource({dataType: dataType.browseName.name , value: keyValue.value})
+                        variable.setValueFromSource({ dataType: dataType.browseName.name, value: keyValue.value })
                     }
                 }
-                catch(err) {
+                catch (err) {
                     console.log(err)
                 }
             })
@@ -319,7 +320,7 @@ class FtNirDeviceImpl {
         }
         const samples: SampleInfo[] = []
         const samplesArguments = inputArguments[4]
-        if (samplesArguments.value != null ) {
+        if (samplesArguments.value != null) {
             try {
                 const samplesInfo = samplesArguments.value as Variant[]
                 samplesInfo?.forEach((item) => {
@@ -327,19 +328,19 @@ class FtNirDeviceImpl {
                     samples.push(sampleInfo)
                 })
             }
-            catch(err) {
+            catch (err) {
                 console.log(err)
             }
         } else {
             // create fake samples
-            samples.push({containerId: "4711", sampleId: "08150001", position: "1", customData: ""})
-            samples.push({containerId: "4711", sampleId: "08150002", position: "2", customData: ""})
-            samples.push({containerId: "4711", sampleId: "08150003", position: "4", customData: ""})
-            samples.push({containerId: "4711", sampleId: "08150004", position: "8", customData: ""})
+            samples.push({ containerId: "4711", sampleId: "08150001", position: "1", customData: "" })
+            samples.push({ containerId: "4711", sampleId: "08150002", position: "2", customData: "" })
+            samples.push({ containerId: "4711", sampleId: "08150003", position: "4", customData: "" })
+            samples.push({ containerId: "4711", sampleId: "08150004", position: "8", customData: "" })
         }
-        
+
         // set context information provided by input-arguments
-        getDescriptionVariable(result).setValueFromSource({dataType: DataType.LocalizedText, value: `Run based on template ${programTemplateId}, started ${startedTimestamp.toLocaleDateString()}.`})
+        getDescriptionVariable(result).setValueFromSource({ dataType: DataType.LocalizedText, value: `Run based on template ${programTemplateId}, started ${startedTimestamp.toLocaleDateString()}.` })
         result.properties?.setValueFromSource(inputArguments[1])
         result.supervisoryJobId?.setValueFromSource(inputArguments[2])
         result.supervisoryTaskId?.setValueFromSource(inputArguments[3])
@@ -382,12 +383,12 @@ class FtNirDeviceImpl {
             // get sample
             raiseEvent(this.functionalUnit, `Getting sample ${sample.sampleId} at position ${sample.position}`)
             const position = Number(sample.position) - 1
-            this.carouselContoller.targetValue.setValueFromSource({dataType: DataType.UInt32, value: position>=0?position:0})
+            this.carouselContoller.targetValue.setValueFromSource({ dataType: DataType.UInt32, value: position >= 0 ? position : 0 })
             do {
                 await sleepMilliSeconds(500)
                 updateTimers(startTime, stepStartTime)
             } while (controlFunctionState.getCurrentState().includes(LADSFunctionalState.Running))
-         
+
             // do measurements
             raiseEvent(this.functionalUnit, `Measuring sample ${sample.sampleId}`)
             const analysisFinished = Date.now() + analyzeTime
@@ -408,15 +409,15 @@ class FtNirDeviceImpl {
                     propertyOf: sampleObject,
                     browseName: name,
                     dataType: DataType.Double,
-                    value: {dataType: DataType.Double, value: 10 * Math.random()}
-                })    
+                    value: { dataType: DataType.Double, value: 10 * Math.random() }
+                })
             })
 
             // check if run was stopped or aborted from remote
-            const currentState  = this.functionalUnitState.getCurrentState()
-            if (currentState && !currentState.includes(LADSFunctionalState.Running)) { 
+            const currentState = this.functionalUnitState.getCurrentState()
+            if (currentState && !currentState.includes(LADSFunctionalState.Running)) {
                 raiseEvent(this.device, `Method ${programTemplateId} aborted`)
-                break 
+                break
             }
         }
         // finalize
@@ -427,10 +428,10 @@ class FtNirDeviceImpl {
 
     private initCarouselPositionNames(variable: UAMultiStateDiscrete<number, DataType.UInt32>) {
         const dimension = variable.enumStrings.arrayDimensions[0]
-        const names = Array<LocalizedText>(dimension).fill(new LocalizedText({text: ""})).map((value, index) => { 
-            return new LocalizedText({text: `Position ${index + 1}`})
+        const names = Array<LocalizedText>(dimension).fill(new LocalizedText({ text: "" })).map((value, index) => {
+            return new LocalizedText({ text: `Position ${index + 1}` })
         })
-        variable.enumStrings.setValueFromSource({dataType: DataType.LocalizedText, value: names})
+        variable.enumStrings.setValueFromSource({ dataType: DataType.LocalizedText, value: names })
     }
 
     private async runCarouselController() {
@@ -439,7 +440,7 @@ class FtNirDeviceImpl {
         const currentValue = this.carouselContoller.currentValue
         const stateNames = currentValue.enumStrings.readValue().value.value
         const timerInterval = 500
-        stateMachine.setState(LADSFunctionalState.Stopped)    
+        stateMachine.setState(LADSFunctionalState.Stopped)
         const timer = setInterval(() => {
             const state = stateMachine.getCurrentState()
             const i = currentValue.readValue().value.value
@@ -448,22 +449,22 @@ class FtNirDeviceImpl {
                 try {
                     raiseEvent(this.carouselContoller, `Carousel moving from ${stateNames[i].text} to ${stateNames[j].text}.`)
                 }
-                catch(err) {}
+                catch (err) { }
                 stateMachine.setState(LADSFunctionalState.Running)
             }
             if ((state.includes(LADSFunctionalState.Running)) && (i == j)) {
                 try {
                     raiseEvent(this.carouselContoller, `Carousel moved to ${stateNames[j].text}.`)
                 }
-                catch(err) {}
+                catch (err) { }
                 stateMachine.setState(LADSFunctionalState.Stopped)
-                currentValue.setValueFromSource({dataType: DataType.UInt32, value: j}, StatusCodes.Good)
+                currentValue.setValueFromSource({ dataType: DataType.UInt32, value: j }, StatusCodes.Good)
             }
             if (i != j) {
-                const k = i<j?i+1:i-1
-                currentValue.setValueFromSource({dataType: DataType.UInt32, value: k}, StatusCodes.GoodDependentValueChanged)
+                const k = i < j ? i + 1 : i - 1
+                currentValue.setValueFromSource({ dataType: DataType.UInt32, value: k }, StatusCodes.GoodDependentValueChanged)
             }
-        }, timerInterval)    
+        }, timerInterval)
     }
 
 }

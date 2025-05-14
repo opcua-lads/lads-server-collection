@@ -19,8 +19,8 @@ import { UAVariable, UAObject } from "node-opcua"
 import { LADSResult, LADSResultFile, LADSSampleInfo } from "@interfaces"
 import { VariableDataRecorder, ensureDirectoryExists, DataExporter } from "@utils"
 import { UADevice } from "node-opcua-nodeset-di"
-import { AFODictionary } from "../../afo/src/lads-afo"
-import { AFODictionaryIds } from "../../afo/src/lads-afo-ids"
+import { AFODictionary } from "@afo/lads-afo"
+import { AFODictionaryIds } from "@afo/lads-afo-ids"
 
 //---------------------------------------------------------------
 // Interfaces
@@ -53,7 +53,7 @@ export interface DeviceControlAggregateDocument {
     "device control document": DeviceControlDocument[]
 }
 
-interface BaseDeviceDocument{
+interface BaseDeviceDocument {
     "brand name"?: string
     "device identifier"?: string
     "equipment serial number"?: string
@@ -107,8 +107,8 @@ export interface DataCubeData {
     "measures": Array<MeasureArrayType>
 }
 
-type DimensionArrayType = Array<string|number|boolean>
-type MeasureArrayType =  Array<string|number|boolean|null>
+type DimensionArrayType = Array<string | number | boolean>
+type MeasureArrayType = Array<string | number | boolean | null>
 
 export class Units {
     static readonly degC = "degC"
@@ -150,51 +150,51 @@ export abstract class AllotropeSimpleModelRecorder {
         const deviceInfos = options.devices
         if (deviceInfos.length < 1) return
         const systemDevice = deviceInfos[0].device
-        const deviceSystemDocument : DeviceSystemDocument = {
-            "asset management identifier": systemDevice.assetId?systemDevice.assetId.readValue().value.value:"",
+        const deviceSystemDocument: DeviceSystemDocument = {
+            "asset management identifier": systemDevice.assetId ? systemDevice.assetId.readValue().value.value : "",
             "device identifier": systemDevice.browseName.name,
             "device document": this.createDeviceDocuments(deviceInfos)
         }
         return deviceSystemDocument
     }
-    
+
     static createDeviceControlDocuments(deviceInfos: DeviceInfo[]): DeviceControlDocument[] {
         return deviceInfos.map(deviceInfo => this.createDeviceControlDocument(deviceInfo))
     }
-    
+
     static createDeviceControlDocument(deviceInfo: DeviceInfo): DeviceControlDocument {
         return this.createDeviceDocument(deviceInfo) as DeviceControlDocument
     }
-    
+
     static createDeviceDocuments(deviceInfos: DeviceInfo[]): DeviceDocument[] {
         return deviceInfos.map(deviceInfo => this.createDeviceDocument(deviceInfo))
     }
-    
+
     static createDeviceDocument(deviceInfo: DeviceInfo): DeviceDocument {
         const deviceDocument = this.createBaseDeviceDocument(deviceInfo.device) as DeviceDocument
         deviceDocument["device type"] = deviceInfo.deviceType
         return deviceDocument
     }
-    
+
     private static createBaseDeviceDocument(device: UADevice): BaseDeviceDocument {
-        const manufacturer = device.manufacturer?device.manufacturer.readValue().value.value.text:""
+        const manufacturer = device.manufacturer ? device.manufacturer.readValue().value.value.text : ""
         return {
             "brand name": manufacturer,
-            "equipment serial number": device.serialNumber?device.serialNumber.readValue().value.value:"",
+            "equipment serial number": device.serialNumber ? device.serialNumber.readValue().value.value : "",
             "device identifier": device.browseName.name,
-            "firmware version": device.softwareRevision?device.softwareRevision.readValue().value.value:"",
-            "model number": device.model?device.model.readValue().value.value.text:"",
+            "firmware version": device.softwareRevision ? device.softwareRevision.readValue().value.value : "",
+            "model number": device.model ? device.model.readValue().value.value.text : "",
             "product manufacturer": manufacturer,
         }
     }
-        
+
     static createSampleDocument(sample: LADSSampleInfo): SampleDocument {
         return {
             "sample identifier": sample.sampleId,
             "location identifier": sample.position,
         }
     }
-    
+
     static createMeasurementDocument(options: AllotropeSimpleModelRecorderOptions): MeasurementDocument {
         const identifier = options.result.browseName.name
         const measurementDocument: MeasurementDocument = {
@@ -209,7 +209,7 @@ export abstract class AllotropeSimpleModelRecorder {
         }
         return measurementDocument
     }
-    
+
     static createMeasurementAggregateDocument(options: AllotropeSimpleModelRecorderOptions, measurementDocuments: MeasurementDocument[]): MeasurementAggregateDocument {
         const measurementAggregateDocument: MeasurementAggregateDocument = {
             "analyst": options.result.user.readValue().value.value,
@@ -217,7 +217,7 @@ export abstract class AllotropeSimpleModelRecorder {
         }
         return measurementAggregateDocument
     }
-        
+
     dataRecorder: VariableDataRecorder
     referenceIds: string[] = []
 
@@ -236,7 +236,7 @@ export abstract class AllotropeSimpleModelRecorder {
         // eventually create directoy
         await ensureDirectoryExists(dirName)
         const path = resolve(dirName, `${fileName}.json`)
-        const asmModel = model?model:this.createModel()
+        const asmModel = model ? model : this.createModel()
         const json = JSON.stringify(asmModel, null, 2)
         await fs.writeFile(path, json, "utf8").then(
             () => console.log(`Created ASM file ${path}`),
@@ -249,4 +249,3 @@ export abstract class AllotropeSimpleModelRecorder {
         return resultFile
     }
 }
-

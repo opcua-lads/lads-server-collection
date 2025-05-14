@@ -13,9 +13,9 @@
 // LADS Allotrope Simple Model for Rheometry
 //---------------------------------------------------------------
 
-import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, Units, AggregateDocument, AllotropeSimpleModelRecorderOptions  } from "./lads-asm"
+import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, Units, AggregateDocument, AllotropeSimpleModelRecorderOptions } from "./lads-asm"
 import { UAVariable } from "node-opcua"
-import { AFODictionaryIds } from "../../afo/src/lads-afo-ids"
+import { AFODictionaryIds } from "@afo/lads-afo-ids"
 
 //---------------------------------------------------------------
 // Interfaces
@@ -165,11 +165,11 @@ export class RheometryRecorder extends AllotropeSimpleModelRecorder {
                     {
                         "measurement aggregate document": measurementAggregateDocument
                     }
-                ]            
+                ]
             }
         }
         return model
     }
 
-    
+
 }

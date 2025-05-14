@@ -2,13 +2,15 @@
   "name": "lads-ft-nir",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/index.ts"
+    "lads-freezer": "ts-node -r tsconfig-paths/register servers/lads-freezer/src/server.ts",
+    "lads-ft-nir": "ts-node -r tsconfig-paths/register servers/lads-ft-nir/src/server.ts",
+    "lads-ph-meter": "ts-node -r tsconfig-paths/register servers/lads-ph-meter/src/server.ts",
+    "lads-viscometer": "ts-node -r tsconfig-paths/register servers/lads-viscometer/src/server.ts"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Dr. Matthias Arnold, AixEngineers",
+  "license": "MIT",
   "dependencies": {
     "@types/node": "^20.2.3",
     "csv-parser": "^3.2.0",
