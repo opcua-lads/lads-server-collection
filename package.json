@@ -1,5 +1,5 @@
 {
-  "name": "lads-ft-nir",
+  "name": "lads-server-collection",
   "version": "1.0.0",
   "description": "",
   "scripts": {
@@ -10,7 +10,7 @@
     "lads-viscometer": "ts-node -r tsconfig-paths/register servers/lads-viscometer/src/server.ts"
   },
   "author": "Dr. Matthias Arnold, AixEngineers",
-  "license": "MIT",
+  "license": "MIT & AGPL 3",
   "dependencies": {
     "@types/node": "^20.2.3",
     "csv-parser": "^3.2.0",
