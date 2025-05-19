@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 // device implementation
 //---------------------------------------------------------------
-
+import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponent } from "@interfaces"
 import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper } from "@utils"
@@ -34,13 +34,24 @@ import { pHMeterSimulatorUnitImpl } from "./ph-meter-unit-simulator"
 export class pHMeterDeviceImpl {
     serialPort: string
     device: pHMeterDevice
-    
+
+    static isSerialPortAvailable(path: string): boolean {
+        try {
+            // Check if the path exists and is a character device
+            const stats = fs.statSync(path);
+            return stats.isCharacterDevice();
+        } catch {
+            return false;
+        }
+    }
     constructor(device: pHMeterDevice, serialPort: string) {
         this.device = device
         this.serialPort = serialPort
 
         const functionalUnit = this.getFunctionalUnit()
-        const functionalUnitImpl = serialPort.length == 0?new pHMeterSimulatorUnitImpl(this, functionalUnit):new pHMeterSevenEasyUnitImpl(this, functionalUnit, serialPort)
+        const runAsSimulation = !pHMeterDeviceImpl.isSerialPortAvailable(serialPort)
+        console.log(`Running ${runAsSimulation ? "as simulator" : "device at port " + serialPort}..`)
+        const functionalUnitImpl = runAsSimulation ? new pHMeterSimulatorUnitImpl(this, functionalUnit) : new pHMeterSevenEasyUnitImpl(this, functionalUnit, serialPort)
 
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
@@ -62,7 +73,7 @@ export class pHMeterDeviceImpl {
             serialNumber: "0815",
         }
         initComponent(sensor, sensorOptions)
-        
+
         // attach device helper
         const helper = new LADSDeviceHelper(device)
 

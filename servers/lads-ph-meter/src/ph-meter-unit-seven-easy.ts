@@ -43,7 +43,7 @@ export class pHMeterSevenEasyUnitImpl extends pHMeterUnitImpl {
             }
             if (temperature) {
                 setNumericValue(this.pHSensor.compensationValue, temperature)
-                setNumericValue(this.temperatureSensor.sensorValue, temperature)    
+                setNumericValue(this.temperatureSensor.sensorValue, temperature)
                 this.currentRunOptions?.recorder?.createRecord()
             }
         })
@@ -118,50 +118,56 @@ class SerialPhMeterParser extends EventEmitter {
         path: string,
         gapMillis = 1000,
     ): SerialPhMeterParser {
-        const port = new SerialPort({
-            baudRate: 1200,
-            dataBits: 8,
-            stopBits: 1,
-            parity: 'none',
-            autoOpen: true,
-            path: path
-        });
-        const rl = port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
-        const parser = new SerialPhMeterParser();
+        try {
+            const port = new SerialPort({
+                baudRate: 1200,
+                dataBits: 8,
+                stopBits: 1,
+                parity: 'none',
+                autoOpen: true,
+                path: path
+            });
+            const rl = port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+            const parser = new SerialPhMeterParser();
 
-        const sendRead = () => {
-            if (port.writable) port.write('read\r\n');
-        };
+            const sendRead = () => {
+                if (port.writable) port.write('read\r\n');
+            };
 
-        // kick‑off on initial open
-        port.once('open', () => {
-            sendRead();
-            resetTimer();
-        });
+            // kick‑off on initial open
+            port.once('open', () => {
+                sendRead();
+                resetTimer();
+            });
 
-        /*
-         * RE‑TRIGGER LOGIC ------------------------------------------------------
-         * Every time a measurement line is received, we reset a timer.  If the
-         * timer elapses without new lines (i.e. the meter stopped streaming),
-         * we send another “read” command to start the next sequence.
-         */
-        let inactivityTimer: NodeJS.Timeout | undefined;
-        const resetTimer = () => {
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(sendRead, gapMillis);
-        };
+            /*
+             * RE‑TRIGGER LOGIC ------------------------------------------------------
+             * Every time a measurement line is received, we reset a timer.  If the
+             * timer elapses without new lines (i.e. the meter stopped streaming),
+             * we send another “read” command to start the next sequence.
+             */
+            let inactivityTimer: NodeJS.Timeout | undefined;
+            const resetTimer = () => {
+                if (inactivityTimer) clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(sendRead, gapMillis);
+            };
 
-        rl.on('data', (line: string) => {
-            parser.feed(line);
-            resetTimer();
-        });
+            rl.on('data', (line: string) => {
+                parser.feed(line);
+                resetTimer();
+            });
 
-        // Clear timer on port close so Node can exit cleanly.
-        port.on('close', () => {
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-        });
+            // Clear timer on port close so Node can exit cleanly.
+            port.on('close', () => {
+                if (inactivityTimer) clearTimeout(inactivityTimer);
+            });
 
-        return parser;
+            return parser;
+        }
+        catch(err) {
+            console.error(`Unabe to open port ${path}`, err)
+            return undefined
+        }
     }
 }
 

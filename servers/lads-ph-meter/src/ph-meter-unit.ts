@@ -382,7 +382,7 @@ export abstract class pHMeterUnitImpl {
                     dataType: DataType.String,
                     value: { dataType: DataType.String, value: json }
                 })
-                AFODictionary.addReferences(asm, AFODictionaryIds.measurement_aggregate_document, AFODictionaryIds.pH_monitoring_aggregate_document, ...referenceIds)
+                AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.pH_monitoring_aggregate_document, ...referenceIds)
 
 
                 // set state to stopped and leave    
