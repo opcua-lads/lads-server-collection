@@ -39,7 +39,7 @@ class pHMeterServerImpl {
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
         // provide paths for the nodeset files
-        const nodeset_path = join(__dirname, '../../../nodesets')
+        const nodeset_path = join(process.cwd(), 'nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
         const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
         const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')

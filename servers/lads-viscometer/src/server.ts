@@ -39,7 +39,7 @@ class ViscometerServerImpl {
 
     constructor(port: number) {
         // provide paths for the nodeset files
-        const nodeset_path = join(__dirname, '../../../nodesets')
+        const nodeset_path = join(process.cwd(), 'nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
         const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
         const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
@@ -114,7 +114,7 @@ class ViscometerServerImpl {
 //---------------------------------------------------------------
 export async function main() {
     const server = new ViscometerServerImpl(4840)
-    await server.start(['/dev/ttyUSB0', '/dev/ttyUSB1'])
+    await server.start(['/dev/ttyUSB0'])
 }
 
 main()
