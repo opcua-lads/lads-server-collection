@@ -25,6 +25,7 @@ type LADSSensorFunction = LADSAnalogScalarSensorFunction | LADSAnalogArraySensor
 type LADSControlFunction = LADSAnalogControlFunction | LADSTwoStateDiscreteControlFunction | LADSMultiStateDiscreteControlFunction
 
 export class AFODictionary {
+    static referenceCount = 0
     static isInstalled: boolean
     static afoNamespace: INamespace
     static ladsNamespace: INamespace
@@ -73,6 +74,7 @@ export class AFODictionary {
                         referenceType: this.hasDictionaryReferenceType,
                         nodeId: dictionaryEntry.nodeId
                     })
+                    this.referenceCount++
                 }
                 catch (err) {
                     console.info(`AFO Reference ${id} already exits for ${node.browseName.name}`)

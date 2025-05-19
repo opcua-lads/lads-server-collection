@@ -127,7 +127,7 @@ export class ViscometerDeviceImpl {
         // create simulated or real world device
         this.viscometerUnitImpl = new ViscometerUnitSimulatorImpl(this, viscometerUnit)
 
-        // Allotrope Foundation Ontologoes
+        // Allotrope Foundation Ontologies
         AFODictionary.addDefaultDeviceReferences(device)
         AFODictionary.addReferences(device, AFODictionaryIds.measurement_device, AFODictionaryIds.rheometry, AFODictionaryIds.viscometry)
     }

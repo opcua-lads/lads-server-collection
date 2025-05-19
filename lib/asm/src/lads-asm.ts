@@ -219,7 +219,7 @@ export abstract class AllotropeSimpleModelRecorder {
     }
 
     dataRecorder: VariableDataRecorder
-    referenceIds: string[] = []
+    referenceIds: string[] = [AFODictionaryIds.ASM_file]
 
     constructor(options: AllotropeSimpleModelRecorderOptions, variables: UAVariable[]) {
         const identifier = options.result.browseName.name
