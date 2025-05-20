@@ -42,7 +42,8 @@ import {
     UAAliasNameCategory,
     UAProperty,
     UAEventType,
-    UADataType
+    UADataType,
+    ServerSession
 } from "node-opcua"
 import {
     LADSDevice,
@@ -301,6 +302,21 @@ export function copyProgramTemplate(source: LADSProgramTemplate, target: LADSPro
     target.modified.setValueFromSource(source.modified.readValue().value)
     target.deviceTemplateId.setValueFromSource(source.deviceTemplateId.readValue().value)
     target.version?.setValueFromSource(source.version?.readValue().value)
+}
+
+//---------------------------------------------------------------
+// LADS result support
+//---------------------------------------------------------------
+export function setSessionInformation(result: LADSResult, context: SessionContext) {
+    // analyze session context
+    const session = context.session as ServerSession
+    const userIdentity = context.userIdentity
+    const applicationUri: string = session.clientDescription?.applicationUri?session.clientDescription.applicationUri:""
+    const applicationName: string = session.clientDescription?.applicationName?session.clientDescription?.applicationName.text:""
+    const sessionName: string = session.sessionName
+    const policyId: string = session.userIdentityToken?.policyId?session.userIdentityToken?.policyId:"unknown"
+    setStringValue(result.applicationUri, applicationUri)
+    setStringValue(result.user, userIdentity?userIdentity:policyId)
 }
 
 //---------------------------------------------------------------

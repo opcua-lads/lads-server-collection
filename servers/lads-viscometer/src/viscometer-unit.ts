@@ -19,15 +19,17 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, LocalizedText, SessionContext, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
+import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, LocalizedText, ServerSession, SessionContext, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
 import { ViscometerFunctionalUnit } from "./viscometer-interfaces"
 import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./viscometer-device"
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
+import { verify } from "crypto"
+import { version } from "os"
 
 //---------------------------------------------------------------
 // functional unit implementation
@@ -291,6 +293,7 @@ export abstract class ViscometerUnitImpl {
             setStringValue(description, viscometerProgram.description)
             viscometerProgram.created?setDateTimeValue(programTemplate.created, new Date(viscometerProgram.created)):0
             viscometerProgram.modified?setDateTimeValue(programTemplate.modified, new Date(viscometerProgram.modified)):0
+            viscometerProgram.version?setStringValue(programTemplate.version, viscometerProgram.version):0
 
             // Allotrope Foundation Ontology
             AFODictionary.addDefaultProgramTemplateReferences(programTemplate)
@@ -316,7 +319,7 @@ export abstract class ViscometerUnitImpl {
         const deviceProgramRunId = `${date}-${time}-${programTemplateId.replace(/[ (),°]/g,"")}`
 
         // initiate program run (async)
-        this.runProgram(deviceProgramRunId, startedTimestamp, inputArguments)
+        this.runProgram(deviceProgramRunId, startedTimestamp, inputArguments, context)
 
         // return run-Id
         return {
@@ -347,7 +350,7 @@ export abstract class ViscometerUnitImpl {
         return { statusCode: StatusCodes.Good }
     }
 
-    private async runProgram(deviceProgramRunId: string, startedTimestamp: Date, inputArguments: VariantLike[]) {
+    private async runProgram(deviceProgramRunId: string, startedTimestamp: Date, inputArguments: VariantLike[], context: SessionContext) {
         // dynamically create an new result object in the result set and update node-version attribute
         const resultType = getLADSObjectType(this.parent.addressSpace, "ResultType")
         const resultSetNode = <UAObject>this.functionalUnit.programManager.resultSet
@@ -408,6 +411,7 @@ export abstract class ViscometerUnitImpl {
         }
         
         // set context information provided by input-arguments
+        setSessionInformation(result, context)
         setStringValue(getDescriptionVariable(result), `Run based on template ${programTemplateId}, started ${startedTimestamp.toLocaleDateString()}.`)
         result.properties?.setValueFromSource(inputArguments[1])
         result.supervisoryJobId?.setValueFromSource(inputArguments[2])

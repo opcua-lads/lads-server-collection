@@ -332,6 +332,7 @@ export interface LADSResult extends UAObject {
     stopped: UAProperty<DateTime, DataType.DateTime>
     totalRuntime?: UAProperty<number, DataType.Double>
     totalPauseTime?: UAProperty<number, DataType.Double>
+    applicationUri: UAProperty<string, DataType.String>
     user: UAProperty<string, DataType.String>
     variableSet: UAObject
     fileSet: UAObject

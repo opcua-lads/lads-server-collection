@@ -33,6 +33,7 @@ export interface ViscometerProgram {
     description: string
     created?: Date
     modified?: Date
+    version?: string
     steps: VisometerProgramStep[]
 }
 
@@ -104,11 +105,16 @@ export async function loadViscometerProgramsFromDirectory(directory: string): Pr
     return programs
 }
 
+const date = new Date(Date.parse("2025-05-01T10:00:00Z"))
+const version = "1.0"
 export const DefaultViscometerPrograms: ViscometerProgram[] = [
     {
         name: "Analytical Method A (30rpm)",
         author: "AixEngineers",
-        description: "",
+        created: date,
+        modified: date,
+        version: version,
+        description: "Measure viscosity of the sample at constant shear rate and different temperatures.",
         steps: [
             {name: "Viscosity 30°C", dt: 10000, tsp: 30, nsp: 30},
             {name: "Viscosity 40°C", dt: 10000, tsp: 40, nsp: 30},
@@ -121,7 +127,10 @@ export const DefaultViscometerPrograms: ViscometerProgram[] = [
     {
         name: "Analytical Method B (50rpm)",
         author: "AixEngineers",
-        description: "",
+        created: date,
+        modified: date,
+        version: version,
+        description: "Measure viscosity of the sample at constant shear rate and different temperatures.",
         steps: [
             {name: "Viscosity 30°C", dt: 10000, tsp: 30, nsp: 50},
             {name: "Viscosity 40°C", dt: 10000, tsp: 40, nsp: 50},
@@ -134,7 +143,10 @@ export const DefaultViscometerPrograms: ViscometerProgram[] = [
     {
         name: "Analytical Method C (short)",
         author: "AixEngineers",
-        description: "",
+        created: date,
+        modified: date,
+        version: version,
+        description: "Measure viscosity of the sample at constant shear rate and constant temperature.",
         steps: [
             {name: "Viscosity 30°C", dt: 10000, tsp: 30, nsp: 50},
         ]
