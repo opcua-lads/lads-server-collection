@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { pHSensorRecorder } from "@asm"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, constructPropertiesExtensionObject, constructSamplesExtensionObject, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue } from "@utils"
+import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, constructPropertiesExtensionObject, constructSamplesExtensionObject, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, UAVariable, AccessLevelFlag, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
 import { join } from "path"
 import { pHMeterDeviceImpl } from "./ph-meter-device"
@@ -210,7 +210,7 @@ export abstract class pHMeterUnitImpl {
         }
     }
 
-    protected enterMeasuring() {
+    protected enterMeasuring(context: SessionContext) {
         const options = this.currentRunOptions
         raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
 
@@ -233,6 +233,7 @@ export abstract class pHMeterUnitImpl {
         const result = options.result
         AFODictionary.addDefaultResultReferences(result)
         AFODictionary.addReferences(result, ...referenceIds)
+        setSessionInformation(result, context)
         setStringValue(getDescriptionVariable(result), `Run based on template ${options.programTemplateId}, started ${options.started.toLocaleDateString()}.`)
         setPropertiesValue(result.properties, options.properties)
         setSamplesValue(result.samples, options.samples)
@@ -415,7 +416,7 @@ export abstract class pHMeterUnitImpl {
         options.properties = properties
         options.samples = [sampleInfo]
 
-        this.enterMeasuring()
+        this.enterMeasuring(context)
         return { statusCode: StatusCodes.Good }
     }
 
@@ -425,7 +426,7 @@ export abstract class pHMeterUnitImpl {
         const programTemplate = this.programTemplatesElements.find(value => value.identifier.toLowerCase().includes(programTemplateId.toLowerCase()))
         if (programTemplate) {
             this.initCurrentRunOptions(programTemplate)
-            this.runProgram(inputArguments)
+            this.runProgram(inputArguments, context)
             return {
                 outputArguments: [new Variant({ dataType: DataType.String, value: this.currentRunOptions.runId })],
                 statusCode: StatusCodes.Good
@@ -435,7 +436,7 @@ export abstract class pHMeterUnitImpl {
         }
     }
 
-    private async runProgram(inputArguments: VariantLike[]) {
+    private async runProgram(inputArguments: VariantLike[], context: SessionContext) {
         const options = this.currentRunOptions
         options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
         options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
@@ -450,7 +451,7 @@ export abstract class pHMeterUnitImpl {
         if (samples.length === 0) samples.push({ containerId: "4711", sampleId: "08150001", position: "1", customData: "" })
         options.samples = samples
 
-        this.enterMeasuring()
+        this.enterMeasuring(context)
     }
 
     private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
