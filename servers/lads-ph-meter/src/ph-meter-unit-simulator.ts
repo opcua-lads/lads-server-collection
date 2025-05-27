@@ -23,7 +23,7 @@ import { getNumericArrayValue, getNumericValue, setNumericValue } from '@utils'
 import { pHMeterFunctionalUnit } from './ph-meter-interfaces';
 import { pHMeterDeviceImpl } from './ph-meter-device';
 import { Constants, pHMeterUnitImpl, ProgramTemplateIds } from './ph-meter-unit';
-import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';
+import { AccessLevelFlag, DataType, SessionContext, UAVariable } from 'node-opcua';
 
 //---------------------------------------------------------------
 export class pHMeterSimulatorUnitImpl extends pHMeterUnitImpl {
@@ -126,7 +126,7 @@ export class pHMeterSimulatorUnitImpl extends pHMeterUnitImpl {
         setNumericValue(this.pHSensor.sensorValue, snspH)
     }
 
-    protected enterMeasuring() {
+    protected enterMeasuring(context: SessionContext) {
         // set simulated pH
         const pHValues: { id: string, value: number }[] = [
             { id: ProgramTemplateIds.Measure, value: 7.0 + 6.0 * (Math.random() - 0.5) },
@@ -140,7 +140,7 @@ export class pHMeterSimulatorUnitImpl extends pHMeterUnitImpl {
         setNumericValue(this.simpHPV, options.referenceValue)
 
         // enter measuring
-        super.enterMeasuring()
+        super.enterMeasuring(context)
     }
 
 }
