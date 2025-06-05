@@ -57,9 +57,21 @@ export class AtmoWebUnitImpl extends EventEmitter {
 
         // connect to client
         this.client = deviceImpl.client
+        this.client.on(ClientEvent.error, (err) => console.warn(err))
         this.client.on(ClientEvent.state, this.stateHandler.bind(this))
         this.client.on(ClientEvent.config, this.configHandler.bind(this))
-        this.client.on(ClientEvent.log, (messages: string[]) => messages.forEach((message) => raiseEvent(this.unit, message)))
+        this.client.on(ClientEvent.log, this.logHandler.bind(this))
+    }
+
+    logHandler(messages: string[]) {
+        messages.forEach((message) => {
+            const l = message.split("\t")
+            if (l.length >= 4){
+                raiseEvent(this.unit, l[3])
+            }
+
+        })
+
     }
 
     stateHandler(state: ClientState) {

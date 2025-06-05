@@ -141,7 +141,9 @@ export class AtmoWebClient extends EventEmitter {
         try {
             // console.log(`Fetch data from ${this.opts.baseURL} "${params}"`)
             const data = await this.fetchJSON("/atmoweb?" + params.toString());
-            this.emit(ClientEvent.data, data);
+            if (data) {
+                this.emit(ClientEvent.data, data);
+            }
         } catch (err) {
             this.emit(ClientEvent.error, err);
         }
@@ -153,10 +155,14 @@ export class AtmoWebClient extends EventEmitter {
 
         try {
             const txt = await this.fetchText("/Controller/Config/Log.txt");
-            const lines = txt.split("\n");
-            const fresh = lines.slice(this.lastLogLines);
-            if (fresh.length) this.emit(ClientEvent.log, fresh);
-            this.lastLogLines = lines.length;
+            if (txt) {
+                const lines = txt.split("\n");
+                const fresh = lines.slice(this.lastLogLines);
+                if (fresh.length) {
+                    this.emit(ClientEvent.log, fresh);
+                }
+                this.lastLogLines = lines.length;
+            }
         } catch (err) {
             this.emit(ClientEvent.error, err);
         }
@@ -165,9 +171,9 @@ export class AtmoWebClient extends EventEmitter {
     /* ------------------------------------------------------------------ */
     private async fetchJSON(path: string): Promise<any> {
         try {
-            const res = await fetch(this.opts.baseURL + path);
+            const res = await fetch(this.opts.baseURL + path, { signal: AbortSignal.timeout(5000) });
             if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
-            return res.json();
+            return await res.json();
         } catch (err) {
             this.emit(ClientEvent.error, err);
         }
@@ -175,9 +181,9 @@ export class AtmoWebClient extends EventEmitter {
 
     private async fetchText(path: string): Promise<string> {
         try {
-            const res = await fetch(this.opts.baseURL + path);
+            const res = await fetch(this.opts.baseURL + path, { signal: AbortSignal.timeout(5000) });
             if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
-            return res.text();
+            return await res.text();
         } catch (err) {
             this.emit(ClientEvent.error, err);
         }
