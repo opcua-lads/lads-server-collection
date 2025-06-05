@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet LastModified="2025-05-29T12:54:29.911Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+    <NamespaceUris>
+        <Uri>http://opcfoundation.org/UA/DI/</Uri>
+        <Uri>http://opcfoundation.org/UA/Machinery/</Uri>
+        <Uri>http://opcfoundation.org/UA/LADS/</Uri>
+        <Uri>http://aixengineers.de/AtmoWeb/</Uri>
+    </NamespaceUris>
+    <Models>
+        <Model ModelUri="http://aixengineers.de/AtmoWeb/" PublicationDate="2025-05-28T08:37:18+02:00" Version="1.00">
+            <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2022-11-01T00:00:00Z" Version="1.05.02"/>
+            <RequiredModel ModelUri="http://opcfoundation.org/UA/DI/" PublicationDate="2022-11-03T00:00:00Z" Version="1.04.0"/>
+            <RequiredModel ModelUri="http://opcfoundation.org/UA/Machinery/" PublicationDate="2023-08-01T00:00:00Z" Version="1.03.0"/>
+            <RequiredModel ModelUri="http://opcfoundation.org/UA/LADS/" PublicationDate="2023-11-30T00:00:00Z" Version="1.0.0"/>
+        </Model>
+    </Models>
+    <Aliases>
+        <Alias Alias="Boolean">i=1</Alias>
+        <Alias Alias="DateTime">i=13</Alias>
+        <Alias Alias="String">i=12</Alias>
+        <Alias Alias="LocalizedText">i=21</Alias>
+        <Alias Alias="HasComponent">i=47</Alias>
+        <Alias Alias="HasProperty">i=46</Alias>
+        <Alias Alias="HasSubtype">i=45</Alias>
+        <Alias Alias="HasTypeDefinition">i=40</Alias>
+        <Alias Alias="HasModellingRule">i=37</Alias>
+        <Alias Alias="HasAddIn">i=17604</Alias>
+        <Alias Alias="IdType">i=256</Alias>
+        <Alias Alias="NumericRange">i=291</Alias>
+        <Alias Alias="Duration">i=290</Alias>
+    </Aliases>
+    <Extensions>
+        <Extension>
+            <si:Generator Product="SiOME" Edition="Standard" Version="2.8.5"/>
+        </Extension>
+        <Extension>
+            <si:GeneratorExtension Hash="2939cbc62b07f69eac787e13ff8a5c74"/>
+        </Extension>
+    </Extensions>
+    <UAObject SymbolicName="http___aixengineers_de_AtmoWeb_" NodeId="ns=4;i=5000" BrowseName="4:http://aixengineers.de/AtmoWeb/" ParentNodeId="i=11715">
+        <DisplayName>http://aixengineers.de/AtmoWeb/</DisplayName>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">i=11715</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=11616</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Boolean" NodeId="ns=4;i=6000" BrowseName="IsNamespaceSubset" ParentNodeId="ns=4;i=5000">
+        <DisplayName>IsNamespaceSubset</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DateTime" NodeId="ns=4;i=6001" BrowseName="NamespacePublicationDate" ParentNodeId="ns=4;i=5000">
+        <DisplayName>NamespacePublicationDate</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:DateTime>2025-05-28T08:37:18+02:00</uax:DateTime>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6002" BrowseName="NamespaceUri" ParentNodeId="ns=4;i=5000">
+        <DisplayName>NamespaceUri</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:String>http://aixengineers.de/AtmoWeb/</uax:String>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6003" BrowseName="NamespaceVersion" ParentNodeId="ns=4;i=5000">
+        <DisplayName>NamespaceVersion</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:String>1.00</uax:String>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="IdType" ValueRank="1" NodeId="ns=4;i=6004" BrowseName="StaticNodeIdTypes" ParentNodeId="ns=4;i=5000">
+        <DisplayName>StaticNodeIdTypes</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NumericRange" ValueRank="1" NodeId="ns=4;i=6005" BrowseName="StaticNumericNodeIdRange" ParentNodeId="ns=4;i=5000">
+        <DisplayName>StaticNumericNodeIdRange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6006" BrowseName="StaticStringNodeIdPattern" ParentNodeId="ns=4;i=5000">
+        <DisplayName>StaticStringNodeIdPattern</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=96" ValueRank="1" NodeId="ns=4;i=6007" BrowseName="DefaultRolePermissions" ParentNodeId="ns=4;i=5000">
+        <DisplayName>DefaultRolePermissions</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAObjectType NodeId="ns=4;i=1000" BrowseName="4:AtmoWebDeviceType">
+        <DisplayName>AtmoWebDeviceType</DisplayName>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=3;i=1002</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=5001</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=5002</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=5003</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6009</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6011</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6014</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6015</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6016</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6017</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6018</Reference>
+        </References>
+    </UAObjectType>
+    <UAObject NodeId="ns=4;i=5001" BrowseName="2:MachineryItemState" ParentNodeId="ns=4;i=1000">
+        <DisplayName>MachineryItemState</DisplayName>
+        <Description>MachineryItemState indicates the current state of the device in conformance with the Machinery Basics specification.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1002</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6020</Reference>
+        </References>
+    </UAObject>
+    <UAObject NodeId="ns=4;i=5002" BrowseName="2:MachineryOperationMode" ParentNodeId="ns=4;i=1000">
+        <DisplayName>MachineryOperationMode</DisplayName>
+        <Description>State machine representing the operation mode of a laboratory device. Optional methods allow for initiating changes of the operation mode from remote.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1050</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6019</Reference>
+        </References>
+    </UAObject>
+    <UAObject NodeId="ns=4;i=5003" BrowseName="1:Identification" ParentNodeId="ns=4;i=1000">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1012</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6068</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6069</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6051</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6062</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6093</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6010</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6096</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6008</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6064</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6063</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6008</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6010</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="String" NodeId="ns=4;i=6008" BrowseName="2:Location" ParentNodeId="ns=4;i=5003" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>Location</DisplayName>
+        <Description>To be used by end users to store the location of the machine in a scheme specific to the end user. Servers shall support at least 60 Unicode characters for the clients writing this value, this means clients can expect to be able to write strings with a length of 60 Unicode characters into that field.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6009" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=1000">
+        <DisplayName>Manufacturer</DisplayName>
+        <Description>Name of the company that manufactured the device</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:LocalizedText>
+                <uax:Text>Memmert GmbH</uax:Text>
+            </uax:LocalizedText>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6010" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=5003">
+        <DisplayName>Manufacturer</DisplayName>
+        <Description>Name of the company that manufactured the device</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:LocalizedText>
+                <uax:Text>Memmert GmbH</uax:Text>
+            </uax:LocalizedText>
+        </Value>
+    </UAVariable>
+    <UAObjectType NodeId="ns=4;i=1001" BrowseName="4:AtmoWebUnitType">
+        <DisplayName>AtmoWebUnitType</DisplayName>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=3;i=1003</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5004</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5005</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5007</Reference>
+        </References>
+    </UAObjectType>
+    <UAObject NodeId="ns=4;i=5004" BrowseName="3:FunctionSet" ParentNodeId="ns=4;i=1001">
+        <DisplayName>FunctionSet</DisplayName>
+        <Description>The FunctionSetType is used for organising FunctionType objects in an unordered list structure.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1026</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAObject>
+    <UAObject NodeId="ns=4;i=5005" BrowseName="3:ProgramManager" ParentNodeId="ns=4;i=1001">
+        <DisplayName>Program Manager</DisplayName>
+        <Description>The ProgramManager provides the functional unit's program manager.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1006</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=5021</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=5022</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5006</Reference>
+        </References>
+    </UAObject>
+    <UAObject NodeId="ns=4;i=5006" BrowseName="3:ActiveProgram" ParentNodeId="ns=4;i=5005">
+        <DisplayName>ActiveProgram</DisplayName>
+        <Description>The ActiveProgram specifies the current state of operation of a FunctionalUnit. It provides context and information about the currently active program on the device. This allows users to follow the progress of a program run in a standardized fashion by organising steps into a flat, linear sequence.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1040</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6012</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6013</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Duration" NodeId="ns=4;i=6012" BrowseName="3:CurrentRuntime" ParentNodeId="ns=4;i=5006">
+        <DisplayName>CurrentRuntime</DisplayName>
+        <Description>CurrentRuntime is the current run-time of the program -run. The CurrentRunTime is set to 0 at the start of the program and is counted upwards as long as the program run is not in a Paused state. The Paused state is an aggregation of the Suspended state and the Held state.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Duration" NodeId="ns=4;i=6013" BrowseName="3:EstimatedRuntime" ParentNodeId="ns=4;i=5006">
+        <DisplayName>EstimatedRuntime</DisplayName>
+        <Description>EstimatedRuntime is the estimated run-time of the current program run. If the runtime cannot be estimated, the StatusCode BadNoData should be sent.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6011" BrowseName="1:AssetId" ParentNodeId="ns=4;i=1000" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>AssetId</DisplayName>
+        <Description>AssetId is a user writable alphanumeric character sequence uniquely identifying a component. The ID is provided by the integrator or user of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6014" BrowseName="1:ComponentName" ParentNodeId="ns=4;i=1000" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>ComponentName</DisplayName>
+        <Description>ComponentName is a user writable name provided by the integrator or user of the component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6015" BrowseName="1:Model" ParentNodeId="ns=4;i=1000">
+        <DisplayName>Model</DisplayName>
+        <Description>Model name of the device</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6016" BrowseName="1:SoftwareRevision" ParentNodeId="ns=4;i=1000">
+        <DisplayName>SoftwareRevision</DisplayName>
+        <Description>Revision level of the software/firmware of the device</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6017" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=1000">
+        <DisplayName>SerialNumber</DisplayName>
+        <Description>Identifier that uniquely identifies, within a manufacturer, a device instance</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6018" BrowseName="1:HardwareRevision" ParentNodeId="ns=4;i=1000">
+        <DisplayName>HardwareRevision</DisplayName>
+        <Description>Revision level of the hardware of the device</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=5007" BrowseName="3:FunctionalUnitState" ParentNodeId="ns=4;i=1001">
+        <DisplayName>FunctionalUnitState</DisplayName>
+        <Description>FunctionalUnitState provides the state-machine of the FunctionalUnit.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1043</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=6473</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=6472</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=6279</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7000</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7001</Reference>
+        </References>
+    </UAObject>
+    <UAMethod NodeId="ns=4;i=7000" BrowseName="3:StartProgram" ParentNodeId="ns=4;i=5007">
+        <DisplayName>StartProgram</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6098</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6121</Reference>
+        </References>
+    </UAMethod>
+    <UAMethod NodeId="ns=4;i=7001" BrowseName="3:Stop" ParentNodeId="ns=4;i=5007">
+        <DisplayName>Stop</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAMethod>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6019" BrowseName="CurrentState" ParentNodeId="ns=4;i=5002">
+        <DisplayName>CurrentState</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">i=3728</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6020" BrowseName="CurrentState" ParentNodeId="ns=4;i=5001">
+        <DisplayName>CurrentState</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">i=3728</Reference>
+        </References>
+    </UAVariable>
+</UANodeSet>
