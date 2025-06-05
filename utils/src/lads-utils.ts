@@ -79,6 +79,7 @@ export async function sleepMilliSeconds(ms: number): Promise<void> { return new 
 const EventNotifierFlagSubscribeToEvents = 1
 let BaseModelChangedEventType: UAEventType = undefined
 export function touchNodes(...nodes: UAObject[]) {
+    const timestamp = new Date().toISOString()
     nodes.forEach(node => {
         try {
             if (!BaseModelChangedEventType) {
@@ -88,15 +89,9 @@ export function touchNodes(...nodes: UAObject[]) {
                 node.setEventNotifier(EventNotifierFlagSubscribeToEvents)
             }
             node.raiseEvent(BaseModelChangedEventType, {})
-            node.nodeVersion?.setValueFromSource({ dataType: DataType.String, value: new Date().toISOString() })
+            node.nodeVersion?.setValueFromSource({ dataType: DataType.String, value: timestamp })
         } catch { }
     })
-}
-
-export function raiseEvent(node: UAObject, message: string, severity: number = 0) {
-    if (!node) return
-    const eventType = node.addressSpace.findObjectType("BaseEventType")
-    node.raiseEvent(eventType, { message: { dataType: DataType.String, value: message }, severity: { dataType: DataType.UInt16, value: severity } })
 }
 
 //---------------------------------------------------------------
@@ -302,6 +297,14 @@ export function copyProgramTemplate(source: LADSProgramTemplate, target: LADSPro
     target.modified.setValueFromSource(source.modified.readValue().value)
     target.deviceTemplateId.setValueFromSource(source.deviceTemplateId.readValue().value)
     target.version?.setValueFromSource(source.version?.readValue().value)
+}
+
+export function createDeviceProgramRunId(programTemplateId: string): string {
+        const iso = new Date().toISOString()
+        const date = iso.slice(0, 10).replace(/-/g, "")
+        const time = iso.slice(11, 19).replace(/:/g, "")
+        const deviceProgramRunId = `${date}-${time}-${programTemplateId.replace(/[ (),°]/g,"")}`
+        return deviceProgramRunId        
 }
 
 //---------------------------------------------------------------

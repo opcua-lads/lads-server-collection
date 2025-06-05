@@ -15,10 +15,12 @@
 import { BaseNode, coerceNodeId, INamespace, ReferenceTypeIds, UAObject, UAObjectType, UAReferenceType, UAStateMachine } from "node-opcua";
 import { UAComponent } from "node-opcua-nodeset-di";
 import { AFODictionaryIds } from "@afo";
-import { LADSActiveProgram, LADSAnalogArraySensorFunction, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, 
-    LADSComponent, LADSDevice, LADSFunction, LADSFunctionalUnit, LADSMultiStateDiscreteControlFunction, LADSMultiStateDiscreteSensorFunction, 
-    LADSProgramManager, LADSProgramTemplate, LADSResult, LADSResultFile, 
-    LADSTwoStateDiscreteControlFunction, LADSTwoStateDiscreteSensorFunction, MachineIdentificationType } from "@interfaces";
+import {
+    LADSActiveProgram, LADSAnalogArraySensorFunction, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction,
+    LADSComponent, LADSDevice, LADSFunction, LADSFunctionalUnit, LADSMultiStateDiscreteControlFunction, LADSMultiStateDiscreteSensorFunction,
+    LADSProgramManager, LADSProgramTemplate, LADSResult, LADSResultFile,
+    LADSTwoStateDiscreteControlFunction, LADSTwoStateDiscreteSensorFunction, MachineIdentificationType
+} from "@interfaces";
 import { getChildObjects, getDescriptionVariable } from "@utils";
 
 type LADSSensorFunction = LADSAnalogScalarSensorFunction | LADSAnalogArraySensorFunction | LADSTwoStateDiscreteSensorFunction | LADSMultiStateDiscreteSensorFunction
@@ -49,7 +51,7 @@ export class AFODictionary {
                     this.baseSensorFunctionType = this.ladsNamespace.findObjectType("BaseSensorFunctionType")
                     this.baseControlFunctionType = this.ladsNamespace.findObjectType("BaseControlFunctionType")
                     this.analogControlFunctionType = this.ladsNamespace.findObjectType("AnalogControlFunctionType")
-                    this.discreteControlFunctionType = this.ladsNamespace.findObjectType("DiscreteControlFunctionType")  
+                    this.discreteControlFunctionType = this.ladsNamespace.findObjectType("DiscreteControlFunctionType")
                 } else {
                     this.isInstalled = false
                     console.log(`LADS AFO support unavailable..`)
@@ -59,25 +61,27 @@ export class AFODictionary {
         return this.isInstalled
     }
 
-    static addReferences(node: BaseNode, ...ids : string[]) {
+    static addReferences(node: BaseNode, ...ids: string[]) {
         if (!node) return
         if (!this.checkInstall(node)) return
 
         ids.forEach(id => {
-            const nodeId = coerceNodeId(`s=${id}`, this.afoNamespace.index)
-            const dictionaryEntry = this.afoNamespace.findNode(nodeId)
-            if (!dictionaryEntry) {
-                console.warn(`Unable to find dictionary entry ${id}`)
-            } else {
-                try {
-                    node.addReference({
-                        referenceType: this.hasDictionaryReferenceType,
-                        nodeId: dictionaryEntry.nodeId
-                    })
-                    this.referenceCount++
-                }
-                catch (err) {
-                    console.info(`AFO Reference ${id} already exits for ${node.browseName.name}`)
+            if (id !== undefined) {
+                const nodeId = coerceNodeId(`s=${id}`, this.afoNamespace.index)
+                const dictionaryEntry = this.afoNamespace.findNode(nodeId)
+                if (!dictionaryEntry) {
+                    console.warn(`Unable to find dictionary entry ${id}`)
+                } else {
+                    try {
+                        node.addReference({
+                            referenceType: this.hasDictionaryReferenceType,
+                            nodeId: dictionaryEntry.nodeId
+                        })
+                        this.referenceCount++
+                    }
+                    catch (err) {
+                        console.info(`AFO Reference ${id} already exits for ${node.browseName.name}`)
+                    }
                 }
             }
         })
@@ -96,7 +100,7 @@ export class AFODictionary {
         this.addReferences(stateMachine.currentState, AFODictionaryIds.process_state)
     }
 
-    private static addDefaultFunctionReferences(abstractFunction: LADSFunction){
+    private static addDefaultFunctionReferences(abstractFunction: LADSFunction) {
         const objectType = abstractFunction.typeDefinitionObj
         if (objectType.isSubtypeOf(this.baseSensorFunctionType)) {
             this.addDefaultSensorFunctionReferences(abstractFunction as LADSSensorFunction)
@@ -116,18 +120,18 @@ export class AFODictionary {
         this.addReferences(controlFunction.currentValue, AFODictionaryIds.current_setting)
     }
 
-    static addSensorFunctionReferences(sensorFunction: LADSSensorFunction, sensorId: string, ...id: string[]) { 
+    static addSensorFunctionReferences(sensorFunction: LADSSensorFunction, sensorId: string, ...id: string[]) {
         AFODictionary.addReferences(sensorFunction, sensorId, ...id)
         if (id.length === 0) { id.push(sensorId) }
-        AFODictionary.addReferences(sensorFunction.sensorValue, ...id) 
+        AFODictionary.addReferences(sensorFunction.sensorValue, ...id)
     }
 
-     static addControlFunctionReferences(controlFunction: LADSControlFunction, controllerId: string,  ...id: string[]) { 
-        AFODictionary.addReferences(controlFunction, controllerId, ...id) 
-        AFODictionary.addReferences(controlFunction.targetValue, ...id) 
-        AFODictionary.addReferences(controlFunction.currentValue, ...id) 
+    static addControlFunctionReferences(controlFunction: LADSControlFunction, controllerId: string, ...id: string[]) {
+        AFODictionary.addReferences(controlFunction, controllerId, ...id)
+        AFODictionary.addReferences(controlFunction.targetValue, ...id)
+        AFODictionary.addReferences(controlFunction.currentValue, ...id)
     }
-    
+
     private static addDefaultProgramManagerReferences(programManager: LADSProgramManager) {
         if (!programManager) return
         const programTemplates = getChildObjects(programManager.programTemplateSet as UAObject) as LADSProgramTemplate[]
@@ -150,7 +154,7 @@ export class AFODictionary {
     }
 
     private static addDefaultActiveProgramReferences(activeProgram: LADSActiveProgram) {
-        this.addReferences(activeProgram.currentRuntime, AFODictionaryIds.elapsed_time)        
+        this.addReferences(activeProgram.currentRuntime, AFODictionaryIds.elapsed_time)
     }
 
     static addDefaultResultReferences(result: LADSResult) {

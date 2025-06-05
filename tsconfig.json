@@ -3,10 +3,8 @@
         "skipLibCheck": true,
         "target": "esnext",
         "esModuleInterop": true,
-        "module": "commonjs",
-        "lib": [
-            "ES7"
-        ],
+        "lib": ["ES2022", "DOM"],
+        "module": "commonjS",
         "outDir": "out",
         "moduleResolution": "node",
         "strictNullChecks": false,

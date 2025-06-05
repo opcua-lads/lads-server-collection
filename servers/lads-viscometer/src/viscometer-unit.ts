@@ -357,7 +357,7 @@ export abstract class ViscometerUnitImpl {
         const result = <LADSResult><unknown>resultType.instantiate({ 
             componentOf: resultSetNode,
             browseName: deviceProgramRunId, 
-            optionals: ["NodeVersion", "VariableSet.NodeVersion"] 
+            optionals: ["NodeVersion", "VariableSet.NodeVersion", "FileSet.NodeVersion"] 
         })
         touchNodes(resultSetNode)
 
@@ -506,7 +506,7 @@ export abstract class ViscometerUnitImpl {
 
         // creat files
         const resultsDirectory = join(DataDirectory, "results")
-        new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX",resultsDirectory, deviceProgramRunId, [endPointRecorder, trendRecorder, eventRecorder])        
+        new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, deviceProgramRunId, [endPointRecorder, trendRecorder, eventRecorder])        
         const model = rheometryRecorder.createModel()
         rheometryRecorder.writeResultFile(result.fileSet, "ASM", resultsDirectory, deviceProgramRunId, model)
          

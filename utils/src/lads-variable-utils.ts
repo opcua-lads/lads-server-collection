@@ -10,9 +10,10 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DataValue } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
+import { raiseEvent } from "./lads-event-utils"
 
 // ----------------------------------------------------------------------------
 // Variable getters
@@ -49,6 +50,8 @@ export function getStringValue(variable: UAVariable, defaultValue = ""): string 
     }
 }
 
+export function getEUInformation(variable: UABaseAnalog<number, any>): EUInformation { return variable.engineeringUnits?.readValue().value.value }
+
 export function getItem<T>(item: T | null, propertyName: string): T {
     if (!item) {
         throw new Error(`Failed to get ${propertyName}`);
@@ -59,7 +62,7 @@ export function getItem<T>(item: T | null, propertyName: string): T {
 // ----------------------------------------------------------------------------
 // Variable setters
 // ----------------------------------------------------------------------------
-const NumericDataTypes = new Set<number>([DataType.Int16, DataType.Int32, DataType.Int64, DataType.UInt16, DataType.UInt32, DataType.UInt64, DataType.Byte, DataType.Float, DataType.Double])
+export const NumericDataTypes = new Set<number>([DataType.Int16, DataType.Int32, DataType.Int64, DataType.UInt16, DataType.UInt32, DataType.UInt64, DataType.Byte, DataType.Float, DataType.Double])
 
 export function setBooleanValue(variable: UAVariable, value: boolean, statusCode = StatusCodes.Good) {
     if (!variable) return
@@ -137,6 +140,99 @@ export function setNameNodeIdValue(variable: UAVariable, name: string, nodeId: N
     variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructNameNodeIdExtensionObject(variable.addressSpace, name, nodeId) })
 }
 
+// ----------------------------------------------------------------------------
+// Variable initializers
+// ----------------------------------------------------------------------------
+export function initializeAnalogUnitRange(variable: UAAnalogUnitRange<number, DataType.Double>, value: number, euInformation: EUInformation, range: Range, historizing: boolean = false) {
+    setNumericValue(variable, value)
+    if (euInformation) {
+        variable.engineeringUnits.setValueFromSource({ value: euInformation, dataType: DataType.ExtensionObject })
+    }
+    if (range) {
+        variable.euRange.setValueFromSource({ value: range, dataType: DataType.ExtensionObject })
+    }
+    if (historizing) {
+        variable.historizing = true
+        variable.addressSpace.installHistoricalDataNode(variable)
+    }
+}
+
+export function initializeTwoStateDiscrete(variable: UATwoStateDiscrete<boolean>, value: boolean, falseState: string, trueState: string) {
+    setBooleanValue(variable, value)
+    setStringValue(variable?.trueState, trueState)
+    setStringValue(variable?.falseState, falseState)
+}
+
+class ValueChangedEventReporter {
+    static install(eventSource: UAObject, variable: UAVariable) { new ValueChangedEventReporter(eventSource, variable) }
+
+    previousValue: any = null
+    eventSource: UAObject
+    variable: UAVariable
+
+    constructor(eventSource: UAObject, variable: UAVariable) {
+        const dataType = variable.dataTypeObj.basicDataType
+        this.eventSource = eventSource
+        this.variable = variable
+        this.variable.on("value_changed", this.onChanged.bind(this))
+    }
+
+    protected message(value: any): string {
+        return `${this.eventSource.getDisplayName()} ${this.variable.getDisplayName()} changed to ${value}.`
+    }
+
+    onChanged(dataValue: DataValue) {
+        const value = dataValue.value.value
+        if (this.previousValue !== null) {
+            if (value !== this.previousValue) {
+                raiseEvent(this.eventSource, this.message(value))
+            }
+        }
+        this.previousValue = value
+    }
+}
+
+function toFixed(value: number, decimals: number) {
+    var power = Math.pow(10, decimals || 0);
+    return String(Math.round(value * power) / power);
+}
+
+type AnalogUnitRange = UAAnalogUnitRange<number, DataType.Double>
+class AnalogUnitRangeChangedEventReporter extends ValueChangedEventReporter { 
+    static install(eventSource: UAObject, variable: AnalogUnitRange) { new AnalogUnitRangeChangedEventReporter(eventSource, variable) }
+    
+    decimals: number
+    constructor(eventSource: UAObject, variable: AnalogUnitRange, decimals = 1) {
+        super(eventSource, variable)
+        this.decimals = decimals
+    }
+
+    protected message(value: any): string {
+        const variable = this.variable as AnalogUnitRange
+        const valueStr = toFixed(Number(value), this.decimals)
+        const eu = getEUInformation(variable)?.displayName.text
+        const euStr = eu ? ` [${eu}]` : ""
+        return `${this.eventSource.getDisplayName()} ${this.variable.getDisplayName()} changed to ${valueStr}${euStr}.`
+    }
+
+}
+
+type TwoStateDiscrete = UATwoStateDiscrete<boolean>
+class TwoStateDiscreteChangedEventReporter extends ValueChangedEventReporter { 
+    static install(eventSource: UAObject, variable: TwoStateDiscrete) { new TwoStateDiscreteChangedEventReporter(eventSource, variable) }
+
+    constructor(eventSource: UAObject, variable: TwoStateDiscrete) {
+        super(eventSource, variable)
+    }
+
+    protected message(value: any): string {
+        const variable = this.variable as TwoStateDiscrete
+        const state = Boolean(value)
+        const trueStateStr = getStringValue(variable.trueState, "true")
+        const falseStateStr = getStringValue(variable.falseState, "false")
+        return `${this.eventSource.getDisplayName()} ${this.variable.getDisplayName()} changed to ${state ? trueStateStr : falseStateStr}.`
+    }
+}
 
 // ----------------------------------------------------------------------------
 // Create variables at runtime
