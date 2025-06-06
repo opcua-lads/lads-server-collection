@@ -23,7 +23,7 @@ import { LADSDevice } from "@interfaces";
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server";
 import { AtmoWebUnitImpl } from "./atmoweb-unit";
 import { AtmoWebClient } from "./atmoweb-client";
-import { LADSDeviceHelper } from "@utils";
+import { defaultLocation, getStringValue, initComponent, LADSComponentOptions, LADSDeviceHelper } from "@utils";
 import { AFODictionary, AFODictionaryIds } from "@afo";
 
 //---------------------------------------------------------------
@@ -44,14 +44,28 @@ export class AtmoWebDeviceImpl {
         }) as LADSDevice
 
         // create client
-        this.client = new AtmoWebClient({baseURL: config.baseUrl})
+        this.client = new AtmoWebClient({ baseURL: config.baseUrl })
 
         // create unit implementation
         this.unitImpl = new AtmoWebUnitImpl(server, this, config)
 
         // build event notifier tree
-        this.unitImpl.on("initialized", () => {
-            const deviceHelper = new LADSDeviceHelper(this.device, {initializationTime: 2000, shutdownTime: 2000, raiseEvents: true})
+        this.unitImpl.on("initialized", (data: any) => {
+            // initialize nameplate
+            const device = this.device
+            const deviceOptions: LADSComponentOptions = {
+                manufacturer: getStringValue(device.manufacturer, "Memmert GmbH"),
+                model: data["DevType"],
+                serialNumber: data["SN"],
+                softwareRevision: data["SWRev"],
+                deviceRevision: "1.0",
+                assetId: "0815-4711",
+                componentName: `My Memmert ${data["DevType"]} incubator`,
+                location: defaultLocation,
+            }
+            initComponent(device, deviceOptions)
+            // finalize
+            const deviceHelper = new LADSDeviceHelper(this.device, { initializationTime: 2000, shutdownTime: 2000, raiseEvents: false })
             AFODictionary.addDefaultDeviceReferences(this.device)
             AFODictionary.addReferences(this.device, AFODictionaryIds.temperature_controlled_chamber)
         })

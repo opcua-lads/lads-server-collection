@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { CallMethodResultOptions, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSFunctionalState, LADSProgramManager, LADSProgramTemplate, LADSResult } from "@interfaces"
-import { copyProgramTemplate, createDeviceProgramRunId, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, promoteToFiniteStateMachine, setDateTimeValue, setNumericValue, setSessionInformation, setStringValue, touchNodes, VariableDataRecorder } from "@utils"
+import { copyProgramTemplate, createDeviceProgramRunId, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, promoteToFiniteStateMachine, raiseEvent, setDateTimeValue, setNumericValue, setSessionInformation, setStringValue, touchNodes, VariableDataRecorder } from "@utils"
 import { AtmoWebUnitImpl } from "./atmoweb-unit"
 import { join } from "path"
 import { AFODictionary, AFODictionaryIds } from "@afo"
@@ -153,6 +153,9 @@ export class AtmoWebProgramManagerImpl {
         options.variableRecorderTimer = setInterval(() => options.variableRecorder.createRecord(), recorderInterval)
         options.progressTimer = setInterval(() => setNumericValue(this.programManager.activeProgram.currentRuntime, Date.now() - options.started), 1000)
         this.functionalUnitState.setState(LADSFunctionalState.Running)
+
+        // generate event
+        raiseEvent(this.unitImpl.unit, `Run with id ${options.deviceProgramRunId} based on program-template ${options.programTemplate.browseName.name} started.`)
     }
 
     private async leaveRunning() {
@@ -168,6 +171,10 @@ export class AtmoWebProgramManagerImpl {
             const xlsx = await new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.deviceProgramRunId, [options.variableRecorder, options.eventRecorder])        
             AFODictionary.addReferences(xlsx, AFODictionaryIds.temperature_measurement_result)
             touchNodes(result, result.fileSet, result.variableSet)
+            // generate event
+            raiseEvent(this.unitImpl.unit, `Run with id ${options.deviceProgramRunId} stopped.`)
+        } else {
+            raiseEvent(this.unitImpl.unit, `Run stopped.`)
         }
         this.programRunOptions = undefined
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)

@@ -196,7 +196,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
         this.programManager = new AtmoWebProgramManagerImpl(this, data)
 
         // raise initialized
-        this.emit("initialized")
+        this.emit("initialized", data)
     }
 
     dataHandler(data: any) {
