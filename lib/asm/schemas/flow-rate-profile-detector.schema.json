@@ -1,0 +1,77 @@
+{
+  "$defs": {
+    "measurementDocumentItems": {
+      "properties": {
+        "flow rate data cube": {
+          "$asm.pattern": "datacube",
+          "$asm.property-class": "http://purl.allotrope.org/ontologies/result#AFR_0002347",
+          "allOf": [
+            {
+              "$ref": "http://purl.allotrope.org/json-schemas/adm/core/REC/2025/03/cube.schema#/$defs/tDatacube"
+            },
+            {
+              "properties": {
+                "cube-structure": {
+                  "properties": {
+                    "dimensions": {
+                      "maxItems": 1,
+                      "minItems": 1,
+                      "prefixItems": [
+                        {
+                          "properties": {
+                            "@componentDatatype": {
+                              "const": "double"
+                            },
+                            "concept": {
+                              "const": "elapsed time"
+                            },
+                            "unit": {
+                              "const": "s"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "measures": {
+                      "contains": {
+                        "oneOf": [
+                          {
+                            "properties": {
+                              "@componentDatatype": {
+                                "const": "double"
+                              },
+                              "concept": {
+                                "const": "flow rate"
+                              },
+                              "unit": {
+                                "const": "mL/min"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "maxItems": 1,
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "type": "object"
+        },
+        "purge gas type": {
+          "$asm.pattern": "value datum",
+          "$asm.property-class": "http://purl.allotrope.org/ontologies/result#AFR_0002346",
+          "$asm.type": "http://www.w3.org/2001/XMLSchema#string",
+          "$ref": "http://purl.allotrope.org/json-schemas/adm/core/REC/2025/03/core.schema#/$defs/tStringValue"
+        }
+      },
+      "required": [
+        "data cube"
+      ]
+    }
+  },
+  "$id": "http://purl.allotrope.org/json-schemas/adm/automated-reactors/REC/2025/03/flow-rate-profile-detector.schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

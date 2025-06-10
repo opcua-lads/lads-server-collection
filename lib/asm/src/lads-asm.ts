@@ -243,7 +243,8 @@ export abstract class AllotropeSimpleModelRecorder {
             (err) => console.log(err)
         )
         const resultFile = DataExporter.createResultFile(fileSet, name, fileName, DataExporter.MimeTypeJSON, path)
-        AFODictionary.addReferences(resultFile, ...this.referenceIds)
+        const referenceIds = new Set(this.referenceIds)
+        AFODictionary.addReferences(resultFile, ...referenceIds)
         AFODictionary.addReferences(resultFile.file, AFODictionaryIds.ASM_file)
         AFODictionary.addReferences(resultFile.name, AFODictionaryIds.ASM_file_identifier)
         return resultFile

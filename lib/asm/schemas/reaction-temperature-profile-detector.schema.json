@@ -1,0 +1,71 @@
+{
+  "$defs": {
+    "measurementDocumentItems": {
+      "properties": {
+        "reaction temperature data cube": {
+          "$asm.pattern": "datacube",
+          "$asm.property-class": "http://purl.allotrope.org/ontologies/result#AFR_0002053",
+          "allOf": [
+            {
+              "$ref": "http://purl.allotrope.org/json-schemas/adm/core/REC/2025/03/cube.schema#/$defs/tDatacube"
+            },
+            {
+              "properties": {
+                "cube-structure": {
+                  "properties": {
+                    "dimensions": {
+                      "maxItems": 1,
+                      "minItems": 1,
+                      "prefixItems": [
+                        {
+                          "properties": {
+                            "@componentDatatype": {
+                              "const": "double"
+                            },
+                            "concept": {
+                              "const": "elapsed time"
+                            },
+                            "unit": {
+                              "const": "s"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "measures": {
+                      "contains": {
+                        "oneOf": [
+                          {
+                            "properties": {
+                              "@componentDatatype": {
+                                "const": "double"
+                              },
+                              "concept": {
+                                "const": "temperature"
+                              },
+                              "unit": {
+                                "const": "degC"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "maxItems": 1,
+                      "minItems": 1
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "reaction temperature data cube"
+      ]
+    }
+  },
+  "$id": "http://purl.allotrope.org/json-schemas/adm/automated-reactors/REC/2025/03/reaction-temperature-profile-detector.schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
