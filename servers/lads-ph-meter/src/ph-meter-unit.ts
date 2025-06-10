@@ -178,7 +178,8 @@ export abstract class pHMeterUnitImpl {
     }
 
     private touchResult() {
-        touchNodes(this.functionalUnit.programManager.resultSet as UAObject, this.currentRunOptions.result)
+        const result = this.currentRunOptions.result
+        touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result.fileSet, result.variableSet)
     }
 
     private readyToStart(): boolean {
@@ -228,7 +229,7 @@ export abstract class pHMeterUnitImpl {
         options.result = <LADSResult><unknown>resultType.instantiate({
             componentOf: resultSet,
             browseName: options.runId,
-            optionals: ["NodeVersion", "VariableSet.NodeVersion"]
+            optionals: ["NodeVersion", "FileSet.NodeVersion", "VariableSet.NodeVersion"]
         })
         const result = options.result
         AFODictionary.addDefaultResultReferences(result)
