@@ -13,7 +13,7 @@
 // LADS Allotrope Simple Model for pH monitoring
 //---------------------------------------------------------------
 
-import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, Units, AggregateDocument, DeviceDocument, AllotropeSimpleModelRecorderOptions  } from "./lads-asm"
+import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, EngineeringUnits, AggregateDocument, DeviceDocument, AllotropeSimpleModelRecorderOptions  } from "./lads-asm"
 import { UAVariable } from "node-opcua"
 import { AFODictionaryIds } from "@afo"
 
@@ -55,19 +55,19 @@ const pHSensorDataCubeStructure: DataCubeStructure = {
         {
             "@componentDatatype": "double",
             "concept": "elapsed time",
-            "unit": Units.s
+            "unit": EngineeringUnits.s
         },
     ],
     "measures": [
         {
             "@componentDatatype": "double",
             "concept": "pH",
-            "unit": Units.pH
+            "unit": EngineeringUnits.pH
         },
         {
             "@componentDatatype": "double",
             "concept": "temperature",
-            "unit": Units.degC
+            "unit": EngineeringUnits.degC
         },
     ]
 }
@@ -113,11 +113,11 @@ export class pHSensorRecorder extends AllotropeSimpleModelRecorder {
         if (includePoints) {
             const endpoint = this.dataRecorder.records[count - 1]
             measurementDocument.pH = {
-                unit: Units.pH,
+                unit: EngineeringUnits.pH,
                 value: Number(endpoint.tracksRecord[1])
             }
             measurementDocument.temperature = {
-                unit: Units.degC,
+                unit: EngineeringUnits.degC,
                 value: Number(endpoint.tracksRecord[2])
             }
         }

@@ -13,7 +13,7 @@
 // LADS Allotrope Simple Model for automated-reactors
 //---------------------------------------------------------------
 
-import { MeasurementAggregateDocument, DataCube, MeasurementDocument, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, Units, AggregateDocument, AllotropeSimpleModelRecorderOptions } from "./lads-asm"
+import { MeasurementAggregateDocument, DataCube, MeasurementDocument, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, EngineeringUnits, AggregateDocument, AllotropeSimpleModelRecorderOptions } from "./lads-asm"
 import { UAVariable } from "node-opcua"
 import { AFODictionaryIds } from "@afo"
 
@@ -53,15 +53,15 @@ const AutomatedReactorDataCubeDimensions = [
     {
         "@componentDatatype": "double",
         "concept": "elapsed time",
-        "unit": Units.s
+        "unit": EngineeringUnits.s
     },
 ]
 
 export interface AutomatedReactorMeasurementOptions {
     variable: UAVariable
     detectionType: string
-    analyteName: string
-    unit: Units
+    analyteName?: string
+    unit: EngineeringUnits
     probeIdentifier?: string
     probeType?: string
     referenceIds: string[]

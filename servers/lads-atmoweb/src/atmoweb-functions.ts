@@ -24,6 +24,7 @@ import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFun
 import { setNumericValue, getLADSObjectType, setBooleanValue, getBooleanValue, raiseEvent, initializeAnalogUnitRange, initializeTwoStateDiscrete, AnalogUnitRangeChangedEventReporter, TwoStateDiscreteChangedEventReporter } from "@utils"
 import { AtmoWebClient } from "./atmoweb-client"
 import { AFODictionary } from "@afo"
+import { AutomatedReactorMeasurementOptions, EngineeringUnits } from "@asm"
 
 //---------------------------------------------------------------
 // variable binding
@@ -84,7 +85,14 @@ interface BaseFunctionConfig {
     dictionaryIds?: string[]
 }
 
-export interface AnalogControlFunctionConfig extends BaseFunctionConfig {
+export interface AnalogFunctionConfig extends BaseFunctionConfig {
+    euInformation: EUInformation
+    unit?: EngineeringUnits
+    detectionType?: string,
+    analyteName?: string
+}
+
+export interface AnalogControlFunctionConfig extends AnalogFunctionConfig {
     targetValue: number
     targetValueRange: Range
     currentValue: number
@@ -92,13 +100,11 @@ export interface AnalogControlFunctionConfig extends BaseFunctionConfig {
     currentValueRange: Range
     alarmHi: number
     alarmLo: number
-    euInformation: EUInformation
 }
 
-export interface AnalogSensorFunctionConfig extends BaseFunctionConfig {
+export interface AnalogSensorFunctionConfig extends AnalogFunctionConfig {
     sensorValue: number
     sensorValueRange: Range
-    euInformation: EUInformation
 }
 
 export interface TwoStateDiscreteControlFunctionConfig extends BaseFunctionConfig {
@@ -117,9 +123,20 @@ export interface CoverFunctionConfig extends BaseFunctionConfig {
 // function implementation
 //---------------------------------------------------------------
 
+function createMeasurementOptions(variable: UAVariable, config: AnalogFunctionConfig): AutomatedReactorMeasurementOptions {
+    return {
+        variable: variable,
+        analyteName: config.analyteName ? config.analyteName : config.dictionaryIds[0] ?? "",
+        detectionType: config.detectionType,
+        unit: config.unit,
+        referenceIds: config.dictionaryIds ?? []
+    }
+}
+
 export abstract class FunctionImpl {
     abstract variableBindings(client: AtmoWebClient): VariableBinding[]
-    recorderVariables(): UAVariable[] { return []}
+    recorderVariables(): UAVariable[] { return [] }
+    measurementOptions(): AutomatedReactorMeasurementOptions[] { return [] }
 }
 
 export class AnalogControlFunctionImpl extends FunctionImpl {
@@ -153,6 +170,9 @@ export class AnalogControlFunctionImpl extends FunctionImpl {
     }
 
     recorderVariables(): UAVariable[] { return [this.controlFunction.currentValue] }
+
+    measurementOptions(): AutomatedReactorMeasurementOptions[] { return [createMeasurementOptions(this.controlFunction.currentValue, this.config)]}
+
 }
 
 export class AnalogSensorFunctionImpl extends FunctionImpl {
@@ -180,6 +200,9 @@ export class AnalogSensorFunctionImpl extends FunctionImpl {
     }
 
     recorderVariables(): UAVariable[] { return [this.sensorFunction.sensorValue] }
+
+    measurementOptions(): AutomatedReactorMeasurementOptions[] { return [createMeasurementOptions(this.sensorFunction.sensorValue, this.config)]}
+
 }
 
 export class TwoStateDiscreteControlFunctionImpl extends FunctionImpl {

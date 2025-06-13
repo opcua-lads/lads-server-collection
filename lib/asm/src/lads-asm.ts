@@ -15,12 +15,13 @@
 
 import { resolve } from "path"
 import { promises as fs } from "fs"
-import { UAVariable, UAObject } from "node-opcua"
+import { UAVariable, UAObject, EUInformation } from "node-opcua"
 import { LADSResult, LADSResultFile, LADSSampleInfo } from "@interfaces"
 import { VariableDataRecorder, ensureDirectoryExists, DataExporter } from "@utils"
 import { UADevice } from "node-opcua-nodeset-di"
 import { AFODictionary } from "@afo/lads-afo"
 import { AFODictionaryIds } from "@afo/lads-afo-ids"
+import { disconnect } from "process"
 
 //---------------------------------------------------------------
 // Interfaces
@@ -99,7 +100,7 @@ export interface DataCubeComponent {
     "@componentDatatype": string
     "concept": string
     "scale"?: string
-    "unit": Units
+    "unit": EngineeringUnits
 }
 
 export interface DataCubeData {
@@ -110,13 +111,14 @@ export interface DataCubeData {
 type DimensionArrayType = Array<string | number | boolean>
 type MeasureArrayType = Array<string | number | boolean | null>
 
-export class Units {
+export class EngineeringUnits {
     static readonly degC = "degC"
     static readonly mm = "mm"
     static readonly N = "N"
     static readonly Nm = "N.m"
     static readonly Pa = "Pa"
     static readonly Pas = "Pa.s"
+    static readonly Percent = "%"
     static readonly pH = "pH"
     static readonly rad = "rad"
     static readonly rad_s = "rad/s"
@@ -125,8 +127,18 @@ export class Units {
     static readonly µm = "µm"
 }
 
+/*const euMap = {
+    "°C": EngineeringUnits.degC,
+    "mm": EngineeringUnits.mm,
+    "hPa": EngineeringUnits.hpa,
+    "s": EngineeringUnits.
+}*/
+export function euInformation2EngineeringUnit(euInformation: EUInformation): EngineeringUnits {
+    return EngineeringUnits.s
+}
+
 export interface Property {
-    "unit": Units
+    "unit": EngineeringUnits
     "value": number
 }
 

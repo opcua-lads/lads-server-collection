@@ -13,7 +13,7 @@
 // LADS Allotrope Simple Model for Rheometry
 //---------------------------------------------------------------
 
-import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, Units, AggregateDocument, AllotropeSimpleModelRecorderOptions } from "./lads-asm"
+import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, EngineeringUnits, AggregateDocument, AllotropeSimpleModelRecorderOptions } from "./lads-asm"
 import { UAVariable } from "node-opcua"
 import { AFODictionaryIds } from "@afo/lads-afo-ids"
 
@@ -58,12 +58,12 @@ export interface RheometryMeasurementChamberDocument {
 const DefaultRheometryMeasurementChamberDocument: RheometryMeasurementChamberDocument = {
     "gap length": {
         value: 800,
-        unit: Units.µm
+        unit: EngineeringUnits.µm
     },
     "measurement chamber type": RheometryMeasurementChamberType.plate_plate,
     "radius": {
         value: 10,
-        unit: Units.mm
+        unit: EngineeringUnits.mm
     }
 }
 
@@ -72,39 +72,39 @@ const RheometryCurveDataCubeStructure: DataCubeStructure = {
         {
             "@componentDatatype": "double",
             "concept": "shear rate",
-            "unit": Units._s
+            "unit": EngineeringUnits._s
         },
         {
             "@componentDatatype": "double",
             "concept": "elapsed time",
-            "unit": Units.s
+            "unit": EngineeringUnits.s
         },
         {
             "@componentDatatype": "double",
             "concept": "step time",
-            "unit": Units.s
+            "unit": EngineeringUnits.s
         },
     ],
     "measures": [
         {
             "@componentDatatype": "double",
             "concept": "shear stress",
-            "unit": Units.Pa
+            "unit": EngineeringUnits.Pa
         },
         {
             "@componentDatatype": "double",
             "concept": "viscosity",
-            "unit": Units.Pas
+            "unit": EngineeringUnits.Pas
         },
         {
             "@componentDatatype": "double",
             "concept": "torque",
-            "unit": Units.Nm
+            "unit": EngineeringUnits.Nm
         },
         {
             "@componentDatatype": "double",
             "concept": "temperature",
-            "unit": Units.degC
+            "unit": EngineeringUnits.degC
         },
     ]
 }

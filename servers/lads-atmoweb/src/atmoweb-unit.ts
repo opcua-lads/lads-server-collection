@@ -111,7 +111,15 @@ export class AtmoWebUnitImpl extends EventEmitter {
     }
 
     createAnalogSensorFunction(data: any, parent: UAObject, name: string, euInformation: EUInformation, controllerDictionaryId: string, dictionaryIds: string[], id: string, sensorValueRange?: Range) {
-        return new AnalogSensorFunctionImpl(parent, { name: name, functionDictionaryId: controllerDictionaryId, dictionaryIds: dictionaryIds, euInformation: euInformation, id: id, sensorValue: Number(data[`${id}Read`]), sensorValueRange: sensorValueRange })
+        return new AnalogSensorFunctionImpl(parent, { 
+            name: name, 
+            functionDictionaryId: controllerDictionaryId, 
+            dictionaryIds: dictionaryIds, 
+            euInformation: euInformation, 
+            id: id, 
+            sensorValue: Number(data[`${id}Read`]), 
+            sensorValueRange: sensorValueRange,
+        })
     }
 
     createTwoStateDiscreteControlFunction(data: any, parent: UAObject, name: string, falseState: string, trueState: string, dictionaryIds: string[], id: string): TwoStateDiscreteControlFunctionImpl {
