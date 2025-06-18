@@ -19,17 +19,17 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, LocalizedText, ServerSession, SessionContext, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
+import { AccessLevelFlag, CallMethodResultOptions, DataType, DataValue, LocalizedText, SessionContext, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
 import { ViscometerFunctionalUnit } from "./viscometer-interfaces"
 import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./viscometer-device"
-import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
+import { LADSActiveProgram, LADSAnalogScalarSensorFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
-import { verify } from "crypto"
-import { version } from "os"
+import { TemperatureController, TemperatureControllerSimulator, TemperatureControllerThermosel } from "./viscometer-temperature-controller"
+import { SpeedController, SpeedControllerSimulator } from "./viscometer-speed-controller"
 
 //---------------------------------------------------------------
 // functional unit implementation
@@ -38,11 +38,11 @@ export abstract class ViscometerUnitImpl {
     parent: ViscometerDeviceImpl
     functionalUnit: ViscometerFunctionalUnit
     functionalUnitState: UAStateMachineEx
-    speedController: LADSAnalogControlFunction
-    speedControllerState: UAStateMachineEx
+    //speedController: LADSAnalogControlFunction
+    //speedControllerState: UAStateMachineEx
+    speedController: SpeedController
     temperature: LADSAnalogScalarSensorFunction
-    temperatureController: LADSAnalogControlFunction
-    temperatureControllerState: UAStateMachineEx
+    temperatureController: TemperatureController
     relativeTorque: LADSAnalogScalarSensorFunction
     torque: LADSAnalogScalarSensorFunction
     viscosity: LADSAnalogScalarSensorFunction
@@ -56,7 +56,7 @@ export abstract class ViscometerUnitImpl {
     activeProgram: LADSActiveProgram
     results: LADSResult[] = []
 
-    constructor(parent: ViscometerDeviceImpl, functionalUnit: ViscometerFunctionalUnit) {
+    constructor(parent: ViscometerDeviceImpl, functionalUnit: ViscometerFunctionalUnit, port = '/dev/tty.usbserial-2110') {
         this.parent = parent
         this.functionalUnit = functionalUnit
         const addressSpace = functionalUnit.addressSpace
@@ -69,10 +69,10 @@ export abstract class ViscometerUnitImpl {
         this.initSpindle()
 
         // intialize speed controller
-        this.initSpeedController()
+        this.speedController = new SpeedControllerSimulator(functionSet.speedController)
 
         // intialize temperature controller
-        this.initTemperatureController()
+        this.temperatureController = port.length > 0 ? new TemperatureControllerThermosel(functionSet.temperatureController, port) : new TemperatureControllerSimulator(functionSet.temperatureController)
 
         // initialize viscosity with history
         this.viscosity = functionSet.viscosity
@@ -95,120 +95,10 @@ export abstract class ViscometerUnitImpl {
         AFODictionary.addSensorFunctionReferences(this.shearStress, AFODictionaryIds.shear_stress_of_quality)
         AFODictionary.addSensorFunctionReferences(this.shearRate, AFODictionaryIds.rate)
         AFODictionary.addSensorFunctionReferences(this.temperature, AFODictionaryIds.temperature_measurement, AFODictionaryIds.temperature)
-        AFODictionary.addControlFunctionReferences(this.temperatureController, AFODictionaryIds.temperature_controller, AFODictionaryIds.temperature)
-        AFODictionary.addControlFunctionReferences(this.speedController, AFODictionaryIds.rotational_speed, AFODictionaryIds.rotational_speed)
 
         // future - initialize program mananger
         this.initProgramManager()
 
-        // start run loop
-        const dT = 200 
-        setInterval( () => {this.evaluate(dT)}, dT)
-    }
-
-    protected evaluate(dT: number) {
-        this.evaluateTemperatureController(dT)
-        this.evaluateSpeedController(dT)
-    }
-
-    private startController(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx, withEvent: boolean): StatusCode {
-        const currentState = stateMachine.getCurrentState();
-        if (currentState.includes(LADSFunctionalState.Running)) {
-            return StatusCodes.BadInvalidState
-        }
-        stateMachine.setState(LADSFunctionalState.Running)
-        if (withEvent) {
-            raiseEvent(controller, `${controller.getDisplayName()} started`)
-        }
-
-    }
-    
-    private stopController(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx, withEvent: boolean): StatusCode {
-        const currentState = stateMachine.getCurrentState();
-        if (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Stopping)) {
-            return StatusCodes.BadInvalidState
-        }
-        stateMachine.setState(LADSFunctionalState.Stopped)
-        if (withEvent) {
-            raiseEvent(controller, `${controller.getDisplayName()} stopped`)
-        }
-    }
-    
-    // speed controller
-    private initSpeedController() {
-        this.speedController = this.functionalUnit.functionSet.speedController
-        assert(this.speedController)
-        const stateMachine = this.speedController.controlFunctionState
-        stateMachine.start?.bindMethod(this.startSpeedController.bind(this))
-        stateMachine.stop?.bindMethod(this.stopSpeedController.bind(this))
-        this.speedControllerState = promoteToFiniteStateMachine(stateMachine)
-        this.speedControllerState.setState(LADSFunctionalState.Stopped)
-        setNumericValue(this.speedController.currentValue, 0.0)
-        setNumericValue(this.speedController.targetValue, 30.0)
-        this.speedController.targetValue.on("value_changed", (dataValue => {raiseEvent(this.speedController, `Speed set-point changed to ${dataValue.value.value}rpm`)}))
-    }
-
-    private async startSpeedController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.startController(this.speedController, this.speedControllerState, true) }
-    }
-
-    private async stopSpeedController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.stopController(this.speedController, this.speedControllerState, true) }
-    }
-
-    private evaluateSpeedController(dT: number) {
-        function calcSpeed(sp: number, pv: number):  number {
-            const delta = 0.001 * dT * 10 // 10rpm/s
-            if (Math.abs(sp - pv) < delta) {
-                return sp
-            } else if (pv < sp) {
-                return pv + delta
-            } else {
-                return pv - delta
-            }
-        }
-
-        const running =  this.speedControllerState.getCurrentState().includes(LADSFunctionalState.Running)
-        const sp = getNumericValue(this.speedController.targetValue)
-        const pv = getNumericValue(this.speedController.currentValue)
-        const newpv = running?calcSpeed(sp, pv):0
-        setNumericValue(this.speedController.currentValue, newpv)
-    }
-
-    // temperature controller
-    private initTemperatureController() {
-        const controller = this.functionalUnit.functionSet.temperatureController
-        assert(controller)
-        this.temperatureController = controller
-        const stateMachine = this.temperatureController.controlFunctionState
-        stateMachine.start?.bindMethod(this.startTemperatureController.bind(this))
-        stateMachine.stop?.bindMethod(this.stopTemperatureController.bind(this))
-        this.temperatureControllerState = promoteToFiniteStateMachine(stateMachine)
-        this.temperatureControllerState.setState(LADSFunctionalState.Stopped)
-        setNumericValue(controller.currentValue, 25.0)
-        controller.currentValue.historizing = true
-        controller.addressSpace.installHistoricalDataNode(controller.currentValue)
-        setNumericValue(controller.targetValue, 50.0)
-        controller.targetValue.on("value_changed", (dataValue => {raiseEvent(this.temperatureController, `Temperature set-point changed to ${dataValue.value.value}°C`)}))
-    }
-
-    private async startTemperatureController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.startController(this.temperatureController, this.temperatureControllerState, true) }
-    }
-
-    private async stopTemperatureController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.stopController(this.temperatureController, this.temperatureControllerState, true) }
-    }
-
-    private evaluateTemperatureController(dT: number) {
-
-        const running =  this.temperatureControllerState.getCurrentState().includes(LADSFunctionalState.Running)
-        const sp = running?getNumericValue(this.temperatureController.targetValue):25
-        const pv = getNumericValue(this.temperatureController.currentValue)
-        const noise = 0.02 * (Math.random() - 0.5)
-        const cf = running?dT / 2000:dT / 10000
-        const newpv = (cf * sp) + (1.0 - cf) * pv + noise
-        setNumericValue(this.temperatureController.currentValue, newpv)
     }
 
     // viscometer system
@@ -218,8 +108,8 @@ export abstract class ViscometerUnitImpl {
             return StatusCodes.BadInvalidState
         }
         this.functionalUnitState.setState(LADSFunctionalState.Running)
-        this.startController(this.speedController, this.speedControllerState, false)
-        this.startController(this.temperatureController, this.temperatureControllerState, false)
+        this.speedController.start()
+        this.temperatureController.start()
         raiseEvent(this.functionalUnit, `Viscometer started with speed set-point ${this.speedController.targetValue.readValue().value.value}rpm`)
         return StatusCodes.Good
     }
@@ -230,8 +120,8 @@ export abstract class ViscometerUnitImpl {
             return StatusCodes.BadInvalidState
         }
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
-        this.stopController(this.speedController, this.speedControllerState, false)
-        this.stopController(this.temperatureController, this.temperatureControllerState, false)
+        this.speedController.stop()
+        this.temperatureController.stop()
         raiseEvent(this.functionalUnit, "Viscometer stopped")
         return StatusCodes.Good
     }

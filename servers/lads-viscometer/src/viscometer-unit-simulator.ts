@@ -63,11 +63,13 @@ export class ViscometerUnitSimulatorImpl extends ViscometerUnitImpl {
             dataType: DataType.Double,
             value: {dataType: DataType.Double, value: 0.95 },
             accessLevel: AccessLevelFlag.CurrentRead | AccessLevelFlag.CurrentWrite
-        })        
+        })
+
+        const dT = 200
+        setInterval(() => this.evaluate(dT), dT)
     }
 
     protected evaluate(dT: number) {
-        super.evaluate(dT)
 
         // input values
         const tpv = getNumericValue(this.temperatureController.currentValue)
