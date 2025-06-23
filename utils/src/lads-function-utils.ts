@@ -9,12 +9,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assert, CallMethodResultOptions, DataType, SessionContext, StatusCode, StatusCodes, UAAnalogUnitRange, UAStateMachineEx, VariantLike } from "node-opcua";
+import { assert, CallMethodResultOptions, DataType, DataValue, SessionContext, StatusCode, StatusCodes, UAAnalogUnitRange, UAStateMachineEx, VariantLike } from "node-opcua";
 import { LADSAnalogControlFunction, LADSBaseControlFunction, LADSFunctionalState } from "@interfaces";
 import { raiseEvent } from "./lads-event-utils";
 import { promoteToFiniteStateMachine } from "./lads-utils";
+import { setNumericValue } from "./lads-variable-utils";
 
-export function startController(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx, withEvent: boolean): StatusCode {
+function startController(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx, withEvent: boolean): StatusCode {
     const currentState = stateMachine.getCurrentState();
     if (currentState.includes(LADSFunctionalState.Running)) {
         return StatusCodes.BadInvalidState
@@ -26,7 +27,7 @@ export function startController(controller: LADSBaseControlFunction, stateMachin
     return StatusCodes.Good
 }
 
-export function stopController(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx, withEvent: boolean): StatusCode {
+function stopController(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx, withEvent: boolean): StatusCode {
     const currentState = stateMachine.getCurrentState();
     if (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Stopping)) {
         return StatusCodes.BadInvalidState
@@ -39,9 +40,9 @@ export function stopController(controller: LADSBaseControlFunction, stateMachine
 }
 
 //---------------------------------------------------------------
-// abstract generic analog control function implementation
+// abstract control function implementation
 //---------------------------------------------------------------
-export abstract class AnalogControlFunctionImpl {
+abstract class BaseControlFunctionImpl {
     controllerState: UAStateMachineEx
     controller: LADSAnalogControlFunction
 
@@ -78,11 +79,30 @@ export abstract class AnalogControlFunctionImpl {
         return statusCode
     }
 
-    get targetValue(): UAAnalogUnitRange<number, DataType.Double> {return this.controller.targetValue}
-    get currentValue(): UAAnalogUnitRange<number, DataType.Double> {return this.controller.targetValue}
-
     protected enterStart() { }
     protected enterStop() { }
+}
+
+//---------------------------------------------------------------
+// abstract generic analog control function implementation
+//---------------------------------------------------------------
+export abstract class AnalogControlFunctionImpl extends BaseControlFunctionImpl{
+    constructor(controller: LADSAnalogControlFunction, targetValue: number, currentValue: number) {
+        super(controller)
+        const name = controller.getDisplayName()
+        const currentValueVariable = this.currentValue
+        setNumericValue(this.targetValue, targetValue)
+        setNumericValue(currentValueVariable, currentValue)
+        currentValueVariable.historizing = true
+        controller.addressSpace.installHistoricalDataNode(currentValueVariable)
+        // currentValueVariable.on("value_changed", (dataValue: DataValue) => console.log(name, dataValue.sourcePicoseconds, dataValue.value.value))
+
+    }
+
+    private get controlFunction(): LADSAnalogControlFunction { return this.controller as LADSAnalogControlFunction}
+    get targetValue(): UAAnalogUnitRange<number, DataType.Double> {return this.controlFunction.targetValue}
+    get currentValue(): UAAnalogUnitRange<number, DataType.Double> {return this.controlFunction.currentValue}
+
 }
 
 
