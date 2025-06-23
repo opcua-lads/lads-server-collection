@@ -44,10 +44,9 @@ export class ViscometerControllerImpl extends ControllerImpl {
         super(parent, options)
 
         if (component) {
-            const componentOptions: LADSComponentOptions = {
-                manufacturer: "AMETEK Brookfield",
-                model: parent.model.name,
-            }
+            const componentOptions = this.defaultComponentOptions()
+            componentOptions.manufacturer = "AMETEK Brookfield",
+            componentOptions.model= parent.model.name
             initComponent(component, componentOptions)
         }
 

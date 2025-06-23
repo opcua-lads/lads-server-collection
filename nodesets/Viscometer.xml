@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-05-03T08:01:58.711Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-06-23T13:00:18.380Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -41,7 +41,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="2.8.5"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="6fb9fb7e809d7732e871629ff9a517a7"/>
+            <si:GeneratorExtension Hash="9ed509c9774b1ade0421d0ebb771b7b2"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___spectaris_de_Viscometer_" NodeId="ns=5;i=5000" BrowseName="5:http://spectaris.de/Viscometer/" ParentNodeId="i=11715">
@@ -669,6 +669,7 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6044</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6045</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6046</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6092</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5014" BrowseName="5:Spindle" ParentNodeId="ns=5;i=5001">
@@ -935,6 +936,8 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6169</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6175</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6088</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6091</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6044" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5013">
@@ -977,6 +980,7 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6047</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6048</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6049</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6090</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5021" BrowseName="1:Identification" ParentNodeId="ns=5;i=5020">
@@ -987,6 +991,8 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6050</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6051</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6087</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6089</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6047" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5020">
@@ -1046,6 +1052,7 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6052</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6053</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6054</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6094</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5023" BrowseName="1:Identification" ParentNodeId="ns=5;i=5022">
@@ -1056,6 +1063,8 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6055</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6056</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6086</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6093</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6052" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5022">
@@ -1550,6 +1559,75 @@
     <UAVariable DataType="String" NodeId="ns=5;i=6085" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5027">
         <DisplayName>SoftwareRevision</DisplayName>
         <Description>Revision level of the software/firmware of the device</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6086" BrowseName="1:Model" ParentNodeId="ns=5;i=5023">
+        <DisplayName>Model</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6087" BrowseName="1:Model" ParentNodeId="ns=5;i=5021">
+        <DisplayName>Model</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6088" BrowseName="1:Model" ParentNodeId="ns=5;i=5019">
+        <DisplayName>Model</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6089" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5021" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>AssetId</DisplayName>
+        <Description>AssetId is a user writable alphanumeric character sequence uniquely identifying a component. The ID is provided by the integrator or user of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6090" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5020" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>AssetId</DisplayName>
+        <Description>AssetId is a user writable alphanumeric character sequence uniquely identifying a component. The ID is provided by the integrator or user of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6091" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5019" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>AssetId</DisplayName>
+        <Description>AssetId is a user writable alphanumeric character sequence uniquely identifying a component. The ID is provided by the integrator or user of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6092" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5013" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>AssetId</DisplayName>
+        <Description>AssetId is a user writable alphanumeric character sequence uniquely identifying a component. The ID is provided by the integrator or user of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6093" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5023" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>AssetId</DisplayName>
+        <Description>AssetId is a user writable alphanumeric character sequence uniquely identifying a component. The ID is provided by the integrator or user of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6094" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5022" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>AssetId</DisplayName>
+        <Description>AssetId is a user writable alphanumeric character sequence uniquely identifying a component. The ID is provided by the integrator or user of the device.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>

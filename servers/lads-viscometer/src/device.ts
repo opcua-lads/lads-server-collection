@@ -107,12 +107,12 @@ export class ViscometerDeviceImpl {
 
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
-            manufacturer: getStringValue(device.manufacturer, "Brookfield Engineering"),
-            model: getStringValue(device.model, "LVDV-II+"),
-            serialNumber: getStringValue(device.serialNumber, "4711"),
+            manufacturer: getStringValue(device.manufacturer, "AixEngineers"),
+            model: getStringValue(device.model, "Viscometer System 2025"),
+            serialNumber: getStringValue(device.serialNumber, "47114242"),
             softwareRevision: "1.0",
             deviceRevision: "1.0",
-            assetId: "0815-4711",
+            assetId: "08154711",
             componentName: `My ${name}`,
             location: defaultLocation,
         }

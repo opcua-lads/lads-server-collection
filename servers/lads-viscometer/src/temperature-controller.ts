@@ -41,10 +41,9 @@ export class TemperatureControllerImpl extends ControllerImpl {
         this.temperatureControlFunction = port.length > 0 ? new TemperatureControlFunctionThermosel(functionSet.temperatureController, port) : new TemperatureControlFunctionSimulator(functionSet.temperatureController)
 
         if (component) {
-            const componentOptions: LADSComponentOptions = {
-                manufacturer: "Brookfield",
-                model: "Thermosel"
-            }
+            const componentOptions = this.defaultComponentOptions()
+            componentOptions.manufacturer = "AMETEK Brookfield",
+            componentOptions.model= "Thermosel"
             initComponent(component, componentOptions)
         }
     }

@@ -31,6 +31,7 @@ import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, 
 import { TemperatureControllerImpl } from "./temperature-controller"
 import { ViscometerControllerImpl } from "./viscometer-controller"
 import { DeviceOptions } from "./server"
+import { UADevice } from "node-opcua-nodeset-di"
 
 
 //---------------------------------------------------------------
@@ -306,7 +307,11 @@ export class ViscometerUnitImpl {
 
         const rheometryRecorderOptions: RheometryRecorderOptions = {
             result: result,
-            devices: [{deviceType: "Viscometer", device: this.parent.device}],
+            devices: [
+                {deviceType: "Viscometer System", device: this.parent.device},
+                {deviceType: "Viscometer", device: this.parent.device.components.viscometer as UADevice},
+                {deviceType: "Temperature Controller", device: this.parent.device.components.temperatureController as UADevice},
+            ],
             runtime: this.activeProgram.currentRuntime,
             stepRuntime: this.activeProgram.currentStepRuntime,
             shearRate: viscometer.shearRate.sensorValue,

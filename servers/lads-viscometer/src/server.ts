@@ -34,6 +34,8 @@ import { ViscometerDeviceImpl } from './device'
 //---------------------------------------------------------------
 export interface ControllerOptions {
     serialPort?: string
+    assetId?: string
+    serialNumber?: string
 }
 
 export interface DeviceOptions {
@@ -49,9 +51,18 @@ interface ServerOptions {
 }
 
 const DefaultServerOptions: ServerOptions  = {
+    includeAFO: true,
     deviceOptions: [{
         name: "My Viscometer",
-        temperatureController: { serialPort: "/dev/tty.usbserial-2110"}
+        temperatureController: { 
+            assetId: "Asset1234",
+            serialPort: "/dev/tty.usbserial-2110",
+            serialNumber: "08154711"
+        },
+        viscometerController: { 
+            assetId: "Asset5678",
+            serialNumber: "47110815"
+        }
     }]
 }
 
