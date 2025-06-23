@@ -19,25 +19,54 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import { setLogLevel, LogLevel } from "node-opcua-debug";
+setLogLevel(LogLevel.Error)
+
 import { join } from 'path'
 import assert from "assert"
 import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, } from "node-opcua"
 import { DIObjectIds, setStringValue, } from "@utils"
-import { ViscometerDevice } from './viscometer-interfaces'
-import { ViscometerDeviceImpl } from './viscometer-device'
+import { ViscometerDevice } from './interfaces'
+import { ViscometerDeviceImpl } from './device'
 
 //---------------------------------------------------------------
-// Allotrope Foundation Ontology
+// server configuration
 //---------------------------------------------------------------
-const IncludeAFO = true
+export interface ControllerOptions {
+    serialPort?: string
+}
+
+export interface DeviceOptions {
+    name: string
+    viscometerController?: ControllerOptions
+    temperatureController?: ControllerOptions
+}
+
+interface ServerOptions {
+    port?: number
+    includeAFO?: boolean
+    deviceOptions: DeviceOptions[]
+}
+
+const DefaultServerOptions: ServerOptions  = {
+    deviceOptions: [{
+        name: "My Viscometer",
+        temperatureController: { serialPort: "/dev/tty.usbserial-2110"}
+    }]
+}
 
 //---------------------------------------------------------------
-// server implmentation
+// server implementation
 //---------------------------------------------------------------
 class ViscometerServerImpl {
+    options: ServerOptions
     server: OPCUAServer
 
-    constructor(port: number) {
+    constructor(options: ServerOptions) {
+        this.options = options
+        const includeAFO = options.includeAFO ?? false
+        const port = options.port ?? 4840
+
         // provide paths for the nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
@@ -50,7 +79,7 @@ class ViscometerServerImpl {
 
         try {
             // list of node-set files
-            const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_viscometer,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_viscometer,]
+            const node_set_filenames = includeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_viscometer,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_viscometer,]
 
             // build the server object
             const uri = "LADS-Viscometer-Server"
@@ -80,7 +109,7 @@ class ViscometerServerImpl {
         }
     }
 
-    async start(serialPorts: string[]) {
+    async start() {
         // get objects
         await this.server.initialize()
         const addressSpace = this.server.engine.addressSpace
@@ -91,14 +120,14 @@ class ViscometerServerImpl {
         assert(deviceType)
         const deviceSet = <UAObject>addressSpace.findNode(coerceNodeId(DIObjectIds.deviceSet, nameSpaceDI.index))
         assert(deviceSet)
-        serialPorts.forEach((serialPort, index) => {
-            const name = serialPorts.length == 1 ? "myViscometer" : `myViscometer${index + 1}`
+        this.options.deviceOptions.forEach((deviceOptions, index) => {
+            const name = deviceOptions.name
             const deviceObject = <ViscometerDevice>deviceType.instantiate({
                 componentOf: deviceSet,
                 browseName: name,
             })
             setStringValue(deviceObject.serialNumber, (4711 + index).toString())
-            const deviceImpl = new ViscometerDeviceImpl(deviceObject, serialPort)
+            const deviceImpl = new ViscometerDeviceImpl(deviceObject, deviceOptions)
         })
 
         // finalize start
@@ -113,8 +142,8 @@ class ViscometerServerImpl {
 // create and start server including a list of viscometers
 //---------------------------------------------------------------
 export async function main() {
-    const server = new ViscometerServerImpl(4840)
-    await server.start(['/dev/ttyUSB0'])
+    const server = new ViscometerServerImpl(DefaultServerOptions)
+    await server.start()
 }
 
 main()

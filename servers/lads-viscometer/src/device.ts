@@ -22,9 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper } from "@utils"
 import { assert, coerceNodeId, IAddressSpace, ObjectTypeIds, UAEventType } from "node-opcua"
-import { ViscometerDevice } from "./viscometer-interfaces"
-import { ViscometerUnitImpl } from "./viscometer-unit"
-import { ViscometerUnitSimulatorImpl } from "./viscometer-unit-simulator"
+import { ViscometerDevice } from "./interfaces"
+import { ViscometerUnitImpl } from "./unit"
+import { DeviceOptions } from "./server"
 
 //---------------------------------------------------------------
 // device implementation
@@ -100,7 +100,7 @@ export class ViscometerDeviceImpl {
     device: ViscometerDevice
     viscometerUnitImpl: ViscometerUnitImpl
 
-    constructor(device: ViscometerDevice, serialPort: string) {
+    constructor(device: ViscometerDevice, options: DeviceOptions) {
         this.device = device
         const name = this.device.getDisplayName()
         console.log(`Initializing viscometer device ${name}..`)
@@ -125,7 +125,7 @@ export class ViscometerDeviceImpl {
         const viscometerUnit = this.device.functionalUnitSet.viscometerUnit
         assert(viscometerUnit)
         // create simulated or real world device
-        this.viscometerUnitImpl = new ViscometerUnitSimulatorImpl(this, viscometerUnit)
+        this.viscometerUnitImpl = new ViscometerUnitImpl(this, viscometerUnit, options)
 
         // Allotrope Foundation Ontologies
         AFODictionary.addDefaultDeviceReferences(device)

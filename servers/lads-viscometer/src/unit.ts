@@ -20,85 +20,56 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { AccessLevelFlag, CallMethodResultOptions, DataType, DataValue, LocalizedText, SessionContext, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
-import { ViscometerFunctionalUnit } from "./viscometer-interfaces"
-import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./viscometer-device"
-import { LADSActiveProgram, LADSAnalogScalarSensorFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
+import { ViscometerFunctionalUnit } from "./interfaces"
+import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./device"
+import { LADSActiveProgram, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
 import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation } from "@utils"
 import { join } from "path"
-import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
-import { TemperatureController, TemperatureControllerSimulator, TemperatureControllerThermosel } from "./viscometer-temperature-controller"
-import { SpeedController, SpeedControllerSimulator } from "./viscometer-speed-controller"
+import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./programs"
+import { TemperatureControllerImpl } from "./temperature-controller"
+import { ViscometerControllerImpl } from "./viscometer-controller"
+import { DeviceOptions } from "./server"
+
 
 //---------------------------------------------------------------
 // functional unit implementation
 //---------------------------------------------------------------
-export abstract class ViscometerUnitImpl {
+export class ViscometerUnitImpl {
     parent: ViscometerDeviceImpl
-    functionalUnit: ViscometerFunctionalUnit
-    functionalUnitState: UAStateMachineEx
-    //speedController: LADSAnalogControlFunction
-    //speedControllerState: UAStateMachineEx
-    speedController: SpeedController
-    temperature: LADSAnalogScalarSensorFunction
-    temperatureController: TemperatureController
-    relativeTorque: LADSAnalogScalarSensorFunction
-    torque: LADSAnalogScalarSensorFunction
-    viscosity: LADSAnalogScalarSensorFunction
-    shearStress: LADSAnalogScalarSensorFunction
-    shearRate: LADSAnalogScalarSensorFunction
     model: ViscometerModelParameters
     spindle: ViscometerSpindleParameters
+    functionalUnit: ViscometerFunctionalUnit
+    functionalUnitState: UAStateMachineEx
+    temperatureController: TemperatureControllerImpl
+    viscometerController: ViscometerControllerImpl
+
     // program manager
     viscometerPrograms: ViscometerProgram[]
     programTemplates: LADSProgramTemplate[] = []
     activeProgram: LADSActiveProgram
     results: LADSResult[] = []
 
-    constructor(parent: ViscometerDeviceImpl, functionalUnit: ViscometerFunctionalUnit, port = '/dev/tty.usbserial-2110') {
+    constructor(parent: ViscometerDeviceImpl, functionalUnit: ViscometerFunctionalUnit, options: DeviceOptions) {
         this.parent = parent
         this.functionalUnit = functionalUnit
-        const addressSpace = functionalUnit.addressSpace
-        const functionSet = this.functionalUnit.functionSet
 
         // set model
         this.model = ViscometerModels[0]
-
         // initialize spindle list
         this.initSpindle()
 
         // intialize speed controller
-        this.speedController = new SpeedControllerSimulator(functionSet.speedController)
-
+        this.viscometerController = new ViscometerControllerImpl(this, options.viscometerController, parent.device.components.viscometer)
         // intialize temperature controller
-        this.temperatureController = port.length > 0 ? new TemperatureControllerThermosel(functionSet.temperatureController, port) : new TemperatureControllerSimulator(functionSet.temperatureController)
-
-        // initialize viscosity with history
-        this.viscosity = functionSet.viscosity
-        const viscosityValue = this.viscosity.sensorValue
-        viscosityValue.historizing = true
-        addressSpace.installHistoricalDataNode(viscosityValue)
-        // initialize other functions
-        this.relativeTorque = functionSet.relativeTorque
-        this.torque = functionSet.torque
-        this.shearStress = functionSet.shearStress
-        this.shearRate = functionSet.shearRate
-        this.temperature = functionSet.temperature
-        this.temperature.sensorValue.setValueFromSource({dataType: DataType.Double, value: 25.0})
+        this.temperatureController = new TemperatureControllerImpl(this, options.temperatureController, parent.device.components.temperatureController)
 
         // add Allotrope Ontology References
         AFODictionary.addReferences(this.functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.rheometry, AFODictionaryIds.viscometry)
-        AFODictionary.addSensorFunctionReferences(this.viscosity, AFODictionaryIds.viscosity)
-        AFODictionary.addSensorFunctionReferences(this.relativeTorque, AFODictionaryIds.relative_intensity)
-        AFODictionary.addSensorFunctionReferences(this.torque, AFODictionaryIds.torque)
-        AFODictionary.addSensorFunctionReferences(this.shearStress, AFODictionaryIds.shear_stress_of_quality)
-        AFODictionary.addSensorFunctionReferences(this.shearRate, AFODictionaryIds.rate)
-        AFODictionary.addSensorFunctionReferences(this.temperature, AFODictionaryIds.temperature_measurement, AFODictionaryIds.temperature)
 
         // future - initialize program mananger
         this.initProgramManager()
-
     }
 
     // viscometer system
@@ -108,9 +79,9 @@ export abstract class ViscometerUnitImpl {
             return StatusCodes.BadInvalidState
         }
         this.functionalUnitState.setState(LADSFunctionalState.Running)
-        this.speedController.start()
+        this.viscometerController.start()
         this.temperatureController.start()
-        raiseEvent(this.functionalUnit, `Viscometer started with speed set-point ${this.speedController.targetValue.readValue().value.value}rpm`)
+        raiseEvent(this.functionalUnit, `Viscometer started with speed set-point ${this.viscometerController.speedControlFunction.targetValue.readValue().value.value}rpm`)
         return StatusCodes.Good
     }
 
@@ -120,7 +91,7 @@ export abstract class ViscometerUnitImpl {
             return StatusCodes.BadInvalidState
         }
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
-        this.speedController.stop()
+        this.viscometerController.stop()
         this.temperatureController.stop()
         raiseEvent(this.functionalUnit, "Viscometer stopped")
         return StatusCodes.Good
@@ -324,11 +295,12 @@ export abstract class ViscometerUnitImpl {
         setStringValue(activeProgram.deviceProgramRunId, deviceProgramRunId )
 
         // create recorders
+        const viscometer = this.viscometerController
         const endPointRecorder = new VariableDataRecorder("End-points", [
-            activeProgram.currentStepName, this.temperature.sensorValue, this.viscosity.sensorValue, this.shearStress.sensorValue, this.shearRate.sensorValue, 
-            this.relativeTorque.sensorValue, this.torque.sensorValue, this.speedController.currentValue, this.temperatureController.currentValue
+            activeProgram.currentStepName, viscometer.temperature.sensorValue, viscometer.viscosity.sensorValue, viscometer.shearStress.sensorValue, viscometer.shearRate.sensorValue, 
+            viscometer.relativeTorque.sensorValue, viscometer.torque.sensorValue, viscometer.speedControlFunction.currentValue, this.temperatureController.temperatureControlFunction.currentValue
         ])
-        const trendRecorder = new VariableDataRecorder("Trends", [this.temperature.sensorValue, this.viscosity.sensorValue, ])
+        const trendRecorder = new VariableDataRecorder("Trends", [viscometer.temperature.sensorValue, viscometer.viscosity.sensorValue, ])
         const trendRecorderInterval = setInterval(() => {trendRecorder.createRecord()}, 1000)
         const eventRecorder = new EventDataRecorder("Events", this.functionalUnit)
 
@@ -337,11 +309,11 @@ export abstract class ViscometerUnitImpl {
             devices: [{deviceType: "Viscometer", device: this.parent.device}],
             runtime: this.activeProgram.currentRuntime,
             stepRuntime: this.activeProgram.currentStepRuntime,
-            shearRate: this.shearRate.sensorValue,
-            shearStress: this.shearStress.sensorValue,
-            viscosity: this.viscosity.sensorValue,
-            torque: this.torque.sensorValue,
-            temperature: this.temperature.sensorValue,
+            shearRate: viscometer.shearRate.sensorValue,
+            shearStress: viscometer.shearStress.sensorValue,
+            viscosity: viscometer.viscosity.sensorValue,
+            torque: viscometer.torque.sensorValue,
+            temperature: viscometer.temperature.sensorValue,
             sample: samples[0],
         }
         const rheometryRecorder = new RheometryRecorder(rheometryRecorderOptions)
@@ -360,8 +332,8 @@ export abstract class ViscometerUnitImpl {
             setNumericValue(activeProgram.estimatedStepRuntime, step.dt)
 
             // set target-values
-            setNumericValue(this.speedController.targetValue, step.nsp)
-            setNumericValue(this.temperatureController.targetValue, step.tsp)
+            setNumericValue(this.viscometerController.speedControlFunction.targetValue, step.nsp)
+            setNumericValue(this.temperatureController.temperatureControlFunction.targetValue, step.tsp)
 
             // wait and update
             const tsStepRuntime = Date.now()

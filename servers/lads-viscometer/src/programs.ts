@@ -116,12 +116,12 @@ export const DefaultViscometerPrograms: ViscometerProgram[] = [
         version: version,
         description: "Measure viscosity of the sample at constant shear rate and different temperatures.",
         steps: [
-            {name: "Viscosity 30°C", dt: 10000, tsp: 30, nsp: 30},
-            {name: "Viscosity 40°C", dt: 10000, tsp: 40, nsp: 30},
-            {name: "Viscosity 50°C", dt: 10000, tsp: 50, nsp: 30},
-            {name: "Viscosity 60°C", dt: 10000, tsp: 60, nsp: 30},
-            {name: "Viscosity 80°C", dt: 10000, tsp: 80, nsp: 30},
-            {name: "Viscosity 100°C", dt: 10000, tsp: 100, nsp: 30},
+            {name: "Viscosity 30°C", dt: 30000, tsp: 30, nsp: 30},
+            {name: "Viscosity 40°C", dt: 30000, tsp: 40, nsp: 30},
+            {name: "Viscosity 50°C", dt: 30000, tsp: 50, nsp: 30},
+            {name: "Viscosity 60°C", dt: 30000, tsp: 60, nsp: 30},
+            {name: "Viscosity 80°C", dt: 30000, tsp: 80, nsp: 30},
+            {name: "Viscosity 100°C", dt: 30000, tsp: 100, nsp: 30},
         ]
     },
     {
@@ -132,12 +132,12 @@ export const DefaultViscometerPrograms: ViscometerProgram[] = [
         version: version,
         description: "Measure viscosity of the sample at constant shear rate and different temperatures.",
         steps: [
-            {name: "Viscosity 30°C", dt: 10000, tsp: 30, nsp: 50},
-            {name: "Viscosity 40°C", dt: 10000, tsp: 40, nsp: 50},
-            {name: "Viscosity 50°C", dt: 10000, tsp: 50, nsp: 50},
-            {name: "Viscosity 60°C", dt: 10000, tsp: 60, nsp: 50},
-            {name: "Viscosity 80°C", dt: 10000, tsp: 80, nsp: 50},
-            {name: "Viscosity 100°C", dt: 10000, tsp: 100, nsp: 50},
+            {name: "Viscosity 30°C", dt: 30000, tsp: 30, nsp: 50},
+            {name: "Viscosity 40°C", dt: 30000, tsp: 40, nsp: 50},
+            {name: "Viscosity 50°C", dt: 30000, tsp: 50, nsp: 50},
+            {name: "Viscosity 60°C", dt: 30000, tsp: 60, nsp: 50},
+            {name: "Viscosity 80°C", dt: 30000, tsp: 80, nsp: 50},
+            {name: "Viscosity 100°C", dt: 30000, tsp: 100, nsp: 50},
         ]
     },
     {
@@ -148,7 +148,7 @@ export const DefaultViscometerPrograms: ViscometerProgram[] = [
         version: version,
         description: "Measure viscosity of the sample at constant shear rate and constant temperature.",
         steps: [
-            {name: "Viscosity 30°C", dt: 10000, tsp: 30, nsp: 50},
+            {name: "Viscosity 30°C", dt: 30000, tsp: 30, nsp: 50},
         ]
     },
 ]

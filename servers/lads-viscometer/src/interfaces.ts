@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 // SPDX-License-Identifier: AGPL 3
 
-import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSMultiStateDiscreteControlFunction, LADSFunctionalUnit, LADSDevice } from "@interfaces"
+import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSMultiStateDiscreteControlFunction, LADSFunctionalUnit, LADSDevice, LADSComponent } from "@interfaces"
 import { UAObject } from "node-opcua"
 
 /*
@@ -44,6 +44,14 @@ export interface ViscometerFunctionalUnit extends Omit<LADSFunctionalUnit, "func
 export interface ViscometerFunctionalUnitSet extends UAObject {
     viscometerUnit: ViscometerFunctionalUnit
 }
+
+interface ViscometerComponents extends UAObject {
+    barcodeReader: LADSComponent
+    temperatureController: LADSComponent
+    viscometer: LADSComponent
+}
+
 export interface ViscometerDevice extends Omit<LADSDevice, "functionalUnitSet"> {
     functionalUnitSet: ViscometerFunctionalUnitSet
+    components: ViscometerComponents
 }

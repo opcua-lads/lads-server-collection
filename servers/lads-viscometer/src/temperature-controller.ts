@@ -22,28 +22,53 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { EventEmitter } from 'events';
 import { SerialPort, ReadlineParser } from 'serialport';
 import { DataValue } from 'node-opcua';
-import { LADSAnalogControlFunction, LADSFunctionalState } from '@interfaces';
-import { AnalogControlFunctionImpl, getNumericValue, raiseEvent, setNumericValue } from '@utils';
+import { LADSAnalogControlFunction, LADSComponent, LADSFunctionalState } from '@interfaces';
+import { AnalogControlFunctionImpl, getNumericValue, initComponent, LADSComponentOptions, raiseEvent, setNumericValue } from '@utils';
 import { AFODictionary, AFODictionaryIds } from '@afo';
+import { ViscometerUnitImpl } from './unit';
+import { ControllerOptions } from './server';
+import { ControllerImpl } from './controller';
 
 //---------------------------------------------------------------
 // abstract temperature controller implementation
 //---------------------------------------------------------------
-export abstract class TemperatureController extends AnalogControlFunctionImpl {
+export class TemperatureControllerImpl extends ControllerImpl {
+    temperatureControlFunction: TemperatureControlFunction
+    constructor(parent: ViscometerUnitImpl, options: ControllerOptions, component?: LADSComponent) {
+        super(parent, options)
+        const functionSet = parent.functionalUnit.functionSet
+        const port = options?.serialPort ?? ""
+        this.temperatureControlFunction = port.length > 0 ? new TemperatureControlFunctionThermosel(functionSet.temperatureController, port) : new TemperatureControlFunctionSimulator(functionSet.temperatureController)
+
+        if (component) {
+            const componentOptions: LADSComponentOptions = {
+                manufacturer: "Brookfield",
+                model: "Thermosel"
+            }
+            initComponent(component, componentOptions)
+        }
+    }
+
+    start() { this.temperatureControlFunction.start() }
+    stop() { this.temperatureControlFunction.stop() }
+}
+
+//---------------------------------------------------------------
+// abstract temperature control function implementation
+//---------------------------------------------------------------
+export abstract class TemperatureControlFunction extends AnalogControlFunctionImpl {
 
     constructor(controller: LADSAnalogControlFunction) {
-        super(controller)
-        setNumericValue(controller.currentValue, 25.0)
-        setNumericValue(controller.targetValue, 50.0)
+        super(controller, 50.0, 25.0)
         controller.targetValue.on("value_changed", (dataValue => { raiseEvent(this.controller, `Temperature set-point changed to ${dataValue.value.value}°C`) }))
         AFODictionary.addControlFunctionReferences(this.controller, AFODictionaryIds.temperature_controller, AFODictionaryIds.temperature)
     }
 }
 
 //---------------------------------------------------------------
-// simulated temperature controller implementation
+// simulated temperature control function implementation
 //---------------------------------------------------------------
-export class TemperatureControllerSimulator extends TemperatureController {
+export class TemperatureControlFunctionSimulator extends TemperatureControlFunction {
 
     constructor(controller: LADSAnalogControlFunction) {
         super(controller)
@@ -63,17 +88,17 @@ export class TemperatureControllerSimulator extends TemperatureController {
 }
 
 //---------------------------------------------------------------
-// thermosel temperature controller implementation
+// thermosel temperature control function implementation
 //---------------------------------------------------------------
-export class TemperatureControllerThermosel extends TemperatureController {
+export class TemperatureControlFunctionThermosel extends TemperatureControlFunction {
     fromDevice = false
     temperatureController: ThermoselController
 
-    constructor(controller: LADSAnalogControlFunction, port = '/dev/tty.usbserial-2110') {
+    constructor(controller: LADSAnalogControlFunction, port: string) {
         super(controller)
 
         // inizialize temperature controller
-        const temperatureController = new ThermoselController({ port: port, pollInterval: 2000 });
+        const temperatureController = new ThermoselController({ port: port, pollInterval: 1000 });
         this.temperatureController = temperatureController
         temperatureController.on('state', this.handleStateChanged.bind(this));
         temperatureController.on('temperature', this.handelCurrentValueChanged.bind(this));
@@ -258,7 +283,7 @@ export class ThermoselController extends EventEmitter {
 
 function testThermosel() {
     // Example usage:
-    const temperatureController = new ThermoselController({ port: '/dev/tty.usbserial-2110', pollInterval: 2000 });
+    const temperatureController = new ThermoselController({ port: '/dev/tty.usbserial-2110', pollInterval: 1000 });
 
     temperatureController.on('state', (state) => console.log(`State changed to: ${state}`));
     temperatureController.on('temperature', (temp) => console.log(`Current temperature: ${temp}°C`));
