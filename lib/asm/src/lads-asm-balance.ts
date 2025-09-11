@@ -21,7 +21,7 @@ import { ResultRecord } from "@utils"
 //---------------------------------------------------------------
 // Interfaces
 //---------------------------------------------------------------
-const BalanceManifest = "http://purl.allotrope.org/manifests/ph/REC/2025/03/balance.manifest"
+const BalanceManifest = "http://purl.allotrope.org/manifests/balance/REC/2025/03/balance.manifest"
 
 export interface BalanceModel extends AllotropeSimpleModel {
     "weighing aggregate document": BalanceAggregateDocument
@@ -148,7 +148,7 @@ export class BalanceRecorder extends AllotropeSimpleModelRecorder {
         const measurementAggregateDocument = AllotropeSimpleModelRecorder.createMeasurementAggregateDocument(options, [measurementDocument]) as BalanceMeasurementAggregateDocument
         measurementAggregateDocument["experiment identifier"] = identifier
 
-        // convert generic device documents to pH specific device documents
+        // convert generic device documents to model specific device documents
         const deviceSystemDocument = AllotropeSimpleModelRecorder.createDeviceSystemDocument(options)
         const deviceDocuments = deviceSystemDocument["device document"].map(deviceDocument => deviceDocument as BalanceDeviceDocument)
         const calibrationCertificate = options.calibrationCertficate?options.calibrationCertficate:"Default calibration certficicate"
