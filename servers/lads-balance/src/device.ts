@@ -24,15 +24,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponent } from "@interfaces"
-import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper } from "@utils"
-import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./balance-interfaces"
+import { LADSComponent, LADSDevice } from "@interfaces"
+import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
+import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
+import { BalanceDeviceConfig, BalanceServerImpl } from "./server"
+import { UAObject } from "node-opcua"
+import { BalanceSimulatorUnitImpl } from "./unit-simulator"
 //import { pHMeterSevenEasyUnitImpl } from "./ph-meter-unit-seven-easy"
 //import { pHMeterSimulatorUnitImpl } from "./ph-meter-unit-simulator"
 
-//---------------------------------------------------------------
+//---------------------------------------------------------------    constructor(server: AtmoWebServerImpl, config: AtmoWebDeviceConfig) {
+
+
 export class BalanceDeviceImpl {
-    serialPort: string
+    config: BalanceDeviceConfig
     device: BalanceDevice
 
     static isSerialPortAvailable(path: string): boolean {
@@ -44,14 +49,20 @@ export class BalanceDeviceImpl {
             return false;
         }
     }
-    constructor(device: BalanceDevice, serialPort: string) {
-        this.device = device
-        this.serialPort = serialPort
+    constructor(server: BalanceServerImpl, config: BalanceDeviceConfig) {
 
-        const functionalUnit = this.getFunctionalUnit()
-        const runAsSimulation = !BalanceDeviceImpl.isSerialPortAvailable(serialPort)
-        console.log(`Running ${runAsSimulation ? "as simulator" : "device at port " + serialPort}..`)
-        //const functionalUnitImpl = runAsSimulation ? new pHMeterSimulatorUnitImpl(this, functionalUnit) : new pHMeterSevenEasyUnitImpl(this, functionalUnit, serialPort)
+        // create device object
+        const nameSpace = server.nameSpaceApp
+        const addressSpace = nameSpace.addressSpace
+        const deviceType = nameSpace.findObjectType("BalanceDeviceType")
+        const device = deviceType.instantiate({
+            componentOf: getDeviceSet(addressSpace),
+            browseName: config.name,
+        }) as BalanceDevice
+        this.device = device
+
+        // console.log(`Running ${runAsSimulation ? "as simulator" : "device at port " + serialPort}..`)
+        const functionalUnitImpl = new BalanceSimulatorUnitImpl(this, this.getFunctionalUnit())
 
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
@@ -65,21 +76,13 @@ export class BalanceDeviceImpl {
             location: defaultLocation,
         }
         initComponent(device, deviceOptions)
-        const components = device.getComponentByName("Components")
-        const sensor = components.getComponentByName("pHSensor") as LADSComponent
-        const sensorOptions: LADSComponentOptions = {
-            manufacturer: "Mettler Toledo",
-            model: "DPAS 405",
-            serialNumber: "0815",
-        }
-        initComponent(sensor, sensorOptions)
 
         // attach device helper
         const helper = new LADSDeviceHelper(device)
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
-        AFODictionary.addReferences(device, AFODictionaryIds.measurement_device, AFODictionaryIds.pH_measurement)
+        AFODictionary.addReferences(device, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
     }
 
     getFunctionalUnit(): BalanceFunctionalUnit {

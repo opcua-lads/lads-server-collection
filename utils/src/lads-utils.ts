@@ -65,7 +65,8 @@ import {
     MachineIdentificationType
 } from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from "node-opcua-nodeset-di"
-import { setStringValue } from "./lads-variable-utils"
+import { setDateTimeValue, setStringValue } from "./lads-variable-utils"
+import { AFODictionary } from "@afo"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -107,6 +108,14 @@ export function getAMBNamespace(addressSpace: IAddressSpace): INamespace {
 
 export function getMachineryNamespace(addressSpace: IAddressSpace): INamespace {
     return addressSpace.getNamespace('http://opcfoundation.org/UA/Machinery/')
+}
+
+export function getDINamespace(addressSpace: IAddressSpace): INamespace {
+    return addressSpace.getNamespace('http://opcfoundation.org/UA/DI/')
+}
+
+export function getDeviceSet(addressSpace: IAddressSpace): UAObject {
+    return <UAObject>addressSpace.findNode(coerceNodeId(DIObjectIds.deviceSet, getDINamespace(addressSpace).index))
 }
 
 //---------------------------------------------------------------
@@ -297,6 +306,34 @@ export function copyProgramTemplate(source: LADSProgramTemplate, target: LADSPro
     target.modified.setValueFromSource(source.modified.readValue().value)
     target.deviceTemplateId.setValueFromSource(source.deviceTemplateId.readValue().value)
     target.version?.setValueFromSource(source.version?.readValue().value)
+}
+
+export interface ProgramTemplateOptions {
+    identifier: string
+    description: string
+    author: string
+    created: Date
+    modified: Date
+    version?: string
+    referenceIds?: string[]
+}
+
+export interface ProgramTemplateElement { identifier: string, programTemplate: LADSProgramTemplate }
+
+export function addProgramTemplate(programTemplateSet: UAObject, options: ProgramTemplateOptions): ProgramTemplateElement {
+    if (!programTemplateSet) return
+    const programTemplateType = getLADSObjectType(programTemplateSet.addressSpace, "ProgramTemplateType")
+    const programTemplate = programTemplateType.instantiate({
+        componentOf: programTemplateSet,
+        browseName: options.identifier
+    }) as LADSProgramTemplate
+    setStringValue(getDescriptionVariable(programTemplate), options.description)
+    setStringValue(programTemplate.author, options.author)
+    setStringValue(programTemplate.deviceTemplateId, options.identifier)
+    setDateTimeValue(programTemplate.created, options.created)
+    setDateTimeValue(programTemplate.modified, options.modified)
+    if (options.referenceIds) { AFODictionary.addReferences(programTemplate, ...options.referenceIds) }
+    return { identifier: options.identifier, programTemplate: programTemplate }
 }
 
 export function createDeviceProgramRunId(programTemplateId: string): string {

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL 3
 
 /*
-LADS pH-Meter
+LADS Balance
 Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSFunctionalUnit, LADSDevice, LADSComponent } from "@interfaces"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSComponent } from "@interfaces"
 import { UAObject } from "node-opcua"
 
 //---------------------------------------------------------------

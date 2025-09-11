@@ -19,20 +19,75 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, assert, coerceNodeId, DataType, OPCUAServer, UAObject } from "node-opcua"
+import { ApplicationType, assert, INamespace, OPCUAServer } from "node-opcua"
 import { join } from "path"
-import { DIObjectIds, getChildObjects } from "@utils"
-import { BalanceDevice } from "./balance-interfaces"
-import { BalanceDeviceImpl } from "./balance-device"
+import { BalanceDeviceImpl } from "./device"
+import { readFile } from "fs/promises"
 
 //---------------------------------------------------------------
 export const IncludeAFO = true
 
 //---------------------------------------------------------------
+// config
+//---------------------------------------------------------------
+export enum BalanceProtocols {
+    Simulator = "Simulator",
+    SICS = "SICS",
+    SBI = "SBI"
+}
+export interface BalanceConfig {
+    devices: BalanceDeviceConfig[]
+}
+
+export interface BalanceDeviceConfig {
+    serialPort: string
+    protocol: string
+    name: string
+}
+
+// Type guard
+function isBalanceConfig(obj: any): obj is BalanceConfig {
+    return (
+        Array.isArray(obj.devices) &&
+        obj.steps.every(isBalanceDeviceConfig)
+    )
+}
+
+function isBalanceDeviceConfig(obj: any): obj is BalanceDeviceConfig {
+    return (
+        typeof obj.name === 'string' &&
+        typeof obj.serialPort === 'string' &&
+        typeof obj.protocol === 'string'
+    )
+}
+
+const DefaultConfig: BalanceConfig = {
+    devices: [
+        { serialPort: "", protocol: BalanceProtocols.Simulator, name: "My Simulated Balance" },
+        { serialPort: "/dev/cu.PL2303G-USBtoUART210", protocol: BalanceProtocols.SBI, name: "My Sartorius Balance" },
+    ]
+}
+
+async function loadConfig(): Promise<BalanceConfig> {
+    // load config
+    const path = join(__dirname, "config.json")
+    try {
+        const content = await readFile(path, 'utf-8')
+        const parsed = JSON.parse(content)
+        return isBalanceConfig(parsed) ? parsed as BalanceConfig : DefaultConfig
+    } catch (err) {
+        console.warn(`Failed to load configuration file: ${path}`)
+        console.log(`Running in simulation mode`)
+        return DefaultConfig
+    }
+}
+
+//---------------------------------------------------------------
 // server implementation
 //---------------------------------------------------------------
-class BalanceServerImpl {
+export class BalanceServerImpl {
     server: OPCUAServer
+    nameSpaceApp: INamespace
 
     constructor(port: number) {
         const uri = "LADS-Balance-Server"
@@ -79,29 +134,16 @@ class BalanceServerImpl {
         }
     }
 
-    async start(serialPort: string) {
+    async start() {
         // wait until server initialized
         await this.server.initialize()
 
         // build structure
         const addressSpace = this.server.engine.addressSpace
-        const nameSpaceDI = addressSpace.getNamespace('http://opcfoundation.org/UA/DI/')
-        const nameSpacepH = addressSpace.getNamespace("http://spectaris.de/Balance/")
-        assert(nameSpacepH)
-        const deviceType = nameSpacepH.findObjectType("BalanceDeviceType")
-        assert(deviceType)
-        const deviceSet = <UAObject>addressSpace.findNode(coerceNodeId(DIObjectIds.deviceSet, nameSpaceDI.index))
-        assert(deviceSet)
-        const deviceImplementations: BalanceDeviceImpl[] = []
-        const devices = getChildObjects(deviceSet)
-        devices.forEach(device => {
-            if (device.typeDefinitionObj === deviceType) {
-                const balanceDevice = device as BalanceDevice
-                const index = deviceImplementations.length
-                balanceDevice.serialNumber.setValueFromSource({ dataType: DataType.String, value: (4711 + index).toString() })
-                deviceImplementations.push(new BalanceDeviceImpl(balanceDevice, serialPort))
-            }
-        })
+        this.nameSpaceApp = addressSpace.getNamespace("http://aixengineers.de/Balance/")
+        assert(this.nameSpaceApp)
+        const config = await loadConfig()
+        config.devices.forEach(deviceConfig => { const device = new BalanceDeviceImpl(this, deviceConfig) })
 
         // finalize start
         await this.server.start()
@@ -116,10 +158,7 @@ class BalanceServerImpl {
 //---------------------------------------------------------------
 export async function main() {
     const server = new BalanceServerImpl(4841)
-    const argv = process.argv.slice()
-    const portIdx = argv.indexOf('-p');
-    const port = portIdx !== -1 ? String(argv[portIdx + 1]) : '';
-    await server.start(port)
+    await server.start()
 }
 
 main()
