@@ -123,6 +123,7 @@ export class Units {
     static readonly s = "s"
     static readonly _s = "s-1"
     static readonly µm = "µm"
+    static readonly g = "g"
 }
 
 export interface Property {
