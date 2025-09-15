@@ -87,7 +87,6 @@ async function loadConfig(): Promise<BalanceConfig> {
 //---------------------------------------------------------------
 export class BalanceServerImpl {
     server: OPCUAServer
-    nameSpaceApp: INamespace
 
     constructor(port: number) {
         const uri = "LADS-Balance-Server"
@@ -140,10 +139,8 @@ export class BalanceServerImpl {
 
         // build structure
         const addressSpace = this.server.engine.addressSpace
-        this.nameSpaceApp = addressSpace.getNamespace("http://aixengineers.de/Balance/")
-        assert(this.nameSpaceApp)
         const config = await loadConfig()
-        config.devices.forEach(deviceConfig => { const device = new BalanceDeviceImpl(this, deviceConfig) })
+        config.devices.forEach(deviceConfig => { const device = new BalanceDeviceImpl(addressSpace, deviceConfig) })
 
         // finalize start
         await this.server.start()

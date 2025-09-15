@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL 3
 
 /*
-LADS pH-Meter
+LADS Balance
 Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
@@ -24,14 +24,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponent, LADSDevice } from "@interfaces"
 import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
-import { BalanceDeviceConfig, BalanceServerImpl } from "./server"
-import { UAObject } from "node-opcua"
+import { BalanceDeviceConfig } from "./server"
+import { IAddressSpace } from "node-opcua"
 import { BalanceSimulatorUnitImpl } from "./unit-simulator"
-//import { pHMeterSevenEasyUnitImpl } from "./ph-meter-unit-seven-easy"
-//import { pHMeterSimulatorUnitImpl } from "./ph-meter-unit-simulator"
 
 //---------------------------------------------------------------    constructor(server: AtmoWebServerImpl, config: AtmoWebDeviceConfig) {
 
@@ -49,11 +46,10 @@ export class BalanceDeviceImpl {
             return false;
         }
     }
-    constructor(server: BalanceServerImpl, config: BalanceDeviceConfig) {
+    constructor(addressSpace: IAddressSpace, config: BalanceDeviceConfig) {
 
         // create device object
-        const nameSpace = server.nameSpaceApp
-        const addressSpace = nameSpace.addressSpace
+        const nameSpace = addressSpace.getNamespace("http://aixengineers.de/Balance/")
         const deviceType = nameSpace.findObjectType("BalanceDeviceType")
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
@@ -66,13 +62,13 @@ export class BalanceDeviceImpl {
 
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
-            manufacturer: getStringValue(device.manufacturer, "Mettler Toledo"),
-            model: getStringValue(device.model, "Super pH-Meter"),
+            manufacturer: getStringValue(device.manufacturer, "AixEngineers"),
+            model: getStringValue(device.model, "Super Balance"),
             serialNumber: getStringValue(device.serialNumber, "4711"),
             softwareRevision: "1.0",
             deviceRevision: "1.0",
             assetId: "0815-4711",
-            componentName: "My pH-meter",
+            componentName: "My Balance",
             location: defaultLocation,
         }
         initComponent(device, deviceOptions)
