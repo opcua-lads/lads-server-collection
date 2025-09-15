@@ -23,59 +23,87 @@ import { getNumericValue, setNumericValue } from '@utils'
 import { BalanceFunctionalUnit } from './interfaces';
 import { BalanceDeviceImpl } from './device';
 import { BalanceUnitImpl } from './unit';
-import { AccessLevelFlag, DataType, DataValue, UAVariable } from 'node-opcua';
+import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';
+import { SimulatedBalance } from './balance-simulator';
 
 //---------------------------------------------------------------
 export class BalanceSimulatorUnitImpl extends BalanceUnitImpl {
-    simSampleWeight: UAVariable
-    simTareWeight: UAVariable
-    simGrossWeight: UAVariable
+    sampleWeight: UAVariable
+    tareWeight: UAVariable
+    zeroWeight: UAVariable
+    grossWeight: UAVariable
+    rawWeight: UAVariable
+    filteredRawWeight = 0
 
     constructor(parent: BalanceDeviceImpl, functionalUnit: BalanceFunctionalUnit) {
         super(parent, functionalUnit)
+
+        // create balance
+        this.balance = new SimulatedBalance(this.getRawWeight.bind(this))
+        
+        // create variables for simulator
         const namespace = functionalUnit.namespace
         const simulator = namespace.addObject({
             componentOf: functionalUnit,
             browseName: "Simulator"
         })
-        this.simSampleWeight = namespace.addVariable({
+        this.sampleWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Sample Weight",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 0.0 }
         })
-        this.simTareWeight = namespace.addVariable({
+        this.tareWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Tare Weight",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 0.0 }
         })
-        this.simGrossWeight = namespace.addVariable({
+        this.zeroWeight = namespace.addVariable({
+            componentOf: simulator,
+            browseName: "Zero Weight",
+            dataType: DataType.Double,
+            value: { dataType: DataType.Double, value: 0.0 }
+        })
+        this.grossWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Gross Weight",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 0.0 },
             accessLevel: AccessLevelFlag.CurrentRead
         })
+        this.rawWeight = namespace.addVariable({
+            componentOf: simulator,
+            browseName: "Raw Weight",
+            dataType: DataType.Double,
+            value: { dataType: DataType.Double, value: 0.0 },
+            accessLevel: AccessLevelFlag.CurrentRead
+        })
 
-        this.simSampleWeight.on("value_changed", (dataValue: DataValue) => { setNumericValue(this.simGrossWeight, getNumericValue(this.simTareWeight) + Number(dataValue.value.value)) })
-        this.simTareWeight.on("value_changed", (dataValue: DataValue) => { setNumericValue(this.simGrossWeight, getNumericValue(this.simSampleWeight) + Number(dataValue.value.value)) })
-
-        // start run loop
+        // start simulation loop
         const dT = 200
-        setInterval(() => { this.evaluate(dT) }, dT)
+        setInterval(async () => { this.evaluate(dT) }, 200)
+
+        // start balance polling loop
+        setInterval(async () => { 
+            await this.balance.getCurrentReading()
+        }, 500)
+
+        this.postInitialize()
     }
 
-    get simulationMode(): boolean { return true }
+    getRawWeight(): number { return this.filteredRawWeight }
 
-    private evaluate(dT: number) {
-        const sim_gross = getNumericValue(this.simGrossWeight)
-        const sim_tare = getNumericValue(this.simTareWeight)
+    private async evaluate(dT: number) {        
+        // compute simulated values
+        const gross = getNumericValue(this.sampleWeight) + getNumericValue(this.tareWeight)
+        const raw = gross + getNumericValue(this.zeroWeight)
+        setNumericValue(this.grossWeight, gross)
+        setNumericValue(this.rawWeight, raw)
 
-        const cf = 0.1
-        const new_gross = (1.0 - cf) * getNumericValue(this.balanceSensor.rawValue) + cf * sim_gross
-        setNumericValue(this.balanceSensor.rawValue, new_gross)
-        setNumericValue(this.balanceSensor.sensorValue, new_gross + sim_tare)
+        // evaluate low pass filter
+        const cf = 0.2
+        this.filteredRawWeight = (1.0 - cf) * this.filteredRawWeight + cf * raw
     }
 
 }

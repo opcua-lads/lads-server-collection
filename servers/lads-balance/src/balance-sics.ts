@@ -102,12 +102,6 @@ export class SicsBalance extends SerialBalance {
       if (s) info.serialNumber = s[1].trim();
     } catch {}
 
-    try {
-      const respI10 = await this.sendCommand("I10");
-      const u = respI10.match(/I10\s+(.+)/);
-      if (u) info.userId = u[1].trim();
-    } catch {}
-
     return info;
   }
 }

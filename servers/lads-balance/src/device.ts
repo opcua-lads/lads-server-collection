@@ -24,11 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig } from "./server"
 import { IAddressSpace } from "node-opcua"
 import { BalanceSimulatorUnitImpl } from "./unit-simulator"
+import { BalanceEvents, DeviceInfo } from "./balance"
 
 //---------------------------------------------------------------    constructor(server: AtmoWebServerImpl, config: AtmoWebDeviceConfig) {
 
@@ -57,21 +58,8 @@ export class BalanceDeviceImpl {
         }) as BalanceDevice
         this.device = device
 
-        // console.log(`Running ${runAsSimulation ? "as simulator" : "device at port " + serialPort}..`)
-        const functionalUnitImpl = new BalanceSimulatorUnitImpl(this, this.getFunctionalUnit())
-
-        // initialize nameplates
-        const deviceOptions: LADSComponentOptions = {
-            manufacturer: getStringValue(device.manufacturer, "AixEngineers"),
-            model: getStringValue(device.model, "Super Balance"),
-            serialNumber: getStringValue(device.serialNumber, "4711"),
-            softwareRevision: "1.0",
-            deviceRevision: "1.0",
-            assetId: "0815-4711",
-            componentName: "My Balance",
-            location: defaultLocation,
-        }
-        initComponent(device, deviceOptions)
+        const balanceUnitImpl = new BalanceSimulatorUnitImpl(this, this.getFunctionalUnit())
+        balanceUnitImpl.balance.on(BalanceEvents.DeviceInfo, this.setNameplate.bind(this))
 
         // attach device helper
         const helper = new LADSDeviceHelper(device)
@@ -88,6 +76,21 @@ export class BalanceDeviceImpl {
         } else {
             return this.device.functionalUnitSet.balanceUnit
         }
+    }
+
+    setNameplate(deviceInfo: DeviceInfo) {
+        // initialize nameplates
+        const deviceOptions: LADSComponentOptions = {
+            manufacturer: deviceInfo.manufacturer,
+            model: deviceInfo.model,
+            serialNumber: deviceInfo.serialNumber || "Unknown",
+            softwareRevision: deviceInfo.firmware || "",
+            deviceRevision: deviceInfo.hardware|| "",
+            assetId: "0815-4711",
+            componentName: "My Balance",
+            location: defaultLocation,
+        }
+        initComponent(this.device, deviceOptions)
     }
 
 }

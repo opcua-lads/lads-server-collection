@@ -23,12 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSComponent } from "@interfaces"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
 import { UAObject } from "node-opcua"
 
 //---------------------------------------------------------------
 export interface BalanceFunctionSet extends UAObject {
-    balanceSensor: LADSAnalogScalarSensorFunction
+    weightSensor: LADSAnalogScalarSensorFunction
+    weightStable: LADSTwoStateDiscreteSensorFunction
+    tareMode: LADSMultiStateDiscreteSensorFunction
 }
 
 export interface BalanceFunctionalUnit extends Omit<LADSFunctionalUnit, "functionSet"> {
@@ -43,7 +45,5 @@ export interface BalanceDevice extends Omit<LADSDevice, "functionalUnitSet, comp
     components: BalanceComponents
 }
 
-export interface BalanceComponents extends UAObject {
-    pHSensor: LADSComponent
-}
+export interface BalanceComponents extends UAObject {}
 

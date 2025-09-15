@@ -1,3 +1,24 @@
+// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-License-Identifier: AGPL 3
+
+/*
+LADS Balance
+Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 /**
  * Common types and base class for all balance drivers.
  */
@@ -17,10 +38,10 @@ export enum BalanceStatus {
  * isTared tells whether the displayed weight is net (true) or gross (false).
  */
 export interface BalanceReading {
-    weight: number;
-    unit: string;
-    stable: boolean;
-    isTared: boolean;
+    weight: number
+    unit: string
+    stable: boolean
+    isTared: boolean
 }
 
 /**
@@ -29,12 +50,11 @@ export interface BalanceReading {
  * depending on the specific balance model and protocol.
  */
 export interface DeviceInfo {
-    manufacturer: string;
-    model: string;
-    serialNumber?: string;
-    firmware?: string;
-    hardware?: string;
-    userId?: string;
+    manufacturer: string
+    model: string
+    serialNumber?: string
+    firmware?: string
+    hardware?: string
 }
 
 /**
@@ -67,7 +87,7 @@ export type BalanceEventMap = {
 export abstract class Balance extends EventEmitter{
     protected emitter = new EventEmitter()
 
-    constructor(public readonly id: string) { super() }
+    constructor() { super() }
 
     abstract connect(): Promise<void>;
     abstract disconnect(): Promise<void>;

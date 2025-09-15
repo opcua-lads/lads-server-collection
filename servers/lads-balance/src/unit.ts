@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL 3
 
 /*
-LADS pH-Meter
+LADS Balance
 Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
@@ -24,13 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate } from "@utils"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
+import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { BalanceFunctionalUnit, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
+import { Balance, BalanceEvents, BalanceReading, BalanceStatus } from "./balance"
+import { EventEmitter } from "events"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -38,7 +40,8 @@ interface CurrentRunOptions {
     runId: string,
     started: Date,
     startedMilliseconds: number
-    estimatedRuntimeMilliseconds: number
+    minRunTimeMilliseconds: number
+    maxRuntimeMilliseconds: number
     programTemplate: LADSProgramTemplate
     supervisoryJobId: string
     supervisoryTaskId: string
@@ -53,23 +56,26 @@ interface CurrentRunOptions {
 export class ProgramTemplateIds {
     static readonly RegisterWeight = "Register Weight"
     static readonly SetTare = "Set Tare"
-    static readonly SetPresetTare = "Set Preset Tare"
-    static readonly ClearTare = "Clear Tare"
     static readonly SetZero = "Set Zero"
 }
 
 //---------------------------------------------------------------
-export abstract class BalanceUnitImpl {
+export abstract class BalanceUnitImpl extends EventEmitter {
     parent: BalanceDeviceImpl
+    balance: Balance
+    lastReading: BalanceReading
     functionalUnit: BalanceFunctionalUnit
     functionalUnitState: UAStateMachineEx
-    balanceSensor: LADSAnalogScalarSensorFunction
+    currentWeight: LADSAnalogScalarSensorFunction
+    weightStable: LADSTwoStateDiscreteSensorFunction
+    tareMode: LADSMultiStateDiscreteSensorFunction
     programTemplates: LADSProgramTemplate[] = []
     activeProgram: LADSActiveProgram
     currentRunOptions: CurrentRunOptions
     programTemplateElements: ProgramTemplateElement[] = []
 
     constructor(parent: BalanceDeviceImpl, functionalUnit: BalanceFunctionalUnit) {
+        super()
         this.parent = parent
 
         // init functional unit & state machine
@@ -78,7 +84,7 @@ export abstract class BalanceUnitImpl {
         stateMachine.start.bindMethod(this.start.bind(this))
         stateMachine.startProgram.bindMethod(this.startProgram.bind(this))
         stateMachine.stop.bindMethod(this.stop.bind(this))
-        
+
         stateMachine.abort.bindMethod(this.abort.bind(this))
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
@@ -87,19 +93,34 @@ export abstract class BalanceUnitImpl {
         const addressSpace = this.functionalUnit.addressSpace
         const functionSet = true ? this.functionalUnit.getComponentByName("FunctionSet") as BalanceFunctionSet : functionalUnit.functionSet
         // balance sensor
-        this.balanceSensor = functionSet.balanceSensor
-        this.balanceSensor.sensorValue.historizing = true
-        addressSpace.installHistoricalDataNode(this.balanceSensor.sensorValue)
+        this.currentWeight = functionSet.weightSensor
+        this.currentWeight.sensorValue.historizing = true
+        addressSpace.installHistoricalDataNode(this.currentWeight.sensorValue)
+        this.weightStable = functionSet.weightStable
+        this.tareMode = functionSet.tareMode
 
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
-        AFODictionary.addSensorFunctionReferences(this.balanceSensor, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
+        AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
+    }
+    
+    async postInitialize() {
+
+        // connect to balance object
+        const status = await this.balance.getStatus()
+        if (status === BalanceStatus.Offline) await this.balance.connect()
+        
+        // update infoarmation model variables from balance object events
+        this.balance.on(BalanceEvents.Reading, (reading: BalanceReading) => {
+            this.lastReading = reading
+            const statusCode = reading.stable?StatusCodes.Good:StatusCodes.UncertainSensorNotAccurate
+            setNumericValue(this.currentWeight.sensorValue, reading.weight, statusCode)
+            setBooleanValue(this.weightStable.sensorValue, reading.stable)
+            setNumericValue(this.tareMode.sensorValue, reading.isTared?1:0)
+        })
 
         // init program manager
         this.initProgramTemplates()
     }
-
-    
-    abstract get simulationMode(): boolean
 
     //---------------------------------------------------------------
     // program manager implementation
@@ -118,22 +139,6 @@ export abstract class BalanceUnitImpl {
         this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
             identifier: ProgramTemplateIds.SetTare,
             description: "Tare balance",
-            author: "AixEngineers",
-            created: date,
-            modified: date,
-            referenceIds: [AFODictionaryIds.calibration, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight]
-        }))
-        this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
-            identifier: ProgramTemplateIds.SetPresetTare,
-            description: "Set tare to a preset value provided as property 'tare=<value>'. Tare will be cleared when no property is provided.",
-            author: "AixEngineers",
-            created: date,
-            modified: date,
-            referenceIds: [AFODictionaryIds.calibration, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight]
-        }))
-        this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
-            identifier: ProgramTemplateIds.ClearTare,
-            description: "Clear tare value.",
             author: "AixEngineers",
             created: date,
             modified: date,
@@ -175,7 +180,8 @@ export abstract class BalanceUnitImpl {
             programTemplateId: template.identifier,
             started: started,
             startedMilliseconds: Date.now(),
-            estimatedRuntimeMilliseconds: 60000,
+            minRunTimeMilliseconds: 1000,
+            maxRuntimeMilliseconds: template.identifier === ProgramTemplateIds.RegisterWeight ? 10000 : 5000,
             programTemplate: template.programTemplate,
             runId: deviceProgramRunId,
             supervisoryJobId: "",
@@ -186,21 +192,14 @@ export abstract class BalanceUnitImpl {
     protected enterMeasuring(context: SessionContext) {
         const options = this.currentRunOptions
         const programTemplateId = options.programTemplateId
-        if (programTemplateId !== ProgramTemplateIds.RegisterWeight) {
-            // execute simple command
-            raiseEvent(this.functionalUnit, `Execting method ${programTemplateId}`)
-            switch (programTemplateId) {
-            case ProgramTemplateIds.SetTare:
-                break;
-            default:
-            }
-        } else {
-            raiseEvent(this.functionalUnit, `Starting method ${programTemplateId} with identifier ${options.runId}.`)
+        const createResult = programTemplateId === ProgramTemplateIds.RegisterWeight
+        raiseEvent(this.functionalUnit, `Starting method ${programTemplateId} with identifier ${options.runId}.`)
 
-            // additional references for calibration
+        // additional references for calibration
+
+        // create result
+        if (createResult) {
             const referenceIds: string[] = [AFODictionaryIds.weighing, AFODictionaryIds.weighing_aggregate_document, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result]
-
-            // create result
             const resultType = getLADSObjectType(this.functionalUnit.addressSpace, "ResultType")
             const resultSet = <UAObject>this.functionalUnit.programManager.resultSet
             options.result = <LADSResult><unknown>resultType.instantiate({
@@ -229,26 +228,33 @@ export abstract class BalanceUnitImpl {
                 sample: options.samples[0],
                 result: result,
                 runtime: this.functionalUnit.programManager.activeProgram.currentRuntime,
-                sampleWeight: this.balanceSensor.sensorValue,
-                grossWeight: this.balanceSensor.rawValue
+                sampleWeight: this.currentWeight.sensorValue,
+                grossWeight: this.currentWeight.rawValue
             })
-            this.simulationMode ? options.recorderInterval = setInterval(() => { options.recorder.createRecord() }, 2000) : 0
             options.recorder.addReferenceIds(...referenceIds)
-
-
-            // runtime recording
-            const activeProgram = this.functionalUnit.programManager.activeProgram
-            setNumericValue(activeProgram.currentRuntime, 0)
-            setNumericValue(activeProgram.estimatedRuntime, options.estimatedRuntimeMilliseconds)
-            options.runtimeInterval = setInterval(() => {
-                const runtime = Date.now() - options.startedMilliseconds
-                setNumericValue(activeProgram.currentRuntime, runtime)
-                if (runtime > options.estimatedRuntimeMilliseconds) {
-                    this.leaveMeasuring(LADSFunctionalState.Stopping)
-                }
-            }, 500)
-            this.functionalUnitState.setState(LADSFunctionalState.Running)
+            this.balance.on(BalanceEvents.Reading, (reading: BalanceReading) => { options.recorder.createRecord() })
         }
+
+        // runtime recording
+        const activeProgram = this.functionalUnit.programManager.activeProgram
+        setNumericValue(activeProgram.currentRuntime, 0)
+        setNumericValue(activeProgram.estimatedRuntime, options.maxRuntimeMilliseconds)
+        options.runtimeInterval = setInterval(() => {
+            const runtime = Date.now() - options.startedMilliseconds
+            setNumericValue(activeProgram.currentRuntime, runtime)
+
+            // check if method can be finished
+            if (runtime > options.minRunTimeMilliseconds){
+                if (this.lastReading) {
+                    if (this.lastReading.stable) {
+                        this.leaveMeasuring(LADSFunctionalState.Stopping)
+                    } else if (runtime > options.maxRuntimeMilliseconds) {
+                        this.leaveMeasuring(LADSFunctionalState.Aborting)
+                    }
+                }
+            }
+        }, 500)
+        this.functionalUnitState.setState(LADSFunctionalState.Running)
     }
 
     private leaveMeasuring(state: LADSFunctionalState) {
@@ -276,22 +282,22 @@ export abstract class BalanceUnitImpl {
 
                 // add end-points
                 const variableSet = result.variableSet
-                const referenceIds = []
+                const dataRecorder = options.recorder.dataRecorder
+                const lastRecord = dataRecorder.getLastRecord()
+                if (lastRecord) {
+                    const sampleWeightTrackIndex = dataRecorder.trackIndex(this.currentWeight.sensorValue)
+                    if (sampleWeightTrackIndex >= 0) {
+                        const sampleWeightResult = result.namespace.addVariable({
+                            componentOf: variableSet,
+                            browseName: "sample weight",
+                            description: "weighing endpoint",
+                            dataType: DataType.Double,
+                            value: { dataType: DataType.Double, value: lastRecord.tracksRecord[sampleWeightTrackIndex] }
+                        })
+                        AFODictionary.addReferences(sampleWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.sample_weight)
+                    }
+                }
 
-                // read endpoint values
-                const sampleWeight = getNumericValue(this.balanceSensor.sensorValue) // pH
-                const grossWeight = getNumericValue(this.balanceSensor.rawValue) // mV
-                const calibrationValues: number[] = getNumericArrayValue(this.balanceSensor.calibrationValues)
-
-                // create result variables
-                const sampleWeightResult = result.namespace.addVariable({
-                    componentOf: variableSet,
-                    browseName: "net weight",
-                    description: "weighing endpoint",
-                    dataType: DataType.Double,
-                    value: { dataType: DataType.Double, value: sampleWeight }
-                })
-                AFODictionary.addReferences(sampleWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.sample_weight)
                 // create ASM
                 const model = options.recorder.createModel()
                 const resultsDirectory = join(__dirname, "data", "results")
@@ -303,7 +309,7 @@ export abstract class BalanceUnitImpl {
                     dataType: DataType.String,
                     value: { dataType: DataType.String, value: json }
                 })
-                AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.weighing, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result, ...referenceIds)
+                AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.weighing, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result)
 
 
                 // set state to stopped and leave    

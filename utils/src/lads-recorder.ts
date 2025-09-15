@@ -173,6 +173,12 @@ export class VariableDataRecorder extends DataRecorder {
         return record
     }
 
+    getLastRecord(): ResultRecord {
+        const count = this.records.length
+        if (count === 0) return undefined
+        return this.records[count - 1]
+    }
+
     createCSVString(): string {
         let result = ""
         // header
@@ -219,8 +225,10 @@ export class VariableDataRecorder extends DataRecorder {
         return worksheet
     }
 
+    trackIndex(variable: UAVariable): number { return this.tracks.findIndex(track => (track.variable === variable)) }
+
     trackValues(variable: UAVariable): (number | string)[] {
-        const trackIndex = this.tracks.findIndex(track => (track.variable === variable))
+        const trackIndex = this.trackIndex(variable)
         if (trackIndex >= 0) {
             return this.records.map(record => record.tracksRecord[trackIndex])
         } else {
