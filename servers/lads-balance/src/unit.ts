@@ -116,6 +116,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
         // update information model variables from balance object events
         this.balance.on(BalanceEvents.Reading, (reading: BalanceReading) => {
+            if (!reading) return
             const responseType = reading.responseType ?? BalanceResponseType.Reading
             if (responseType === BalanceResponseType.Reading) {
                 const statusCode = reading.stable ? StatusCodes.Good : StatusCodes.UncertainSensorNotAccurate
@@ -139,6 +140,14 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 }
             }
             this.lastReading = reading
+        })
+
+        this.balance.on(BalanceEvents.Status, (status: BalanceStatus) => {
+            if (status === BalanceStatus.Offline) {
+                this.enterOffline()
+            } else if (status === BalanceStatus.Online) {
+                this.enterOnline()
+            }
         })
 
         // init program manager
