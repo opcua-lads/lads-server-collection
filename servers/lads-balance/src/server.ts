@@ -19,13 +19,13 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, assert, INamespace, OPCUAServer } from "node-opcua"
+import { ApplicationType, OPCUAServer } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 
 //---------------------------------------------------------------
-export const IncludeAFO = true
+export const IncludeAFO = false
 
 //---------------------------------------------------------------
 // config
@@ -64,7 +64,8 @@ function isBalanceDeviceConfig(obj: any): obj is BalanceDeviceConfig {
 const DefaultConfig: BalanceConfig = {
     devices: [
         { serialPort: "", protocol: BalanceProtocols.Simulator, name: "My Simulated Balance" },
-        { serialPort: "/dev/cu.PL2303G-USBtoUART210", protocol: BalanceProtocols.SBI, name: "My Sartorius Balance" },
+        //{ serialPort: "/dev/cu.PL2303G-USBtoUART210", protocol: BalanceProtocols.SBI, name: "My Sartorius Balance" },
+        { serialPort: "/dev/tty.usbmodem00294063041", protocol: BalanceProtocols.SBI, name: "My Sartorius Balance" },
     ]
 }
 
@@ -154,7 +155,7 @@ export class BalanceServerImpl {
 // create and start server including a list of balances
 //---------------------------------------------------------------
 export async function main() {
-    const server = new BalanceServerImpl(4841)
+    const server = new BalanceServerImpl(4844)
     await server.start()
 }
 

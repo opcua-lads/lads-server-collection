@@ -27,7 +27,7 @@ import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';
 import { SimulatedBalance } from './balance-simulator';
 
 //---------------------------------------------------------------
-export class BalanceSimulatorUnitImpl extends BalanceUnitImpl {
+export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
     sampleWeight: UAVariable
     tareWeight: UAVariable
     zeroWeight: UAVariable
@@ -51,7 +51,7 @@ export class BalanceSimulatorUnitImpl extends BalanceUnitImpl {
             componentOf: simulator,
             browseName: "Sample Weight",
             dataType: DataType.Double,
-            value: { dataType: DataType.Double, value: 0.0 }
+            value: { dataType: DataType.Double, value: 50.0 }
         })
         this.tareWeight = namespace.addVariable({
             componentOf: simulator,
@@ -83,12 +83,8 @@ export class BalanceSimulatorUnitImpl extends BalanceUnitImpl {
         // start simulation loop
         const dT = 200
         setInterval(async () => { this.evaluate(dT) }, 200)
-
-        // start balance polling loop
-        setInterval(async () => { 
-            await this.balance.getCurrentReading()
-        }, 500)
-
+        
+        // finalize iitialization
         this.postInitialize()
     }
 

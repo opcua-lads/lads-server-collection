@@ -30,6 +30,8 @@ export enum BalanceStatus {
     Online = "online",
 }
 
+export enum BalanceResponseType { Reading, High, Low, Calibration, Other}
+
 /**
  * A single weight reading from a balance.
  * weight is always expressed in grams (normalized),
@@ -42,6 +44,8 @@ export interface BalanceReading {
     unit: string
     stable: boolean
     isTared: boolean
+    responseType?: BalanceResponseType
+    response?: string
 }
 
 /**
@@ -62,11 +66,13 @@ export interface DeviceInfo {
  * Using symbols avoids hard-coded strings in the code base.
  */
 export const BalanceEvents = {
-    DeviceInfo: Symbol("deviceInfo"),
-    Reading: Symbol("reading"),
-    Status: Symbol("status"),
-    Error: Symbol("error"),
+    DeviceInfo: "deviceInfo",
+    Reading: "reading",
+    Status: "status",
+    Error: "error",
 } as const;
+
+export type BalanceEventKey = typeof BalanceEvents[keyof typeof BalanceEvents]
 
 /**
  * Type mapping each event symbol to the payload type
@@ -85,12 +91,16 @@ export type BalanceEventMap = {
  * Concrete subclasses must implement the protocol-specific commands.
  */
 export abstract class Balance extends EventEmitter{
-    protected emitter = new EventEmitter()
+    private polling?: NodeJS.Timeout
+    calibrationTimestamp?: Date
+    calibrationReport?: string
 
     constructor() { super() }
 
     abstract connect(): Promise<void>;
-    abstract disconnect(): Promise<void>;
+    async disconnect(): Promise<void> {
+        if (this.polling) clearInterval(this.polling)
+    }
 
     abstract getStatus(): Promise<BalanceStatus>;
     abstract getCurrentReading(): Promise<BalanceReading>;
@@ -99,16 +109,25 @@ export abstract class Balance extends EventEmitter{
     abstract zero(): Promise<void>;
 
     abstract getDeviceInfo?(): Promise<DeviceInfo>;
+
     /**
-     * Subscribe to an event such as DeviceInfo, Reading, Status, or Error.
+     * Start automatic polling of weight readings at the given interval.
+     * Emits BalanceEvents.Reading for every successful reading.
      */
-    on<K extends keyof BalanceEventMap>(
-        event: K,
-        listener: (arg: BalanceEventMap[K]) => void
-    ): this {
-        this.emitter.on(event, listener);
-        return this;
+    startPolling(intervalMs = 1000): void {
+        if (this.polling) clearInterval(this.polling);
+        this.polling = setInterval(async () => {
+            try {
+                const reading = await this.getCurrentReading();
+                if (reading){
+                    this.emit(BalanceEvents.Reading, reading);                
+                } else {
+                    this.emit(BalanceEvents.Error, "Invalid reading");
+                }
+            } catch (e) {}
+        }, intervalMs);
     }
+
 }
 
 /**

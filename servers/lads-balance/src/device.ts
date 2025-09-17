@@ -26,10 +26,12 @@ import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
-import { BalanceDeviceConfig } from "./server"
+import { BalanceDeviceConfig, BalanceProtocols } from "./server"
 import { IAddressSpace } from "node-opcua"
-import { BalanceSimulatorUnitImpl } from "./unit-simulator"
+import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
+import { BalanceUnitImpl } from "./unit"
+import { SerialBalanceUnitImpl } from "./unit-serial"
 
 //---------------------------------------------------------------    constructor(server: AtmoWebServerImpl, config: AtmoWebDeviceConfig) {
 
@@ -47,6 +49,7 @@ export class BalanceDeviceImpl {
             return false;
         }
     }
+
     constructor(addressSpace: IAddressSpace, config: BalanceDeviceConfig) {
 
         // create device object
@@ -58,7 +61,7 @@ export class BalanceDeviceImpl {
         }) as BalanceDevice
         this.device = device
 
-        const balanceUnitImpl = new BalanceSimulatorUnitImpl(this, this.getFunctionalUnit())
+        const balanceUnitImpl = this.getBalanceUnitImpl(config)
         balanceUnitImpl.balance.on(BalanceEvents.DeviceInfo, this.setNameplate.bind(this))
 
         // attach device helper
@@ -67,6 +70,17 @@ export class BalanceDeviceImpl {
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
         AFODictionary.addReferences(device, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
+    }
+
+    getBalanceUnitImpl(config: BalanceDeviceConfig): BalanceUnitImpl {
+        const functionalUnit = this.getFunctionalUnit()
+        switch (config.protocol) {
+            case BalanceProtocols.SBI:
+            case BalanceProtocols.SICS:
+                return new SerialBalanceUnitImpl(this, functionalUnit, config)
+            default:
+                return new SimulatedBalanceUnitImpl(this, functionalUnit)
+        }
     }
 
     getFunctionalUnit(): BalanceFunctionalUnit {

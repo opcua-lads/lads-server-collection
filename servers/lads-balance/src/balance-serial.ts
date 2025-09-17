@@ -13,12 +13,11 @@ import { Balance, BalanceStatus, BalanceEvents } from "./balance";
 export abstract class SerialBalance extends Balance {
     protected port: SerialPort;
     protected buffer = "";
-    private polling?: NodeJS.Timeout;
     private statusCheck?: NodeJS.Timeout;
     private lastStatus?: BalanceStatus;
 
-    constructor(id: string, portPath: string, baudRate = 9600) {
-        super(id);
+    constructor(portPath: string, baudRate = 9600) {
+        super();
         this.port = new SerialPort({ path: portPath, baudRate });
     }
 
@@ -32,7 +31,7 @@ export abstract class SerialBalance extends Balance {
                 try {
                     if (this.getDeviceInfo) {
                         const info = await this.getDeviceInfo();
-                        if (info) this.emitter.emit(BalanceEvents.DeviceInfo, info);
+                        if (info) this.emit(BalanceEvents.DeviceInfo, info);
                     }
 
                     this.startStatusMonitor();
@@ -40,9 +39,9 @@ export abstract class SerialBalance extends Balance {
                     // Send one initial reading so callers get immediate data.
                     try {
                         const reading = await this.getCurrentReading();
-                        this.emitter.emit(BalanceEvents.Reading, reading);
+                        this.emit(BalanceEvents.Reading, reading);
                     } catch (e) {
-                        this.emitter.emit(BalanceEvents.Error, e);
+                        this.emit(BalanceEvents.Error, e);
                     }
                 } finally {
                     resolve();
@@ -60,7 +59,7 @@ export abstract class SerialBalance extends Balance {
      * Closes the port and stops background tasks.
      */
     async disconnect(): Promise<void> {
-        if (this.polling) clearInterval(this.polling);
+        await super.disconnect()
         if (this.statusCheck) clearInterval(this.statusCheck);
         this.port.close();
     }
@@ -80,23 +79,8 @@ export abstract class SerialBalance extends Balance {
         this.buffer = "";
         this.port.write(cmd + "\r\n");
         await new Promise(res => setTimeout(res, waitMs));
-        return this.buffer.trim();
-    }
-
-    /**
-     * Start automatic polling of weight readings at the given interval.
-     * Emits BalanceEvents.Reading for every successful reading.
-     */
-    startPolling(intervalMs = 1000): void {
-        if (this.polling) clearInterval(this.polling);
-        this.polling = setInterval(async () => {
-            try {
-                const r = await this.getCurrentReading();
-                this.emitter.emit(BalanceEvents.Reading, r);
-            } catch (e) {
-                this.emitter.emit(BalanceEvents.Error, e);
-            }
-        }, intervalMs);
+        return this.buffer
+        // return this.buffer.trim();
     }
 
     /**
@@ -109,7 +93,7 @@ export abstract class SerialBalance extends Balance {
             const s = await this.getStatus();
             if (s !== this.lastStatus) {
                 this.lastStatus = s;
-                this.emitter.emit(BalanceEvents.Status, s);
+                this.emit(BalanceEvents.Status, s);
             }
         }, intervalMs);
     }

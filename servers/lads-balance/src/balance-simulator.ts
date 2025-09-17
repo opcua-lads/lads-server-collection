@@ -31,11 +31,6 @@ export async function waitForCondition(
     intervalMs: number = 200
 ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            clearInterval(interval)
-            reject(new Error('Timeout expired while waiting for condition.'))
-        }, timeoutMs)
-
         const interval = setInterval(async () => {
             try {
                 if (await condition()) {
@@ -49,6 +44,11 @@ export async function waitForCondition(
                 reject(err)
             }
         }, intervalMs)
+        const timeout = setTimeout(() => {
+            clearInterval(interval)
+            reject(new Error('Timeout expired while waiting for condition.'))
+        }, timeoutMs)
+
     })
 }
 
@@ -61,15 +61,15 @@ export class SimulatedBalance extends Balance {
 
     constructor(getRawWeight: () => number) {
         super()
-        this.getRawWeight = getRawWeight.bind(this)
+        this.getRawWeight = getRawWeight
     }
 
     async connect(): Promise<void> {
         this.status = BalanceStatus.Online
         const info = await this.getDeviceInfo()
-        if (info) this.emitter.emit(BalanceEvents.DeviceInfo, info)
+        if (info) this.emit(BalanceEvents.DeviceInfo, info)
         const reading = await this.getCurrentReading()
-        if (reading) this.emitter.emit(BalanceEvents.Reading, reading)
+        if (reading) this.emit(BalanceEvents.Reading, reading)
     }
 
     async disconnect(): Promise<void> {
@@ -117,7 +117,7 @@ export class SimulatedBalance extends Balance {
     }
 
     async getDeviceInfo(): Promise<DeviceInfo> {
-        const info: DeviceInfo = { manufacturer: "AixEngineers", model: "SuperBalance 2030", firmware: "1.0", hardware: "1.0" }
+        const info: DeviceInfo = { manufacturer: "AixEngineers", model: "SuperBalance 2030", firmware: "1.0", hardware: "1.0", serialNumber: "47110815" }
         return info
     }
 }

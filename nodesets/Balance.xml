@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-09-16T07:24:29.280Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-09-17T08:43:36.934Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/Machinery/</Uri>
@@ -30,6 +30,7 @@
         <Alias Alias="IdType">i=256</Alias>
         <Alias Alias="NumericRange">i=291</Alias>
         <Alias Alias="Duration">i=290</Alias>
+        <Alias Alias="Argument">i=296</Alias>
         <Alias Alias="Range">i=884</Alias>
         <Alias Alias="EUInformation">i=887</Alias>
     </Aliases>
@@ -38,7 +39,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="2.8.5"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="a9d011c247fcda913291fe144fc0de7b"/>
+            <si:GeneratorExtension Hash="2b70defe1539fce7f4f0ec89bea64ea3"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_Balance_" NodeId="ns=4;i=5000" BrowseName="4:http://aixengineers.de/Balance/" ParentNodeId="i=11715">
@@ -115,11 +116,14 @@
     </UAVariable>
     <UAObjectType NodeId="ns=4;i=1000" BrowseName="4:BalanceUnitType">
         <DisplayName>BalanceUnitType</DisplayName>
+        <Description>Last known calibration report - if any.</Description>
         <References>
             <Reference ReferenceType="HasSubtype" IsForward="false">ns=3;i=1003</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5001</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5002</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5003</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6037</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6038</Reference>
         </References>
     </UAObjectType>
     <UAObject NodeId="ns=4;i=5001" BrowseName="3:FunctionalUnitState" ParentNodeId="ns=4;i=1000">
@@ -130,10 +134,14 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent">ns=3;i=6473</Reference>
             <Reference ReferenceType="HasComponent">ns=3;i=6472</Reference>
-            <Reference ReferenceType="HasComponent">ns=3;i=6279</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7000</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7001</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7002</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7003</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6027</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7004</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7005</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7006</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=4;i=5002" BrowseName="3:FunctionSet" ParentNodeId="ns=4;i=1000">
@@ -154,8 +162,8 @@
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1006</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent">ns=3;i=5021</Reference>
-            <Reference ReferenceType="HasComponent">ns=3;i=5022</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5004</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5014</Reference>
         </References>
     </UAObject>
     <UAMethod NodeId="ns=4;i=7000" BrowseName="3:Start" ParentNodeId="ns=4;i=5001">
@@ -320,7 +328,7 @@
         </References>
         <Value>
             <uax:LocalizedText>
-                <uax:Text>unstable</uax:Text>
+                <uax:Text>Unstable</uax:Text>
             </uax:LocalizedText>
         </Value>
     </UAVariable>
@@ -333,7 +341,7 @@
         </References>
         <Value>
             <uax:LocalizedText>
-                <uax:Text>stable</uax:Text>
+                <uax:Text>Stable</uax:Text>
             </uax:LocalizedText>
         </Value>
     </UAVariable>
@@ -446,7 +454,7 @@
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=2;i=1002</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent">i=2772</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6028</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=4;i=5011" BrowseName="2:MachineryOperationMode" ParentNodeId="ns=4;i=1001">
@@ -455,7 +463,7 @@
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1050</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent">i=2772</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6029</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6023" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=1001">
@@ -509,6 +517,168 @@
             <Reference ReferenceType="HasComponent">ns=4;i=5001</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5002</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5003</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6037</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6038</Reference>
         </References>
     </UAObject>
+    <UAMethod NodeId="ns=4;i=7003" BrowseName="3:Stop" ParentNodeId="ns=4;i=5001">
+        <DisplayName>Stop</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAMethod>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6027" BrowseName="CurrentState" ParentNodeId="ns=4;i=5001">
+        <DisplayName>CurrentState</DisplayName>
+        <Description>Shortcut to start the "Register Weight" program-template with defualt values.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=3;i=6280</Reference>
+            <Reference ReferenceType="HasProperty">i=3728</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6028" BrowseName="CurrentState" ParentNodeId="ns=4;i=5010">
+        <DisplayName>CurrentState</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">i=3728</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6029" BrowseName="CurrentState" ParentNodeId="ns=4;i=5011">
+        <DisplayName>CurrentState</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">i=3728</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=5014" BrowseName="3:ResultSet" ParentNodeId="ns=4;i=5003">
+        <DisplayName>ResultSet</DisplayName>
+        <Description>The ResultSetType is used for organising ResultType objects in an unordered list structure.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1020</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6030</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="String" NodeId="ns=4;i=6030" BrowseName="NodeVersion" ParentNodeId="ns=4;i=5014" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>NodeVersion</DisplayName>
+        <Description>NodeVersion and the GeneralModelChangeEventType are mechanisms to notify clients that the content of the set has changed and shall be used as defined in OPC 10000-3.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:String>NaN</uax:String>
+        </Value>
+    </UAVariable>
+    <UAMethod NodeId="ns=4;i=7004" BrowseName="4:SetTare" ParentNodeId="ns=4;i=5001">
+        <DisplayName>SetTare</DisplayName>
+        <Description>Shortcut to start the "Set Tare" program-template.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6031</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6032</Reference>
+        </References>
+    </UAMethod>
+    <UAVariable DataType="Argument" ValueRank="1" NodeId="ns=4;i=6031" BrowseName="InputArguments" ParentNodeId="ns=4;i=7004">
+        <DisplayName>InputArguments</DisplayName>
+        <Description>the definition of the input argument of method 4:FunctionalUnitState.34:SetTare</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Argument" ValueRank="1" NodeId="ns=4;i=6032" BrowseName="OutputArguments" ParentNodeId="ns=4;i=7004">
+        <DisplayName>OutputArguments</DisplayName>
+        <Description>the definition of the output arguments of method 4:FunctionalUnitState.34:SetTare</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAMethod NodeId="ns=4;i=7005" BrowseName="4:SetZero" ParentNodeId="ns=4;i=5001">
+        <DisplayName>SetZero</DisplayName>
+        <Description>Shortcut to start the "Set Zero" program-template.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6033</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6034</Reference>
+        </References>
+    </UAMethod>
+    <UAVariable DataType="Argument" ValueRank="1" NodeId="ns=4;i=6033" BrowseName="InputArguments" ParentNodeId="ns=4;i=7005">
+        <DisplayName>InputArguments</DisplayName>
+        <Description>the definition of the input argument of method 4:FunctionalUnitState.34:StartZero</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Argument" ValueRank="1" NodeId="ns=4;i=6034" BrowseName="OutputArguments" ParentNodeId="ns=4;i=7005">
+        <DisplayName>OutputArguments</DisplayName>
+        <Description>the definition of the output arguments of method 4:FunctionalUnitState.34:StartZero</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAMethod NodeId="ns=4;i=7006" BrowseName="4:RegisterWeight" ParentNodeId="ns=4;i=5001">
+        <DisplayName>RegisterWeight</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6035</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6036</Reference>
+        </References>
+    </UAMethod>
+    <UAVariable DataType="Argument" ValueRank="1" NodeId="ns=4;i=6035" ArrayDimensions="1" BrowseName="InputArguments" ParentNodeId="ns=4;i=7006">
+        <DisplayName>InputArguments</DisplayName>
+        <Description>the definition of the input argument of method 4:FunctionalUnitState.34:RegisterWeight</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ListOfExtensionObject>
+                <uax:ExtensionObject>
+                    <uax:TypeId>
+                        <uax:Identifier>i=297</uax:Identifier>
+                    </uax:TypeId>
+                    <uax:Body>
+                        <uax:Argument>
+                            <uax:Name>SampleId</uax:Name>
+                            <uax:DataType>
+                                <uax:Identifier>i=12</uax:Identifier>
+                            </uax:DataType>
+                            <uax:ValueRank>-1</uax:ValueRank>
+                            <uax:ArrayDimensions/>
+                            <uax:Description/>
+                        </uax:Argument>
+                    </uax:Body>
+                </uax:ExtensionObject>
+            </uax:ListOfExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Argument" ValueRank="1" NodeId="ns=4;i=6036" BrowseName="OutputArguments" ParentNodeId="ns=4;i=7006">
+        <DisplayName>OutputArguments</DisplayName>
+        <Description>the definition of the output arguments of method 4:FunctionalUnitState.34:RegisterWeight</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6037" BrowseName="4:CalibrationReport" ParentNodeId="ns=4;i=1000" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>CalibrationReport</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DateTime" NodeId="ns=4;i=6038" BrowseName="4:CalibrationTimestamp" ParentNodeId="ns=4;i=1000" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>CalibrationTimestamp</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
 </UANodeSet>

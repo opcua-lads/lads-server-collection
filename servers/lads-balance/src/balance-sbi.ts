@@ -1,5 +1,5 @@
 import { SerialBalance } from "./balance-serial";
-import { BalanceReading, toGrams, DeviceInfo } from "./balance";
+import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType } from "./balance";
 
 /**
  * Driver for Sartorius balances using the PC-SBI protocol (ESC-based),
@@ -13,7 +13,7 @@ import { BalanceReading, toGrams, DeviceInfo } from "./balance";
  *
  * Weight readings are always returned in grams.
  */
-export class SbcBalance extends SerialBalance {
+export class SbiBalance extends SerialBalance {
 
     /**
      * Send a PC-SBI command with ESC prefix and CR/LF termination.
@@ -28,19 +28,35 @@ export class SbcBalance extends SerialBalance {
      *   "G   +123.456 g"   (stable gross)
      *   "N   +23.456"      (unstable net, unit missing)
      */
+/*"2025-09-17     09:10
+Internal calibration
+Start: manually     
+Dev         0.00 g  
+Internal adjustment 
+Dev         0.00 g 
+*/
+
     async getCurrentReading(): Promise<BalanceReading> {
-        const resp = await this.sendEsc("P");
-
-        // Match: G/N, value, optional unit
-        const m = resp.match(/^([GN])\s*([+-]?\d+(\.\d+)?)(?:\s*(\w+))?$/);
-        if (!m) throw new Error(`Invalid PC-SBI response: ${resp}`);
-
-        const isTared = m[1] === "N";        // 'N' = net (tared), 'G' = gross (not tared)
-        const stable = !!m[4];              // stable if unit present
-        const unit = m[4] || "g";         // assume g if no unit (unstable reading)
-        const weight = toGrams(parseFloat(m[2]), unit);
-
-        return { weight, unit, stable, isTared };
+        const response = await this.sendEsc("P");
+        const l = response.length
+        if (l === 22) {
+            const marker = response.slice(0, 6).trim()
+            const sign = response.slice(6,7)
+            const value = response.slice(7, 16).trim()
+            const unit = response.slice(17, 20).trim()
+            const isTared = marker === "N"        // 'N' = net (tared), 'G' = gross (not tared)
+            const stable = unit.length > 0
+            const weight = toGrams(Number(sign + value), unit || "g")
+            const s = value.toLowerCase()
+            const responseType = (s === "high")?BalanceResponseType.High:(s === "low")?BalanceResponseType.Low:BalanceResponseType.Reading
+            return { weight, unit, stable, isTared, responseType, response: response}
+        } else if ((l > 22) && (response.toLowerCase().includes("calibration"))) {
+            this.calibrationTimestamp =  new Date(response.split(/\r\n/, 1)[0].replace(/\s+/, ' '))
+            this.calibrationReport = response
+            return { weight: 0, unit: "g", stable: false, isTared: false, responseType: BalanceResponseType.Calibration, response: response}
+        } else {
+            return undefined
+        }
     }
 
     /**

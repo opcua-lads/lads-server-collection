@@ -26,41 +26,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { pHSensorRecorder } from "@asm"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, constructPropertiesExtensionObject, constructSamplesExtensionObject, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, UAVariable, AccessLevelFlag, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
+import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
 import { join } from "path"
 import { pHMeterDeviceImpl } from "./ph-meter-device"
 import { pHMeterFunctionalUnit, pHMeterFunctionSet } from "./ph-meter-interfaces"
 
 //---------------------------------------------------------------
-interface ProgramTemplateOptions {
-    identifier: string
-    description: string
-    author: string
-    created: Date
-    modified: Date
-    version?: string
-    referenceIds?: string[]
-}
-
-interface ProgramTemplateElement { identifier: string, programTemplate: LADSProgramTemplate }
-
-function addProgramTemplate(programTemplateSet: UAObject, options: ProgramTemplateOptions): ProgramTemplateElement {
-    if (!programTemplateSet) return
-    const programTemplateType = getLADSObjectType(programTemplateSet.addressSpace, "ProgramTemplateType")
-    const programTemplate = programTemplateType.instantiate({
-        componentOf: programTemplateSet,
-        browseName: options.identifier
-    }) as LADSProgramTemplate
-    setStringValue(getDescriptionVariable(programTemplate), options.description)
-    setStringValue(programTemplate.author, options.author)
-    setStringValue(programTemplate.deviceTemplateId, options.identifier)
-    setDateTimeValue(programTemplate.created, options.created)
-    setDateTimeValue(programTemplate.modified, options.modified)
-    if (options.referenceIds) { AFODictionary.addReferences(programTemplate, ...options.referenceIds) }
-    return { identifier: options.identifier, programTemplate: programTemplate }
-}
-
 interface CurrentRunOptions {
     programTemplateId: string
     runId: string,

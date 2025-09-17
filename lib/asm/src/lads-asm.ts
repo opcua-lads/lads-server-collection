@@ -17,7 +17,7 @@ import { resolve } from "path"
 import { promises as fs } from "fs"
 import { UAVariable, UAObject } from "node-opcua"
 import { LADSResult, LADSResultFile, LADSSampleInfo } from "@interfaces"
-import { VariableDataRecorder, ensureDirectoryExists, DataExporter } from "@utils"
+import { VariableDataRecorder, ensureDirectoryExists, DataExporter, getStringValue } from "@utils"
 import { UADevice } from "node-opcua-nodeset-di"
 import { AFODictionary } from "@afo/lads-afo"
 import { AFODictionaryIds } from "@afo/lads-afo-ids"
@@ -189,9 +189,16 @@ export abstract class AllotropeSimpleModelRecorder {
         }
     }
 
-    static createSampleDocument(sample: LADSSampleInfo): SampleDocument {
+    static createSampleDocument(options: AllotropeSimpleModelRecorderOptions): SampleDocument {
+        const result = options.result
+        const jobId = getStringValue(result.supervisoryJobId)
+        const taskId = getStringValue(result.supervisoryTaskId)
+        const batchId = [jobId, taskId].join("-")
+        const sample = options.sample
+        const sampleId = sample.sampleId.length > 0?sample.sampleId:sample.containerId
         return {
-            "sample identifier": sample.sampleId,
+            "batch identifier": batchId,
+            "sample identifier": sampleId,
             "location identifier": sample.position,
         }
     }
@@ -206,7 +213,7 @@ export abstract class AllotropeSimpleModelRecorder {
             "measurement identifier": identifier,
             "measurement method identifier": options.result.programTemplate.deviceTemplateId.readValue().value.value,
             "measurement time": options.result.started.readValue().value.value,
-            "sample document": this.createSampleDocument(options.sample),
+            "sample document": this.createSampleDocument(options),
         }
         return measurementDocument
     }

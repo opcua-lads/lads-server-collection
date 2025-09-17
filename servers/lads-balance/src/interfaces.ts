@@ -23,18 +23,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
-import { UAObject } from "node-opcua"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSFunctionalUnitStateMachine } from "@interfaces"
+import { DataType, UABaseDataVariable, UAMethod, UAObject } from "node-opcua"
 
 //---------------------------------------------------------------
 export interface BalanceFunctionSet extends UAObject {
-    weightSensor: LADSAnalogScalarSensorFunction
+    currentWeight: LADSAnalogScalarSensorFunction
     weightStable: LADSTwoStateDiscreteSensorFunction
     tareMode: LADSMultiStateDiscreteSensorFunction
 }
 
 export interface BalanceFunctionalUnit extends Omit<LADSFunctionalUnit, "functionSet"> {
     functionSet: BalanceFunctionSet
+    calibrationTimestamp: UABaseDataVariable<string, DataType.DateTime>
+    calibrationReport: UABaseDataVariable<string, DataType.String>
 }
 
 export interface BalanceFunctionalUnitSet extends UAObject {
@@ -42,8 +44,11 @@ export interface BalanceFunctionalUnitSet extends UAObject {
 }
 export interface BalanceDevice extends Omit<LADSDevice, "functionalUnitSet, components"> {
     functionalUnitSet: BalanceFunctionalUnitSet
-    components: BalanceComponents
 }
 
-export interface BalanceComponents extends UAObject {}
+export interface BalanceFunctionalUnitStatemachine extends LADSFunctionalUnitStateMachine {
+    setTare: UAMethod
+    setZero: UAMethod
+    registerWeight: UAMethod
+}
 
