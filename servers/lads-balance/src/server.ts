@@ -25,7 +25,7 @@ import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 
 //---------------------------------------------------------------
-export const IncludeAFO = false
+export const IncludeAFO = true
 
 //---------------------------------------------------------------
 // config
@@ -78,7 +78,6 @@ async function loadConfig(): Promise<BalanceConfig> {
         return isBalanceConfig(parsed) ? parsed as BalanceConfig : DefaultConfig
     } catch (err) {
         console.warn(`Failed to load configuration file: ${path}`)
-        console.log(`Running in simulation mode`)
         return DefaultConfig
     }
 }

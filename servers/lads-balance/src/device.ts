@@ -33,8 +33,7 @@ import { BalanceEvents, DeviceInfo } from "./balance"
 import { BalanceUnitImpl } from "./unit"
 import { SerialBalanceUnitImpl } from "./unit-serial"
 
-//---------------------------------------------------------------    constructor(server: AtmoWebServerImpl, config: AtmoWebDeviceConfig) {
-
+//--------------------------------------------------------------- 
 
 export class BalanceDeviceImpl {
     config: BalanceDeviceConfig

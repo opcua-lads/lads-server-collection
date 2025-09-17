@@ -1,0 +1,14 @@
+{
+    "devices": [
+        {
+            "serialPort": "",
+            "protocol": "Simulator",
+            "name": "My Simulated Balance"
+        },
+        {
+            "serialPort": "/dev/tty.usbmodem00294063041",
+            "protocol": "SBI",
+            "name": "My Sartorius Balance"
+        }
+    ]
+}

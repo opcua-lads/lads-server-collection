@@ -1,5 +1,23 @@
-import { SerialBalance } from "./balance-serial";
-import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType } from "./balance";
+// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-License-Identifier: AGPL 3
+
+/*
+LADS Balance
+Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 /**
  * Driver for Sartorius balances using the PC-SBI protocol (ESC-based),
@@ -13,6 +31,10 @@ import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType } from "./bala
  *
  * Weight readings are always returned in grams.
  */
+
+import { SerialBalance } from "./balance-serial";
+import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType } from "./balance";
+
 export class SbiBalance extends SerialBalance {
 
     /**
@@ -28,14 +50,6 @@ export class SbiBalance extends SerialBalance {
      *   "G   +123.456 g"   (stable gross)
      *   "N   +23.456"      (unstable net, unit missing)
      */
-/*"2025-09-17     09:10
-Internal calibration
-Start: manually     
-Dev         0.00 g  
-Internal adjustment 
-Dev         0.00 g 
-*/
-
     async getCurrentReading(): Promise<BalanceReading> {
         const response = await this.sendEsc("P");
         const l = response.length
@@ -78,7 +92,7 @@ Dev         0.00 g
      *   x1_ : model/type
      *   x2_ : serial number
      *   x3_ : firmware/software version
-     *   x4_ : hardware or additional identifier
+     *   x4_ : hardware version
      */
     async getDeviceInfo(): Promise<DeviceInfo> {
         const info: DeviceInfo = { manufacturer: "Sartorius", model: "Unknown" };

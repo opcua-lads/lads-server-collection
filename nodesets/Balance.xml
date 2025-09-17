@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-09-17T08:43:36.934Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-09-17T10:15:06.546Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/Machinery/</Uri>
@@ -39,7 +39,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="2.8.5"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="2b70defe1539fce7f4f0ec89bea64ea3"/>
+            <si:GeneratorExtension Hash="c285a63d49028d15030c25900212c345"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_Balance_" NodeId="ns=4;i=5000" BrowseName="4:http://aixengineers.de/Balance/" ParentNodeId="i=11715">
@@ -290,23 +290,23 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=4;i=5006" BrowseName="4:WeightStable" ParentNodeId="ns=4;i=5002">
-        <DisplayName>WeightStable</DisplayName>
+        <DisplayName>Weight Stable</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1031</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasProperty">ns=3;i=6002</Reference>
             <Reference ReferenceType="HasComponent">ns=3;i=5061</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=6015</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6040</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=4;i=5007" BrowseName="4:TareMode" ParentNodeId="ns=4;i=5002">
-        <DisplayName>TareMode</DisplayName>
+        <DisplayName>Tare Mode</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1037</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasProperty">ns=3;i=6002</Reference>
             <Reference ReferenceType="HasComponent">ns=3;i=5061</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=6018</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6039</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="Boolean" NodeId="ns=4;i=6015" BrowseName="3:SensorValue" ParentNodeId="ns=4;i=5006">
@@ -446,6 +446,7 @@
             <Reference ReferenceType="HasProperty">ns=3;i=6008</Reference>
             <Reference ReferenceType="HasProperty">ns=3;i=6064</Reference>
             <Reference ReferenceType="HasProperty">ns=3;i=6063</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6041</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=4;i=5010" BrowseName="2:MachineryItemState" ParentNodeId="ns=4;i=1001">
@@ -678,6 +679,30 @@
         <DisplayName>CalibrationTimestamp</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Boolean" NodeId="ns=4;i=6039" BrowseName="3:IsEnabled" ParentNodeId="ns=4;i=5007" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>IsEnabled</DisplayName>
+        <Description>IsEnabled indicates whether the Function can currently be executed on the Device. A Function may be disabled for several reasons including not licensed, missing hardware modules, or missing supplies</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Boolean" NodeId="ns=4;i=6040" BrowseName="3:IsEnabled" ParentNodeId="ns=4;i=5006" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>IsEnabled</DisplayName>
+        <Description>IsEnabled indicates whether the Function can currently be executed on the Device. A Function may be disabled for several reasons including not licensed, missing hardware modules, or missing supplies</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=4;i=6041" BrowseName="2:Location" ParentNodeId="ns=4;i=5009" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>Location</DisplayName>
+        <Description>To be used by end users to store the location of the machine in a scheme specific to the end user. Servers shall support at least 60 Unicode characters for the clients writing this value, this means clients can expect to be able to write strings with a length of 60 Unicode characters into that field.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>

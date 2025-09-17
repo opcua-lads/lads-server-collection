@@ -33,7 +33,6 @@ import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFuncti
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus } from "./balance"
 import { EventEmitter } from "events"
-import { read } from "fs"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -282,6 +281,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         const activeProgram = this.functionalUnit.programManager.activeProgram
         setNumericValue(activeProgram.currentRuntime, 0)
         setNumericValue(activeProgram.estimatedRuntime, options.maxRuntimeMilliseconds)
+        setStringValue(activeProgram.deviceProgramRunId, options.runId)
         options.runtimeInterval = setInterval(() => {
             const runtime = Date.now() - options.startedMilliseconds
             setNumericValue(activeProgram.currentRuntime, runtime)
