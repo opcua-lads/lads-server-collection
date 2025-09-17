@@ -10,10 +10,9 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DataValue, DateTime } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
-import { raiseEvent } from "./lads-event-utils"
 
 // ----------------------------------------------------------------------------
 // Variable getters
