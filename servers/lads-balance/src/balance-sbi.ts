@@ -52,21 +52,25 @@ export class SbiBalance extends SerialBalance {
      */
     async getCurrentReading(): Promise<BalanceReading> {
         const response = await this.sendEsc("P");
-        const l = response.length
-        if (l === 22) {
-            const marker = response.slice(0, 6).trim()
-            const sign = response.slice(6,7)
-            const value = response.slice(7, 16).trim()
-            const unit = response.slice(17, 20).trim()
+        const l = response.length        
+        if ((l === 22) || (l == 16)) {
+            const short = (l == 16)
+            const ofs = short?0:6
+            const marker = short?"":response.slice(0, 6).trim()
+            const sign = response.slice(ofs, ofs + 1)
+            const value = response.slice(ofs + 1, ofs + 10).trim()
+            const unit = response.slice(ofs + 11, ofs + 14).trim()
             const isTared = marker === "N"        // 'N' = net (tared), 'G' = gross (not tared)
             const stable = unit.length > 0
-            const weight = toGrams(Number(sign + value), unit || "g")
+            const weight = toGrams(Number((sign + value).replace(/\[|\]/g, "")), unit || "g")
             const s = value.toLowerCase()
             const responseType = (s === "high")?BalanceResponseType.High:(s === "low")?BalanceResponseType.Low:BalanceResponseType.Reading
-            return { weight, unit, stable, isTared, responseType, response: response}
+            return { weight, unit, stable, isTared, responseType }
         } else if ((l > 22) && (response.toLowerCase().includes("calibration"))) {
-            this.calibrationTimestamp =  new Date(response.split(/\r\n/, 1)[0].replace(/\s+/, ' '))
-            this.calibrationReport = response
+            this.calibrationReport = {
+                timestamp: new Date(response.split(/\r\n/, 1)[0].replace(/\s+/, ' ')),
+                report: response
+            }
             return { weight: 0, unit: "g", stable: false, isTared: false, responseType: BalanceResponseType.Calibration, response: response}
         } else {
             if (l > 0) {
