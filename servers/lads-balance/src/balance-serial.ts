@@ -35,21 +35,16 @@ import { Balance, BalanceStatus, BalanceEvents } from "./balance";
 export abstract class SerialBalance extends Balance {
     protected port: SerialPort;
     protected buffer = "";
-    private statusCheck?: NodeJS.Timeout;
-    private lastStatus?: BalanceStatus;
-    private threshold = 5
-    private counter = 0
-
+    
     constructor(portPath: string, baudRate = 9600) {
         super();
         this.port = new SerialPort({ path: portPath, baudRate });
     }
 
-    private tryReconnect() {
+    async tryReconnect(): Promise<void> {
         try { this.port.open()}  
         catch {}
     }
-
 
     /**
      * Opens the serial port and starts status monitoring.
@@ -64,7 +59,7 @@ export abstract class SerialBalance extends Balance {
                         if (info) this.emit(BalanceEvents.DeviceInfo, info);
                     }
 
-                    //this.startStatusMonitor();
+                    this.startCheckStatus()
 
                     // Send one initial reading so callers get immediate data.
                     try {
@@ -90,7 +85,6 @@ export abstract class SerialBalance extends Balance {
      */
     async disconnect(): Promise<void> {
         await super.disconnect()
-        if (this.statusCheck) clearInterval(this.statusCheck);
         this.port.close();
     }
 
@@ -110,21 +104,6 @@ export abstract class SerialBalance extends Balance {
         this.port.write(cmd + "\r\n");
         await new Promise(res => setTimeout(res, waitMs))
         const l = this.buffer.length
-        if (l === 0) {
-            this.counter++
-            if (this.lastStatus === BalanceStatus.Offline) {
-                this.tryReconnect()
-            }  else if (this.counter > this.threshold) {
-                this.lastStatus = BalanceStatus.Offline
-                this.emit(BalanceEvents.Status, BalanceStatus.Offline)
-            }
-        } else {
-            if (this.lastStatus === BalanceStatus.Offline) {
-                this.lastStatus = BalanceStatus.Online
-                this.emit(BalanceEvents.Status, BalanceStatus.Online)                
-            }
-            this.counter = 0
-        }
         return this.buffer
     }
 

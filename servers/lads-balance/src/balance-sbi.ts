@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 import { SerialBalance } from "./balance-serial";
-import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType } from "./balance";
+import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType, BalanceStatus } from "./balance";
 
 export class SbiBalance extends SerialBalance {
 
@@ -69,8 +69,18 @@ export class SbiBalance extends SerialBalance {
             this.calibrationReport = response
             return { weight: 0, unit: "g", stable: false, isTared: false, responseType: BalanceResponseType.Calibration, response: response}
         } else {
+            if (l > 0) {
+                console.log(response)
+            }
             return undefined
         }
+
+    }
+
+    async checkStatus(): Promise<BalanceStatus> {
+        if (!this.port.isOpen) return BalanceStatus.Offline
+        const response = await this.sendEsc("X1")
+        return response.length > 0?BalanceStatus.Online:BalanceStatus.Offline
     }
 
     /**

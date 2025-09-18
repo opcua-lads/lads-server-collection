@@ -69,6 +69,7 @@ export const BalanceEvents = {
     DeviceInfo: "deviceInfo",
     Reading: "reading",
     Status: "status",
+    CalibrationReport: "calibrationReport",
     Error: "error",
 } as const;
 
@@ -91,15 +92,19 @@ export type BalanceEventMap = {
  * Concrete subclasses must implement the protocol-specific commands.
  */
 export abstract class Balance extends EventEmitter{
-    private polling?: NodeJS.Timeout
+    private pollReading?: NodeJS.Timeout
+    private pollStatus?: NodeJS.Timeout
+    private lastStatus =  BalanceStatus.Offline;
     calibrationTimestamp?: Date
     calibrationReport?: string
 
     constructor() { super() }
 
-    abstract connect(): Promise<void>;
+    abstract connect(): Promise<void>
+    abstract tryReconnect(): Promise<void>
     async disconnect(): Promise<void> {
-        if (this.polling) clearInterval(this.polling)
+        if (this.pollReading) clearInterval(this.pollReading)
+        if (this.pollStatus) clearInterval(this.pollStatus)
     }
 
     abstract getStatus(): Promise<BalanceStatus>;
@@ -115,8 +120,8 @@ export abstract class Balance extends EventEmitter{
      * Emits BalanceEvents.Reading for every successful reading.
      */
     startPolling(intervalMs = 1000): void {
-        if (this.polling) clearInterval(this.polling);
-        this.polling = setInterval(async () => {
+        if (this.pollReading) clearInterval(this.pollReading);
+        this.pollReading = setInterval(async () => {
             try {
                 const reading = await this.getCurrentReading();
                 if (reading){
@@ -128,6 +133,22 @@ export abstract class Balance extends EventEmitter{
         }, intervalMs);
     }
 
+    startCheckStatus(intervalMs = 1000): void {
+        if (this.pollStatus) clearInterval(this.pollStatus)
+        this.pollStatus = setInterval(async () => {
+            try {
+                const status = await this.getStatus()
+                if (status != this.lastStatus) {
+                    console.log(status)
+                    this.emit(BalanceEvents.Status, status)
+                    this.lastStatus = status
+                }
+                if (status === BalanceStatus.Offline) {
+                    await this.tryReconnect()
+                }
+            } catch (e) {}
+        }, intervalMs);
+    }
 }
 
 /**

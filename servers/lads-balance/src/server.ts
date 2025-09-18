@@ -25,7 +25,7 @@ import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 
 //---------------------------------------------------------------
-export const IncludeAFO = true
+export const IncludeAFO = false
 
 //---------------------------------------------------------------
 // config
