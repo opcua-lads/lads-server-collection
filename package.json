@@ -7,7 +7,8 @@
     "lads-freezer": "ts-node -r tsconfig-paths/register servers/lads-freezer/src/server.ts",
     "lads-ft-nir": "ts-node -r tsconfig-paths/register servers/lads-ft-nir/src/server.ts",
     "lads-ph-meter": "ts-node -r tsconfig-paths/register servers/lads-ph-meter/src/server.ts",
-    "lads-viscometer": "ts-node -r tsconfig-paths/register servers/lads-viscometer/src/server.ts"
+    "lads-viscometer": "ts-node -r tsconfig-paths/register servers/lads-viscometer/src/server.ts",
+    "lads-balance": "ts-node -r tsconfig-paths/register servers/lads-balance/src/server.ts"
   },
   "author": "Dr. Matthias Arnold, AixEngineers",
   "license": "MIT & AGPL 3",
