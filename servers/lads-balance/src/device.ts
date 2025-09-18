@@ -60,6 +60,8 @@ export class BalanceDeviceImpl {
         }) as BalanceDevice
         this.device = device
 
+        // create unit implementation
+        this.config = config
         const balanceUnitImpl = this.getBalanceUnitImpl(config)
         balanceUnitImpl.balance.on(BalanceEvents.DeviceInfo, this.setNameplate.bind(this))
 

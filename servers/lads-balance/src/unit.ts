@@ -31,7 +31,7 @@ import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
-import { Balance, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus } from "./balance"
+import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus } from "./balance"
 import { EventEmitter } from "events"
 
 //---------------------------------------------------------------
@@ -130,18 +130,20 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                     const statusCode = StatusCodes.BadOutOfRange
                     setNumericValue(this.currentWeight.sensorValue, currentWeight, statusCode)
                 }
-            } else if (responseType === BalanceResponseType.Calibration) {
-                if (responseType != this.lastReading.responseType) {
-                    if (reading?.response) {
-                        raiseEvent(this.functionalUnit, 'Received calibration report.')
-                        setDateTimeValue(this.functionalUnit.calibrationTimestamp, this.balance.calibrationTimestamp)
-                        setStringValue(this.functionalUnit.calibrationReport, this.balance.calibrationReport)
-                    }
-                }
             }
             this.lastReading = reading
         })
 
+        // update calibration report
+        this.balance.on(BalanceEvents.CalibrationReport, (calibrationReport: BalanceCalibrationReport) => {
+            if (calibrationReport.timestamp.toISOString() != getDateTimeValue(this.functionalUnit.calibrationTimestamp).toISOString()) {
+                setDateTimeValue(this.functionalUnit.calibrationTimestamp, calibrationReport.timestamp)
+                setStringValue(this.functionalUnit.calibrationReport, calibrationReport.report)
+                raiseEvent(this.functionalUnit, 'Received calibration report.')
+            }
+         })
+
+        // update connection status
         this.balance.on(BalanceEvents.Status, (status: BalanceStatus) => {
             if (status === BalanceStatus.Offline) {
                 this.enterOffline()

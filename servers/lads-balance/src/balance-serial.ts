@@ -59,6 +59,7 @@ export abstract class SerialBalance extends Balance {
                         if (info) this.emit(BalanceEvents.DeviceInfo, info);
                     }
 
+                    // start online/offline status
                     this.startCheckStatus()
 
                     // Send one initial reading so callers get immediate data.

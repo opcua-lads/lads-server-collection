@@ -48,6 +48,11 @@ export interface BalanceReading {
     response?: string
 }
 
+export interface BalanceCalibrationReport {
+    timestamp: Date
+    report: string
+}
+
 /**
  * Device identification and software information.
  * Some fields (firmware, hardware, userId) may be undefined
@@ -82,6 +87,7 @@ export type BalanceEventKey = typeof BalanceEvents[keyof typeof BalanceEvents]
 export type BalanceEventMap = {
     [BalanceEvents.DeviceInfo]: DeviceInfo;
     [BalanceEvents.Reading]: BalanceReading;
+    [BalanceEvents.CalibrationReport]: BalanceCalibrationReport;
     [BalanceEvents.Status]: BalanceStatus;
     [BalanceEvents.Error]: Error;
 };
@@ -94,9 +100,8 @@ export type BalanceEventMap = {
 export abstract class Balance extends EventEmitter{
     private pollReading?: NodeJS.Timeout
     private pollStatus?: NodeJS.Timeout
-    private lastStatus =  BalanceStatus.Offline;
-    calibrationTimestamp?: Date
-    calibrationReport?: string
+    private lastStatus =  BalanceStatus.Offline
+    calibrationReport?: BalanceCalibrationReport
 
     constructor() { super() }
 
@@ -121,11 +126,16 @@ export abstract class Balance extends EventEmitter{
      */
     startPolling(intervalMs = 1000): void {
         if (this.pollReading) clearInterval(this.pollReading);
+        let lastCalibrationReport: BalanceCalibrationReport = undefined
         this.pollReading = setInterval(async () => {
             try {
                 const reading = await this.getCurrentReading();
                 if (reading){
-                    this.emit(BalanceEvents.Reading, reading);                
+                    if (reading.responseType === BalanceResponseType.Calibration) {
+                        this.emit(BalanceEvents.CalibrationReport, this.calibrationReport)
+                    } else { 
+                        this.emit(BalanceEvents.Reading, reading)
+                    }
                 } else {
                     this.emit(BalanceEvents.Error, "Invalid reading");
                 }
