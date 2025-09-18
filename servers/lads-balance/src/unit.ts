@@ -207,7 +207,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         const iso = started.toISOString()
         const date = iso.slice(0, 10).replace(/-/g, "")
         const time = iso.slice(11, 19).replace(/:/g, "")
-        const deviceProgramRunId = `${date}-${time}-${template.identifier.replace(/[ (),°]/g, "")}`
+        const deviceProgramRunId = `${date}-${time}-${this.parent.config.name}-${template.identifier}`.replace(/[ (),°]/g, "")
         this.currentRunOptions = {
             programTemplateId: template.identifier,
             started: started,
