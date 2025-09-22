@@ -28,6 +28,7 @@ import EventEmitter from "events";
 export enum BalanceStatus {
     Offline = "offline",
     Online = "online",
+    StandBy = "standby"
 }
 
 export enum BalanceResponseType { Reading, High, Low, Calibration, Other}
@@ -44,6 +45,7 @@ export interface BalanceReading {
     unit: string
     stable: boolean
     isTared: boolean
+    tareWeight?: number
     responseType?: BalanceResponseType
     response?: string
 }

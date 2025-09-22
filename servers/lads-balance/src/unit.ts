@@ -24,15 +24,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSDeviceState } from "@interfaces"
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, constructPropertiesExtensionObject, getNumericValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
-import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
+import { BalanceFunctionalUnit, BalanceFunctionalUnitSet, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus } from "./balance"
 import { EventEmitter } from "events"
+import { read } from "fs"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -69,17 +70,20 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     currentWeight: LADSAnalogScalarSensorFunction
     weightStable: LADSTwoStateDiscreteSensorFunction
     tareMode: LADSMultiStateDiscreteSensorFunction
+    tareWeight: LADSAnalogScalarSensorFunction
     programTemplates: LADSProgramTemplate[] = []
     activeProgram: LADSActiveProgram
     currentRunOptions: CurrentRunOptions
     programTemplateElements: ProgramTemplateElement[] = []
 
-    constructor(parent: BalanceDeviceImpl, functionalUnit: BalanceFunctionalUnit) {
+    constructor(parent: BalanceDeviceImpl) {
         super()
         this.parent = parent
+    }
 
+    async postInitialize() {
         // init functional unit & state machine
-        this.functionalUnit = functionalUnit
+        const functionalUnit = this.functionalUnit
         const stateMachine = functionalUnit.functionalUnitState as BalanceFunctionalUnitStatemachine
         stateMachine.setTare.bindMethod(this.setTare.bind(this))
         stateMachine.setZero.bindMethod(this.setZero.bind(this))
@@ -100,14 +104,12 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         addressSpace.installHistoricalDataNode(this.currentWeight.sensorValue)
         this.weightStable = functionSet.weightStable
         this.tareMode = functionSet.tareMode
+        this.tareWeight = functionSet.tareWeight
 
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
         AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addReferences(functionalUnit.calibrationTimestamp, AFODictionaryIds.calibration_time)
         AFODictionary.addReferences(functionalUnit.calibrationReport, AFODictionaryIds.calibration_report)
-    }
-
-    async postInitialize() {
 
         // connect to balance object
         const status = await this.balance.getStatus()
@@ -123,12 +125,11 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 setNumericValue(this.currentWeight.sensorValue, reading.weight, statusCode)
                 setBooleanValue(this.weightStable.sensorValue, reading.stable)
                 setNumericValue(this.tareMode.sensorValue, reading.isTared ? 1 : 0)
+                setNumericValue(this.tareWeight?.sensorValue, reading.tareWeight ?? 0)
             } else if ((responseType === BalanceResponseType.High) || (responseType === BalanceResponseType.Low)) {
                 if (responseType != this.lastReading.responseType) {
                     raiseEvent(this.functionalUnit, `Weight exceeds ${responseType === BalanceResponseType.High ? "high" : "low"} limit!`, 1000)
-                    const currentWeight = getNumericValue(this.currentWeight.sensorValue)
-                    const statusCode = StatusCodes.BadOutOfRange
-                    setNumericValue(this.currentWeight.sensorValue, currentWeight, statusCode)
+                    modifyStatusCode(this.currentWeight.sensorValue, StatusCodes.BadOutOfRange)
                 }
             }
             this.lastReading = reading
@@ -149,6 +150,8 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 this.enterOffline()
             } else if (status === BalanceStatus.Online) {
                 this.enterOnline()
+            } else if (status === BalanceStatus.StandBy) {
+                this.enterStandBy()
             }
         })
 
@@ -223,15 +226,27 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         }
     }
 
+    setStatusCode(statusCode: StatusCode) {
+        modifyStatusCode(this.currentWeight.sensorValue, statusCode)
+        modifyStatusCode(this.weightStable.sensorValue, statusCode)
+        modifyStatusCode(this.tareMode.sensorValue, statusCode)
+    }
+
     protected enterOnline() {
         raiseEvent(this.functionalUnit, "Balance online")
+        this.parent.deviceHelper.enterDeviceOperating()
     }
 
     protected enterOffline() {
         raiseEvent(this.functionalUnit, "Balance offline", 1000)
-        modifyStatusCode(this.currentWeight.sensorValue, StatusCodes.UncertainLastUsableValue)
-        modifyStatusCode(this.weightStable.sensorValue, StatusCodes.UncertainLastUsableValue)
-        modifyStatusCode(this.tareMode.sensorValue, StatusCodes.UncertainLastUsableValue)
+        this.setStatusCode(StatusCodes.UncertainLastUsableValue)
+        this.parent.deviceHelper.enterDeviceInitialzation()
+    }
+
+    protected enterStandBy() {
+        raiseEvent(this.functionalUnit, "Balance standby", 100)
+        this.setStatusCode(StatusCodes.UncertainLastUsableValue)
+        this.parent.deviceHelper.enterDeviceSleep()
     }
 
     protected enterMeasuring(context: SessionContext) {
@@ -280,7 +295,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 result: result,
                 runtime: this.functionalUnit.programManager.activeProgram.currentRuntime,
                 sampleWeight: this.currentWeight.sensorValue,
-                grossWeight: this.currentWeight.rawValue,
+                tareWeight: this.tareWeight?.sensorValue,
                 calibrationTime: getDateTimeValue(this.functionalUnit.calibrationTimestamp),
                 calibrationCertficate: getStringValue(this.functionalUnit.calibrationReport)
             })

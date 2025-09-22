@@ -27,17 +27,19 @@ import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols } from "./server"
-import { IAddressSpace } from "node-opcua"
+import { IAddressSpace, INamespace, UAStateMachineEx } from "node-opcua"
 import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
 import { BalanceUnitImpl } from "./unit"
 import { SerialBalanceUnitImpl } from "./unit-serial"
 
 //--------------------------------------------------------------- 
+export function getBalanceNameSpace(addressSpace: IAddressSpace): INamespace {return addressSpace.getNamespace("http://aixengineers.de/Balance/") }
 
 export class BalanceDeviceImpl {
     config: BalanceDeviceConfig
     device: BalanceDevice
+    deviceHelper: LADSDeviceHelper
 
     static isSerialPortAvailable(path: string): boolean {
         try {
@@ -52,7 +54,7 @@ export class BalanceDeviceImpl {
     constructor(addressSpace: IAddressSpace, config: BalanceDeviceConfig) {
 
         // create device object
-        const nameSpace = addressSpace.getNamespace("http://aixengineers.de/Balance/")
+        const nameSpace = getBalanceNameSpace(addressSpace)
         const deviceType = nameSpace.findObjectType("BalanceDeviceType")
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
@@ -66,23 +68,27 @@ export class BalanceDeviceImpl {
         balanceUnitImpl.balance.on(BalanceEvents.DeviceInfo, this.setNameplate.bind(this))
 
         // attach device helper
-        const helper = new LADSDeviceHelper(device)
+        this.deviceHelper = new LADSDeviceHelper(device)
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
         AFODictionary.addReferences(device, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
     }
 
+    
     getBalanceUnitImpl(config: BalanceDeviceConfig): BalanceUnitImpl {
         const functionalUnit = this.getFunctionalUnit()
+        const functionalUnitSet = this.getFunctionalUnitSet()
         switch (config.protocol) {
             case BalanceProtocols.SBI:
             case BalanceProtocols.SICS:
-                return new SerialBalanceUnitImpl(this, functionalUnit, config)
+                return new SerialBalanceUnitImpl(this, functionalUnitSet, config)
             default:
-                return new SimulatedBalanceUnitImpl(this, functionalUnit)
+                return new SimulatedBalanceUnitImpl(this, functionalUnitSet)
         }
     }
+
+    getFunctionalUnitSet(): BalanceFunctionalUnitSet { return this.device.getComponentByName("FunctionalUnitSet") as BalanceFunctionalUnitSet }
 
     getFunctionalUnit(): BalanceFunctionalUnit {
         if (true) {

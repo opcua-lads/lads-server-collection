@@ -42,6 +42,7 @@ export interface BalanceDeviceConfig {
     serialPort: string
     protocol: string
     name: string
+    enabled?: boolean
 }
 
 // Type guard
@@ -146,7 +147,12 @@ export class BalanceServerImpl {
 
         // build structure
         const addressSpace = this.server.engine.addressSpace
-        this.config.devices.forEach(deviceConfig => { const device = new BalanceDeviceImpl(addressSpace, deviceConfig) })
+        this.config.devices.forEach(deviceConfig => { 
+            const enabled = deviceConfig.enabled ?? true
+            if (enabled) {
+                const device = new BalanceDeviceImpl(addressSpace, deviceConfig) 
+            }
+        })
 
         // finalize start
         await this.server.start()

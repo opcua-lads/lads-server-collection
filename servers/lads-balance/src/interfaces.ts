@@ -31,6 +31,7 @@ export interface BalanceFunctionSet extends UAObject {
     currentWeight: LADSAnalogScalarSensorFunction
     weightStable: LADSTwoStateDiscreteSensorFunction
     tareMode: LADSMultiStateDiscreteSensorFunction
+    tareWeight?: LADSAnalogScalarSensorFunction
 }
 
 export interface BalanceFunctionalUnit extends Omit<LADSFunctionalUnit, "functionSet"> {

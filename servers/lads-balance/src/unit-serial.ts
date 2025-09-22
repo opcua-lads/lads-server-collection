@@ -19,8 +19,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { BalanceFunctionalUnit } from './interfaces';
-import { BalanceDeviceImpl } from './device';
+import { BalanceFunctionalUnit, BalanceFunctionalUnitSet } from './interfaces';
+import { BalanceDeviceImpl, getBalanceNameSpace } from './device';
 import { BalanceUnitImpl } from './unit';
 import { BalanceDeviceConfig, BalanceProtocols } from './server';
 import { SbiBalance } from './balance-sbi';
@@ -29,13 +29,25 @@ import { SicsBalance } from './balance-sics';
 //---------------------------------------------------------------
 export class SerialBalanceUnitImpl extends BalanceUnitImpl {
 
-    constructor(parent: BalanceDeviceImpl, functionalUnit: BalanceFunctionalUnit, config: BalanceDeviceConfig) {
-        super(parent, functionalUnit)
+    constructor(parent: BalanceDeviceImpl, functionalUnitSet: BalanceFunctionalUnitSet, config: BalanceDeviceConfig) {
+        super(parent)
+        
+        const protocol = config.protocol
+        const sbi = (protocol === BalanceProtocols.SBI)
+        const optionals = sbi ? [] : ["FunctionSet.TareWeight"]
+
+        // create unit object
+        const balanceUnitType = getBalanceNameSpace(functionalUnitSet.addressSpace).findObjectType("BalanceUnitType")
+        this.functionalUnit = balanceUnitType.instantiate({
+            browseName: "BalanceUnit",
+            displayName: "Balance Unit",
+            componentOf: functionalUnitSet,
+            optionals: optionals
+        }) as BalanceFunctionalUnit
 
         // create balance
-        const protocol = config.protocol
         const port = config.serialPort
-        if (protocol === BalanceProtocols.SBI) {
+        if (sbi) {
             this.balance = new SbiBalance(port)
         } else {
             this.balance = new SicsBalance(port)

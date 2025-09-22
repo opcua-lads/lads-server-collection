@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { getNumericValue, setNumericValue } from '@utils'
-import { BalanceFunctionalUnit } from './interfaces';
+import { BalanceFunctionalUnit, BalanceFunctionalUnitSet } from './interfaces';
 import { BalanceDeviceImpl } from './device';
 import { BalanceUnitImpl } from './unit';
 import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';
@@ -28,51 +28,52 @@ import { SimulatedBalance } from './balance-simulator';
 
 //---------------------------------------------------------------
 export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
-    sampleWeight: UAVariable
-    tareWeight: UAVariable
-    zeroWeight: UAVariable
-    grossWeight: UAVariable
-    rawWeight: UAVariable
-    filteredRawWeight = 0
+    private simSampleWeight: UAVariable
+    private simTareWeight: UAVariable
+    private simZeroWeight: UAVariable
+    private simGrossWeight: UAVariable
+    private simRawWeight: UAVariable
+    private filteredRawWeight = 0
 
-    constructor(parent: BalanceDeviceImpl, functionalUnit: BalanceFunctionalUnit) {
-        super(parent, functionalUnit)
+    constructor(parent: BalanceDeviceImpl, functionalUnitSet: BalanceFunctionalUnitSet) {
+        super(parent)
 
         // create balance
         this.balance = new SimulatedBalance(this.getRawWeight.bind(this))
         
         // create variables for simulator
+        const functionalUnit = this.functionalUnit
         const namespace = functionalUnit.namespace
         const simulator = namespace.addObject({
             componentOf: functionalUnit,
             browseName: "Simulator"
         })
-        this.sampleWeight = namespace.addVariable({
+        this.simSampleWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Sample Weight",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 50.0 }
         })
-        this.tareWeight = namespace.addVariable({
+        this.simTareWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Tare Weight",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 0.0 }
         })
-        this.zeroWeight = namespace.addVariable({
+        this.simZeroWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Zero Weight",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 0.0 }
         })
-        this.grossWeight = namespace.addVariable({
+        this.simGrossWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Gross Weight",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 0.0 },
             accessLevel: AccessLevelFlag.CurrentRead
         })
-        this.rawWeight = namespace.addVariable({
+        this.simRawWeight = namespace.addVariable({
             componentOf: simulator,
             browseName: "Raw Weight",
             dataType: DataType.Double,
@@ -92,10 +93,10 @@ export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
 
     private async evaluate(dT: number) {        
         // compute simulated values
-        const gross = getNumericValue(this.sampleWeight) + getNumericValue(this.tareWeight)
-        const raw = gross + getNumericValue(this.zeroWeight)
-        setNumericValue(this.grossWeight, gross)
-        setNumericValue(this.rawWeight, raw)
+        const gross = getNumericValue(this.simSampleWeight) + getNumericValue(this.simTareWeight)
+        const raw = gross + getNumericValue(this.simZeroWeight)
+        setNumericValue(this.simGrossWeight, gross)
+        setNumericValue(this.simRawWeight, raw)
 
         // evaluate low pass filter
         const cf = 0.2
