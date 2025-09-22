@@ -25,9 +25,6 @@ import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 
 //---------------------------------------------------------------
-export const IncludeAFO = false
-
-//---------------------------------------------------------------
 // config
 //---------------------------------------------------------------
 export enum BalanceProtocols {
@@ -36,6 +33,8 @@ export enum BalanceProtocols {
     SBI = "SBI"
 }
 export interface BalanceConfig {
+    port?: number
+    includeAfo?: boolean;
     devices: BalanceDeviceConfig[]
 }
 
@@ -49,7 +48,7 @@ export interface BalanceDeviceConfig {
 function isBalanceConfig(obj: any): obj is BalanceConfig {
     return (
         Array.isArray(obj.devices) &&
-        obj.steps.every(isBalanceDeviceConfig)
+        obj.devices.every(isBalanceDeviceConfig)
     )
 }
 
@@ -62,6 +61,8 @@ function isBalanceDeviceConfig(obj: any): obj is BalanceDeviceConfig {
 }
 
 const DefaultConfig: BalanceConfig = {
+    port: 4844,
+    includeAfo: true,
     devices: [
         { serialPort: "", protocol: BalanceProtocols.Simulator, name: "My Simulated Balance" },
         //{ serialPort: "/dev/cu.PL2303G-USBtoUART210", protocol: BalanceProtocols.SBI, name: "My Sartorius Balance" },
@@ -82,13 +83,19 @@ async function loadConfig(): Promise<BalanceConfig> {
     }
 }
 
+export let IncludeAFO = false
+
 //---------------------------------------------------------------
 // server implementation
 //---------------------------------------------------------------
+
 export class BalanceServerImpl {
     server: OPCUAServer
+    config: BalanceConfig
 
-    constructor(port: number) {
+    constructor(config: BalanceConfig) {
+        this.config = config
+        const port = this.config.port ?? 4844
         const uri = "LADS-Balance-Server"
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
@@ -139,8 +146,7 @@ export class BalanceServerImpl {
 
         // build structure
         const addressSpace = this.server.engine.addressSpace
-        const config = await loadConfig()
-        config.devices.forEach(deviceConfig => { const device = new BalanceDeviceImpl(addressSpace, deviceConfig) })
+        this.config.devices.forEach(deviceConfig => { const device = new BalanceDeviceImpl(addressSpace, deviceConfig) })
 
         // finalize start
         await this.server.start()
@@ -154,7 +160,10 @@ export class BalanceServerImpl {
 // create and start server including a list of balances
 //---------------------------------------------------------------
 export async function main() {
-    const server = new BalanceServerImpl(4844)
+    const config = await loadConfig()
+    const includeAfo = config.includeAfo ?? true
+    IncludeAFO = includeAfo
+    const server = new BalanceServerImpl(config)
     await server.start()
 }
 
