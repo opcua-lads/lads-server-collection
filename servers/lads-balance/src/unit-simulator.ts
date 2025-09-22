@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { getNumericValue, setNumericValue } from '@utils'
-import { BalanceFunctionalUnit, BalanceFunctionalUnitSet } from './interfaces';
+import { BalanceFunctionalUnitSet } from './interfaces';
 import { BalanceDeviceImpl } from './device';
 import { BalanceUnitImpl } from './unit';
 import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';

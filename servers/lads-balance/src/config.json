@@ -1,5 +1,5 @@
 {
-    "includeAfo": false,
+    "includeAfo": true,
     "port": 4844,
     "devices": [
         {
@@ -12,7 +12,7 @@
             "serialPort": "/dev/tty.usbmodem00294063041",
             "protocol": "SBI",
             "name": "My Sartorius Balance",
-            "enabled": false
+            "enabled": true
         },
         {
             "serialPort": "/dev/tty.PL2303-USBtoUART1130",

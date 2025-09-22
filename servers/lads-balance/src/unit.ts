@@ -29,11 +29,10 @@ import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine,
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
-import { BalanceFunctionalUnit, BalanceFunctionalUnitSet, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
+import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus } from "./balance"
 import { EventEmitter } from "events"
-import { read } from "fs"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -108,6 +107,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
         AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
+        AFODictionary.addSensorFunctionReferences(this.tareWeight, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight)
         AFODictionary.addReferences(functionalUnit.calibrationTimestamp, AFODictionaryIds.calibration_time)
         AFODictionary.addReferences(functionalUnit.calibrationReport, AFODictionaryIds.calibration_report)
 

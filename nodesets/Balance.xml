@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-09-22T14:36:03.642Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-09-22T15:19:24.440Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/Machinery/</Uri>
@@ -39,7 +39,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="2.8.5"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="86071d8c24b5d9b70d25468d83b01f21"/>
+            <si:GeneratorExtension Hash="1bee8960a2a6788e199527bcf58d5678"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_Balance_" NodeId="ns=4;i=5000" BrowseName="4:http://aixengineers.de/Balance/" ParentNodeId="i=11715">
@@ -150,10 +150,10 @@
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1026</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=5005</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5006</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5007</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5013</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5005</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=4;i=5003" BrowseName="3:ProgramManager" ParentNodeId="ns=4;i=1000">
@@ -223,18 +223,6 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
-    <UAObject NodeId="ns=4;i=5005" BrowseName="4:CurrentWeight" ParentNodeId="ns=4;i=5002">
-        <DisplayName>Current Weight</DisplayName>
-        <References>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1016</Reference>
-            <Reference ReferenceType="HasComponent">ns=3;i=5024</Reference>
-            <Reference ReferenceType="HasComponent">ns=3;i=6039</Reference>
-            <Reference ReferenceType="HasComponent">ns=3;i=6037</Reference>
-            <Reference ReferenceType="HasProperty">ns=4;i=6011</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6042</Reference>
-        </References>
-    </UAObject>
     <UAObject NodeId="ns=4;i=5006" BrowseName="4:WeightStable" ParentNodeId="ns=4;i=5002">
         <DisplayName>Weight Stable</DisplayName>
         <References>
@@ -638,70 +626,6 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
-    <UAVariable DataType="Boolean" NodeId="ns=4;i=6011" BrowseName="3:IsEnabled" ParentNodeId="ns=4;i=1002" UserAccessLevel="3" AccessLevel="3">
-        <DisplayName>IsEnabled</DisplayName>
-        <Description>IsEnabled indicates whether the Function can currently be executed on the Device. A Function may be disabled for several reasons including not licensed, missing hardware modules, or missing supplies</Description>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-        </References>
-    </UAVariable>
-    <UAVariable DataType="Double" NodeId="ns=4;i=6042" BrowseName="3:SensorValue" ParentNodeId="ns=4;i=1002">
-        <DisplayName>SensorValue</DisplayName>
-        <Description>SensorValue is the calibrated and optionally compensated/filtered process value.</Description>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasProperty">ns=4;i=6043</Reference>
-            <Reference ReferenceType="HasProperty">ns=4;i=6044</Reference>
-        </References>
-    </UAVariable>
-    <UAVariable DataType="EUInformation" NodeId="ns=4;i=6043" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=6042">
-        <DisplayName>EngineeringUnits</DisplayName>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-        </References>
-        <Value>
-            <uax:ExtensionObject>
-                <uax:TypeId>
-                    <uax:Identifier>i=888</uax:Identifier>
-                </uax:TypeId>
-                <uax:Body>
-                    <uax:EUInformation>
-                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
-                        <uax:UnitId>4674125</uax:UnitId>
-                        <uax:DisplayName>
-                            <uax:Text>g</uax:Text>
-                        </uax:DisplayName>
-                        <uax:Description>
-                            <uax:Text>gram</uax:Text>
-                        </uax:Description>
-                    </uax:EUInformation>
-                </uax:Body>
-            </uax:ExtensionObject>
-        </Value>
-    </UAVariable>
-    <UAVariable DataType="Range" NodeId="ns=4;i=6044" BrowseName="EURange" ParentNodeId="ns=4;i=6042">
-        <DisplayName>EURange</DisplayName>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-        </References>
-        <Value>
-            <uax:ExtensionObject>
-                <uax:TypeId>
-                    <uax:Identifier>i=885</uax:Identifier>
-                </uax:TypeId>
-                <uax:Body>
-                    <uax:Range>
-                        <uax:Low>-1000</uax:Low>
-                        <uax:High>10000</uax:High>
-                    </uax:Range>
-                </uax:Body>
-            </uax:ExtensionObject>
-        </Value>
-    </UAVariable>
     <UAObject NodeId="ns=4;i=5013" BrowseName="4:TareWeight" ParentNodeId="ns=4;i=5002">
         <DisplayName>Tare Weight</DisplayName>
         <References>
@@ -758,6 +682,81 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="Range" NodeId="ns=4;i=6053" BrowseName="EURange" ParentNodeId="ns=4;i=6051">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>-1000</uax:Low>
+                        <uax:High>10000</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=5005" BrowseName="4:CurrentWeight" ParentNodeId="ns=4;i=5002">
+        <DisplayName>Current Weight</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1016</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6011</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6013</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=5024</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=6039</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Boolean" NodeId="ns=4;i=6011" BrowseName="3:IsEnabled" ParentNodeId="ns=4;i=5005" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>IsEnabled</DisplayName>
+        <Description>IsEnabled indicates whether the Function can currently be executed on the Device. A Function may be disabled for several reasons including not licensed, missing hardware modules, or missing supplies</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=4;i=6013" BrowseName="3:SensorValue" ParentNodeId="ns=4;i=5005">
+        <DisplayName>SensorValue</DisplayName>
+        <Description>SensorValue is the calibrated and optionally compensated/filtered process value.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6045</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6046</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=6045" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=6013">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4674125</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>g</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>gram</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=6046" BrowseName="EURange" ParentNodeId="ns=4;i=6013">
         <DisplayName>EURange</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>

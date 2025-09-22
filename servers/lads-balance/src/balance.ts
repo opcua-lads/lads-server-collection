@@ -151,7 +151,6 @@ export abstract class Balance extends EventEmitter{
             try {
                 const status = await this.getStatus()
                 if (status != this.lastStatus) {
-                    console.log(status)
                     this.emit(BalanceEvents.Status, status)
                     this.lastStatus = status
                 }
