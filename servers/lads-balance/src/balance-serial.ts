@@ -29,20 +29,47 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *   - getDeviceInfo() (optional)
  */
 
-import { SerialPort } from "serialport";
+import { SerialPort, SerialPortOpenOptions } from "serialport";
 import { Balance, BalanceStatus, BalanceEvents } from "./balance";
+import { statSync } from "fs"
 
 export abstract class SerialBalance extends Balance {
+    protected options: SerialPortOpenOptions<any>
     protected port: SerialPort;
     protected buffer = "";
     
-    constructor(portPath: string, baudRate = 9600) {
-        super();
-        this.port = new SerialPort({ path: portPath, baudRate });
+    static isSerialPortAvailable(path: string): boolean {
+        try {
+            // Check if the path exists and is a character device
+            const stats = statSync(path)
+            return stats.isCharacterDevice();
+        } catch {
+            return false
+        }
+    }
+
+    constructor(options: SerialPortOpenOptions<any>) {
+        super()
+        this.options = options
+        // start online/offline status
+        this.startCheckStatus()
+        //this.tryReconnect()
     }
 
     async tryReconnect(): Promise<void> {
-        try { this.port.open()}  
+        try { 
+            if (!this.port) {
+                const path = this.options.path
+                if (SerialBalance.isSerialPortAvailable(path)) {
+                    this.port = new SerialPort(this.options)
+                    this.connect()                        
+                } else {
+                    this.emit(BalanceEvents.Error, `Serialport ${path} not avilable!`)
+                }
+            } else { 
+                this.port.open()
+            }        
+        }  
         catch {}
     }
 
@@ -58,9 +85,6 @@ export abstract class SerialBalance extends Balance {
                         const info = await this.getDeviceInfo();
                         if (info) this.emit(BalanceEvents.DeviceInfo, info);
                     }
-
-                    // start online/offline status
-                    this.startCheckStatus()
 
                     // Send one initial reading so callers get immediate data.
                     try {
@@ -93,6 +117,7 @@ export abstract class SerialBalance extends Balance {
      * Returns Online if the serial port is open, otherwise Offline.
      */
     async getStatus(): Promise<BalanceStatus> {
+        if (!this.port) return BalanceStatus.Offline
         return this.port.isOpen ? BalanceStatus.Online : BalanceStatus.Offline;
     }
 

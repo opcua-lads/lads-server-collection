@@ -80,10 +80,10 @@ export class SicsBalance extends SerialBalance {
     }
 
     async getStatus(): Promise<BalanceStatus> {
+        if (!this.port) return BalanceStatus.Offline
         if (!this.port.isOpen) return BalanceStatus.Offline
         return this.status
     }
-
 
     /**
      * Set current gross as tare

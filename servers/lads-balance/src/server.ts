@@ -40,6 +40,10 @@ export interface BalanceConfig {
 
 export interface BalanceDeviceConfig {
     serialPort: string
+    baudRate?: number
+    parity?: string
+    dataBits?: 7 | 8,
+    stopBits?: 1 | 1.5 | 2 
     protocol: string
     name: string
     enabled?: boolean

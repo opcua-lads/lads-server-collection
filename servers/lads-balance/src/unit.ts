@@ -112,8 +112,10 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         AFODictionary.addReferences(functionalUnit.calibrationReport, AFODictionaryIds.calibration_report)
 
         // connect to balance object
-        const status = await this.balance.getStatus()
-        if (status === BalanceStatus.Offline) await this.balance.connect()
+        this.setStatusCodes(StatusCodes.BadWaitingForInitialData)
+        this.raiseMessage(`Connecting to balance ${this.balanceName}..`)
+        //const status = await this.balance.getStatus()
+        //if (status === BalanceStatus.Offline) await this.balance.connect()
         this.balance.startPolling()
 
         // update information model variables from balance object events
@@ -153,6 +155,11 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             } else if (status === BalanceStatus.StandBy) {
                 this.enterStandBy()
             }
+        })
+
+        // log error message
+        this.balance.on(BalanceEvents.Error, (msg: string) => {
+            this.raiseMessage(`Error: ${msg}`)
         })
 
         // init program manager
@@ -226,26 +233,33 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         }
     }
 
-    setStatusCode(statusCode: StatusCode) {
+    setStatusCodes(statusCode: StatusCode) {
         modifyStatusCode(this.currentWeight.sensorValue, statusCode)
         modifyStatusCode(this.weightStable.sensorValue, statusCode)
         modifyStatusCode(this.tareMode.sensorValue, statusCode)
     }
 
+    private get balanceName(): string { return this.parent.config.name }
+
+    private raiseMessage(message: string, severity = 0) {
+        console.info(message)
+        raiseEvent(this.functionalUnit, message, severity)
+    }    
+
     protected enterOnline() {
-        raiseEvent(this.functionalUnit, "Balance online")
+        this.raiseMessage(`Balance ${this.balanceName} online`)
         this.parent.deviceHelper.enterDeviceOperating()
     }
 
     protected enterOffline() {
-        raiseEvent(this.functionalUnit, "Balance offline", 1000)
-        this.setStatusCode(StatusCodes.UncertainLastUsableValue)
+        this.raiseMessage(`Balance ${this.balanceName} offline`, 1000)
+        this.setStatusCodes(StatusCodes.UncertainLastUsableValue)
         this.parent.deviceHelper.enterDeviceInitialzation()
     }
 
     protected enterStandBy() {
-        raiseEvent(this.functionalUnit, "Balance standby", 100)
-        this.setStatusCode(StatusCodes.UncertainLastUsableValue)
+        this.raiseMessage(`Balance ${this.balanceName} standby`, 100)
+        this.setStatusCodes(StatusCodes.UncertainLastUsableValue)
         this.parent.deviceHelper.enterDeviceSleep()
     }
 

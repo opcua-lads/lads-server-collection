@@ -1,5 +1,5 @@
 {
-    "includeAfo": true,
+    "includeAfo": false,
     "port": 4844,
     "devices": [
         {

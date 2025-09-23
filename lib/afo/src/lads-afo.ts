@@ -80,7 +80,7 @@ export class AFODictionary {
                         this.referenceCount++
                     }
                     catch (err) {
-                        console.info(`AFO Reference ${id} already exits for ${node.browseName.name}`)
+                        // console.info(`AFO Reference ${id} already exits for node ${node.browseName.name} (${node.nodeId.toString()})`)
                     }
                 }
             }

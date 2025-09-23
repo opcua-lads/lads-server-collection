@@ -27,7 +27,7 @@ import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols } from "./server"
-import { IAddressSpace, INamespace, UAStateMachineEx } from "node-opcua"
+import { IAddressSpace, INamespace } from "node-opcua"
 import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
 import { BalanceUnitImpl } from "./unit"
@@ -40,16 +40,6 @@ export class BalanceDeviceImpl {
     config: BalanceDeviceConfig
     device: BalanceDevice
     deviceHelper: LADSDeviceHelper
-
-    static isSerialPortAvailable(path: string): boolean {
-        try {
-            // Check if the path exists and is a character device
-            const stats = fs.statSync(path);
-            return stats.isCharacterDevice();
-        } catch {
-            return false;
-        }
-    }
 
     constructor(addressSpace: IAddressSpace, config: BalanceDeviceConfig) {
 

@@ -25,6 +25,7 @@ import { BalanceUnitImpl } from './unit';
 import { BalanceDeviceConfig, BalanceProtocols } from './server';
 import { SbiBalance } from './balance-sbi';
 import { SicsBalance } from './balance-sics';
+import { SerialPortOpenOptions } from 'serialport';
 
 //---------------------------------------------------------------
 export class SerialBalanceUnitImpl extends BalanceUnitImpl {
@@ -46,11 +47,17 @@ export class SerialBalanceUnitImpl extends BalanceUnitImpl {
         }) as BalanceFunctionalUnit
 
         // create balance
-        const port = config.serialPort
+        const options: SerialPortOpenOptions<any> = {
+            path: config.serialPort,
+            baudRate: config.baudRate ?? 9600,
+            parity: config.parity ?? "none",
+            dataBits: config.dataBits ?? 8,
+            stopBits: config.stopBits ?? 1,
+        }
         if (sbi) {
-            this.balance = new SbiBalance(port)
+            this.balance = new SbiBalance(options)
         } else {
-            this.balance = new SicsBalance(port)
+            this.balance = new SicsBalance(options)
         }
         
         // finalize iitialization
