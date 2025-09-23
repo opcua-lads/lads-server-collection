@@ -158,8 +158,8 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         })
 
         // log error message
-        this.balance.on(BalanceEvents.Error, (msg: string) => {
-            this.raiseMessage(`Error: ${msg}`)
+        this.balance.on(BalanceEvents.Error, (message: string) => {
+            this.raiseMessage(`Balance ${this.balanceName} error: ${message}`)
         })
 
         // init program manager

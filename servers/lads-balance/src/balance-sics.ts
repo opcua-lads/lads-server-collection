@@ -54,7 +54,7 @@ export class SicsBalance extends SerialBalance {
                 this.status = BalanceStatus.Offline
             } else {
                 // status is unclear - don't change it
-                console.log(`Unknown SICS SI response: ${siResp}`)
+                console.debug(`Unknown SICS SI response: ${siResp}`)
             }
             return undefined
         } else {

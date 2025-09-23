@@ -139,7 +139,7 @@ export abstract class Balance extends EventEmitter{
                         this.emit(BalanceEvents.Reading, reading)
                     }
                 } else {
-                    this.emit(BalanceEvents.Error, "Invalid reading");
+                    // this.emit(BalanceEvents.Error, "Invalid reading");
                 }
             } catch (e) {}
         }, intervalMs);

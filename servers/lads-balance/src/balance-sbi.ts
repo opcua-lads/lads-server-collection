@@ -74,7 +74,7 @@ export class SbiBalance extends SerialBalance {
             return { weight: 0, unit: "g", stable: false, isTared: false, responseType: BalanceResponseType.Calibration, response: response}
         } else {
             if (l > 0) {
-                console.log(response)
+                console.debug(response)
             }
             return undefined
         }
