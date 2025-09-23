@@ -237,6 +237,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         modifyStatusCode(this.currentWeight.sensorValue, statusCode)
         modifyStatusCode(this.weightStable.sensorValue, statusCode)
         modifyStatusCode(this.tareMode.sensorValue, statusCode)
+        modifyStatusCode(this.tareWeight?.sensorValue, statusCode)
     }
 
     private get balanceName(): string { return this.parent.config.name }
