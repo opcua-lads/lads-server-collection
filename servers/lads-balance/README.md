@@ -26,35 +26,61 @@ The gataway currently supports the following well known serial protocols
 * rich Allotrope Foundation Ontology **AFO** metadata, and
 * Allotrope Simple Model **ASM** result generation for end-point measurements in accordance with the ASM Balance schema.
 
-## Licence
-LADS OPC UA servers of this collection which represent real world, non generic, device types are licensed under AGPL v3
+## License
+LADS OPC UA servers of this collection which represent real world, non generic, device types are licensed under **AGPL v3**
 
 ## Quick run
 ```bash
 npm run lads-balance             # opc.tcp://localhost:4845
 ```
-## Simple configuration via confog.json
-```
+## Configuration (config.json)
+This document explains the configuration options for `config.json`.
+The configuration file must be placed in the application's root directury.
+
+### Example config.json file
+The first device entry provides the full set of configuration options.
+The second device entry show a minimal version.
+
+```json
 {
-    "includeAfo": false,    // include afo smeantic labels; optional, default is true.
-    "port": 4844,           // OPC UA port number; optional, default is 4844
-    "devices": [            // list of balance devices
-        {
-            "serialPort": "/dev/tty.usbmodem00294063041",   // serial port path, mandatory for non simulated balances
-            "protocol": "SBI",                              // protocol; mandatory, allowed values SBI | SICS | Simulated 
-            "name": "My Sartorius Balance",                 // balance device nick name; mandatory, must be unique within the list of devices
-            "enabled": true,                                // try to connect to this device in startup; optional, default is true
-            "baudRate": 4800,                               // serial port baudrate; optional, default is 9600
-            "parity": "odd",                                // serial port parity; optional, default is "none", allowed values  "none" | "even" | "odd"
-            "dataBits": 8,                                  // serial port databits; optional, default is 8, allowed values 7 | 8
-            "stopBits": 1,                                  // serial port stopbits; optional, default is 1, allowed values 1 | 1.5 | 2
-        },
-        {
-            "serialPort": "/dev/tty.PL2303-USBtoUART1130",
-            "protocol": "SICS",
-            "name": "My Mettler Toledo Balance",
-            "enabled": true
-        }
-    ]
+  "includeAfo": false,
+  "port": 4844,
+  "devices": [
+    {
+      "serialPort": "/dev/tty.usbmodem00294063041",
+      "protocol": "SBI",
+      "name": "My Sartorius Balance",
+      "enabled": true,
+      "baudRate": 4800,
+      "parity": "odd",
+      "dataBits": 8,
+      "stopBits": 1
+    },
+    {
+      "serialPort": "/dev/tty.PL2303-USBtoUART1130",
+      "protocol": "SICS",
+      "name": "My Mettler Toledo Balance",
+    }
+  ]
 }
-```
+
+## Configuration reference
+
+### Top level
+| Key        | Type    | Required | Default | Example   | Description                                       |
+| ---------- | ------- | :------: | ------: | --------- | ------------------------------------------------- |
+| includeAfo | boolean |    No    |    true | false     | Include AFO semantic labels in the OPC UA server. |
+| port       | number  |    No    |    4844 | 4844      | OPC UA server port number.                        |
+| devices    | array   |    Yes   |       - | see below | List of balance devices to connect.               |
+
+### Device object
+| Key        | Type    | Required | Default | Example                        | Description                                                    |
+| ---------- | ------- | :------: | ------: | ------------------------------ | -------------------------------------------------------------- |
+| serialPort | string  |    Yes   |       - | "/dev/tty.usbmodem00294063041" | Serial port path (mandatory for real, non-simulated balances). |
+| protocol   | enum    |    Yes   |       - | "SBI"                          | Communication protocol: SBI, SICS, or Simulated.               |
+| name       | string  |    Yes   |       - | "My Sartorius Balance"         | Nickname for the device; must be unique within the list.       |
+| enabled    | boolean |    No    |    true | false                          | Connect to this device at startup.                             |
+| baudRate   | number  |    No    |    9600 | 4800                           | Serial port baud rate.                                         |
+| parity     | enum    |    No    |  "none" | "odd"                          | Serial port parity: none, even, or odd.                        |
+| dataBits   | number  |    No    |       8 | 7                              | Number of data bits: 7 or 8.                                   |
+| stopBits   | number  |    No    |       1 | 2                              | Number of stop bits: 1, 1.5, or 2.                             |
