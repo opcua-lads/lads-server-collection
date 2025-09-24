@@ -1,0 +1,24 @@
+{
+    "includeAfo": false,
+    "port": 4844,
+    "devices": [
+        {
+            "serialPort": "",
+            "protocol": "Simulator",
+            "name": "My Simulated Balance",
+            "enabled": false
+        },
+        {
+            "serialPort": "/dev/tty.usbmodem00294063041",
+            "protocol": "SBI",
+            "name": "My Sartorius Balance",
+            "enabled": true
+        },
+        {
+            "serialPort": "/dev/tty.PL2303-USBtoUART1130",
+            "protocol": "SICS",
+            "name": "My Mettler Toledo Balance",
+            "enabled": true
+        }
+    ]
+}

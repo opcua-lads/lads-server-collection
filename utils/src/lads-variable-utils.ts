@@ -10,10 +10,9 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DataValue } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
-import { raiseEvent } from "./lads-event-utils"
 
 // ----------------------------------------------------------------------------
 // Variable getters
@@ -48,6 +47,11 @@ export function getStringValue(variable: UAVariable, defaultValue = ""): string 
         default:
             return defaultValue
     }
+}
+
+export function getDateTimeValue(variable: UAVariable): DateTime {
+    if (!variable) return undefined
+    return variable.readValue().value.value
 }
 
 export function getEUInformation(variable: UABaseAnalog<number, any>): EUInformation { return variable.engineeringUnits?.readValue().value.value }
@@ -118,6 +122,11 @@ export function setStringArrayValue(variable: UAVariable, value: string[] | Loca
 export function setStatusCodeValue(variable: UAVariable, value: StatusCode, statusCode = StatusCodes.Good) {
     if (!variable) return
     variable.setValueFromSource({ dataType: DataType.StatusCode, value: value }, statusCode)
+}
+
+export function modifyStatusCode(variable: UAVariable, statusCode: StatusCode) {
+    if (!variable) return
+    variable.setValueFromSource( variable.readValue().value, statusCode)
 }
 
 export function setDateTimeValue(variable: UAVariable, value: Date, statusCode = StatusCodes.Good) {
@@ -235,3 +244,4 @@ export function addStatusCodeVariable(parent: UAObject, name: string, value = St
         value: { dataType: DataType.StatusCode, value: value }
     })
 }
+

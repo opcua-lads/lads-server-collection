@@ -80,7 +80,7 @@ export class AFODictionary {
                         this.referenceCount++
                     }
                     catch (err) {
-                        console.info(`AFO Reference ${id} already exits for ${node.browseName.name}`)
+                        // console.info(`AFO Reference ${id} already exits for node ${node.browseName.name} (${node.nodeId.toString()})`)
                     }
                 }
             }
@@ -101,6 +101,7 @@ export class AFODictionary {
     }
 
     private static addDefaultFunctionReferences(abstractFunction: LADSFunction) {
+        if (!abstractFunction) return
         const objectType = abstractFunction.typeDefinitionObj
         if (objectType.isSubtypeOf(this.baseSensorFunctionType)) {
             this.addDefaultSensorFunctionReferences(abstractFunction as LADSSensorFunction)
@@ -110,10 +111,12 @@ export class AFODictionary {
     }
 
     private static addDefaultSensorFunctionReferences(sensorFunction: LADSSensorFunction) {
+        if (!sensorFunction) return
         this.addReferences(sensorFunction, AFODictionaryIds.sensor, AFODictionaryIds.measurement_function)
     }
 
     private static addDefaultControlFunctionReferences(controlFunction: LADSControlFunction) {
+        if (!controlFunction) return
         this.addReferences(controlFunction, AFODictionaryIds.controller)
         this.addDefaultStatemachineReferences(controlFunction.controlFunctionState)
         this.addReferences(controlFunction.targetValue, AFODictionaryIds.control_setting)
@@ -121,12 +124,14 @@ export class AFODictionary {
     }
 
     static addSensorFunctionReferences(sensorFunction: LADSSensorFunction, sensorId: string, ...id: string[]) {
+        if (!sensorFunction) return
         AFODictionary.addReferences(sensorFunction, sensorId, ...id)
         if (id.length === 0) { id.push(sensorId) }
         AFODictionary.addReferences(sensorFunction.sensorValue, ...id)
     }
 
     static addControlFunctionReferences(controlFunction: LADSControlFunction, controllerId: string, ...id: string[]) {
+        if (!controlFunction) return
         AFODictionary.addReferences(controlFunction, controllerId, ...id)
         AFODictionary.addReferences(controlFunction.targetValue, ...id)
         AFODictionary.addReferences(controlFunction.currentValue, ...id)

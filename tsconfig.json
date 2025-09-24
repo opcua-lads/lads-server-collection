@@ -4,7 +4,7 @@
         "target": "esnext",
         "esModuleInterop": true,
         "lib": ["ES2022", "DOM"],
-        "module": "commonjS",
+        "module": "commonjs",
         "outDir": "out",
         "moduleResolution": "node",
         "strictNullChecks": false,
