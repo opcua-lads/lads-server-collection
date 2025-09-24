@@ -32,7 +32,7 @@ LADS OPC UA servers of this collection which represent real world, non generic, 
 
 ## Quick run
 ```bash
-npm run lads-balance             # opc.tcp://localhost:4845
+npm run lads-balance             # opc.tcp://localhost:4844
 ```
 ## Configuration (config.json)
 This document explains the configuration options for `config.json`.
