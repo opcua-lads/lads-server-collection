@@ -5,6 +5,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# - Project specific items
+servers/lads-balance/doc/
+lib/asm/schemas/automated-reactors.json
+
 # — Package‑manager lockfiles (keep if you want deterministic installs) —
 # package-lock.json
 # yarn.lock
@@ -39,4 +43,3 @@ Thumbs.db
 # — Logs —
 logs/
 *.log
-lib/asm/schemas/automated-reactors.json
