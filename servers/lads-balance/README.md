@@ -63,6 +63,7 @@ The second device entry show a minimal version.
     }
   ]
 }
+```
 
 ## Configuration reference
 
