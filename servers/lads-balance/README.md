@@ -4,7 +4,8 @@ Since it is based on the LADS OPC UA Companion Specification, it additionally in
 * Device Integration
 * Machinery Basics
 * Asset Management Basics
-Although it is not an implementation of the Weighing Companion Specification it lends on its definitions and naming.
+
+Although this server does not implement the Weighing Companion Specification it lends on its definitions and naming.
 
 ## Supported Protocols
 The gataway currently supports the following well known serial protocols

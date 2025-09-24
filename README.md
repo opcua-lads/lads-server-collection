@@ -11,6 +11,7 @@ Each server
 |-------------|--------|------------|------|
 | Viscometer  | [`servers/lads-viscometer`](./servers/lads-viscometer/README.md) | Rheometry simulation (temperature & shear-rate dependent viscosity) |  4840  |
 | pH-Meter    | [`servers/lads-ph-meter`](./servers/lads-ph-meter/README.md) | pH sensor simulation/real world device gateway with temperature compensation and slope/offset calibration (simulation only) |  4841  |
+| Balance     | [`servers/lads-balance`](./servers/lads-balance/README.md) | Laboratory balance gateway which supports SBI (sartorius) and SICS Level 1 (Mettler Toledo and others) protocol compliant balances  |  4844  |
 | ULT Freezer | [`servers/lads-freezer`](./servers/lads-freezer/README.md) | Door state machine + 2-point temperature control simulation |  4842  |
 
 > **Status:** All servers are proof-of-concept simulators intended for demos, integration testing and reference implementations.  
