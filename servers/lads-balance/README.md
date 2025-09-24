@@ -35,7 +35,7 @@ npm run lads-balance             # opc.tcp://localhost:4845
 ```
 ## Configuration (config.json)
 This document explains the configuration options for `config.json`.
-The configuration file must be placed in the application's root directury.
+The configuration file must be placed in the application's root directory.
 
 ### Example config.json file
 The first device entry provides the full set of configuration options.
