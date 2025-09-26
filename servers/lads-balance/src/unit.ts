@@ -294,10 +294,10 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         // execute methods
         switch (programTemplateId) {
             case ProgramTemplateIds.SetTare:
-                this.balance.tare() 
+                this.balance.setTare() 
                 break
             case ProgramTemplateIds.SetZero:
-                this.balance.zero() 
+                this.balance.setZero() 
                 break
             case ProgramTemplateIds.ClearTare:
                 this.balance.clearTare()
@@ -305,7 +305,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             case ProgramTemplateIds.SetPresetTare:
                 const property = options.properties?.find((property) => (property.key.toLowerCase().includes("tare")))
                 const tare = property ? Number(property.value) : 0.0
-                this.balance.presetTare(tare)
+                this.balance.setPresetTare(tare)
                 break
         }
 

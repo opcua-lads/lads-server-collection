@@ -42,7 +42,7 @@ export class SicsBalance extends SerialBalance {
      * Polls SI for weight and TA for tare info.
      */
     status: BalanceStatus
-    tareMode: BalanceTareMode = BalanceTareMode.None
+    presetTare: number = 0
 
     get supportsPresetTare(): boolean { return true }
 
@@ -70,11 +70,11 @@ export class SicsBalance extends SerialBalance {
             const taResp = await this.sendCommand("TA");
             const tMatch = taResp.match(/^TA\s+A\s+([+-]?\d+(?:\.\d+)?)\s*(\w+)/);
             const tareWeight = tMatch ? toGrams(Number(tMatch[1]), tMatch[2]) : undefined
-            if (tMatch) {
-                if  (Math.abs(tareWeight) < 1e-6) {
-                    this.tareMode = BalanceTareMode.None
-                } else if (this.tareMode === BalanceTareMode.None) {
-                    this.tareMode = BalanceTareMode.Manual
+            let tareMode = BalanceTareMode.None
+            if (tareWeight) {
+                if  (Math.abs(tareWeight) > 1e-6) {
+                    // balance is tared
+                    tareMode = (Math.abs(tareWeight - this.presetTare) > 1e-6) ? BalanceTareMode.Manual : BalanceTareMode.Preset
                 }
             }
 
@@ -82,7 +82,7 @@ export class SicsBalance extends SerialBalance {
                 weight,
                 unit,
                 stable,
-                tareMode: this.tareMode,
+                tareMode,
                 tareWeight
             }
         }
@@ -97,27 +97,25 @@ export class SicsBalance extends SerialBalance {
     /**
      * Zero the balance
      */
-    async zero(): Promise<void> {
+    async setZero(): Promise<void> {
         await this.sendCommand("Z");
-        this.tareMode = BalanceTareMode.None
     }
 
     /**
      * Set current gross as tare
      */
-    async tare(): Promise<void> {
+    async setTare(): Promise<void> {
         await this.sendCommand("T");
-        this.tareMode = BalanceTareMode.Manual
     }
 
     async clearTare(): Promise<void> { 
         await this.sendCommand(`TAC`)
-        this.tareMode = BalanceTareMode.None
+        this.presetTare = 0
     }
 
-    async presetTare(tare: number): Promise<void> { 
-        await this.sendCommand(`TA ${tare.toFixed(2)} g`)
-        this.tareMode = BalanceTareMode.Preset
+    async setPresetTare(oresetTare: number): Promise<void> { 
+        await this.sendCommand(`TA ${oresetTare.toFixed(2)} g`)
+        this.presetTare = oresetTare
     }
 
 

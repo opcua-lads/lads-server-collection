@@ -93,7 +93,7 @@ export class SimulatedBalance extends Balance {
         return { weight, unit, stable, tareMode: tareMode };
     }
 
-    async tare(): Promise<void> {
+    async setTare(): Promise<void> {
         return waitForCondition(async (): Promise<boolean> => {
             const reading = await this.getCurrentReading()
             if (reading.stable) {
@@ -105,7 +105,7 @@ export class SimulatedBalance extends Balance {
         })
     }
 
-    async zero(): Promise<void> {
+    async setZero(): Promise<void> {
         return waitForCondition(async (): Promise<boolean> => {
             const reading = await this.getCurrentReading()
             if (reading.stable) {

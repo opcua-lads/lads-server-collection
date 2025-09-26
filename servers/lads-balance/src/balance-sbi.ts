@@ -90,14 +90,14 @@ export class SbiBalance extends SerialBalance {
     /**
      * Set current gross as tare (subtract current load).
      */
-    async tare(): Promise<void> {
+    async setTare(): Promise<void> {
         await this.sendEsc("U");
     }
 
     /**
      * Zero the balance explicitly (supported on most Sartorius models).
      */
-    async zero(): Promise<void> {
+    async setZero(): Promise<void> {
         await this.sendEsc("V");
     }
 

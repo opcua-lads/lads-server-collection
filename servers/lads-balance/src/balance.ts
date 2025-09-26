@@ -123,11 +123,11 @@ export abstract class Balance extends EventEmitter{
     abstract getStatus(): Promise<BalanceStatus>;
     abstract getCurrentReading(): Promise<BalanceReading>;
 
-    abstract zero(): Promise<void>;
-    abstract tare(): Promise<void>;
+    abstract setZero(): Promise<void>;
+    abstract setTare(): Promise<void>;
     get supportsPresetTare(): boolean { return false }
     async clearTare(): Promise<void> { return }
-    async presetTare(tare: number): Promise<void> { return }
+    async setPresetTare(presetTare: number): Promise<void> { return }
 
     abstract getDeviceInfo?(): Promise<DeviceInfo>;
 
