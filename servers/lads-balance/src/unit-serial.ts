@@ -34,8 +34,8 @@ export class SerialBalanceUnitImpl extends BalanceUnitImpl {
         super(parent)
         
         const protocol = config.protocol
-        const sbi = (protocol === BalanceProtocols.SBI)
-        const optionals = sbi ? [] : ["FunctionSet.TareWeight"]
+        const sics = (protocol === BalanceProtocols.SICS)
+        const optionals = sics ? ["FunctionSet.TareWeight", "FunctionalUnitState.SetPresetTare", "FunctionalUnitState.ClearTare"] : []
 
         // create unit object
         const balanceUnitType = getBalanceNameSpace(functionalUnitSet.addressSpace).findObjectType("BalanceUnitType")
@@ -54,10 +54,10 @@ export class SerialBalanceUnitImpl extends BalanceUnitImpl {
             dataBits: config.dataBits ?? 8,
             stopBits: config.stopBits ?? 1,
         }
-        if (sbi) {
-            this.balance = new SbiBalance(options)
-        } else {
+        if (sics) {
             this.balance = new SicsBalance(options)
+        } else {
+            this.balance = new SbiBalance(options)
         }
         
         // finalize iitialization

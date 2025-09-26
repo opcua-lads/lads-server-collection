@@ -55,8 +55,10 @@ interface CurrentRunOptions {
 
 export class ProgramTemplateIds {
     static readonly RegisterWeight = "Register Weight"
-    static readonly SetTare = "Set Tare"
     static readonly SetZero = "Set Zero"
+    static readonly SetTare = "Set Tare"
+    static readonly SetPresetTare = "Set Preset Tare"
+    static readonly ClearTare = "Clear Tare"
 }
 
 //---------------------------------------------------------------
@@ -84,8 +86,10 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         // init functional unit & state machine
         const functionalUnit = this.functionalUnit
         const stateMachine = functionalUnit.functionalUnitState as BalanceFunctionalUnitStatemachine
-        stateMachine.setTare.bindMethod(this.setTare.bind(this))
         stateMachine.setZero.bindMethod(this.setZero.bind(this))
+        stateMachine.setTare.bindMethod(this.setTare.bind(this))
+        stateMachine.setPresetTare?.bindMethod(this.setPresetTare.bind(this))
+        stateMachine.clearTare?.bindMethod(this.clearTare.bind(this))
         stateMachine.registerWeight.bindMethod(this.regsterWeight.bind(this))
         stateMachine.start.bindMethod(this.start.bind(this))
         stateMachine.startProgram.bindMethod(this.startProgram.bind(this))
@@ -126,7 +130,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 const statusCode = reading.stable ? StatusCodes.Good : StatusCodes.UncertainSensorNotAccurate
                 setNumericValue(this.currentWeight.sensorValue, reading.weight, statusCode)
                 setBooleanValue(this.weightStable.sensorValue, reading.stable)
-                setNumericValue(this.tareMode.sensorValue, reading.isTared ? 1 : 0)
+                setNumericValue(this.tareMode.sensorValue, reading.tareMode)
                 setNumericValue(this.tareWeight?.sensorValue, reading.tareWeight ?? 0)
             } else if ((responseType === BalanceResponseType.High) || (responseType === BalanceResponseType.Low)) {
                 if (responseType != this.lastReading.responseType) {
@@ -144,7 +148,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 setStringValue(this.functionalUnit.calibrationReport, calibrationReport.report)
                 raiseEvent(this.functionalUnit, 'Received calibration report.')
             }
-         })
+        })
 
         // update connection status
         this.balance.on(BalanceEvents.Status, (status: BalanceStatus) => {
@@ -188,6 +192,24 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             modified: date,
             referenceIds: [AFODictionaryIds.calibration, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight]
         }))
+        if (this.balance?.supportsPresetTare) {
+            this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
+                identifier: ProgramTemplateIds.SetPresetTare,
+                description: "Preset tare to a given value in grams. Provide the preset-tare value as property named 'tare'. If omitted the tare will be set to zero.",
+                author: "AixEngineers",
+                created: date,
+                modified: date,
+                referenceIds: [AFODictionaryIds.calibration, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight]
+            }))
+            this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
+                identifier: ProgramTemplateIds.ClearTare,
+                description: "Clear tare.",
+                author: "AixEngineers",
+                created: date,
+                modified: date,
+                referenceIds: [AFODictionaryIds.calibration, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight]
+            }))
+        }
         this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
             identifier: ProgramTemplateIds.SetZero,
             description: "Zero balance",
@@ -245,7 +267,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     private raiseMessage(message: string, severity = 0) {
         console.info(message)
         raiseEvent(this.functionalUnit, message, severity)
-    }    
+    }
 
     protected enterOnline() {
         this.raiseMessage(`Balance ${this.balanceName} online`)
@@ -272,9 +294,19 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         // execute methods
         switch (programTemplateId) {
             case ProgramTemplateIds.SetTare:
-                this.balance.tare(); break;
+                this.balance.tare() 
+                break
             case ProgramTemplateIds.SetZero:
-                this.balance.zero(); break;
+                this.balance.zero() 
+                break
+            case ProgramTemplateIds.ClearTare:
+                this.balance.clearTare()
+                break
+            case ProgramTemplateIds.SetPresetTare:
+                const property = options.properties?.find((property) => (property.key.toLowerCase().includes("tare")))
+                const tare = property ? Number(property.value) : 0.0
+                this.balance.presetTare(tare)
+                break
         }
 
         // create result
@@ -412,18 +444,26 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         return this.programTemplateElements.find(value => value.identifier.toLowerCase().includes(id))
     }
 
-    private async startMethod(inputArguments: VariantLike[], context: SessionContext, programTemplateId: string): Promise<CallMethodResultOptions> {
+    private async startMethod(context: SessionContext, programTemplateId: string, properties?: LADSProperty[]): Promise<CallMethodResultOptions> {
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         this.initCurrentRunOptions(this.findProgramTemplate(programTemplateId))
+        this.currentRunOptions.properties = properties
         this.enterMeasuring(context)
         return { statusCode: StatusCodes.Good }
 
     }
     private async setTare(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        return await this.startMethod(inputArguments, context, ProgramTemplateIds.SetTare)
+        return await this.startMethod(context, ProgramTemplateIds.SetTare)
+    }
+    private async setPresetTare(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        const property: LADSProperty = { key: "Tare", value: inputArguments[0].value }
+        return await this.startMethod(context, ProgramTemplateIds.SetPresetTare, [property])
+    }
+    private async clearTare(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        return await this.startMethod(context, ProgramTemplateIds.ClearTare)
     }
     private async setZero(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        return await this.startMethod(inputArguments, context, ProgramTemplateIds.SetZero)
+        return await this.startMethod(context, ProgramTemplateIds.SetZero)
     }
     private async regsterWeight(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         const property: LADSProperty = { key: "SampleId", value: inputArguments[0].value }

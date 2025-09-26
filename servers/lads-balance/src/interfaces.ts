@@ -51,5 +51,7 @@ export interface BalanceFunctionalUnitStatemachine extends LADSFunctionalUnitSta
     setTare: UAMethod
     setZero: UAMethod
     registerWeight: UAMethod
+    setPresetTare?: UAMethod
+    clearTare?: UAMethod
 }
 

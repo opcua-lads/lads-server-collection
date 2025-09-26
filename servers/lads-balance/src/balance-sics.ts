@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 import { SerialBalance } from "./balance-serial";
-import { BalanceReading, toGrams, DeviceInfo, BalanceStatus } from "./balance";
+import { BalanceReading, toGrams, DeviceInfo, BalanceStatus, BalanceTareMode } from "./balance";
 
 export class SicsBalance extends SerialBalance {
     /**
@@ -42,6 +42,9 @@ export class SicsBalance extends SerialBalance {
      * Polls SI for weight and TA for tare info.
      */
     status: BalanceStatus
+    tareMode: BalanceTareMode = BalanceTareMode.None
+
+    get supportsPresetTare(): boolean { return true }
 
     async getCurrentReading(): Promise<BalanceReading> {
         // Current weight (and stable/unstable) from SI
@@ -67,13 +70,19 @@ export class SicsBalance extends SerialBalance {
             const taResp = await this.sendCommand("TA");
             const tMatch = taResp.match(/^TA\s+A\s+([+-]?\d+(?:\.\d+)?)\s*(\w+)/);
             const tareWeight = tMatch ? toGrams(Number(tMatch[1]), tMatch[2]) : undefined
-            const isTared = tMatch ? Math.abs(tareWeight) > 1e-6 : false
+            if (tMatch) {
+                if  (Math.abs(tareWeight) < 1e-6) {
+                    this.tareMode = BalanceTareMode.None
+                } else if (this.tareMode === BalanceTareMode.None) {
+                    this.tareMode = BalanceTareMode.Manual
+                }
+            }
 
             return {
                 weight,
                 unit,
                 stable,
-                isTared,
+                tareMode: this.tareMode,
                 tareWeight
             }
         }
@@ -86,18 +95,31 @@ export class SicsBalance extends SerialBalance {
     }
 
     /**
-     * Set current gross as tare
-     */
-    async tare(): Promise<void> {
-        await this.sendCommand("T");
-    }
-
-    /**
      * Zero the balance
      */
     async zero(): Promise<void> {
         await this.sendCommand("Z");
+        this.tareMode = BalanceTareMode.None
     }
+
+    /**
+     * Set current gross as tare
+     */
+    async tare(): Promise<void> {
+        await this.sendCommand("T");
+        this.tareMode = BalanceTareMode.Manual
+    }
+
+    async clearTare(): Promise<void> { 
+        await this.sendCommand(`TAC`)
+        this.tareMode = BalanceTareMode.None
+    }
+
+    async presetTare(tare: number): Promise<void> { 
+        await this.sendCommand(`TA ${tare.toFixed(2)} g`)
+        this.tareMode = BalanceTareMode.Preset
+    }
+
 
     /**
      * Retrieve device identification and firmware info.

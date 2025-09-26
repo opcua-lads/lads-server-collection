@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 import { SerialBalance } from "./balance-serial";
-import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType, BalanceStatus } from "./balance";
+import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance";
 
 export class SbiBalance extends SerialBalance {
 
@@ -60,18 +60,18 @@ export class SbiBalance extends SerialBalance {
             const sign = response.slice(ofs, ofs + 1)
             const value = response.slice(ofs + 1, ofs + 10).trim()
             const unit = response.slice(ofs + 11, ofs + 14).trim()
-            const isTared = marker === "N"        // 'N' = net (tared), 'G' = gross (not tared)
+            const tareMode = (marker === "N") ? BalanceTareMode.Manual : BalanceTareMode.None        // 'N' = net (tared), 'G' = gross (not tared)
             const stable = unit.length > 0
             const weight = toGrams(Number((sign + value).replace(/\[|\]/g, "")), unit || "g")
             const s = value.toLowerCase()
             const responseType = (s === "high")?BalanceResponseType.High:(s === "low")?BalanceResponseType.Low:BalanceResponseType.Reading
-            return { weight, unit, stable, isTared, responseType }
+            return { weight, unit, stable, tareMode: tareMode, responseType }
         } else if ((l > 22) && (response.toLowerCase().includes("calibration"))) {
             this.calibrationReport = {
                 timestamp: new Date(response.split(/\r\n/, 1)[0].replace(/\s+/, ' ')),
                 report: response
             }
-            return { weight: 0, unit: "g", stable: false, isTared: false, responseType: BalanceResponseType.Calibration, response: response}
+            return { weight: 0, unit: "g", stable: false, tareMode: BalanceTareMode.None, responseType: BalanceResponseType.Calibration, response: response}
         } else {
             if (l > 0) {
                 console.debug(response)

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *  Simulated Balance Implementation
 */
 
-import { Balance, BalanceReading, DeviceInfo, BalanceStatus, BalanceEvents } from "./balance";
+import { Balance, BalanceReading, DeviceInfo, BalanceStatus, BalanceEvents, BalanceTareMode } from "./balance";
 
 export async function waitForCondition(
     condition: () => boolean | Promise<boolean>,
@@ -86,11 +86,11 @@ export class SimulatedBalance extends Balance {
     async getCurrentReading(): Promise<BalanceReading> {
         const rawValue = this.getRawWeight()
         const stable = Math.abs(this.rawWeight - rawValue) < 0.01
-        const isTared = Math.abs(this.tareWeight) >= 0.001
+        const tareMode = (Math.abs(this.tareWeight) < 0.001) ? BalanceTareMode.None : BalanceTareMode.Manual
         this.rawWeight = rawValue
         const unit = "g"
         const weight = this.netWeight
-        return { weight, unit, stable, isTared };
+        return { weight, unit, stable, tareMode: tareMode };
     }
 
     async tare(): Promise<void> {

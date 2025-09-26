@@ -31,6 +31,12 @@ export enum BalanceStatus {
     StandBy = "standby"
 }
 
+export enum BalanceTareMode {
+    None = 0,
+    Manual = 1,
+    Preset = 2,
+}
+
 export enum BalanceResponseType { Reading, High, Low, Calibration, Other}
 
 /**
@@ -44,7 +50,7 @@ export interface BalanceReading {
     weight: number
     unit: string
     stable: boolean
-    isTared: boolean
+    tareMode: BalanceTareMode
     tareWeight?: number
     responseType?: BalanceResponseType
     response?: string
@@ -117,8 +123,11 @@ export abstract class Balance extends EventEmitter{
     abstract getStatus(): Promise<BalanceStatus>;
     abstract getCurrentReading(): Promise<BalanceReading>;
 
-    abstract tare(): Promise<void>;
     abstract zero(): Promise<void>;
+    abstract tare(): Promise<void>;
+    get supportsPresetTare(): boolean { return false }
+    async clearTare(): Promise<void> { return }
+    async presetTare(tare: number): Promise<void> { return }
 
     abstract getDeviceInfo?(): Promise<DeviceInfo>;
 
