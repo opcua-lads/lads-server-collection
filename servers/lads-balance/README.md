@@ -14,14 +14,20 @@ The gataway currently supports the following well known serial protocols
 * Simulated balance
 
 ## Features
+Monitoring
 * current weight monitoring
 * weight stable monitoring
 * tare mode monitoring
-* tare weigth monitoring (if supported by protocol)
-* zero function
-* tare function
+* tare weigth monitoring (if supported by balance/protocol)
+FAIR Documentation
 * register weight function including creation of ASM result files (see below)
-* semantic annotatios based on AFO ontolgy labels
+Balance control
+* set zero function
+* set tare function
+* preset tare function (if supported by balance/protocol)
+* clear tare function (if supported by balance/protocol)
+FAIR labeling
+* semantic annotations based on AFO ontology labels
 
 ## FAIR by Design
 * rich Allotrope Foundation Ontology **AFO** metadata, and
