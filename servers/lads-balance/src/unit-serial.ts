@@ -19,7 +19,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { BalanceFunctionalUnit, BalanceFunctionalUnitSet } from './interfaces';
+import { BalanceFunctionalUnit, BalanceFunctionalUnitSet, BalanceTareOptionals } from './interfaces';
 import { BalanceDeviceImpl, getBalanceNameSpace } from './device';
 import { BalanceUnitImpl } from './unit';
 import { BalanceDeviceConfig, BalanceProtocols } from './server';
@@ -35,7 +35,7 @@ export class SerialBalanceUnitImpl extends BalanceUnitImpl {
         
         const protocol = config.protocol
         const sics = (protocol === BalanceProtocols.SICS)
-        const optionals = sics ? ["FunctionSet.TareWeight", "FunctionalUnitState.SetPresetTare", "FunctionalUnitState.ClearTare"] : []
+        const optionals = sics ? BalanceTareOptionals : []
 
         // create unit object
         const balanceUnitType = getBalanceNameSpace(functionalUnitSet.addressSpace).findObjectType("BalanceUnitType")

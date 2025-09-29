@@ -154,7 +154,7 @@ export abstract class Balance extends EventEmitter{
         }, intervalMs);
     }
 
-    startCheckStatus(intervalMs = 1000): void {
+    startCheckStatus(intervalMs = 2000): void {
         if (this.pollStatus) clearInterval(this.pollStatus)
         this.pollStatus = setInterval(async () => {
             try {

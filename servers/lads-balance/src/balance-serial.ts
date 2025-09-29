@@ -53,7 +53,6 @@ export abstract class SerialBalance extends Balance {
         this.options = options
         // start online/offline status
         this.startCheckStatus()
-        //this.tryReconnect()
     }
 
     async tryReconnect(): Promise<void> {

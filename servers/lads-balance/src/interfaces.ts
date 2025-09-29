@@ -26,12 +26,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSFunctionalUnitStateMachine } from "@interfaces"
 import { DataType, UABaseDataVariable, UAMethod, UAObject } from "node-opcua"
 
+export const BalanceTareOptionals = ["FunctionSet.CurrentWeight.FunctionSet", "FunctionalUnitState.SetPresetTare", "FunctionalUnitState.ClearTare"]
 //---------------------------------------------------------------
+
+export interface BalanceCurrentWeightType extends Omit<LADSAnalogScalarSensorFunction, "functionSet"> {
+    functionSet?: {
+        gross: LADSAnalogScalarSensorFunction
+        net: LADSAnalogScalarSensorFunction
+        tare: LADSAnalogScalarSensorFunction
+    }
+}
+
 export interface BalanceFunctionSet extends UAObject {
-    currentWeight: LADSAnalogScalarSensorFunction
+    currentWeight: BalanceCurrentWeightType
     weightStable: LADSTwoStateDiscreteSensorFunction
     tareMode: LADSMultiStateDiscreteSensorFunction
-    tareWeight?: LADSAnalogScalarSensorFunction
 }
 
 export interface BalanceFunctionalUnit extends Omit<LADSFunctionalUnit, "functionSet"> {
@@ -54,4 +63,3 @@ export interface BalanceFunctionalUnitStatemachine extends LADSFunctionalUnitSta
     setPresetTare?: UAMethod
     clearTare?: UAMethod
 }
-

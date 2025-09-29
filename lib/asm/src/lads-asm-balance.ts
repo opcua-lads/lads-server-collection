@@ -73,6 +73,7 @@ const BalanceDataCubeStructure: DataCubeStructure = {
 //---------------------------------------------------------------
 // Recorder implmentation
 //---------------------------------------------------------------
+function toFixed3Number(value: number | string): number {return Number(Number(value).toFixed(3))}
 
 export interface BalanceRecorderOptions extends AllotropeSimpleModelRecorderOptions {
     runtime: UAVariable
@@ -112,21 +113,17 @@ export class BalanceRecorder extends AllotropeSimpleModelRecorder {
             const endpoint: ResultRecord = this.dataRecorder.records[count - 1]
             endpoint.tracksRecord.forEach((trackValue, index) => {
                 const track = endpoint.tracks[index]
-                if (track.variable === options.sampleWeight) {
-                    measurementDocument["sample weight"] = {
-                        unit: Units.g,
-                        value: Number(trackValue)
-                    }
-                } else if (track.variable === options.grossWeight) {
-                    measurementDocument["gross weight"] = {
-                        unit: Units.g,
-                        value: Number(trackValue)
-                    }
-                } else if (track.variable === options.tareWeight) {
-                    measurementDocument["tare weight"] = {
-                        unit: Units.g,
-                        value: Number(trackValue)
-                    }
+                const property = {
+                    unit: Units.g,
+                    value: toFixed3Number(trackValue)
+                }
+                switch (track.variable){
+                    case options.sampleWeight: 
+                        measurementDocument["sample weight"] = property; break
+                    case options.grossWeight: 
+                        measurementDocument["gross weight"] = property; break
+                    case options.tareWeight: 
+                        measurementDocument["tare weight"] = property; break
                 }
             })
         }

@@ -26,12 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSDeviceState } from "@interfaces"
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, constructPropertiesExtensionObject, getNumericValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode } from "node-opcua"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, DTKeyValuePair } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
-import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus } from "./balance"
+import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance"
 import { EventEmitter } from "events"
 
 //---------------------------------------------------------------
@@ -69,9 +69,11 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     functionalUnit: BalanceFunctionalUnit
     functionalUnitState: UAStateMachineEx
     currentWeight: LADSAnalogScalarSensorFunction
+    netWeight: LADSAnalogScalarSensorFunction
+    grossWeight: LADSAnalogScalarSensorFunction
+    tareWeight: LADSAnalogScalarSensorFunction
     weightStable: LADSTwoStateDiscreteSensorFunction
     tareMode: LADSMultiStateDiscreteSensorFunction
-    tareWeight: LADSAnalogScalarSensorFunction
     programTemplates: LADSProgramTemplate[] = []
     activeProgram: LADSActiveProgram
     currentRunOptions: CurrentRunOptions
@@ -107,10 +109,14 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         addressSpace.installHistoricalDataNode(this.currentWeight.sensorValue)
         this.weightStable = functionSet.weightStable
         this.tareMode = functionSet.tareMode
-        this.tareWeight = functionSet.tareWeight
+        this.grossWeight = functionSet.currentWeight.functionSet?.gross
+        this.netWeight = functionSet.currentWeight.functionSet?.net
+        this.tareWeight = functionSet.currentWeight.functionSet?.tare
 
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
         AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
+        AFODictionary.addSensorFunctionReferences(this.grossWeight, AFODictionaryIds.weighing, AFODictionaryIds.gross_weight)
+        AFODictionary.addSensorFunctionReferences(this.netWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addSensorFunctionReferences(this.tareWeight, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight)
         AFODictionary.addReferences(functionalUnit.calibrationTimestamp, AFODictionaryIds.calibration_time)
         AFODictionary.addReferences(functionalUnit.calibrationReport, AFODictionaryIds.calibration_report)
@@ -131,7 +137,12 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 setNumericValue(this.currentWeight.sensorValue, reading.weight, statusCode)
                 setBooleanValue(this.weightStable.sensorValue, reading.stable)
                 setNumericValue(this.tareMode.sensorValue, reading.tareMode)
-                setNumericValue(this.tareWeight?.sensorValue, reading.tareWeight ?? 0)
+                const tare = reading.tareWeight ?? 0
+                const gross = (reading.tareMode === BalanceTareMode.None) ? reading.weight : reading.weight + tare
+                const net = gross - tare
+                setNumericValue(this.grossWeight?.sensorValue, gross)
+                setNumericValue(this.netWeight?.sensorValue, net)
+                setNumericValue(this.tareWeight?.sensorValue, tare)
             } else if ((responseType === BalanceResponseType.High) || (responseType === BalanceResponseType.Low)) {
                 if (responseType != this.lastReading.responseType) {
                     raiseEvent(this.functionalUnit, `Weight exceeds ${responseType === BalanceResponseType.High ? "high" : "low"} limit!`, 1000)
@@ -286,7 +297,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.parent.deviceHelper.enterDeviceSleep()
     }
 
-    protected enterMeasuring(context: SessionContext) {
+    protected async enterMeasuring(context: SessionContext) {
         const options = this.currentRunOptions
         const programTemplateId = options.programTemplateId
         raiseEvent(this.functionalUnit, `Starting method ${programTemplateId} with identifier ${options.runId}.`)
@@ -336,13 +347,16 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             this.touchResult()
 
             // build ASM recorder
+            // if net-weight is available choose it as source for sample-weight over current-weight
+            const sampleWeight = (this.netWeight) ? this.netWeight : this.currentWeight
             options.recorder = new BalanceRecorder({
                 devices: [{ device: this.parent.device, deviceType: "Balance" }],
                 sample: options.samples[0],
                 result: result,
                 runtime: this.functionalUnit.programManager.activeProgram.currentRuntime,
-                sampleWeight: this.currentWeight.sensorValue,
+                sampleWeight: sampleWeight.sensorValue,
                 tareWeight: this.tareWeight?.sensorValue,
+                grossWeight: this.grossWeight?.sensorValue,
                 calibrationTime: getDateTimeValue(this.functionalUnit.calibrationTimestamp),
                 calibrationCertficate: getStringValue(this.functionalUnit.calibrationReport)
             })
@@ -373,7 +387,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.functionalUnitState.setState(LADSFunctionalState.Running)
     }
 
-    private leaveMeasuring(state: LADSFunctionalState) {
+    private async leaveMeasuring(state: LADSFunctionalState) {
         const stateMachine = this.functionalUnitState
         stateMachine.setState(state)
 
@@ -444,13 +458,13 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         return this.programTemplateElements.find(value => value.identifier.toLowerCase().includes(id))
     }
 
-    private async startMethod(context: SessionContext, programTemplateId: string, properties?: LADSProperty[]): Promise<CallMethodResultOptions> {
+    private async startMethod(context: SessionContext, programTemplateId: string, properties?: LADSProperty[], samples?: LADSSampleInfo[]): Promise<CallMethodResultOptions> {
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         this.initCurrentRunOptions(this.findProgramTemplate(programTemplateId))
-        this.currentRunOptions.properties = properties
+        this.currentRunOptions.properties = properties ?? []
+        this.currentRunOptions.samples = samples ?? []
         this.enterMeasuring(context)
         return { statusCode: StatusCodes.Good }
-
     }
     private async setTare(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         return await this.startMethod(context, ProgramTemplateIds.SetTare)
@@ -466,27 +480,18 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         return await this.startMethod(context, ProgramTemplateIds.SetZero)
     }
     private async regsterWeight(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        const property: LADSProperty = { key: "SampleId", value: inputArguments[0].value }
-        return await this.start([new Variant({ dataType: DataType.ExtensionObject, value: constructPropertiesExtensionObject(this.functionalUnit.addressSpace, [property]) })], context)
+        const sampleId = String(inputArguments[0]?.value.value)
+        const sampleInfo: LADSSampleInfo = { containerId: "", sampleId: sampleId, position: "", customData: "", }
+        return await this.startMethod(context, ProgramTemplateIds.RegisterWeight, undefined, [sampleInfo])
     }
-
     private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
-        // search properties for sampleId
-        const propertiesValue = inputArguments[0].value
-        const properties = propertiesValue === null ? [] : (propertiesValue as Variant[]).map(item => { return (<any>item) as LADSProperty })
-        const sampleProperty = properties.find(property => (property.key.toLocaleLowerCase().includes("sampleid")))
-        const sampleId: string = sampleProperty ? sampleProperty.value : "Unknown"
+        // search key-value pairs for sampleId
+        const inputArgument = inputArguments[0].value
+        const keyValuePairs = (inputArgument === null) ? [] : (inputArgument as Variant[]).map(item => { return (<any>item) as DTKeyValuePair })
+        const sampleKeyValuePair = keyValuePairs.find(keyValuePair => (keyValuePair.key.name.toLowerCase().includes("sampleid")))
+        const sampleId: string = sampleKeyValuePair ? String(sampleKeyValuePair.value.value) : "Unknown"
         const sampleInfo: LADSSampleInfo = { containerId: "", sampleId: sampleId, position: "", customData: "" }
-
-        // create options
-        this.initCurrentRunOptions(this.findProgramTemplate(ProgramTemplateIds.RegisterWeight))
-        const options = this.currentRunOptions
-        options.properties = properties
-        options.samples = [sampleInfo]
-
-        this.enterMeasuring(context)
-        return { statusCode: StatusCodes.Good }
+        return await this.startMethod(context, ProgramTemplateIds.RegisterWeight, undefined, [sampleInfo])
     }
 
     private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
@@ -516,9 +521,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
         // analyze samples
         const samplesValue = inputArguments[4].value
-        const samples = samplesValue === null ? [] : (samplesValue as Variant[]).map(item => { return (<any>item) as LADSSampleInfo })
-        if (samples.length === 0) samples.push({ containerId: "4711", sampleId: "08150001", position: "1", customData: "" })
-        options.samples = samples
+        options.samples = samplesValue === null ? [] : (samplesValue as Variant[]).map(item => { return (<any>item) as LADSSampleInfo })
 
         this.enterMeasuring(context)
     }
@@ -528,6 +531,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.leaveMeasuring(LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
+
     private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Aborting)
