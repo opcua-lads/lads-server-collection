@@ -31,21 +31,11 @@ import { SerialPortOpenOptions } from 'serialport';
 export class SerialBalanceUnitImpl extends BalanceUnitImpl {
 
     constructor(parent: BalanceDeviceImpl, functionalUnitSet: BalanceFunctionalUnitSet, config: BalanceDeviceConfig) {
-        super(parent)
-        
         const protocol = config.protocol
         const sics = (protocol === BalanceProtocols.SICS)
         const optionals = sics ? BalanceTareOptionals : []
-
-        // create unit object
-        const balanceUnitType = getBalanceNameSpace(functionalUnitSet.addressSpace).findObjectType("BalanceUnitType")
-        this.functionalUnit = balanceUnitType.instantiate({
-            browseName: "BalanceUnit",
-            displayName: "Balance Unit",
-            componentOf: functionalUnitSet,
-            optionals: optionals
-        }) as BalanceFunctionalUnit
-
+        super(parent, optionals)
+        
         // create balance
         const options: SerialPortOpenOptions<any> = {
             path: config.serialPort,

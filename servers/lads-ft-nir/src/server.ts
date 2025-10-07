@@ -268,7 +268,7 @@ class FtNirDeviceImpl {
             browseName: deviceProgramRunId,
             optionals: ["SupervisoryJobId", "SupervisoryTaskId"]
         })
-        resultSetNode.nodeVersion?.setValueFromSource({ dataType: DataType.String, value: startedTimestamp.toISOString() })
+        resultSetNode.getNodeVersion()?.setValueFromSource({ dataType: DataType.String, value: startedTimestamp.toISOString() })
 
 
         // get program template-id

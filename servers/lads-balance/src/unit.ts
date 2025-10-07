@@ -28,7 +28,7 @@ import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnal
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, constructPropertiesExtensionObject, getNumericValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, DTKeyValuePair } from "node-opcua"
 import { join } from "path"
-import { BalanceDeviceImpl } from "./device"
+import { BalanceDeviceImpl, getBalanceNameSpace } from "./device"
 import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance"
@@ -49,8 +49,8 @@ interface CurrentRunOptions {
     samples?: LADSSampleInfo[]
     result?: LADSResult
     recorder?: BalanceRecorder
-    recorderInterval?: NodeJS.Timer
-    runtimeInterval?: NodeJS.Timer
+    recorderInterval?: NodeJS.Timeout
+    runtimeInterval?: NodeJS.Timeout
 }
 
 export class ProgramTemplateIds {
@@ -79,9 +79,18 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     currentRunOptions: CurrentRunOptions
     programTemplateElements: ProgramTemplateElement[] = []
 
-    constructor(parent: BalanceDeviceImpl) {
+    constructor(parent: BalanceDeviceImpl, optionals: string[]= []) {
         super()
         this.parent = parent
+        // create unit object
+        const functionalUnitSet = parent.getFunctionalUnitSet()
+        const balanceUnitType = getBalanceNameSpace(functionalUnitSet.addressSpace).findObjectType("BalanceUnitType")
+        this.functionalUnit = balanceUnitType.instantiate({
+            browseName: "BalanceUnit",
+            displayName: "Balance Unit",
+            componentOf: functionalUnitSet,
+            optionals: optionals
+        }) as BalanceFunctionalUnit
     }
 
     async postInitialize() {
