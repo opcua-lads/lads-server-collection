@@ -47,8 +47,8 @@ interface CurrentRunOptions {
     samples?: LADSSampleInfo[]
     result?: LADSResult
     recorder?: pHSensorRecorder
-    recorderInterval?: NodeJS.Timer
-    runtimeInterval?: NodeJS.Timer
+    recorderInterval?: NodeJS.Timeout
+    runtimeInterval?: NodeJS.Timeout
 }
 
 export class ProgramTemplateIds {

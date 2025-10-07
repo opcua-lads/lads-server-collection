@@ -90,7 +90,7 @@ export function touchNodes(...nodes: UAObject[]) {
                 node.setEventNotifier(EventNotifierFlagSubscribeToEvents)
             }
             node.raiseEvent(BaseModelChangedEventType, {})
-            node.nodeVersion?.setValueFromSource({ dataType: DataType.String, value: timestamp })
+            node.getNodeVersion()?.setValueFromSource({ dataType: DataType.String, value: timestamp })
         } catch { }
     })
 }
