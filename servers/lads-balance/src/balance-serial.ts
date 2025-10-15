@@ -34,10 +34,11 @@ import { Balance, BalanceStatus, BalanceEvents } from "./balance";
 import { statSync } from "fs"
 
 export abstract class SerialBalance extends Balance {
+    private opLock: Promise<void> = Promise.resolve()
     protected options: SerialPortOpenOptions<any>
-    protected port: SerialPort;
-    protected buffer = "";
-    
+    protected port: SerialPort
+    protected buffer = ""
+
     static isSerialPortAvailable(path: string): boolean {
         try {
             // Check if the path exists and is a character device
@@ -56,20 +57,20 @@ export abstract class SerialBalance extends Balance {
     }
 
     async tryReconnect(): Promise<void> {
-        try { 
+        try {
             if (!this.port) {
                 const path = this.options.path
                 if (SerialBalance.isSerialPortAvailable(path)) {
                     this.port = new SerialPort(this.options)
-                    this.connect()                        
+                    this.connect()
                 } else {
                     this.emit(BalanceEvents.Error, `Serialport ${path} not avilable!`)
                 }
-            } else { 
+            } else {
                 this.port.open()
-            }        
-        }  
-        catch {}
+            }
+        }
+        catch { }
     }
 
     /**
@@ -125,11 +126,25 @@ export abstract class SerialBalance extends Balance {
      * for the balance to reply, returning the trimmed response string.
      */
     protected async sendCommand(cmd: string, waitMs = 200): Promise<string> {
-        this.buffer = "";
-        this.port.write(cmd + "\r\n");
-        await new Promise(res => setTimeout(res, waitMs))
-        const l = this.buffer.length
-        return this.buffer
-    }
+        // Serialize all access to the port to avoid polling vs. command races
+        const run = async () => {
+            this.buffer = ""
+            this.port.write(cmd + "\r\n")
+            await new Promise(res => setTimeout(res, waitMs))
+            return this.buffer
+        }
 
+        // chain onto the lock
+        let unlock!: () => void
+        const next = new Promise<void>(res => (unlock = res))
+        const prev = this.opLock
+        this.opLock = this.opLock.then(() => next)
+
+        try {
+            await prev           // wait for previous op
+            return await run()   // do our I/O exclusively
+        } finally {
+            unlock()             // release for the next op
+        }
+    }
 }
