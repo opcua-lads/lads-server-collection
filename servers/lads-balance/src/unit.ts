@@ -425,7 +425,8 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                     const dataRecorder = options.recorder.dataRecorder
                     const lastRecord = dataRecorder.getLastRecord()
                     if (lastRecord) {
-                        const sampleWeightTrackIndex = dataRecorder.trackIndex(this.currentWeight.sensorValue)
+                        const sampleWeight = (this.netWeight) ? this.netWeight : this.currentWeight
+                        const sampleWeightTrackIndex = dataRecorder.trackIndex(sampleWeight.sensorValue)
                         if (sampleWeightTrackIndex >= 0) {
                             const sampleWeightResult = result.namespace.addVariable({
                                 componentOf: variableSet,
