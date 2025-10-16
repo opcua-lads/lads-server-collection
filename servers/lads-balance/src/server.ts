@@ -19,7 +19,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, OPCUAServer } from "node-opcua"
+import { ApplicationType, nodesets, OPCUAServer } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
@@ -104,12 +104,13 @@ export class BalanceServerImpl {
         const uri = "LADS-Balance-Server"
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
-        // provide paths for the nodeset files
+        // utilize node-opua nodeset files for built in version compatibility
+        const nodeset_standard = nodesets.standard
+        const nodeset_di = nodesets.di
+        const nodeset_amb = nodesets.amb
+        // load additional nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
-        const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
-        const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
-        const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
-        const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')
+        const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')        
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
         const nodeset_afo = join(nodeset_path, 'AFO_Dictionary.NodeSet2.xml')
         const nodeset_balance = join(nodeset_path, 'Balance.xml')
