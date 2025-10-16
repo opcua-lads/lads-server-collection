@@ -195,6 +195,8 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     //---------------------------------------------------------------
     private initProgramTemplates() {
         const programTemplateSet = this.functionalUnit.programManager.programTemplateSet as UAObject
+        // pre-initialize nodeversion to avoid node-opcua stack messages
+        setStringValue(programTemplateSet.getNodeVersion(), "0")
         const date = new Date(Date.parse("2025-09-01T00:00:00.000Z"))
         this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
             identifier: ProgramTemplateIds.RegisterWeight,
