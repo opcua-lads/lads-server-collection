@@ -43,3 +43,4 @@ Thumbs.db
 # — Logs —
 logs/
 *.log
+servers/lads-balance/src/config.json
