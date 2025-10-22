@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-09-29T14:35:15.177Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-10-21T08:46:09.659Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/Machinery/</Uri>
@@ -39,7 +39,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="22da3a1801249bbb2d2c0a2a3a9cfcf7"/>
+            <si:GeneratorExtension Hash="bb4469bce65e655c15d882dafb38e98d"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_Balance_" NodeId="ns=4;i=5000" BrowseName="4:http://aixengineers.de/Balance/" ParentNodeId="i=11715">
@@ -122,8 +122,6 @@
             <Reference ReferenceType="HasComponent">ns=4;i=5001</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5002</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5003</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6037</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6038</Reference>
         </References>
     </UAObjectType>
     <UAObject NodeId="ns=4;i=5001" BrowseName="3:FunctionalUnitState" ParentNodeId="ns=4;i=1000">
@@ -586,20 +584,6 @@
         <Description>the definition of the output arguments of method 4:FunctionalUnitState.34:RegisterWeight</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-        </References>
-    </UAVariable>
-    <UAVariable DataType="String" NodeId="ns=4;i=6037" BrowseName="4:CalibrationReport" ParentNodeId="ns=4;i=1000" UserAccessLevel="3" AccessLevel="3">
-        <DisplayName>CalibrationReport</DisplayName>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-        </References>
-    </UAVariable>
-    <UAVariable DataType="DateTime" NodeId="ns=4;i=6038" BrowseName="4:CalibrationTimestamp" ParentNodeId="ns=4;i=1000" UserAccessLevel="3" AccessLevel="3">
-        <DisplayName>CalibrationTimestamp</DisplayName>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>

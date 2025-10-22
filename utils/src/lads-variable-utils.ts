@@ -10,7 +10,7 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
 
@@ -132,6 +132,11 @@ export function modifyStatusCode(variable: UAVariable, statusCode: StatusCode) {
 export function setDateTimeValue(variable: UAVariable, value: Date, statusCode = StatusCodes.Good) {
     if (!variable) return
     variable.setValueFromSource({ dataType: DataType.DateTime, value: value }, statusCode)
+}
+
+export function setByteStringValue(variable: UAVariable, value: ByteString, statusCode = StatusCodes.Good) {
+    if (!variable) return
+    variable.setValueFromSource({ dataType: DataType.ByteString, value: value }, statusCode)
 }
 
 export function setPropertiesValue(variable: UAVariable, properties: LADSProperty[]) {

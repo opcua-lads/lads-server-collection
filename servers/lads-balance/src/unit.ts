@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSDeviceState } from "@interfaces"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSDeviceState, LADSComplianceDocumentSet } from "@interfaces"
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, constructPropertiesExtensionObject, getNumericValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, DTKeyValuePair } from "node-opcua"
 import { join } from "path"
@@ -33,6 +33,7 @@ import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFuncti
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance"
 import { EventEmitter } from "events"
+import { ComplianceDocuments, ComplianceDocumentReferences } from "utils/src/lads-cd"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -79,7 +80,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     currentRunOptions: CurrentRunOptions
     programTemplateElements: ProgramTemplateElement[] = []
 
-    constructor(parent: BalanceDeviceImpl, optionals: string[]= []) {
+    constructor(parent: BalanceDeviceImpl, optionals: string[] = []) {
         super()
         this.parent = parent
         // create unit object
@@ -122,13 +123,19 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.netWeight = functionSet.currentWeight.functionSet?.net
         this.tareWeight = functionSet.currentWeight.functionSet?.tare
 
+        // experimental - create compliance-document-set & add fake DCC
+        const device = this.parent.device
+        const documentSet = ComplianceDocuments.getComplianceDocumentSet(device)
+        const documentAppliesTo = [device, functionalUnit, this.currentWeight]
+        const dccDocument = await ComplianceDocuments.addDCCFromFile(documentSet, __dirname, "224G372", documentAppliesTo)
+
+        // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
         AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addSensorFunctionReferences(this.grossWeight, AFODictionaryIds.weighing, AFODictionaryIds.gross_weight)
         AFODictionary.addSensorFunctionReferences(this.netWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addSensorFunctionReferences(this.tareWeight, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight)
-        AFODictionary.addReferences(functionalUnit.calibrationTimestamp, AFODictionaryIds.calibration_time)
-        AFODictionary.addReferences(functionalUnit.calibrationReport, AFODictionaryIds.calibration_report)
+        AFODictionary.addReferences(dccDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
 
         // connect to balance object
         this.setStatusCodes(StatusCodes.BadWaitingForInitialData)
@@ -162,11 +169,15 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         })
 
         // update calibration report
+        let lastCalibrationTimestamp = new Date().toISOString()
         this.balance.on(BalanceEvents.CalibrationReport, (calibrationReport: BalanceCalibrationReport) => {
-            if (calibrationReport.timestamp.toISOString() != getDateTimeValue(this.functionalUnit.calibrationTimestamp).toISOString()) {
-                setDateTimeValue(this.functionalUnit.calibrationTimestamp, calibrationReport.timestamp)
-                setStringValue(this.functionalUnit.calibrationReport, calibrationReport.report)
+            const timestampISOString = calibrationReport.timestamp.toISOString()
+            if (timestampISOString != lastCalibrationTimestamp) {
+                const document = ComplianceDocuments.addTextDocument(documentSet, `CalInternal-${timestampISOString}`, calibrationReport.timestamp, calibrationReport.report, documentAppliesTo, ComplianceDocumentReferences.HasCalibrationCertificate)
+                AFODictionary.addReferences(document, AFODictionaryIds.calibration_time)
+                AFODictionary.addReferences(document, AFODictionaryIds.calibration_report)
                 raiseEvent(this.functionalUnit, 'Received calibration report.')
+                lastCalibrationTimestamp = timestampISOString
             }
         })
 
@@ -316,10 +327,10 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         // execute methods
         switch (programTemplateId) {
             case ProgramTemplateIds.SetTare:
-                this.balance.setTare() 
+                this.balance.setTare()
                 break
             case ProgramTemplateIds.SetZero:
-                this.balance.setZero() 
+                this.balance.setZero()
                 break
             case ProgramTemplateIds.ClearTare:
                 this.balance.clearTare()
@@ -360,6 +371,9 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             // build ASM recorder
             // if net-weight is available choose it as source for sample-weight over current-weight
             const sampleWeight = (this.netWeight) ? this.netWeight : this.currentWeight
+            const calibrationCertificates = ComplianceDocuments.findComplianceDocumentsApplyingTo(this.functionalUnit, ComplianceDocumentReferences.HasCalibrationCertificate)
+            const digitalCalibrationCertificates = calibrationCertificates.filter((document) => (getStringValue(document.schemaUri, "")?.includes("dcc")))
+            const calibrationCertificate = digitalCalibrationCertificates.length > 0 ? digitalCalibrationCertificates[0] : calibrationCertificates.length > 0 ? calibrationCertificates[0] : undefined
             options.recorder = new BalanceRecorder({
                 devices: [{ device: this.parent.device, deviceType: "Balance" }],
                 sample: options.samples[0],
@@ -368,8 +382,8 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 sampleWeight: sampleWeight.sensorValue,
                 tareWeight: this.tareWeight?.sensorValue,
                 grossWeight: this.grossWeight?.sensorValue,
-                calibrationTime: getDateTimeValue(this.functionalUnit.calibrationTimestamp),
-                calibrationCertficate: getStringValue(this.functionalUnit.calibrationReport)
+                calibrationTime: getDateTimeValue(calibrationCertificate?.issuedAt),
+                calibrationCertficate: getStringValue(calibrationCertificate?.documentName)
             })
             options.recorder.addReferenceIds(...referenceIds)
             this.balance.on(BalanceEvents.Reading, (reading: BalanceReading) => { options.recorder.createRecord() })
@@ -443,17 +457,18 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
                     // create ASM
                     const model = options.recorder.createModel()
-                    const resultsDirectory = join(__dirname, "data", "results")
-                    options.recorder.writeResultFile(result.fileSet, "ASM", resultsDirectory, options.runId, model)
-                    const json = JSON.stringify(model, null, 2)
-                    const asm = result.namespace.addVariable({
-                        componentOf: variableSet,
-                        browseName: "ASM",
-                        dataType: DataType.String,
-                        value: { dataType: DataType.String, value: json }
-                    })
-                    AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.weighing, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result)
-
+                    if (model) {
+                        const resultsDirectory = join(__dirname, "data", "results")
+                        options.recorder.writeResultFile(result.fileSet, "ASM", resultsDirectory, options.runId, model)
+                        const json = JSON.stringify(model, null, 2)
+                        const asm = result.namespace.addVariable({
+                            componentOf: variableSet,
+                            browseName: "ASM",
+                            dataType: DataType.String,
+                            value: { dataType: DataType.String, value: json }
+                        })
+                        AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.weighing, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result)
+                    }
                 }
                 // set state to stopped and leave    
                 stateMachine.setState(LADSFunctionalState.Stopped)

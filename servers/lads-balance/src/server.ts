@@ -23,6 +23,7 @@ import { ApplicationType, nodesets, OPCUAServer } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
+import { ComplianceDocuments } from "utils/src/lads-cd"
 
 //---------------------------------------------------------------
 // config
@@ -112,12 +113,13 @@ export class BalanceServerImpl {
         const nodeset_path = join(process.cwd(), 'nodesets')
         const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')        
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
+        const nodeset_lads_cd = join(nodeset_path, 'LADS-CD.xml')
         const nodeset_afo = join(nodeset_path, 'AFO_Dictionary.NodeSet2.xml')
         const nodeset_balance = join(nodeset_path, 'Balance.xml')
 
         try {
             // list of node-set files
-            const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_balance,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_balance,]
+            const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_afo, nodeset_balance,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_balance,]
 
             // build the server object
             this.server = new OPCUAServer({
@@ -151,11 +153,10 @@ export class BalanceServerImpl {
         await this.server.initialize()
 
         // build structure
-        const addressSpace = this.server.engine.addressSpace
         this.config.devices.forEach(deviceConfig => { 
             const enabled = deviceConfig.enabled ?? true
             if (enabled) {
-                const device = new BalanceDeviceImpl(addressSpace, deviceConfig) 
+                const device = new BalanceDeviceImpl(this, deviceConfig) 
             }
         })
 

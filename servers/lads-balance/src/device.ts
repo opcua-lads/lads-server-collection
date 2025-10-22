@@ -22,11 +22,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 // device implementation
 //---------------------------------------------------------------
-import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
-import { BalanceDeviceConfig, BalanceProtocols } from "./server"
+import { BalanceDeviceConfig, BalanceProtocols, BalanceServerImpl } from "./server"
 import { IAddressSpace, INamespace } from "node-opcua"
 import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
@@ -37,13 +36,16 @@ import { SerialBalanceUnitImpl } from "./unit-serial"
 export function getBalanceNameSpace(addressSpace: IAddressSpace): INamespace {return addressSpace.getNamespace("http://aixengineers.de/Balance/") }
 
 export class BalanceDeviceImpl {
+    parent: BalanceServerImpl
     config: BalanceDeviceConfig
     device: BalanceDevice
     deviceHelper: LADSDeviceHelper
 
-    constructor(addressSpace: IAddressSpace, config: BalanceDeviceConfig) {
+    constructor(server: BalanceServerImpl, config: BalanceDeviceConfig) {
 
         // create device object
+        this.parent = server
+        const addressSpace = this.parent.server.engine.addressSpace
         const nameSpace = getBalanceNameSpace(addressSpace)
         const deviceType = nameSpace.findObjectType("BalanceDeviceType")
         const device = deviceType.instantiate({

@@ -1,0 +1,885 @@
+<?xml version="1.0"?>
+<dcc:digitalCalibrationCertificate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:si="https://ptb.de/si" xmlns:dx="https://ptb.de/dx" schemaVersion="3.3.0" xmlns:dcc="https://ptb.de/dcc">
+  <dcc:administrativeData>
+    <dcc:dccSoftware>
+      <dcc:software>
+        <dcc:name>
+          <dcc:content>Verical</dcc:content>
+        </dcc:name>
+        <dcc:release>Version 6.6</dcc:release>
+        <dcc:description>
+          <dcc:content lang="en">Metrological service software of Sartorius Lab Instruments GmbH &amp;amp; Co. KG.</dcc:content>
+          <dcc:content lang="de">Metrologische Service Software der Sartorius Lab Instruments GmbH &amp;amp; Co. KG.</dcc:content>
+        </dcc:description>
+      </dcc:software>
+    </dcc:dccSoftware>
+    <dcc:refTypeDefinitions>
+      <dcc:refTypeDefinition>
+        <dcc:name>
+          <dcc:content lang="en">general terms</dcc:content>
+          <dcc:content lang="de">Allgemeine Begriffe</dcc:content>
+        </dcc:name>
+        <dcc:namespace>basic</dcc:namespace>
+        <dcc:link>https://digilab.ptb.de/dkd/refType/vocab/index.php?tema=2&amp;amp;/basic</dcc:link>
+      </dcc:refTypeDefinition>
+      <dcc:refTypeDefinition>
+        <dcc:name>
+          <dcc:content lang="en">Mathematical terms and operators</dcc:content>
+          <dcc:content lang="de">Mathematische Begriffe und Operatoren</dcc:content>
+        </dcc:name>
+        <dcc:namespace>math</dcc:namespace>
+        <dcc:link>https://digilab.ptb.de/dkd/refType/vocab/index.php?tema=292&amp;amp;/math</dcc:link>
+      </dcc:refTypeDefinition>
+      <dcc:refTypeDefinition>
+        <dcc:name>
+          <dcc:content lang="en">refTypes specific for weighing instruments</dcc:content>
+          <dcc:content lang="de">Waagenspezifische refTypes</dcc:content>
+        </dcc:name>
+        <dcc:namespace>NAWI</dcc:namespace>
+        <dcc:link>https://digilab.ptb.de/dkd/refType/vocab/index.php?tema=278&amp;amp;/nawi</dcc:link>
+      </dcc:refTypeDefinition>
+    </dcc:refTypeDefinitions>
+    <dcc:coreData>
+      <dcc:countryCodeISO3166_1>DE</dcc:countryCodeISO3166_1>
+      <dcc:usedLangCodeISO639_1>en</dcc:usedLangCodeISO639_1>
+      <dcc:usedLangCodeISO639_1>de</dcc:usedLangCodeISO639_1>
+      <dcc:mandatoryLangCodeISO639_1>en</dcc:mandatoryLangCodeISO639_1>
+      <dcc:uniqueIdentifier>e5b55f36-03ca-4835-ae36-d730b32c66e3</dcc:uniqueIdentifier>
+      <dcc:identifications>
+        <dcc:identification refType="basic_certificateNumber">
+          <dcc:issuer>calibrationLaboratory</dcc:issuer>
+          <dcc:value>224G372</dcc:value>
+          <dcc:name>
+            <dcc:content lang="en">Calibration certificate number</dcc:content>
+            <dcc:content lang="de">Kalibrierscheinnummer</dcc:content>
+          </dcc:name>
+        </dcc:identification>
+        <dcc:identification refType="basic_calibrationMark">
+          <dcc:issuer>calibrationLaboratory</dcc:issuer>
+          <dcc:value>224G372 D-K-19398-01-00 2024-08</dcc:value>
+          <dcc:name>
+            <dcc:content lang="en">Calibration mark</dcc:content>
+            <dcc:content lang="de">Kalibrierzeichen</dcc:content>
+          </dcc:name>
+        </dcc:identification>
+        <dcc:identification refType="basic_orderNumber">
+          <dcc:issuer>calibrationLaboratory</dcc:issuer>
+          <dcc:value>ff96db88-e116-4cad-9c42-0c8413afba66</dcc:value>
+          <dcc:name>
+            <dcc:content lang="en">Internal order no. of the calibration laboratory</dcc:content>
+            <dcc:content lang="de">Interne Auftragsnummer des Kalibrierlabors</dcc:content>
+          </dcc:name>
+        </dcc:identification>
+      </dcc:identifications>
+      <dcc:beginPerformanceDate>2024-08-23</dcc:beginPerformanceDate>
+      <dcc:endPerformanceDate>2024-08-23</dcc:endPerformanceDate>
+      <dcc:performanceLocation id="staticPerformanceLocation">customer</dcc:performanceLocation>
+    </dcc:coreData>
+    <dcc:items>
+      <dcc:item>
+        <dcc:name>
+          <dcc:content lang="en">Electronic non-automatic weighing instrument</dcc:content>
+          <dcc:content lang="de">Elektronische nichtselbsttätige Waage</dcc:content>
+        </dcc:name>
+        <dcc:equipmentClass>
+          <dcc:reference>DKD-E 7-3 Instructions on how to use the DCC schema to create a digital calibration certificate for non-automatic weighing instruments</dcc:reference>
+          <dcc:classID>NAWI-SR</dcc:classID>
+          <dcc:link>https://doi.org/10.7795/550.20250325</dcc:link>
+        </dcc:equipmentClass>
+        <dcc:manufacturer>
+          <dcc:name>
+            <dcc:content>Sartorius</dcc:content>
+          </dcc:name>
+        </dcc:manufacturer>
+        <dcc:model>ME5-F</dcc:model>
+        <dcc:identifications>
+          <dcc:identification refType="basic_serialNumber">
+            <dcc:issuer>manufacturer</dcc:issuer>
+            <dcc:value>22313544</dcc:value>
+            <dcc:name>
+              <dcc:content lang="en">Serial number</dcc:content>
+              <dcc:content lang="de">Serialnummer</dcc:content>
+            </dcc:name>
+          </dcc:identification>
+          <dcc:identification refType="basic_measuringEquipmentNumber">
+            <dcc:issuer>customer</dcc:issuer>
+            <dcc:value>514</dcc:value>
+            <dcc:name>
+              <dcc:content lang="en">Measuring/Test equipment number</dcc:content>
+              <dcc:content lang="de">Mess-/Prüfmittelnummer</dcc:content>
+            </dcc:name>
+          </dcc:identification>
+        </dcc:identifications>
+        <dcc:subItems>
+          <dcc:item id="range1" refType="NAWI_range1">
+            <dcc:name>
+              <dcc:content lang="en">Weighing range 1</dcc:content>
+              <dcc:content lang="de">Wägebereich 1</dcc:content>
+            </dcc:name>
+            <dcc:identifications>
+              <dcc:identification>
+                <dcc:issuer>manufacturer</dcc:issuer>
+                <dcc:value>1</dcc:value>
+                <dcc:name>
+                  <dcc:content lang="en">weighing range</dcc:content>
+                  <dcc:content lang="de">Wägebereich</dcc:content>
+                </dcc:name>
+              </dcc:identification>
+            </dcc:identifications>
+            <dcc:itemQuantities>
+              <dcc:itemQuantity refType="math_minimum">
+                <si:real>
+                  <si:value>0</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:itemQuantity>
+              <dcc:itemQuantity refType="math_maximum">
+                <si:real>
+                  <si:value>5.1</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:itemQuantity>
+              <dcc:itemQuantity refType="NAWI_resolutionOfDisplayingDevice">
+                <si:real>
+                  <si:value>1E-06</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:itemQuantity>
+            </dcc:itemQuantities>
+          </dcc:item>
+        </dcc:subItems>
+      </dcc:item>
+    </dcc:items>
+    <dcc:calibrationLaboratory>
+      <dcc:calibrationLaboratoryCode>D-K-19398-01-00</dcc:calibrationLaboratoryCode>
+      <dcc:contact>
+        <dcc:name>
+          <dcc:content>Sartorius Lab Instruments GmbH &amp; Co KG</dcc:content>
+        </dcc:name>
+        <dcc:eMail>metrology@sartorius.com</dcc:eMail>
+        <dcc:location>
+          <dcc:city>Goettingen</dcc:city>
+          <dcc:countryCode>DE</dcc:countryCode>
+          <dcc:postCode>37079</dcc:postCode>
+          <dcc:street>Otto-Brenner-Strasse</dcc:street>
+          <dcc:streetNo>20</dcc:streetNo>
+        </dcc:location>
+      </dcc:contact>
+    </dcc:calibrationLaboratory>
+    <dcc:respPersons>
+      <dcc:respPerson>
+        <dcc:person>
+          <dcc:name>
+            <dcc:content>Karin Hagedorn</dcc:content>
+          </dcc:name>
+        </dcc:person>
+        <dcc:role>Authorization of the Certificate</dcc:role>
+        <dcc:mainSigner>true</dcc:mainSigner>
+      </dcc:respPerson>
+      <dcc:respPerson>
+        <dcc:person>
+          <dcc:name>
+            <dcc:content>Dennis Pilorz</dcc:content>
+          </dcc:name>
+        </dcc:person>
+        <dcc:role>Performing the Calibration</dcc:role>
+        <dcc:mainSigner>false</dcc:mainSigner>
+      </dcc:respPerson>
+    </dcc:respPersons>
+    <dcc:customer>
+      <dcc:name>
+        <dcc:content>Institut für Umwelt- &amp; Energie,</dcc:content>
+        <dcc:content>Technik &amp; Analytik e.V.</dcc:content>
+        <dcc:content>Reinders</dcc:content>
+      </dcc:name>
+      <dcc:location>
+        <dcc:city>Duisburg</dcc:city>
+        <dcc:countryCode>DE</dcc:countryCode>
+        <dcc:postCode>47229</dcc:postCode>
+        <dcc:street>Bliersheimer Str. 58-60</dcc:street>
+      </dcc:location>
+    </dcc:customer>
+    <dcc:statements>
+      <dcc:statement refType="basic_resultScope">
+        <dcc:norm>DIN EN ISO | IEC 17025:2018</dcc:norm>
+        <dcc:reference>7.8.2.1 l</dcc:reference>
+        <dcc:link>https://dx.doi.org/10.31030/2731745</dcc:link>
+        <dcc:declaration>
+          <dcc:content lang="en">The results relate only to the objects calibrated here.</dcc:content>
+          <dcc:content lang="de">Die Ergebnisse beziehen sich ausschließlich auf die hier kalibrierten Gegenstände.</dcc:content>
+        </dcc:declaration>
+        <dcc:valid>true</dcc:valid>
+      </dcc:statement>
+      <dcc:statement refId="staticPerformanceLocation">
+        <dcc:declaration>
+          <dcc:content lang="en">The measurement results are only valid for the specified calibration location - it is up to the user to assess the validity for any other installation location.</dcc:content>
+          <dcc:content lang="de">Die Messergebnisse gelten nur für den angegebenen Kalibrierort - es obliegt dem Anwender die Gültigkeit für einen eventuell anderen Installationsort zu beurteilen.</dcc:content>
+        </dcc:declaration>
+        <dcc:location>
+          <dcc:city>Duisburg</dcc:city>
+          <dcc:countryCode>DE</dcc:countryCode>
+          <dcc:postCode>47229</dcc:postCode>
+          <dcc:street>Bliersheimer Str. 58-60</dcc:street>
+          <dcc:further>
+            <dcc:content>IUTA</dcc:content>
+          </dcc:further>
+          <dcc:further>
+            <dcc:content>UG</dcc:content>
+          </dcc:further>
+          <dcc:further>
+            <dcc:content>Klimaraum</dcc:content>
+          </dcc:further>
+        </dcc:location>
+      </dcc:statement>
+      <dcc:statement refId="isInCMC" refType="basic_isInCMC">
+        <dcc:declaration>
+          <dcc:content lang="en">All measurement results are accompanied by a dcc:valid (or dcc:validXMLList) element with a refId pointing to this dcc:statement element. Entries "true" within this dcc:valid (or dcc:validXMLList) element denote that (a) the associated result(s) is/are within the accredited (or KCDB-covered) range AND (b) that the uncertainty associated with the value(s) is greater than or equal to the CMC uncertainty.</dcc:content>
+          <dcc:content lang="de">Alle Messergebnisse werden von einem dcc:valid-Element (oder dcc:validXMLList-Element) begleitet, das durch eine refId auf dieses dcc:statement-Element verweist. Einträge "true" innerhalb dieses dcc:valid-Elements (oder dcc:validXMLList-Elements) geben an, dass (a) die zugehörigen Ergebnisse innerhalb des akkreditierten (oder KCDB-abgedeckten) Bereichs liegen UND (b) dass die mit den Werten verbundene Unsicherheit größer oder gleich der CMC-Unsicherheit ist.</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement id="metrologicallyTraceableToSI" refType="basic_metrologicallyTraceableToSI">
+        <dcc:norm>DIN EN ISO | IEC 17025:2018</dcc:norm>
+        <dcc:reference>7.8.4.1 c</dcc:reference>
+        <dcc:link>https://dx.doi.org/10.31030/2731745</dcc:link>
+        <dcc:declaration>
+          <dcc:content lang="en">This calibration certificate documents the traceability to national standards, which realize the units of measurement according to the International System of Units (SI).</dcc:content>
+          <dcc:content lang="en">All measurement results are accompanied by a dcc:valid (or dcc:validXMLList) element with a refId pointing to this dcc:statement element. Entries "true" within this dcc:valid (or dcc:validXMLList) element denote that the associated result(s) is/are metrologically traceable to the SI.</dcc:content>
+          <dcc:content lang="de">Dieser Kalibrierschein dokumentiert die Rückführbarkeit auf nationale Normale zur Darstellung der Einheiten in Übereinstimmung mit dem Internationalen Einheitensystem (SI).</dcc:content>
+          <dcc:content lang="de">Alle Messergebnisse werden von einem dcc:valid-Element (oder dcc:validXMLList-Element) begleitet, das durch eine refId auf dieses dcc:statement-Element verweist. Einträge "true" innerhalb dieses dcc:valid-Elements (oder dcc:validXMLList-Elements) geben an, dass die zugehörigen Ergebnisse metrologisch auf das SI rückführbar sind.</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement refType="basic_membership">
+        <dcc:name>
+          <dcc:content lang="en">Membership DKD</dcc:content>
+          <dcc:content lang="de">Mitgliedschaft DKD</dcc:content>
+        </dcc:name>
+        <dcc:declaration>
+          <dcc:content lang="en">Member of the Deutscher Kalibrierdienst (DKD)</dcc:content>
+          <dcc:content lang="de">Mitglied im Deutschen Kalibrierdienst (DKD)</dcc:content>
+          <dcc:file>
+            <dcc:fileName>DKD-Logo-2023.svg</dcc:fileName>
+            <dcc:mimeType>image/svg+xml</dcc:mimeType>
+            <dcc:dataBase64>UEQ5NGJXd2dkbVZ5YzJsdmJqMGlNUzR3SWlCbGJtTnZaR2x1WnowaVZWUkdMVGdpSUhOMFlXNWtZV3h2Ym1VOUltNXZJajgrQ2p4emRtY0tJQ0FnZUcxc2JuTTZaR005SW1oMGRIQTZMeTl3ZFhKc0xtOXlaeTlrWXk5bGJHVnRaVzUwY3k4eExqRXZJZ29nSUNCNGJXeHVjenBqWXowaWFIUjBjRG92TDJOeVpXRjBhWFpsWTI5dGJXOXVjeTV2Y21jdmJuTWpJZ29nSUNCNGJXeHVjenB5WkdZOUltaDBkSEE2THk5M2QzY3Vkek11YjNKbkx6RTVPVGt2TURJdk1qSXRjbVJtTFhONWJuUmhlQzF1Y3lNaUNpQWdJSGh0Ykc1ek9uTjJaejBpYUhSMGNEb3ZMM2QzZHk1M015NXZjbWN2TWpBd01DOXpkbWNpQ2lBZ0lIaHRiRzV6UFNKb2RIUndPaTh2ZDNkM0xuY3pMbTl5Wnk4eU1EQXdMM04yWnlJS0lDQWdlRzFzYm5NNmMyOWthWEJ2WkdrOUltaDBkSEE2THk5emIyUnBjRzlrYVM1emIzVnlZMlZtYjNKblpTNXVaWFF2UkZSRUwzTnZaR2x3YjJScExUQXVaSFJrSWdvZ0lDQjRiV3h1Y3pwcGJtdHpZMkZ3WlQwaWFIUjBjRG92TDNkM2R5NXBibXR6WTJGd1pTNXZjbWN2Ym1GdFpYTndZV05sY3k5cGJtdHpZMkZ3WlNJS0lDQWdhVzVyYzJOaGNHVTZkbVZ5YzJsdmJqMGlNUzR3SUNnME1ETTFZVFJtWWpRNUxDQXlNREl3TFRBMUxUQXhLU0lLSUNBZ2MyOWthWEJ2WkdrNlpHOWpibUZ0WlQwaVgwUkxSQzFNVDBaQkxuTjJaeUlLSUNBZ2RtVnljMmx2YmowaU1TNHhJZ29nSUNCM2FXUjBhRDBpTXpRMExqRTJNekE1SWdvZ0lDQm9aV2xuYUhROUlqRXdPUzQwTXpjeE5TSUtJQ0FnYVdROUluTjJaelFpQ2lBZ0lIWnBaWGRDYjNnOUlqQWdNQ0F6TkRRdU1UWXpNRGtnTVRBNUxqUXpOekUxSWo0S0lDQThjMjlrYVhCdlpHazZibUZ0WldSMmFXVjNDaUFnSUNBZ2FXNXJjMk5oY0dVNlkzVnljbVZ1ZEMxc1lYbGxjajBpYzNabk5DSUtJQ0FnSUNCcGJtdHpZMkZ3WlRwM2FXNWtiM2N0YldGNGFXMXBlbVZrUFNJeElnb2dJQ0FnSUdsdWEzTmpZWEJsT25kcGJtUnZkeTE1UFNJdE9DSUtJQ0FnSUNCcGJtdHpZMkZ3WlRwM2FXNWtiM2N0ZUQwaUxUZ2lDaUFnSUNBZ2FXNXJjMk5oY0dVNlkzazlJak13Tnk0NU1qRXlNU0lLSUNBZ0lDQnBibXR6WTJGd1pUcGplRDBpTVRneUxqTXpOVEl4SWdvZ0lDQWdJR2x1YTNOallYQmxPbnB2YjIwOUlqQXVPRGN5T1RVME56Y2lDaUFnSUNBZ1ptbDBMVzFoY21kcGJpMWliM1IwYjIwOUlqQWlDaUFnSUNBZ1ptbDBMVzFoY21kcGJpMXlhV2RvZEQwaU1DSUtJQ0FnSUNCbWFYUXRiV0Z5WjJsdUxXeGxablE5SWpBaUNpQWdJQ0FnWm1sMExXMWhjbWRwYmkxMGIzQTlJakFpQ2lBZ0lDQWdjMmh2ZDJKdmNtUmxjajBpZEhKMVpTSUtJQ0FnSUNCcGJtdHpZMkZ3WlRwd1lXZGxZMmhsWTJ0bGNtSnZZWEprUFNKMGNuVmxJZ29nSUNBZ0lITm9iM2RuY21sa1BTSm1ZV3h6WlNJS0lDQWdJQ0JwWkQwaWJtRnRaV1IyYVdWM05pSUtJQ0FnSUNCcGJtdHpZMkZ3WlRwM2FXNWtiM2N0YUdWcFoyaDBQU0l4TVRNM0lnb2dJQ0FnSUdsdWEzTmpZWEJsT25kcGJtUnZkeTEzYVdSMGFEMGlNVGt5TUNJS0lDQWdJQ0JwYm10elkyRndaVHB3WVdkbGMyaGhaRzkzUFNJeUlnb2dJQ0FnSUdsdWEzTmpZWEJsT25CaFoyVnZjR0ZqYVhSNVBTSXdJZ29nSUNBZ0lHZDFhV1JsZEc5c1pYSmhibU5sUFNJeE1DSUtJQ0FnSUNCbmNtbGtkRzlzWlhKaGJtTmxQU0l4TUNJS0lDQWdJQ0J2WW1wbFkzUjBiMnhsY21GdVkyVTlJakV3SWdvZ0lDQWdJR0p2Y21SbGNtOXdZV05wZEhrOUlqRWlDaUFnSUNBZ1ltOXlaR1Z5WTI5c2IzSTlJaU0yTmpZMk5qWWlDaUFnSUNBZ2NHRm5aV052Ykc5eVBTSWpabVptWm1abUlpQXZQZ29nSUR4dFpYUmhaR0YwWVFvZ0lDQWdJR2xrUFNKdFpYUmhaR0YwWVRFd0lqNEtJQ0FnSUR4eVpHWTZVa1JHUGdvZ0lDQWdJQ0E4WTJNNlYyOXlhd29nSUNBZ0lDQWdJQ0J5WkdZNllXSnZkWFE5SWlJK0NpQWdJQ0FnSUNBZ1BHUmpPbVp2Y20xaGRENXBiV0ZuWlM5emRtY3JlRzFzUEM5a1l6cG1iM0p0WVhRK0NpQWdJQ0FnSUNBZ1BHUmpPblI1Y0dVS0lDQWdJQ0FnSUNBZ0lDQnlaR1k2Y21WemIzVnlZMlU5SW1oMGRIQTZMeTl3ZFhKc0xtOXlaeTlrWXk5a1kyMXBkSGx3WlM5VGRHbHNiRWx0WVdkbElpQXZQZ29nSUNBZ0lDQWdJRHhrWXpwMGFYUnNaVDQ4TDJSak9uUnBkR3hsUGdvZ0lDQWdJQ0E4TDJOak9sZHZjbXMrQ2lBZ0lDQThMM0prWmpwU1JFWStDaUFnUEM5dFpYUmhaR0YwWVQ0S0lDQThaR1ZtY3dvZ0lDQWdJR2xrUFNKa1pXWnpPQ0lnTHo0S0lDQThjR0YwYUFvZ0lDQWdJR1E5SWswZ016SXpMalUyTnprc01DNHhORE01T1RrNU9TQkRJRE16Tmk0ek5qSTBMREV6TGpVek1qRWdNelEwTGpJM05qVXNNek11TnpFek1TQXpORFF1TURFeU55dzFOUzQyTnpRNElETTBNeTQyT0RNc056WXVOalEzTWlBek16WXVPRGtzT1RVdU5qUXhNU0F6TWpRdU5qZzVNU3d4TURrdU1qa3pJRXdnTWpNNExqVTFOeXd4TURrdU1EazFNU0JXSURBdU1UUXpPVGs1T1RrZ1dpQk5JREkzT0M0NU9EVXNOell1T1RjM0lHTWdNaTQ1TmpjNExERXVNalV6SURZdU1UazVOQ3d5TGpVd05qRWdPUzQ0TWpZM0xESXVOVEEyTVNBeE15NHhNalF6TERBZ01qTXVOREV5Tml3dE1URXVNelF6TmlBeU15NDBNVEkyTEMweU5DNDROak0xSURBc0xURXpMalU0TmlBdE1URXVNREV6T0N3dE1qUXVORFkzT1NBdE1qTXVOREV5Tml3dE1qUXVORFkzT1NBdE15NDJNamN6TERBZ0xUWXVPRFU0T1N3d0xqWTFPVFVnTFRrdU9ESTJOeXd5TGpRME1ESWdlaUJOSURFMk1DNHlOek14TERZNUxqTXlOallnZGlBek9DNHpNVGMySURFdU16RTVJRWdnTVRJd0xqYzJPRFVnVmlBeE1EWXVPVEU0TnlBMU5DNDJPRFUxSURBdU1UUXpPVGs1T1RrZ2FDQXpPUzQxTURRMklGWWdNekl1T1RJeE55QnNJREUwTGprd05Td3RNekl1TnpjM056QXdNREVnYUNBME5DNHdOVFV6SUV3Z01Ua3hMakF3TmpNc05UTXVNVFk0TmlCc0lETXlMalV4TXprc05UVXVOekk0TnlCb0lDMDBNUzQ0TVRNZ2VpQnRJQzB6T1M0MU1EUTJMRE0zTGpVNU1qRWdlaUJ0SURBc01pNHdORFExSUhZZ01DNHlOak00SUhvZ1RTQTROQzQzTlRreUxEQXVNVFF6T1RrNU9Ua2dReUE1Tnk0ME9EYzRMREV6TGpRMk5qRWdNVEExTGpRd01Ua3NNek11TmpRM01TQXhNRFV1TVRNNE1TdzFOUzQxTkRJNUlERXdOQzQzTkRJMExEYzJMalV4TlRNZ09UZ3VNREUxTkN3NU5TNDFNRGt5SURnMkxqQXhNak1zTVRBNUxqRTJNVEVnVENBd0xqRTBNems1T1RrNUxERXdPQzQ1TmpNeUlGWWdNQzR4TkRNNU9UazVPU0JhSUUwZ05EQXVNemMwTWl3M05pNDVNVEVnWXlBekxqQXpNemNzTVM0eU5UTXhJRFl1TWpZMU15d3lMak0zTkRJZ09TNDRNalkzTERJdU16YzBNaUF4TWk0NU9USXpMREFnTWpNdU16UTJOaXd0TVRFdU16UXpOU0F5TXk0ek5EWTJMQzB5TkM0NE5qTTFJREFzTFRFekxqVXlJQzB4TVM0d01UTTRMQzB5TkM0ME1ERTVJQzB5TXk0ek5EWTJMQzB5TkM0ME1ERTVJQzB6TGpVMk1UUXNNQ0F0Tmk0M09UTXNNQzQzT1RFMElDMDVMamd5Tmpjc01pNDFNRFl5SUhvaUNpQWdJQ0FnYzNSNWJHVTlJbVpwYkd3Nkl6QXdPV0pqWlR0bWFXeHNMVzl3WVdOcGRIazZNVHRtYVd4c0xYSjFiR1U2WlhabGJtOWtaRHR6ZEhKdmEyVTZJekF3T1dKalpUdHpkSEp2YTJVdGQybGtkR2c2TUM0eU9EZzdjM1J5YjJ0bExXeHBibVZqWVhBNlluVjBkRHR6ZEhKdmEyVXRiR2x1WldwdmFXNDZiV2wwWlhJN2MzUnliMnRsTFdSaGMyaGhjbkpoZVRwdWIyNWxPM04wY205clpTMXZjR0ZqYVhSNU9qRWlDaUFnSUNBZ2FXUTlJbkJoZEdneUlpQXZQZ284TDNOMlp6NEs=</dcc:dataBase64>
+          </dcc:file>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement>
+        <dcc:declaration>
+          <dcc:content lang="en">The DAkkS is signatory to the multilateral agreements of the European cooperation for Accreditation (EA) and of the International Laboratory Accreditation Cooperation (ILAC) for the mutual recognition of calibration certificates.</dcc:content>
+          <dcc:content lang="de">Die DAkkS ist Unterzeichner der multilateralen Übereinkommen der European co-operation for Accreditation (EA) und der International Laboratory Accreditation Cooperation (ILAC) zur gegenseitigen Anerkennung der Kalibrierscheine.</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement>
+        <dcc:name>
+          <dcc:content lang="en">Accreditation standard</dcc:content>
+          <dcc:content lang="de">Akkreditierungsnorm</dcc:content>
+        </dcc:name>
+        <dcc:norm>DIN EN ISO | IEC 17025:2018</dcc:norm>
+        <dcc:link>https://dx.doi.org/10.31030/2731745</dcc:link>
+        <dcc:declaration>
+          <dcc:content lang="en">The laboratory is accredited according to the german version of ISO | IEC 17025:2017</dcc:content>
+          <dcc:content lang="de">Das Laboratorium ist akkreditiert nach DIN EN ISO | IEC 17025:2018</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement refType="basic_recalibration">
+        <dcc:declaration>
+          <dcc:content lang="en">The user is obliged to have the object recalibrated at appropriate intervals.</dcc:content>
+          <dcc:content lang="de">Für die Einhaltung einer angemessenen Frist zur Wiederholung der Kalibrierung ist der Benutzer verantwortlich.</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement>
+        <dcc:declaration>
+          <dcc:content lang="en">The calibration certificate may not be reproduced other than in full except with the permission of the issuing laboratory.</dcc:content>
+          <dcc:content lang="de">Dieser Kalibrierschein darf nur vollständig und unverändert weiterverbreitet werden. Auszüge oder Änderungen bedürfen der Genehmigung des ausstellenden Kalibrierlaboratoriums.</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement>
+        <dcc:declaration>
+          <dcc:content lang="en">This DCC is delivered as an attachment to a respective PDF version. In case of discrepancies, the PDF is to be regarded as binding.</dcc:content>
+          <dcc:content lang="de">Dieser DCC wird als Anhang zu einer jeweiligen PDF-Version ausgeliefert. Im Falle von Unstimmigkeiten ist die PDF-Version als verbindlich anzusehen.</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement>
+        <dcc:name>
+          <dcc:content lang="en">DCC conventions</dcc:content>
+          <dcc:content lang="de">DCC Konventionen</dcc:content>
+        </dcc:name>
+        <dcc:norm>Expertenbericht DKD-E 7-3 Anleitung zur Erstellung digitaler Kalibrierscheine für nichtselbsttätige Waagen mit Hilfe des DCC-Schemas, Ausgabe 03/2025, Revision 0, Physikalisch-Technische Bundesanstalt, Braunschweig und Berlin</dcc:norm>
+        <dcc:norm>Expert report DKD-E 7-3 Instructions on how to use the DCC schema to create a digital calibration certificate for non-automatic weighing instruments, Issue 03/2025, Revision 0, Physikalisch-Technische Bundesanstalt, Braunschweig und Berlin</dcc:norm>
+        <dcc:link>https://doi.org/10.7795/550.20250325</dcc:link>
+        <dcc:declaration>
+          <dcc:content lang="en">This DCC complies with all conventions and rules stipulated in the DKD expert report DKD-E 7-3 "Instructions on how to use the DCC schema to create a digital calibration certificate for non-automatic weighing instruments"</dcc:content>
+          <dcc:content lang="de">Dieses DCC entspricht allen Konventionen und Regeln, die im DKD-Expertenbericht DKD-E 7-3 "Anleitung zur Erstellung digitaler Kalibrierscheine für nichtselbsttätige Waagen mit Hilfe des DCC-Schemas" festgelegt sind.</dcc:content>
+        </dcc:declaration>
+      </dcc:statement>
+      <dcc:statement refId="range1" refType="basic_calibratedInterval">
+        <dcc:declaration>
+          <dcc:content lang="en">Specification of the weighing range that has been calibrated:</dcc:content>
+          <dcc:content lang="de">Spezifikation des tatsächlich kalibrierten Wägebereichs:</dcc:content>
+        </dcc:declaration>
+        <dcc:data>
+          <dcc:quantity refType="math_minimum">
+            <dcc:name>
+              <dcc:content lang="en">Lower limit of the calibrated weighing range</dcc:content>
+              <dcc:content lang="de">Unteres Limit des kalibrierten Wägebreichs</dcc:content>
+            </dcc:name>
+            <si:real>
+              <si:value>0</si:value>
+              <si:unit>\gram</si:unit>
+            </si:real>
+          </dcc:quantity>
+          <dcc:quantity refType="math_maximum">
+            <dcc:name>
+              <dcc:content lang="en">Upper limit of the calibrated weighing range</dcc:content>
+              <dcc:content lang="de">Oberes Limit des kalibrierten Wägebreichs</dcc:content>
+            </dcc:name>
+            <si:real>
+              <si:value>5.1</si:value>
+              <si:unit>\gram</si:unit>
+            </si:real>
+          </dcc:quantity>
+          <dcc:quantity refType="NAWI_resolutionOfDisplayingDevice">
+            <dcc:name>
+              <dcc:content lang="en">Actual Scale Interval</dcc:content>
+              <dcc:content lang="de">Teilungswert</dcc:content>
+            </dcc:name>
+            <si:real>
+              <si:value>1E-06</si:value>
+              <si:unit>\gram</si:unit>
+            </si:real>
+          </dcc:quantity>
+        </dcc:data>
+      </dcc:statement>
+    </dcc:statements>
+  </dcc:administrativeData>
+  <dcc:measurementResults>
+    <dcc:usedMethods>
+      <dcc:usedMethod refType="basic_methodMeasurementUncertainty">
+        <dcc:name>
+          <dcc:content lang="en">Expanded uncertainty</dcc:content>
+          <dcc:content lang="de">Erweiterte Messunsicherheit</dcc:content>
+        </dcc:name>
+        <dcc:description>
+          <dcc:content lang="en">The reported expanded uncertainty of measurement is stated as the standard uncertainty of measurement multiplied by the documented Expansion factor, determined in accordance with the Calibration Guideline EURAMET cg-18, V4.0 (11/2015). There is a 95 % probability that the value of the measurand will be in the assigned value range.</dcc:content>
+          <dcc:content lang="de">Angegeben ist die erweiterte Messunsicherheit, die sich aus der Standardmessunsicherheit durch Multiplikation mit dem angegebenen Erweiterungsfaktor ergibt. Sie wurde gemäß der europäischen Richtlinie EURAMET cg-18, V4.0 (11/2015) ermittelt. Der Wert der Messgröße liegt mit einer Wahrscheinlichkeit von 95 % im zugeordneten Werteintervall.</dcc:content>
+        </dcc:description>
+        <dcc:norm>JCGM 100:2008, Evaluation of measurement data — Guide to the expression of uncertainty in measurement</dcc:norm>
+        <dcc:link>https://doi.org/10.59161/JCGM100-2008E</dcc:link>
+      </dcc:usedMethod>
+      <dcc:usedMethod refType="basic_methodMeasurementUncertainty">
+        <dcc:name>
+          <dcc:content lang="en">Expanded uncertainty</dcc:content>
+          <dcc:content lang="de">Erweiterte Messunsicherheit</dcc:content>
+        </dcc:name>
+        <dcc:description>
+          <dcc:content lang="en">The reported expanded uncertainty of measurement is stated as the standard uncertainty of measurement multiplied by the documented Expansion factor, determined in accordance with the Calibration Guideline EURAMET cg-18, V4.0 (11/2015). There is a 95 % probability that the value of the measurand will be in the assigned value range.</dcc:content>
+          <dcc:content lang="de">Angegeben ist die erweiterte Messunsicherheit, die sich aus der Standardmessunsicherheit durch Multiplikation mit dem angegebenen Erweiterungsfaktor ergibt. Sie wurde gemäß der europäischen Richtlinie EURAMET cg-18, V4.0 (11/2015) ermittelt. Der Wert der Messgröße liegt mit einer Wahrscheinlichkeit von 95 % im zugeordneten Werteintervall.</dcc:content>
+        </dcc:description>
+        <dcc:norm>EURAMET cg-18, V4.0 (11/2015), Guidelines on the Calibration of Non-Automatic Weighing Instruments</dcc:norm>
+        <dcc:link>https://www.euramet.org/publications-media-centre/calibration-guidelines/</dcc:link>
+      </dcc:usedMethod>
+      <dcc:usedMethod refType="basic_calibrationMethod">
+        <dcc:name>
+          <dcc:content lang="en">Calibration procedure:</dcc:content>
+          <dcc:content lang="de">Kalibrierverfahren</dcc:content>
+        </dcc:name>
+        <dcc:norm>EURAMET cg-18, V4.0 (11/2015), Guidelines on the Calibration of Non-Automatic Weighing Instruments</dcc:norm>
+        <dcc:link>https://www.euramet.org/publications-media-centre/calibration-guidelines/</dcc:link>
+      </dcc:usedMethod>
+    </dcc:usedMethods>
+    <dcc:usedSoftware>
+      <dcc:software>
+        <dcc:name>
+          <dcc:content>Verical</dcc:content>
+        </dcc:name>
+        <dcc:release>Version 6.6</dcc:release>
+        <dcc:description>
+          <dcc:content lang="en">metrological service software of Sartorius Lab Instruments GmbH &amp;amp; Co. KG.</dcc:content>
+          <dcc:content lang="de">Metrologische Service Software der Sartorius Lab Instruments GmbH &amp;amp; Co. KG.</dcc:content>
+        </dcc:description>
+      </dcc:software>
+    </dcc:usedSoftware>
+    <dcc:measuringEquipments>
+      <dcc:measuringEquipment refType="basic_measurementStandard">
+        <dcc:name>
+          <dcc:content lang="en">Weight set OIML R111 E2</dcc:content>
+          <dcc:content lang="de">Gewichtssatz  OIML R111 E2</dcc:content>
+        </dcc:name>
+        <dcc:equipmentClass>
+          <dcc:reference>OIML R111-1:2004</dcc:reference>
+          <dcc:classID>E2</dcc:classID>
+        </dcc:equipmentClass>
+        <dcc:identifications>
+          <dcc:identification>
+            <dcc:issuer>calibrationLaboratory</dcc:issuer>
+            <dcc:value>GWI9501</dcc:value>
+          </dcc:identification>
+        </dcc:identifications>
+      </dcc:measuringEquipment>
+      <dcc:measuringEquipment>
+        <dcc:name>
+          <dcc:content lang="en">Thermometer</dcc:content>
+          <dcc:content lang="de">Thermometer</dcc:content>
+        </dcc:name>
+        <dcc:identifications>
+          <dcc:identification>
+            <dcc:issuer>calibrationLaboratory</dcc:issuer>
+            <dcc:value>TEM9038 | 49/17</dcc:value>
+          </dcc:identification>
+        </dcc:identifications>
+      </dcc:measuringEquipment>
+    </dcc:measuringEquipments>
+    <dcc:measurementMetaData>
+      <dcc:metaData refId="isInCMC">
+        <dcc:description>
+          <dcc:content lang="en">All measurement results within this element are within the accredited range of the calibration laboratory and their associated uncertainties are greater than or equal to the CMC uncertainty of the calibration laboratory.</dcc:content>
+          <dcc:content lang="de">Alle Messergebnisse innerhalb dieses Elements liegen innerhalb des Akkreditierungsumfangs des Kalibrierlabors und die mit ihnen verbundenen Unsicherheiten sind größer oder gleich der CMC-Unsicherheit des Kalibrierlabors.</dcc:content>
+        </dcc:description>
+        <dcc:valid>true</dcc:valid>
+      </dcc:metaData>
+      <dcc:metaData refId="metrologicallyTraceableToSI">
+        <dcc:description>
+          <dcc:content lang="en">All measurement results within this element are metrologically traceable to the SI via national or international standards.</dcc:content>
+          <dcc:content lang="de">Alle Messergebnisse innerhalb dieses Elements sind über nationale oder internationale Normale metrologisch auf das SI rückführbar.</dcc:content>
+        </dcc:description>
+        <dcc:valid>true</dcc:valid>
+      </dcc:metaData>
+    </dcc:measurementMetaData>
+    <dcc:measurementResult refId="range1" refType="NAWI_initialMeasurement">
+      <dcc:name>
+        <dcc:content lang="en">Measurement results</dcc:content>
+        <dcc:content lang="en">Range 1</dcc:content>
+        <dcc:content lang="de">Messergebnisse</dcc:content>
+        <dcc:content lang="de">Bereich 1</dcc:content>
+      </dcc:name>
+      <dcc:influenceConditions>
+        <dcc:influenceCondition refType="basic_temperature">
+          <dcc:name>
+            <dcc:content lang="en">Temperature at place of calibration</dcc:content>
+            <dcc:content lang="de">Temperatur am Kalibrierort</dcc:content>
+          </dcc:name>
+          <dcc:data>
+            <dcc:quantity>
+              <si:real>
+                <si:value>21</si:value>
+                <si:unit>\degreecelsius</si:unit>
+              </si:real>
+            </dcc:quantity>
+          </dcc:data>
+        </dcc:influenceCondition>
+        <dcc:influenceCondition refType="basic_adjustment">
+          <dcc:name>
+            <dcc:content lang="de">Justierstatus</dcc:content>
+            <dcc:content lang="en">Adjustment status</dcc:content>
+          </dcc:name>
+          <dcc:status>afterAdjustment</dcc:status>
+          <dcc:data>
+            <dcc:text>
+              <dcc:content lang="de">Das Gerät wurde vor der Kalibrierung intern justiert.</dcc:content>
+              <dcc:content lang="en">The measuring device was internally adjusted before the calibration.</dcc:content>
+            </dcc:text>
+            <dcc:quantity refType="basic_nominalValue">
+              <si:real>
+                <si:value>NaN</si:value>
+                <si:unit>\gram</si:unit>
+              </si:real>
+              <dcc:measuringEquipments>
+                <dcc:measuringEquipment>
+                  <dcc:name>
+                    <dcc:content lang="de">Justiergewicht</dcc:content>
+                    <dcc:content lang="en">Adjustment weight</dcc:content>
+                  </dcc:name>
+                  <dcc:equipmentClass>
+                    <dcc:reference>EURAMET cg-18, V4.0 (11/2015), Guidelines on the Calibration of Non-Automatic Weighing Instruments</dcc:reference>
+                    <dcc:classID>internalWeight</dcc:classID>
+                    <dcc:link>https://www.euramet.org/publications-media-centre/calibration-guidelines/</dcc:link>
+                  </dcc:equipmentClass>
+                </dcc:measuringEquipment>
+              </dcc:measuringEquipments>
+            </dcc:quantity>
+          </dcc:data>
+        </dcc:influenceCondition>
+      </dcc:influenceConditions>
+      <dcc:results>
+        <dcc:result refType="NAWI_repeatabilityMeasurement">
+          <dcc:name>
+            <dcc:content lang="en">Repeatability</dcc:content>
+            <dcc:content lang="de">Wiederholbarkeit</dcc:content>
+          </dcc:name>
+          <dcc:data>
+            <dcc:list>
+              <dcc:name>
+                <dcc:content lang="en">Measurement at 0,1 gram</dcc:content>
+                <dcc:content lang="de">Wiederholbarkeitsmessung bei 0,1 Gramm</dcc:content>
+              </dcc:name>
+              <dcc:quantity refType="basic_nominalValue">
+                <dcc:description>
+                  <dcc:content lang="en">Testload (nominal value)</dcc:content>
+                  <dcc:content lang="de">Testlast (Nennwert)</dcc:content>
+                </dcc:description>
+                <si:real>
+                  <si:value>0.1</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+              <dcc:quantity refType="basic_measuredValue">
+                <dcc:name>
+                  <dcc:content lang="en">Measured values</dcc:content>
+                  <dcc:content lang="de">Gemessene Werte</dcc:content>
+                </dcc:name>
+                <dcc:description>
+                  <dcc:content lang="en">Measured values for repeated loading</dcc:content>
+                  <dcc:content lang="de">Messwerte bei wiederholter Belastung</dcc:content>
+                </dcc:description>
+                <si:realListXMLList>
+                  <si:valueXMLList>0.099992 0.099992 0.099992 0.099992 0.099992</si:valueXMLList>
+                  <si:unitXMLList>\gram</si:unitXMLList>
+                  <si:dateTimeXMLList />
+                </si:realListXMLList>
+              </dcc:quantity>
+              <dcc:quantity refType="math_standardDeviationSample">
+                <dcc:description>
+                  <dcc:content lang="en">Standard deviation of the repeatability measurement</dcc:content>
+                  <dcc:content lang="de">Standardabweichung der Wiederholbarkeitsmessung</dcc:content>
+                </dcc:description>
+                <si:real>
+                  <si:value>0</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+            </dcc:list>
+            <dcc:list>
+              <dcc:name>
+                <dcc:content lang="en">Measurement at 5 gram</dcc:content>
+                <dcc:content lang="de">Wiederholbarkeitsmessung bei 5 Gramm</dcc:content>
+              </dcc:name>
+              <dcc:quantity refType="basic_nominalValue">
+                <dcc:description>
+                  <dcc:content lang="en">Testload (nominal value)</dcc:content>
+                  <dcc:content lang="de">Testlast (Nennwert)</dcc:content>
+                </dcc:description>
+                <si:real>
+                  <si:value>5</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+              <dcc:quantity refType="basic_measuredValue">
+                <dcc:name>
+                  <dcc:content lang="en">Measured values</dcc:content>
+                  <dcc:content lang="de">Gemessene Werte</dcc:content>
+                </dcc:name>
+                <dcc:description>
+                  <dcc:content lang="en">Measured values for repeated loading</dcc:content>
+                  <dcc:content lang="de">Messwerte bei wiederholter Belastung</dcc:content>
+                </dcc:description>
+                <si:realListXMLList>
+                  <si:valueXMLList>4.999981 4.999981 4.999982 4.999981 4.999981</si:valueXMLList>
+                  <si:unitXMLList>\gram</si:unitXMLList>
+                  <si:dateTimeXMLList />
+                </si:realListXMLList>
+              </dcc:quantity>
+              <dcc:quantity refType="math_standardDeviationSample">
+                <dcc:description>
+                  <dcc:content lang="en">Standard deviation of the repeatability measurement</dcc:content>
+                  <dcc:content lang="de">Standardabweichung der Wiederholbarkeitsmessung</dcc:content>
+                </dcc:description>
+                <si:real>
+                  <si:value>4.47213595562469E-07</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+            </dcc:list>
+          </dcc:data>
+        </dcc:result>
+        <dcc:result refType="NAWI_eccentricityMeasurement">
+          <dcc:name>
+            <dcc:content lang="en">Eccentricity</dcc:content>
+            <dcc:content lang="de">Außermittige Belastung</dcc:content>
+          </dcc:name>
+          <dcc:data>
+            <dcc:text>
+              <dcc:content lang="en">Position1: Front left</dcc:content>
+              <dcc:content lang="en">Position2: Back left</dcc:content>
+              <dcc:content lang="en">Position3: Back right</dcc:content>
+              <dcc:content lang="en">Position4: Front right</dcc:content>
+              <dcc:content lang="de">Position1: Vorne links</dcc:content>
+              <dcc:content lang="de">Position2: Hinten links</dcc:content>
+              <dcc:content lang="de">Position3: Hinten rechts</dcc:content>
+              <dcc:content lang="de">Position4: Vorne rechts</dcc:content>
+            </dcc:text>
+            <dcc:list>
+              <dcc:name>
+                <dcc:content lang="en">Eccentricity measurement at 2 gram</dcc:content>
+                <dcc:content lang="de">Messung der außermittigen Belastung bei 2 Gramm</dcc:content>
+              </dcc:name>
+              <dcc:quantity refType="basic_nominalValue">
+                <dcc:description>
+                  <dcc:content lang="en">Testload (nominal value)</dcc:content>
+                  <dcc:content lang="de">Testlast (Nennwert)</dcc:content>
+                </dcc:description>
+                <si:real>
+                  <si:value>2</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+              <dcc:quantity refType="basic_referenceValue">
+                <dcc:name>
+                  <dcc:content lang="en">Reference value</dcc:content>
+                  <dcc:content lang="de">Referenzwert</dcc:content>
+                </dcc:name>
+                <dcc:description>
+                  <dcc:content lang="en">Measured value at centric loading</dcc:content>
+                  <dcc:content lang="de">Messwert bei mittiger Belastung</dcc:content>
+                </dcc:description>
+                <si:real>
+                  <si:value>1.999992</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+              <dcc:quantity refType="basic_measuredValue">
+                <dcc:name>
+                  <dcc:content lang="en">Measured values</dcc:content>
+                  <dcc:content lang="de">Gemessene Werte</dcc:content>
+                </dcc:name>
+                <dcc:description>
+                  <dcc:content lang="en">Measured values at eccentric loading</dcc:content>
+                  <dcc:content lang="de">Messwerte bei außermittiger Belastung</dcc:content>
+                </dcc:description>
+                <si:realListXMLList>
+                  <si:labelXMLList>Position1 Position2 Position3 Position4</si:labelXMLList>
+                  <si:valueXMLList>1.999992 1.999991 1.999994 1.999992</si:valueXMLList>
+                  <si:unitXMLList>\gram</si:unitXMLList>
+                  <si:dateTimeXMLList />
+                </si:realListXMLList>
+              </dcc:quantity>
+              <dcc:quantity refType="basic_measurementError">
+                <dcc:name>
+                  <dcc:content lang="en">Errors</dcc:content>
+                  <dcc:content lang="de">Abweichungen</dcc:content>
+                </dcc:name>
+                <dcc:description>
+                  <dcc:content lang="en">Deviations from measured value at centric loading indication</dcc:content>
+                  <dcc:content lang="de">Abweichungen vom Messwert bei mittiger Belastung</dcc:content>
+                </dcc:description>
+                <si:realListXMLList>
+                  <si:labelXMLList>FrontLeft RearLeft RearRight FrontRight</si:labelXMLList>
+                  <si:valueXMLList>0.000000 -0.000001 0.000002 0.000000</si:valueXMLList>
+                  <si:unitXMLList>\gram</si:unitXMLList>
+                </si:realListXMLList>
+              </dcc:quantity>
+              <dcc:quantity refType="basic_measurementError math_maximum">
+                <dcc:name>
+                  <dcc:content lang="en">Maximum error</dcc:content>
+                  <dcc:content lang="de">Maximale Abweichung&lt;</dcc:content>
+                </dcc:name>
+                <dcc:description>
+                  <dcc:content lang="en">Maximum deviation from measured value at centric loading</dcc:content>
+                  <dcc:content lang="de">Maximale Abweichung vom Messwert mittiger Belastung</dcc:content>
+                </dcc:description>
+                <si:real>
+                  <si:value>2E-06</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+            </dcc:list>
+          </dcc:data>
+        </dcc:result>
+        <dcc:result refType="NAWI_errorOfIndicationMeasurement">
+          <dcc:name>
+            <dcc:content lang="en">Error of indication</dcc:content>
+            <dcc:content lang="de">Abweichung der Anzeige</dcc:content>
+          </dcc:name>
+          <dcc:data>
+            <dcc:quantity refType="basic_nominalValue">
+              <dcc:description>
+                <dcc:content lang="en">Testloads (nominal values)</dcc:content>
+                <dcc:content lang="de">Testlasten (Nennwerte)</dcc:content>
+              </dcc:description>
+              <si:realListXMLList>
+                <si:valueXMLList>0 0.5 1 1.5 2 2.5 3 3.5 4 4.5 5</si:valueXMLList>
+                <si:unitXMLList>\gram</si:unitXMLList>
+              </si:realListXMLList>
+            </dcc:quantity>
+            <dcc:quantity refType="basic_referenceValue">
+              <dcc:description>
+                <dcc:content lang="en">Testloads (conventional mass values)</dcc:content>
+                <dcc:content lang="de">Testlasten (konventionelle Wägewerte)</dcc:content>
+              </dcc:description>
+              <si:realListXMLList>
+                <si:valueXMLList>0.000000 0.500003 1.000005 1.500008 2.000002 2.500005 3.000007 3.500010 3.999998 4.500001 5.000002</si:valueXMLList>
+                <si:unitXMLList>\gram</si:unitXMLList>
+              </si:realListXMLList>
+            </dcc:quantity>
+            <dcc:quantity refType="basic_measuredValue">
+              <dcc:description>
+                <dcc:content lang="en">Indications</dcc:content>
+                <dcc:content lang="de">Anzeigewerte</dcc:content>
+              </dcc:description>
+              <si:realListXMLList>
+                <si:valueXMLList>0.000000 0.500001 1.000002 1.500001 1.999995 2.499995 2.999998 3.499993 3.999995 4.499996 4.999982</si:valueXMLList>
+                <si:unitXMLList>\gram</si:unitXMLList>
+                <si:dateTimeXMLList />
+              </si:realListXMLList>
+            </dcc:quantity>
+            <dcc:quantity refType="basic_measurementError">
+              <dcc:description>
+                <dcc:content lang="en">Errors</dcc:content>
+                <dcc:content lang="de">Abweichungen</dcc:content>
+              </dcc:description>
+              <si:realListXMLList>
+                <si:valueXMLList>0.000000 -0.000002 -0.000003 -0.000007 -0.000007 -0.000010 -0.000009 -0.000017 -0.000003 -0.000005 -0.000020</si:valueXMLList>
+                <si:unitXMLList>\gram</si:unitXMLList>
+                <si:measurementUncertaintyUnivariateXMLList>
+                  <si:expandedMUXMLList>
+                    <si:valueExpandedMUXMLList>0,0000050 0,000021 0,000025 0,000035 0,000033 0,000041 0,000044 0,000059 0,000048 0,000064 0,000041</si:valueExpandedMUXMLList>
+                    <si:coverageFactorXMLList>2 2 2 2 2 2 2 2 2 2 2</si:coverageFactorXMLList>
+                    <si:coverageProbabilityXMLList>0.95</si:coverageProbabilityXMLList>
+                    <si:distributionXMLList>normal</si:distributionXMLList>
+                  </si:expandedMUXMLList>
+                </si:measurementUncertaintyUnivariateXMLList>
+              </si:realListXMLList>
+            </dcc:quantity>
+            <dcc:quantity refType="basic_measurementError math_maximum">
+              <dcc:description>
+                <dcc:content lang="en">Maximum error of indication</dcc:content>
+                <dcc:content lang="de">Maximale Abweichung der Anzeige</dcc:content>
+              </dcc:description>
+              <si:real>
+                <si:value>2E-05</si:value>
+                <si:unit>\gram</si:unit>
+              </si:real>
+            </dcc:quantity>
+          </dcc:data>
+        </dcc:result>
+        <dcc:result refType="basic_contentOutsideDCC">
+          <dcc:name>
+            <dcc:content lang="en">Uncertainty of measurement in use</dcc:content>
+            <dcc:content lang="de">Unsicherheit im Gebrauch der Waage</dcc:content>
+          </dcc:name>
+          <dcc:description>
+            <dcc:content lang="en">Interpretation of measurement results | Appendix to the calibration certificate</dcc:content>
+            <dcc:content lang="en">Annexes are not part of the accreditation according to ISO| IEC 17025 and are not subject to EA-3/01.</dcc:content>
+            <dcc:content lang="de">Interpretation der Messergebnisse | Anhang zum Kalibrierschein</dcc:content>
+            <dcc:content lang="de">Anhänge sind nicht Bestandteil der Akkreditierung gemäß ISO|IEC 17025 und unterliegen nicht EA-3/01.</dcc:content>
+          </dcc:description>
+          <dcc:data>
+            <dcc:text>
+              <dcc:content lang="en">The current uncertainty of measurement is calculated by entering of the reading R into this formula. In relation to this, there is no need for a
+correction of the indication error. The reported expanded uncertainty of measurement is stated as the standard uncertainty of measurement multiplied with an
+Expansion factor of 2, determined in accordance with the European Calibration Guideline EURAMET cg-18, V4.0. There is a 95 % probability that the value of the
+measurand will be in the assigned value range.</dcc:content>
+              <dcc:content lang="de">Die aktuelle Messunsicherheit ergibt sich durch Eingabe der Waagenanzeige R in diese Formel. Hierbei ist eine Korrektur entsprechend der ermittelten
+Abweichung der Anzeige nicht notwendig. Angegeben ist die erweiterte Messunsicherheit, die sich aus der Standardmessunsicherheit durch Multiplikation mit einem
+Erweiterungsfaktor von 2 ergibt. Sie wurde gemäß der europäischen Richtlinie EURAMET cg-18, V4.0 ermittelt. Der Wert der Messgröße liegt mit einer
+Wahrscheinlichkeit von 95 % im zugeordneten Werteintervall.</dcc:content>
+            </dcc:text>
+            <dcc:formula>
+              <dcc:mathml>
+                <ml:math xmlns:ml="http://www.w3.org/1998/Math/MathML">
+                  <ml:declare type="fn">
+                    <ml:ci>
+                      <ml:apply>
+                        <ml:csymbol>subscript</ml:csymbol>
+                        <ml:ci>U</ml:ci>
+                        <ml:ci>gl</ml:ci>
+                      </ml:apply>
+                    </ml:ci>
+                    <ml:lambda>
+                      <ml:bvar>
+                        <ml:ci>W</ml:ci>
+                      </ml:bvar>
+                      <ml:apply>
+                        <ml:plus />
+                        <ml:apply>
+                          <ml:times />
+                          <ml:ci xref="beta_51f23779-16b5-4ade-850a-fd7aad2de871">m</ml:ci>
+                          <ml:ci>R</ml:ci>
+                        </ml:apply>
+                        <ml:ci xref="alpha_51f23779-16b5-4ade-850a-fd7aad2de871">b</ml:ci>
+                      </ml:apply>
+                    </ml:lambda>
+                  </ml:declare>
+                </ml:math>
+              </dcc:mathml>
+            </dcc:formula>
+            <dcc:quantity id="beta_51f23779-16b5-4ade-850a-fd7aad2de871">
+              <dcc:name>
+                <dcc:content lang="en">Slope m of the linear equation for the uncertainty of measurement in use</dcc:content>
+                <dcc:content lang="de">Steigung m der Geradengleichung für die Unsicherheit im Gebrauch der Waage</dcc:content>
+              </dcc:name>
+              <si:real>
+                <si:value>2.11745901770506E-07</si:value>
+                <si:unit>\one</si:unit>
+              </si:real>
+            </dcc:quantity>
+            <dcc:quantity id="alpha_51f23779-16b5-4ade-850a-fd7aad2de871">
+              <dcc:name>
+                <dcc:content lang="en">Axial interception b of the linear equation for the uncertainty of measurement in use</dcc:content>
+                <dcc:content lang="de">Achsenabschnitt b der Geradengleichung für die Unsicherheit im Gebrauch der Waage</dcc:content>
+              </dcc:name>
+              <si:real>
+                <si:value>1.21106014173133E-06</si:value>
+                <si:unit>\gram</si:unit>
+              </si:real>
+            </dcc:quantity>
+          </dcc:data>
+        </dcc:result>
+        <dcc:result refType="basic_contentOutsideDCC">
+          <dcc:name>
+            <dcc:content lang="en">Minimum net weight example value</dcc:content>
+            <dcc:content lang="de">Mindesteinwaage-Beispielwert</dcc:content>
+          </dcc:name>
+          <dcc:description>
+            <dcc:content lang="en">Interpretation of measurement results | Appendix to the calibration certificate</dcc:content>
+            <dcc:content lang="en">Annexes are not part of the accreditation according to ISO| IEC 17025 and are not subject to EA-3/01.</dcc:content>
+            <dcc:content lang="de">Interpretation der Messergebnisse | Anhang zum Kalibrierschein</dcc:content>
+            <dcc:content lang="de">Anhänge sind nicht Bestandteil der Akkreditierung gemäß ISO|IEC 17025 und unterliegen nicht EA-3/01.</dcc:content>
+          </dcc:description>
+          <dcc:data>
+            <dcc:list>
+              <dcc:name>
+                <dcc:content lang="en">Minimum net weight value, calculated as an example for a required process accuracy and a safety factors</dcc:content>
+                <dcc:content lang="de">Mindesteinwaagewert, beispielhaft berechnet für eine geforderte Prozessgenauigkeiten und einen Sicherheitsfaktor</dcc:content>
+              </dcc:name>
+              <dcc:quantity>
+                <dcc:name>
+                  <dcc:content lang="en">Required process accuracy</dcc:content>
+                  <dcc:content lang="de">Geforderte Prozessgenauigkeit</dcc:content>
+                </dcc:name>
+                <si:real>
+                  <si:value>0.01</si:value>
+                  <si:unit>\one</si:unit>
+                </si:real>
+              </dcc:quantity>
+              <dcc:quantity>
+                <dcc:name>
+                  <dcc:content lang="en">Safety factor</dcc:content>
+                  <dcc:content lang="de">Sicherheitsfaktor</dcc:content>
+                </dcc:name>
+                <si:real>
+                  <si:value>0.03</si:value>
+                  <si:unit>\one</si:unit>
+                </si:real>
+              </dcc:quantity>
+              <dcc:quantity>
+                <dcc:name>
+                  <dcc:content lang="en">Minimum net weight</dcc:content>
+                  <dcc:content lang="de">Mindesteinwaage</dcc:content>
+                </dcc:name>
+                <si:real>
+                  <si:value>0.00036564073030426815</si:value>
+                  <si:unit>\gram</si:unit>
+                </si:real>
+              </dcc:quantity>
+            </dcc:list>
+          </dcc:data>
+        </dcc:result>
+      </dcc:results>
+      <dcc:measurementMetaData>
+        <dcc:metaData>
+          <dcc:date>2024-08-23</dcc:date>
+        </dcc:metaData>
+      </dcc:measurementMetaData>
+    </dcc:measurementResult>
+  </dcc:measurementResults>
+</dcc:digitalCalibrationCertificate>

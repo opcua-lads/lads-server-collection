@@ -19,8 +19,8 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { BalanceFunctionalUnit, BalanceFunctionalUnitSet, BalanceTareOptionals } from './interfaces';
-import { BalanceDeviceImpl, getBalanceNameSpace } from './device';
+import { BalanceFunctionalUnitSet, BalanceTareOptionals } from './interfaces';
+import { BalanceDeviceImpl } from './device';
 import { BalanceUnitImpl } from './unit';
 import { BalanceDeviceConfig, BalanceProtocols } from './server';
 import { SbiBalance } from './balance-sbi';

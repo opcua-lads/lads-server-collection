@@ -43,7 +43,8 @@ import {
     UAProperty,
     UAEventType,
     UADataType,
-    ServerSession
+    ServerSession,
+    BrowseDirection
 } from "node-opcua"
 import {
     LADSDevice,
@@ -160,6 +161,24 @@ function constructPropertyExtensionObject(dt: UADataType, property: LADSProperty
 //---------------------------------------------------------------
 // Browsing LADS structures support
 //---------------------------------------------------------------
+export function getBrowsePath(node: BaseNode): string {
+    const addressSpace = node.addressSpace
+    // base case
+    if (sameNodeId(node.nodeId, addressSpace.rootFolder.objects.nodeId)) {
+        return node.browseName.toString()
+    }
+    // find parent via HierarchicalReferences (inverse)
+    const parentRef = node.findReferencesEx("HierarchicalReferences", BrowseDirection.Inverse)[0]
+    const parentNode = parentRef?.node
+    // recursion
+    if (parentNode) {
+        return `${getBrowsePath(parentNode)}/${node.browseName.toString()}`
+    } else {
+        // orphan or top-level node
+        return node.browseName.toString()
+    }
+}
+
 export function getLADSObjectType(addressSpace: IAddressSpace, objectType: string): UAObjectType {
     const namespace = getLADSNamespace(addressSpace)
     assert(namespace)
@@ -337,11 +356,11 @@ export function addProgramTemplate(programTemplateSet: UAObject, options: Progra
 }
 
 export function createDeviceProgramRunId(programTemplateId: string): string {
-        const iso = new Date().toISOString()
-        const date = iso.slice(0, 10).replace(/-/g, "")
-        const time = iso.slice(11, 19).replace(/:/g, "")
-        const deviceProgramRunId = `${date}-${time}-${programTemplateId.replace(/[ (),°]/g,"")}`
-        return deviceProgramRunId        
+    const iso = new Date().toISOString()
+    const date = iso.slice(0, 10).replace(/-/g, "")
+    const time = iso.slice(11, 19).replace(/:/g, "")
+    const deviceProgramRunId = `${date}-${time}-${programTemplateId.replace(/[ (),°]/g, "")}`
+    return deviceProgramRunId
 }
 
 //---------------------------------------------------------------
@@ -351,12 +370,12 @@ export function setSessionInformation(result: LADSResult, context: SessionContex
     // analyze session context
     const session = context.session as ServerSession
     const userIdentity = context.userIdentity
-    const applicationUri: string = session.clientDescription?.applicationUri?session.clientDescription.applicationUri:""
-    const applicationName: string = session.clientDescription?.applicationName?session.clientDescription?.applicationName.text:""
+    const applicationUri: string = session.clientDescription?.applicationUri ? session.clientDescription.applicationUri : ""
+    const applicationName: string = session.clientDescription?.applicationName ? session.clientDescription?.applicationName.text : ""
     const sessionName: string = session.sessionName
-    const policyId: string = session.userIdentityToken?.policyId?session.userIdentityToken?.policyId:"unknown"
+    const policyId: string = session.userIdentityToken?.policyId ? session.userIdentityToken?.policyId : "unknown"
     setStringValue(result.applicationUri, applicationUri)
-    setStringValue(result.user, userIdentity?userIdentity:policyId)
+    setStringValue(result.user, userIdentity ? userIdentity : policyId)
 }
 
 //---------------------------------------------------------------

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UANodeSet LastModified="2025-10-21T06:59:51.590Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+    <NamespaceUris>
+        <Uri>http://aixengineers.de/LADS-CD/</Uri>
+    </NamespaceUris>
+    <Models>
+        <Model ModelUri="http://aixengineers.de/LADS-CD/" PublicationDate="2025-10-20T12:31:32+02:00" Version="1.00">
+            <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2023-12-15T00:00:00Z" Version="1.05.03"/>
+        </Model>
+    </Models>
+    <Aliases>
+        <Alias Alias="Boolean">i=1</Alias>
+        <Alias Alias="DateTime">i=13</Alias>
+        <Alias Alias="String">i=12</Alias>
+        <Alias Alias="LocalizedText">i=21</Alias>
+        <Alias Alias="HasComponent">i=47</Alias>
+        <Alias Alias="HasProperty">i=46</Alias>
+        <Alias Alias="HasSubtype">i=45</Alias>
+        <Alias Alias="HasTypeDefinition">i=40</Alias>
+        <Alias Alias="HasModellingRule">i=37</Alias>
+        <Alias Alias="IdType">i=256</Alias>
+        <Alias Alias="NumericRange">i=291</Alias>
+        <Alias Alias="GeneratesEvent">i=41</Alias>
+        <Alias Alias="UriString">i=23751</Alias>
+    </Aliases>
+    <Extensions>
+        <Extension>
+            <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
+        </Extension>
+        <Extension>
+            <si:GeneratorExtension Hash="dbf3ba350e83671ce105cbf91d2be98f"/>
+        </Extension>
+    </Extensions>
+    <UAObject SymbolicName="http___aixengineers_de_LADS_CD_" NodeId="ns=1;i=5000" BrowseName="1:http://aixengineers.de/LADS-CD/" ParentNodeId="i=11715">
+        <DisplayName>http://aixengineers.de/LADS-CD/</DisplayName>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">i=11715</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=11616</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Boolean" NodeId="ns=1;i=6000" BrowseName="IsNamespaceSubset" ParentNodeId="ns=1;i=5000">
+        <DisplayName>IsNamespaceSubset</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DateTime" NodeId="ns=1;i=6001" BrowseName="NamespacePublicationDate" ParentNodeId="ns=1;i=5000">
+        <DisplayName>NamespacePublicationDate</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:DateTime>2025-10-20T12:31:32+02:00</uax:DateTime>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=1;i=6002" BrowseName="NamespaceUri" ParentNodeId="ns=1;i=5000">
+        <DisplayName>NamespaceUri</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:String>http://aixengineers.de/LADS-CD/</uax:String>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=1;i=6003" BrowseName="NamespaceVersion" ParentNodeId="ns=1;i=5000">
+        <DisplayName>NamespaceVersion</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:String>1.00</uax:String>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="IdType" ValueRank="1" NodeId="ns=1;i=6004" BrowseName="StaticNodeIdTypes" ParentNodeId="ns=1;i=5000">
+        <DisplayName>StaticNodeIdTypes</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NumericRange" ValueRank="1" NodeId="ns=1;i=6005" BrowseName="StaticNumericNodeIdRange" ParentNodeId="ns=1;i=5000">
+        <DisplayName>StaticNumericNodeIdRange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=1;i=6006" BrowseName="StaticStringNodeIdPattern" ParentNodeId="ns=1;i=5000">
+        <DisplayName>StaticStringNodeIdPattern</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=96" ValueRank="1" NodeId="ns=1;i=6007" BrowseName="DefaultRolePermissions" ParentNodeId="ns=1;i=5000">
+        <DisplayName>DefaultRolePermissions</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=95" NodeId="ns=1;i=6008" BrowseName="DefaultAccessRestrictions" ParentNodeId="ns=1;i=5000">
+        <DisplayName>DefaultAccessRestrictions</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=1;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAObjectType NodeId="ns=1;i=1000" BrowseName="1:ComplianceDocumentSetType">
+        <DisplayName>ComplianceDocumentSetType</DisplayName>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">i=61</Reference>
+            <Reference ReferenceType="GeneratesEvent">i=2133</Reference>
+            <Reference ReferenceType="HasProperty">ns=1;i=6016</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=5003</Reference>
+        </References>
+    </UAObjectType>
+    <UAObjectType NodeId="ns=1;i=1001" BrowseName="1:ComplianceDocumentType">
+        <DisplayName>ComplianceDocumentType</DisplayName>
+        <Description>Represents a document that provides evidence of compliance with quality, metrological, or regulatory requirements.     Each instance may reference its digital content and associated format definition.</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">i=58</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6009</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6010</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6011</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6012</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=5002</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6013</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6014</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6015</Reference>
+        </References>
+    </UAObjectType>
+    <UAVariable DataType="String" NodeId="ns=1;i=6009" BrowseName="1:Content" ParentNodeId="ns=1;i=1001">
+        <DisplayName>Content</DisplayName>
+        <Description>Binary representation of the document content (e.g. XML, JSON, PDF bytes). Use for smaller documents (typically &lt;; 1 MB). If the File object is provided, this variable may be omitted.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DateTime" NodeId="ns=1;i=6010" BrowseName="1:IssuedAt" ParentNodeId="ns=1;i=1001">
+        <DisplayName>IssuedAt</DisplayName>
+        <Description>Date and time when the document was issued.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DateTime" NodeId="ns=1;i=6011" BrowseName="1:VaildFrom" ParentNodeId="ns=1;i=1001">
+        <DisplayName>VaildFrom</DisplayName>
+        <Description>Optional date and time when the validity of the document begins.       Use this if the effective date differs from the issue date.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DateTime" NodeId="ns=1;i=6012" BrowseName="1:VaildUntil" ParentNodeId="ns=1;i=1001">
+        <DisplayName>VaildUntil</DisplayName>
+        <Description>Optional expiration date indicating when the document is no longer valid.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=1;i=5002" BrowseName="1:File" ParentNodeId="ns=1;i=1001">
+        <DisplayName>File</DisplayName>
+        <Description>Provides access to the document via OPC UA File transfer methods.     Recommended for large documents (typically &gt; 1 MB).       Either File or Content should be provided, but not both.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=11575</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+            <Reference ReferenceType="HasComponent">i=11583</Reference>
+            <Reference ReferenceType="HasComponent">i=11590</Reference>
+            <Reference ReferenceType="HasComponent">i=11580</Reference>
+            <Reference ReferenceType="HasProperty">i=11579</Reference>
+            <Reference ReferenceType="HasComponent">i=11585</Reference>
+            <Reference ReferenceType="HasComponent">i=11593</Reference>
+            <Reference ReferenceType="HasProperty">i=11576</Reference>
+            <Reference ReferenceType="HasProperty">i=12687</Reference>
+            <Reference ReferenceType="HasProperty">i=12686</Reference>
+            <Reference ReferenceType="HasComponent">i=11588</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="String" NodeId="ns=1;i=6013" BrowseName="1:MimeType" ParentNodeId="ns=1;i=1001">
+        <DisplayName>MimeType</DisplayName>
+        <Description>Media type identifying the document format (e.g. application/vnd.ptb.dcc+xml, application/pdf).       Clients can use this to determine how to interpret the document content.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=1;i=6014" BrowseName="1:DocumentName" ParentNodeId="ns=1;i=1001">
+        <DisplayName>DocumentName</DisplayName>
+        <Description>Human-readable title of the compliance document.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="UriString" NodeId="ns=1;i=6015" BrowseName="1:SchemaUri" ParentNodeId="ns=1;i=1001">
+        <DisplayName>SchemaUri</DisplayName>
+        <Description>URI referencing the schema, manifest, or format definition that describes how to interpret       the structure and semantics of the document content.</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAReferenceType NodeId="ns=1;i=4000" BrowseName="1:HasComplianceDocument">
+        <DisplayName>HasComplianceDocument</DisplayName>
+        <Description>Links a Node (e.g., Device, Component, or Function) to a ComplianceDocument that provides regulatory or quality evidence.</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">i=32</Reference>
+        </References>
+        <InverseName>AppliesTo</InverseName>
+    </UAReferenceType>
+    <UAReferenceType NodeId="ns=1;i=4001" BrowseName="1:HasCalibrationCertificate">
+        <DisplayName>HasCalibrationCertificate</DisplayName>
+        <Description>Links a Node to a ComplianceDocument representing a calibration certificate (e.g., DCC based XML).</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
+        </References>
+        <InverseName>CalibrationAppliesTo</InverseName>
+    </UAReferenceType>
+    <UAReferenceType NodeId="ns=1;i=4002" BrowseName="1:HasValidationReport">
+        <DisplayName>HasValidationReport</DisplayName>
+        <Description>Links a Node to a ComplianceDocument representing a qualification protocol (e.g., IQ/OQ/PQ).</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
+        </References>
+        <InverseName>ValidationAppliesTo</InverseName>
+    </UAReferenceType>
+    <UAReferenceType NodeId="ns=1;i=4003" BrowseName="1:HasQualificationProtocol">
+        <DisplayName>HasQualificationProtocol</DisplayName>
+        <Description>inks a Node to a ComplianceDocument representing a validation report (e.g., CSV, cleaning validation).</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
+        </References>
+        <InverseName>QualificationAppliesTo</InverseName>
+    </UAReferenceType>
+    <UAVariable DataType="String" NodeId="ns=1;i=6016" BrowseName="NodeVersion" ParentNodeId="ns=1;i=1000" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>NodeVersion</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+        </References>
+        <Value>
+            <uax:String>0</uax:String>
+        </Value>
+    </UAVariable>
+    <UAObject SymbolicName="S_ComplianceDocument_" NodeId="ns=1;i=5003" BrowseName="1:&lt;ComplianceDocument&gt;" ParentNodeId="ns=1;i=1000">
+        <DisplayName>&lt;ComplianceDocument&gt;</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=1;i=1001</Reference>
+            <Reference ReferenceType="HasModellingRule">i=11508</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6014</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6010</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6013</Reference>
+        </References>
+    </UAObject>
+</UANodeSet>
