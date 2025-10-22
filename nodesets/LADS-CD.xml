@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-10-21T06:59:51.590Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-10-22T10:12:03.984Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://aixengineers.de/LADS-CD/</Uri>
     </NamespaceUris>
@@ -28,7 +28,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="dbf3ba350e83671ce105cbf91d2be98f"/>
+            <si:GeneratorExtension Hash="119245995a1313b0ccc0d70d80a1b44e"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_LADS_CD_" NodeId="ns=1;i=5000" BrowseName="1:http://aixengineers.de/LADS-CD/" ParentNodeId="i=11715">
@@ -112,6 +112,7 @@
     </UAVariable>
     <UAObjectType NodeId="ns=1;i=1000" BrowseName="1:ComplianceDocumentSetType">
         <DisplayName>ComplianceDocumentSetType</DisplayName>
+        <Description>A container for all compliance-related documents that are associated with this Device, Component,     or Function. Each entry represents a digital document providing evidence of conformity with     applicable standards, quality requirements, or regulatory frameworks.      Typical examples include:       • Calibration certificates (e.g., PTB Digital Calibration Certificate – DCC)       • Validation or qualification reports (e.g., IQ/OQ/PQ, CSV, Cleaning Validation)       • Inspection or test records       • Accreditation or certification statements      Each contained document is represented as an instance of the ComplianceDocumentType,     exposing metadata such as DocumentName, IssuedAt, and MimeType as well as the actual     document content or a reference to an associated File object.</Description>
         <References>
             <Reference ReferenceType="HasSubtype" IsForward="false">i=61</Reference>
             <Reference ReferenceType="GeneratesEvent">i=2133</Reference>
@@ -150,16 +151,16 @@
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
         </References>
     </UAVariable>
-    <UAVariable DataType="DateTime" NodeId="ns=1;i=6011" BrowseName="1:VaildFrom" ParentNodeId="ns=1;i=1001">
-        <DisplayName>VaildFrom</DisplayName>
+    <UAVariable DataType="DateTime" NodeId="ns=1;i=6011" BrowseName="1:ValidFrom" ParentNodeId="ns=1;i=1001">
+        <DisplayName>ValidFrom</DisplayName>
         <Description>Optional date and time when the validity of the document begins.       Use this if the effective date differs from the issue date.</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=80</Reference>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
         </References>
     </UAVariable>
-    <UAVariable DataType="DateTime" NodeId="ns=1;i=6012" BrowseName="1:VaildUntil" ParentNodeId="ns=1;i=1001">
-        <DisplayName>VaildUntil</DisplayName>
+    <UAVariable DataType="DateTime" NodeId="ns=1;i=6012" BrowseName="1:ValidUntil" ParentNodeId="ns=1;i=1001">
+        <DisplayName>ValidUntil</DisplayName>
         <Description>Optional expiration date indicating when the document is no longer valid.</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=80</Reference>

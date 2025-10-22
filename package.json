@@ -9,7 +9,7 @@
     "lads-ph-meter": "ts-node -r tsconfig-paths/register servers/lads-ph-meter/src/server.ts",
     "lads-viscometer": "ts-node -r tsconfig-paths/register servers/lads-viscometer/src/server.ts",
     "lads-balance": "ts-node -r tsconfig-paths/register servers/lads-balance/src/server.ts",
-    "build": "tsc && copyfiles \"servers/**/src/*.json\" out &&  copyfiles \"servers/**/src/*.xml\" out"
+    "build": "tsc && copyfiles \"servers/**/src/*.json\" out &&  copyfiles \"servers/**/src/resources/*\" out"
   },
   "author": "Dr. Matthias Arnold, AixEngineers",
   "license": "MIT & AGPL 3",

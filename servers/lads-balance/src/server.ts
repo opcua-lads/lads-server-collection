@@ -23,7 +23,6 @@ import { ApplicationType, nodesets, OPCUAServer } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
-import { ComplianceDocuments } from "utils/src/lads-cd"
 
 //---------------------------------------------------------------
 // config

@@ -123,20 +123,23 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.grossWeight = functionSet.currentWeight.functionSet?.gross
         this.netWeight = functionSet.currentWeight.functionSet?.net
         this.tareWeight = functionSet.currentWeight.functionSet?.tare
-
-        // experimental - create compliance-document-set & add fake DCC
-        const device = this.parent.device
-        this.documentSet = new ComplianceDocumentSetImpl(device)
-        const documentAppliesTo = [device, functionalUnit, this.currentWeight]
-        const dccDocument = await this.documentSet.addDCCFromFile(__dirname, "224G372", documentAppliesTo)
-
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
         AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addSensorFunctionReferences(this.grossWeight, AFODictionaryIds.weighing, AFODictionaryIds.gross_weight)
         AFODictionary.addSensorFunctionReferences(this.netWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addSensorFunctionReferences(this.tareWeight, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight)
+
+        // experimental - create compliance-document-set & add fake DCC
+        const device = this.parent.device
+        this.documentSet = new ComplianceDocumentSetImpl(device)
+        const documentAppliesTo = [device, functionalUnit, this.currentWeight]
+        // add example docments from resoucres
+        const dir  = join(__dirname, "resources")
+        const dccDocument = await this.documentSet.addDCCFromFile(dir, "224G372", documentAppliesTo)
+        const pdfDocument = this.documentSet.addPDFFile("24_08_224_G372_ME5_F_22313544", new Date(), join(dir, "24_08_224_G372_ME5_F_22313544_15_10_2025_14_37_07_UTC.pdf"), documentAppliesTo, ComplianceDocumentReferences.HasCalibrationCertificate)
         AFODictionary.addReferences(dccDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
+        AFODictionary.addReferences(pdfDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
 
         // connect to balance object
         this.setStatusCodes(StatusCodes.BadWaitingForInitialData)

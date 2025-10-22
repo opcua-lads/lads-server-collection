@@ -24,6 +24,7 @@ import { readFile } from "fs/promises"
 import { DOMParser } from "xmldom"
 import { raiseEvent } from "./lads-event-utils"
 import { UADevice } from "node-opcua-nodeset-di"
+import { installFileType } from "node-opcua-file-transfer"
 
 export enum ComplianceDocumentReferences {
     HasComplianceDocument = "HasComplianceDocument",
@@ -48,7 +49,7 @@ export interface ComplianceDocumentOptions {
     validUntil?: Date
     schemaUri?: string
     content?: string
-    file?: UAFile
+    filePath?: string
     reference?: ComplianceDocumentReferences
     nodes?: BaseNode[]
 }
@@ -77,7 +78,7 @@ export class ComplianceDocumentSetImpl {
         // create document object
         const optionals = []
         if (options.content) optionals.push("Content")
-        if (options.file) optionals.push("File")
+        if (options.filePath) optionals.push("File")
         if (options.schemaUri) optionals.push("SchemaUri")
         if (options.validFrom) optionals.push("ValidFrom")
         if (options.validUntil) optionals.push("ValidUntil")
@@ -93,6 +94,11 @@ export class ComplianceDocumentSetImpl {
         setStringValue(document.content, options.content)
         setStringValue(document.mimeType, options.mimeType)
         setStringValue(document.schemaUri, options.schemaUri)
+
+        // eventually create file object
+        if (options.filePath) {
+              installFileType(document.file, { filename: options.filePath, mimeType: options.mimeType })            
+        }
 
         // create references
         const referenceTypeName = options.reference ? options.reference : ComplianceDocumentReferences.HasComplianceDocument
@@ -115,6 +121,21 @@ export class ComplianceDocumentSetImpl {
             nodes: nodes,
             mimeType: "text/plain; charset=us-ascii",
             content: content
+        }
+        return this.addComplianceDocument(options)
+    }
+
+    addPDFFile(name: string, issuedAt: Date, filePath: string, nodes: BaseNode[], reference?: ComplianceDocumentReferences): LADSComplianceDocument { return this.addFile(name, issuedAt, filePath, "application/pdf", nodes, reference) }
+
+    addFile(name: string, issuedAt: Date, filePath: string, mimeType: string, nodes: BaseNode[], reference?: ComplianceDocumentReferences): LADSComplianceDocument {
+        const options: ComplianceDocumentOptions = {
+            browseName: name,
+            documentName: name,
+            issuedAt: issuedAt,
+            reference: reference,
+            nodes: nodes,
+            mimeType: mimeType,
+            filePath: filePath
         }
         return this.addComplianceDocument(options)
     }
