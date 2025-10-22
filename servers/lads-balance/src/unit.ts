@@ -33,7 +33,7 @@ import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFuncti
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance"
 import { EventEmitter } from "events"
-import { ComplianceDocuments, ComplianceDocumentReferences } from "utils/src/lads-cd"
+import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "utils/src/lads-cd"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -79,6 +79,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     activeProgram: LADSActiveProgram
     currentRunOptions: CurrentRunOptions
     programTemplateElements: ProgramTemplateElement[] = []
+    documentSet: ComplianceDocumentSetImpl
 
     constructor(parent: BalanceDeviceImpl, optionals: string[] = []) {
         super()
@@ -125,9 +126,9 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
         // experimental - create compliance-document-set & add fake DCC
         const device = this.parent.device
-        const documentSet = ComplianceDocuments.getComplianceDocumentSet(device)
+        this.documentSet = new ComplianceDocumentSetImpl(device)
         const documentAppliesTo = [device, functionalUnit, this.currentWeight]
-        const dccDocument = await ComplianceDocuments.addDCCFromFile(documentSet, __dirname, "224G372", documentAppliesTo)
+        const dccDocument = await this.documentSet.addDCCFromFile(__dirname, "224G372", documentAppliesTo)
 
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
@@ -173,7 +174,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.balance.on(BalanceEvents.CalibrationReport, (calibrationReport: BalanceCalibrationReport) => {
             const timestampISOString = calibrationReport.timestamp.toISOString()
             if (timestampISOString != lastCalibrationTimestamp) {
-                const document = ComplianceDocuments.addTextDocument(documentSet, `CalInternal-${timestampISOString}`, calibrationReport.timestamp, calibrationReport.report, documentAppliesTo, ComplianceDocumentReferences.HasCalibrationCertificate)
+                const document = this.documentSet.addTextDocument(`CalInternal-${timestampISOString}`, calibrationReport.timestamp, calibrationReport.report, documentAppliesTo, ComplianceDocumentReferences.HasCalibrationCertificate)
                 AFODictionary.addReferences(document, AFODictionaryIds.calibration_time)
                 AFODictionary.addReferences(document, AFODictionaryIds.calibration_report)
                 raiseEvent(this.functionalUnit, 'Received calibration report.')
@@ -371,7 +372,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             // build ASM recorder
             // if net-weight is available choose it as source for sample-weight over current-weight
             const sampleWeight = (this.netWeight) ? this.netWeight : this.currentWeight
-            const calibrationCertificates = ComplianceDocuments.findComplianceDocumentsApplyingTo(this.functionalUnit, ComplianceDocumentReferences.HasCalibrationCertificate)
+            const calibrationCertificates = this.documentSet.findComplianceDocumentsApplyingTo(this.functionalUnit, ComplianceDocumentReferences.HasCalibrationCertificate)
             const digitalCalibrationCertificates = calibrationCertificates.filter((document) => (getStringValue(document.schemaUri, "")?.includes("dcc")))
             const calibrationCertificate = digitalCalibrationCertificates.length > 0 ? digitalCalibrationCertificates[0] : calibrationCertificates.length > 0 ? calibrationCertificates[0] : undefined
             options.recorder = new BalanceRecorder({

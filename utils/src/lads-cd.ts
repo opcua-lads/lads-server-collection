@@ -16,14 +16,14 @@
 //---------------------------------------------------------------
 
 import { LADSComplianceDocument, LADSComplianceDocumentSet } from "@interfaces"
-import { AddressSpace, BaseNode, BrowseDirection, INamespace, OPCUAServer, UAFile, UAObject, UAObjectType } from "node-opcua"
+import { BaseNode, BrowseDirection, INamespace, UAFile, UAObject, UAObjectType } from "node-opcua"
 import { setDateTimeValue, setStringValue } from "./lads-variable-utils"
 import { assert } from "console"
 import { join } from "path"
 import { readFile } from "fs/promises"
 import { DOMParser } from "xmldom"
 import { raiseEvent } from "./lads-event-utils"
-import { getBrowsePath } from "./lads-utils"
+import { UADevice } from "node-opcua-nodeset-di"
 
 export enum ComplianceDocumentReferences {
     HasComplianceDocument = "HasComplianceDocument",
@@ -33,13 +33,13 @@ export enum ComplianceDocumentReferences {
 }
 
 enum ComplianceDocumentIds {
+    NameSpaceId = "http://aixengineers.de/LADS-CD/",
     ComplianceDocumentType = "ComplianceDocumentType",
     ComplianceDocumentSetType = "ComplianceDocumentSetType",
     ComplianceDocumentSet = "ComplianceDocumentSet",
 }
 
 export interface ComplianceDocumentOptions {
-    parent: LADSComplianceDocumentSet
     browseName: string,
     documentName: string
     mimeType: string
@@ -53,47 +53,27 @@ export interface ComplianceDocumentOptions {
     nodes?: BaseNode[]
 }
 
-export class ComplianceDocuments {
-    static readonly nameSpaceId = "http://aixengineers.de/LADS-CD/"
-    static isInstalled = false
-    static namespace: INamespace
-    static complianceDocumentSetType: UAObjectType
-    static complianceDocumentType: UAObjectType
+export class ComplianceDocumentSetImpl {
+    namespace: INamespace
+    documentType: UAObjectType
+    documentSetType: UAObjectType
+    device: UADevice
+    documentSet: LADSComplianceDocumentSet
 
-    static checkInstalled(node: BaseNode) {
-        if (!node) return
-        if (this.isInstalled) return
-        const addressSpace = node.addressSpace
-        const namespace = addressSpace.getNamespace(this.nameSpaceId)
-        this.namespace = namespace
-        this.complianceDocumentSetType = namespace.findObjectType(ComplianceDocumentIds.ComplianceDocumentSetType)
-        this.complianceDocumentType = namespace.findObjectType(ComplianceDocumentIds.ComplianceDocumentType)
-        this.isInstalled = true
-    }
-
-    static getComplianceDocumentSet(parent: UAObject): LADSComplianceDocumentSet {
-        if (!parent) return
-        this.checkInstalled(parent)
-        // check if node already exists
-        const child = parent.getChildByName(ComplianceDocumentIds.ComplianceDocumentSet) as LADSComplianceDocumentSet
-        if (child) return child
-        // create new set
-        const documentSet = this.complianceDocumentSetType.instantiate({
+    constructor(device: UADevice) {
+        this.device = device
+        this.namespace = device.addressSpace.getNamespace(ComplianceDocumentIds.NameSpaceId)
+        this.documentType = this.namespace.findObjectType(ComplianceDocumentIds.ComplianceDocumentType)
+        this.documentSetType = this.namespace.findObjectType(ComplianceDocumentIds.ComplianceDocumentSetType)
+        const node = device.getChildByName(ComplianceDocumentIds.ComplianceDocumentSet, this.namespace.index) as LADSComplianceDocumentSet
+        this.documentSet = node ? node : this.documentSetType.instantiate({
             browseName: ComplianceDocumentIds.ComplianceDocumentSet,
-            componentOf: parent,
-            notifierOf: parent,
-            optionals: ["NodeVersion"]
-        })
-        // initialze node-version
-        setStringValue(documentSet.getNodeVersion(), "0")
-        return documentSet
+            componentOf: device,
+            notifierOf: device,
+        }) as LADSComplianceDocumentSet
     }
 
-    static addComplianceDocument(options: ComplianceDocumentOptions): LADSComplianceDocument {
-        const parent = options.parent
-        if (!parent) return
-        this.checkInstalled(parent)
-
+    addComplianceDocument(options: ComplianceDocumentOptions): LADSComplianceDocument {
         // create document object
         const optionals = []
         if (options.content) optionals.push("Content")
@@ -101,8 +81,8 @@ export class ComplianceDocuments {
         if (options.schemaUri) optionals.push("SchemaUri")
         if (options.validFrom) optionals.push("ValidFrom")
         if (options.validUntil) optionals.push("ValidUntil")
-        const document = this.complianceDocumentType.instantiate({
-            componentOf: parent,
+        const document = this.documentType.instantiate({
+            componentOf: this.documentSet,
             browseName: options.browseName,
             optionals: optionals
         }) as LADSComplianceDocument
@@ -122,13 +102,12 @@ export class ComplianceDocuments {
             node.addReference({ referenceType: referenceType, nodeId: document.nodeId })
         })
 
-        raiseEvent(parent, `Added compliance document "${options.documentName}"`)
+        raiseEvent(this.documentSet, `Added compliance document "${options.documentName}"`)
         return document
     }
 
-    static addTextDocument(parent: UAObject, name: string, issuedAt: Date, content: string, nodes: BaseNode[], reference?: ComplianceDocumentReferences): LADSComplianceDocument {
+    addTextDocument(name: string, issuedAt: Date, content: string, nodes: BaseNode[], reference?: ComplianceDocumentReferences): LADSComplianceDocument {
         const options: ComplianceDocumentOptions = {
-            parent: parent,
             browseName: name,
             documentName: name,
             issuedAt: issuedAt,
@@ -140,11 +119,10 @@ export class ComplianceDocuments {
         return this.addComplianceDocument(options)
     }
 
-    static addDCC(parent: UAObject, name: string, content: string, nodes: BaseNode[]): LADSComplianceDocument {
+    addDCC(name: string, content: string, nodes: BaseNode[]): LADSComplianceDocument {
         const data = this.parseDCC(content)
         const issuedAt = data.endDate ?? new Date()
         const options: ComplianceDocumentOptions = {
-            parent: parent,
             browseName: `DCC-${name}`,
             documentName: `Digital Calibration Certifcate ${name}`,
             issuedAt: issuedAt,
@@ -157,11 +135,11 @@ export class ComplianceDocuments {
         return this.addComplianceDocument(options)
     }
 
-    static async addDCCFromFile(parent: UAObject, dir: string, name: string, nodes: BaseNode[]): Promise<LADSComplianceDocument> {
+    async addDCCFromFile(dir: string, name: string, nodes: BaseNode[]): Promise<LADSComplianceDocument> {
         const path = join(dir, `${name}.xml`)
         try {
             const content = await readFile(path, 'utf-8')
-            const dccDocument = this.addDCC(parent, name, content, nodes)
+            const dccDocument = this.addDCC(name, content, nodes)
             return dccDocument
         } catch (err) {
             console.warn(`Failed to load DCC: ${path}`)
@@ -169,7 +147,7 @@ export class ComplianceDocuments {
         return undefined
     }
 
-    private static parseDCC(xmlString: string): {beginDate?: Date, endDate?: Date} {
+    private parseDCC(xmlString: string): { beginDate?: Date, endDate?: Date } {
         const parser = new DOMParser()
         const xml = parser.parseFromString(xmlString, "application/xml");
         const DCC_NS = "https://ptb.de/dcc";
@@ -182,7 +160,7 @@ export class ComplianceDocuments {
         }
     }
 
-    static findComplianceDocumentsApplyingTo(node: UAObject, reference: ComplianceDocumentReferences = ComplianceDocumentReferences.HasComplianceDocument): LADSComplianceDocument[] {
+    findComplianceDocumentsApplyingTo(node: UAObject, reference: ComplianceDocumentReferences = ComplianceDocumentReferences.HasComplianceDocument): LADSComplianceDocument[] {
         if (!node) return []
         const referenceType = this.namespace.findReferenceType(reference)
         const references = node.findReferencesEx(referenceType.nodeId, BrowseDirection.Forward)
@@ -191,14 +169,4 @@ export class ComplianceDocuments {
         })
         return documents
     }
-
-    static getComplianceDocumentUri(server: OPCUAServer, document: LADSComplianceDocument): string {
-        if (!document) return ""
-        const browsePath = getBrowsePath(document)
-        const encodedBrowsePath = encodeURIComponent(browsePath)
-        const endpointUrl = server.endpoints[0].endpointDescriptions()[0].endpointUrl
-        const uri = `${endpointUrl}?path=${encodedBrowsePath}`
-        return uri
-    }
 }
-
