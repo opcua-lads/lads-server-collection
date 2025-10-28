@@ -16,21 +16,23 @@
 //---------------------------------------------------------------
 
 import { LADSComplianceDocument, LADSComplianceDocumentSet } from "@interfaces"
-import { BaseNode, BrowseDirection, INamespace, UAFile, UAObject, UAObjectType } from "node-opcua"
-import { setDateTimeValue, setStringValue } from "./lads-variable-utils"
+import { AccessLevelFlag, BaseNode, BrowseDirection, DataType, INamespace, QualifiedName, UAFile, UAObject, UAObjectType, UAReference } from "node-opcua"
+import { getDateTimeValue, getStringValue, setDateTimeValue, setStringValue } from "./lads-variable-utils"
 import { assert } from "console"
-import { join } from "path"
-import { readFile } from "fs/promises"
+import { join, sep, relative, resolve } from "path"
+import { access, mkdir, writeFile, readFile } from "fs/promises"
 import { DOMParser } from "xmldom"
 import { raiseEvent } from "./lads-event-utils"
-import { UADevice } from "node-opcua-nodeset-di"
 import { installFileType } from "node-opcua-file-transfer"
+import { getChildObjects } from "./lads-utils"
 
 export enum ComplianceDocumentReferences {
     HasComplianceDocument = "HasComplianceDocument",
     HasCalibrationCertificate = "HasCalibrationCertificate",
+    HasCalibrationReport = "HasCalibrationReport",
     HasValidationReport = "HasValidationReport",
-    HasQualificationProtocol = "HasQualificationProtocol"
+    HasQualificationProtocol = "HasQualificationProtocol",
+    HasDeclarationOfConformity = "HasDeclarationOfConformity",
 }
 
 enum ComplianceDocumentIds {
@@ -39,6 +41,12 @@ enum ComplianceDocumentIds {
     ComplianceDocumentSetType = "ComplianceDocumentSetType",
     ComplianceDocumentSet = "ComplianceDocumentSet",
 }
+
+export interface ComplianceDocumentNodeReference {
+    reference: ComplianceDocumentReferences
+    node: BaseNode
+}
+export type ComplianceDocumentNodeReferences = ComplianceDocumentNodeReference[]
 
 export interface ComplianceDocumentOptions {
     browseName: string,
@@ -50,28 +58,57 @@ export interface ComplianceDocumentOptions {
     schemaUri?: string
     content?: string
     filePath?: string
-    reference?: ComplianceDocumentReferences
-    nodes?: BaseNode[]
+    nodeReferences?: ComplianceDocumentNodeReferences
+}
+interface ComplianceDocumentExportOptions extends ComplianceDocumentOptions {
+    contentFilePath?: string
+    nodePaths?: {
+        reference: ComplianceDocumentReferences
+        nodePath: string
+    }[] 
+}
+
+async function fileExists(path: string): Promise<boolean> {
+    try {
+        await access(path)
+        return true
+    } catch {
+        return false
+    }
+}
+
+function constructFileName(baseName: string, mimeType: string): string {
+    const mt = mimeType.split("/")
+    assert(mt.length === 2)
+    const rhs = mt[1]
+    const ext = rhs.includes("+") ? ((rhs.split("+"))[1]).trim() : rhs.trim()
+    return `${join(baseName)}.${ext}`
 }
 
 export class ComplianceDocumentSetImpl {
     namespace: INamespace
     documentType: UAObjectType
     documentSetType: UAObjectType
-    device: UADevice
+    parent: UAObject
     documentSet: LADSComplianceDocumentSet
+    appDir: string
+    documentsDir: string
 
-    constructor(device: UADevice) {
-        this.device = device
-        this.namespace = device.addressSpace.getNamespace(ComplianceDocumentIds.NameSpaceId)
+    constructor(parent: UAObject, appDir: string, documentsDir: string) {
+        this.parent = parent
+        this.appDir = appDir
+        this.documentsDir = documentsDir
+        this.namespace = parent.addressSpace.getNamespace(ComplianceDocumentIds.NameSpaceId)
         this.documentType = this.namespace.findObjectType(ComplianceDocumentIds.ComplianceDocumentType)
         this.documentSetType = this.namespace.findObjectType(ComplianceDocumentIds.ComplianceDocumentSetType)
-        const node = device.getChildByName(ComplianceDocumentIds.ComplianceDocumentSet, this.namespace.index) as LADSComplianceDocumentSet
+        const node = parent.getChildByName(ComplianceDocumentIds.ComplianceDocumentSet, this.namespace.index) as LADSComplianceDocumentSet
         this.documentSet = node ? node : this.documentSetType.instantiate({
-            browseName: ComplianceDocumentIds.ComplianceDocumentSet,
-            componentOf: device,
-            notifierOf: device,
+            browseName: new QualifiedName({ name: ComplianceDocumentIds.ComplianceDocumentSet, namespaceIndex: this.namespace.index }),
+            componentOf: parent,
+            notifierOf: parent,
+            optionals: ["NodeVersion"]
         }) as LADSComplianceDocumentSet
+        setStringValue(this.documentSet.getNodeVersion(), "0")
     }
 
     addComplianceDocument(options: ComplianceDocumentOptions): LADSComplianceDocument {
@@ -97,70 +134,140 @@ export class ComplianceDocumentSetImpl {
 
         // eventually create file object
         if (options.filePath) {
-              installFileType(document.file, { filename: options.filePath, mimeType: options.mimeType })            
+            const filePath = options.filePath
+            const fileName = filePath.split(sep)
+            installFileType(document.file, { filename: filePath, mimeType: options.mimeType })
+            // remember filename for later restoration
+            document.namespace.addVariable({
+                propertyOf: document.file,
+                browseName: "FileName",
+                dataType: DataType.String,
+                accessLevel: AccessLevelFlag.CurrentRead,
+                value: { dataType: DataType.String, value: fileName.pop() }
+            })
         }
 
         // create references
-        const referenceTypeName = options.reference ? options.reference : ComplianceDocumentReferences.HasComplianceDocument
-        const referenceType = this.namespace.findReferenceType(referenceTypeName)
-        assert(referenceType)
-        options.nodes?.forEach(node => {
-            node.addReference({ referenceType: referenceType, nodeId: document.nodeId })
+        options.nodeReferences?.forEach(nr => {
+            const referenceType = this.namespace.findReferenceType(nr.reference)
+            assert(referenceType)
+            nr.node.addReference({ referenceType: referenceType, nodeId: document.nodeId })
         })
-
         raiseEvent(this.documentSet, `Added compliance document "${options.documentName}"`)
         return document
     }
 
-    addTextDocument(name: string, issuedAt: Date, content: string, nodes: BaseNode[], reference?: ComplianceDocumentReferences): LADSComplianceDocument {
+    get documents(): LADSComplianceDocument[] {
+        const children = getChildObjects(this.documentSet)
+        const documents = children.filter(child => (child.typeDefinitionObj.isSubtypeOf(this.documentType))) as LADSComplianceDocument[]
+        return documents
+    }
+
+    async save() {
+        const dir = this.documentsDir
+        try {
+            console.debug(`Creating documents directory ${resolve(dir)}`)
+            await mkdir(dir, { recursive: true })
+        } catch (err) {
+            console.debug(err)
+        }
+        const documents = this.documents
+        const optionsList: ComplianceDocumentExportOptions[] = []
+        for (const document of documents) {
+            const nodeReferences = this.findNodesReferencedbyComplianceDocument(document)
+            const mimeType = getStringValue(document.mimeType)
+            const content = document.content ? getStringValue(document.content) : undefined
+            const fileName = content ? constructFileName(document.browseName.name, mimeType) : document.file.fileName ? getStringValue(document.file.fileName) : undefined
+            const filePath = fileName ? relative(this.appDir, join(dir, fileName)) : undefined
+            const options: ComplianceDocumentExportOptions = {
+                browseName: document.browseName.name,
+                documentName: getStringValue(document.documentName),
+                issuedAt: getDateTimeValue(document.issuedAt),
+                validFrom: document.validFrom ? getDateTimeValue(document.validFrom) : undefined,
+                validUntil: document.validUntil ? getDateTimeValue(document.validUntil) : undefined,
+                mimeType: mimeType,
+                schemaUri: document.schemaUri ? getStringValue(document.schemaUri) : undefined,
+                filePath: content ? undefined : filePath,
+                contentFilePath: content ? filePath: undefined,
+                nodePaths: nodeReferences.length > 0 ? nodeReferences.map(referencedNode =>  {
+                    return {
+                        reference: referencedNode.reference, 
+                        nodePath: referencedNode.node.fullName()
+                     }
+                }) : undefined,
+            }
+
+            // eventually store content (if not alredy available, content should be immutable)
+            if (content) {
+                try {
+                    if (!fileExists(filePath)) {
+                        console.debug(`Saving document ${filePath}`)
+                        await writeFile(filePath, content, "utf-8")                        
+                    }
+                } catch (err) {
+                    console.debug(err)
+                }
+            }
+            optionsList.push(options)
+        }
+
+        // save decription
+        try {
+            const data = JSON.stringify(optionsList, null, 2);
+            await writeFile(join(dir, "compliance_documents.json"), data, "utf-8")
+        } catch (err) {
+            console.debug(err)
+        }
+    }
+
+    addTextDocument(name: string, issuedAt: Date, content: string, nodeReferences: ComplianceDocumentNodeReferences): LADSComplianceDocument {
         const options: ComplianceDocumentOptions = {
             browseName: name,
             documentName: name,
             issuedAt: issuedAt,
-            reference: reference,
-            nodes: nodes,
             mimeType: "text/plain; charset=us-ascii",
-            content: content
+            content: content,
+            nodeReferences: nodeReferences,
         }
         return this.addComplianceDocument(options)
     }
 
-    addPDFFile(name: string, issuedAt: Date, filePath: string, nodes: BaseNode[], reference?: ComplianceDocumentReferences): LADSComplianceDocument { return this.addFile(name, issuedAt, filePath, "application/pdf", nodes, reference) }
+    addPDFFile(name: string, issuedAt: Date, filePath: string, nodeReferences?: ComplianceDocumentNodeReferences): LADSComplianceDocument {
+        return this.addFile(name, issuedAt, filePath, "application/pdf", nodeReferences)
+    }
 
-    addFile(name: string, issuedAt: Date, filePath: string, mimeType: string, nodes: BaseNode[], reference?: ComplianceDocumentReferences): LADSComplianceDocument {
+    addFile(name: string, issuedAt: Date, filePath: string, mimeType: string, nodeReferences?: ComplianceDocumentNodeReferences): LADSComplianceDocument {
         const options: ComplianceDocumentOptions = {
             browseName: name,
             documentName: name,
             issuedAt: issuedAt,
-            reference: reference,
-            nodes: nodes,
             mimeType: mimeType,
-            filePath: filePath
+            filePath: filePath,
+            nodeReferences: nodeReferences,
         }
         return this.addComplianceDocument(options)
     }
 
-    addDCC(name: string, content: string, nodes: BaseNode[]): LADSComplianceDocument {
+    addDCC(name: string, content: string, nodeReferences: ComplianceDocumentNodeReferences): LADSComplianceDocument {
         const data = this.parseDCC(content)
         const issuedAt = data.endDate ?? new Date()
         const options: ComplianceDocumentOptions = {
             browseName: `DCC-${name}`,
             documentName: `Digital Calibration Certifcate ${name}`,
             issuedAt: issuedAt,
-            reference: ComplianceDocumentReferences.HasCalibrationCertificate,
-            nodes: nodes,
             mimeType: "application/vnd.ptb.dcc+xml",
             schemaUri: "https://ptb.de/dcc/schema/3.3.0",
-            content: content
+            content: content,
+            nodeReferences: nodeReferences,
         }
         return this.addComplianceDocument(options)
     }
 
-    async addDCCFromFile(dir: string, name: string, nodes: BaseNode[]): Promise<LADSComplianceDocument> {
+    async addDCCFromFile(dir: string, name: string, nodeReferences: ComplianceDocumentNodeReferences): Promise<LADSComplianceDocument> {
         const path = join(dir, `${name}.xml`)
         try {
             const content = await readFile(path, 'utf-8')
-            const dccDocument = this.addDCC(name, content, nodes)
+            const dccDocument = this.addDCC(name, content, nodeReferences)
             return dccDocument
         } catch (err) {
             console.warn(`Failed to load DCC: ${path}`)
@@ -181,13 +288,23 @@ export class ComplianceDocumentSetImpl {
         }
     }
 
+    findNodesReferencedbyComplianceDocument(document: LADSComplianceDocument, reference: ComplianceDocumentReferences = ComplianceDocumentReferences.HasComplianceDocument): ComplianceDocumentNodeReference[] {
+        if (!document) return []
+        const addressSpace = document.addressSpace
+        const referenceType = this.namespace.findReferenceType(reference)
+        const references = document.findReferencesEx(referenceType.nodeId, BrowseDirection.Inverse)
+        return references.map(reference => {
+            return  { 
+                reference: ((addressSpace.findReferenceType(reference.referenceType)).browseName.name) as ComplianceDocumentReferences, 
+                node: reference.node
+            }
+        })
+    }
+
     findComplianceDocumentsApplyingTo(node: UAObject, reference: ComplianceDocumentReferences = ComplianceDocumentReferences.HasComplianceDocument): LADSComplianceDocument[] {
         if (!node) return []
         const referenceType = this.namespace.findReferenceType(reference)
         const references = node.findReferencesEx(referenceType.nodeId, BrowseDirection.Forward)
-        const documents = references.map((reference) => {
-            return node.addressSpace.findNode(reference.nodeId) as LADSComplianceDocument
-        })
-        return documents
+        return references.map(reference => { return node.addressSpace.findNode(reference.nodeId) as LADSComplianceDocument })
     }
 }

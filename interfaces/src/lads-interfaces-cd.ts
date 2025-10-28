@@ -13,10 +13,14 @@ import { DataType, DateTime, LocalizedText, UABaseDataVariable, UAFile, UAFolder
 
 export interface LADSComplianceDocumentSet extends UAFolder {}
 
+export interface LADSComplianceFile extends UAFile {
+    fileName?: UAProperty<string, DataType.String>
+}
+
 export interface LADSComplianceDocument extends UAObject {
     documentName: UAProperty<LocalizedText, DataType.LocalizedText>
     content?: UABaseDataVariable<string, DataType.String>
-    file?: UAFile
+    file?: LADSComplianceFile
     mimeType: UAProperty<string, DataType.String>
     schemaUri?: UAProperty<string, DataType.String>
     issuedAt: UAProperty<DateTime, DataType.DateTime>

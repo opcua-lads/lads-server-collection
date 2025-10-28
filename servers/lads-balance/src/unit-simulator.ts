@@ -25,6 +25,7 @@ import { BalanceDeviceImpl } from './device';
 import { BalanceUnitImpl } from './unit';
 import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';
 import { SimulatedBalance } from './balance-simulator';
+import { BalanceProtocols } from './server';
 
 //---------------------------------------------------------------
 export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
@@ -36,7 +37,7 @@ export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
     private filteredRawWeight = 0
 
     constructor(parent: BalanceDeviceImpl, functionalUnitSet: BalanceFunctionalUnitSet) {
-        super(parent)
+        super(parent, {name: "My Simulated Balance", protocol: BalanceProtocols.Simulator, serialPort: "", })
 
         // create balance
         this.balance = new SimulatedBalance(this.getRawWeight.bind(this))

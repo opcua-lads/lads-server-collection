@@ -34,7 +34,7 @@ export class SerialBalanceUnitImpl extends BalanceUnitImpl {
         const protocol = config.protocol
         const sics = (protocol === BalanceProtocols.SICS)
         const optionals = sics ? BalanceTareOptionals : []
-        super(parent, optionals)
+        super(parent, config, optionals)
         
         // create balance
         const options: SerialPortOpenOptions<any> = {

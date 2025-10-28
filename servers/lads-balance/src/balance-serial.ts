@@ -67,6 +67,7 @@ export abstract class SerialBalance extends Balance {
                     this.emit(BalanceEvents.Error, `Serialport ${path} not avilable!`)
                 }
             } else {
+                this.port.on("error", (err) => {console.error("Error opening serial port ", this.port, err)})
                 this.port.open()
             }
         }

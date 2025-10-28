@@ -33,7 +33,8 @@ import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFuncti
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance"
 import { EventEmitter } from "events"
-import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "utils/src/lads-cd"
+import { ComplianceDocumentNodeReferences, ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "utils/src/lads-cd"
+import { BalanceDeviceConfig, BalanceProtocols } from "./server"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -66,6 +67,7 @@ export class ProgramTemplateIds {
 export abstract class BalanceUnitImpl extends EventEmitter {
     parent: BalanceDeviceImpl
     balance: Balance
+    config: BalanceDeviceConfig
     lastReading: BalanceReading
     functionalUnit: BalanceFunctionalUnit
     functionalUnitState: UAStateMachineEx
@@ -81,9 +83,10 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     programTemplateElements: ProgramTemplateElement[] = []
     documentSet: ComplianceDocumentSetImpl
 
-    constructor(parent: BalanceDeviceImpl, optionals: string[] = []) {
+    constructor(parent: BalanceDeviceImpl, config: BalanceDeviceConfig, optionals: string[] = []) {
         super()
         this.parent = parent
+        this.config = config
         // create unit object
         const functionalUnitSet = parent.getFunctionalUnitSet()
         const balanceUnitType = getBalanceNameSpace(functionalUnitSet.addressSpace).findObjectType("BalanceUnitType")
@@ -132,14 +135,30 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
         // experimental - create compliance-document-set & add fake DCC
         const device = this.parent.device
-        this.documentSet = new ComplianceDocumentSetImpl(device)
-        const documentAppliesTo = [device, functionalUnit, this.currentWeight]
+        const documentsDir = join(__dirname, "documents", device.browseName.name)
+        // const documentsDir = join("documents", device.browseName.name)
+        this.documentSet = new ComplianceDocumentSetImpl(device, __dirname, documentsDir)
+        const calibrationDocumentAppliesTo: ComplianceDocumentNodeReferences = [
+            {node: device, reference:ComplianceDocumentReferences.HasCalibrationCertificate}, 
+            {node: functionalUnit, reference:ComplianceDocumentReferences.HasCalibrationCertificate}, 
+            {node: this.currentWeight, reference:ComplianceDocumentReferences.HasCalibrationCertificate}, 
+        ]
         // add example docments from resoucres
         const dir  = join(__dirname, "resources")
-        const dccDocument = await this.documentSet.addDCCFromFile(dir, "224G372", documentAppliesTo)
-        const pdfDocument = this.documentSet.addPDFFile("24_08_224_G372_ME5_F_22313544", new Date(), join(dir, "24_08_224_G372_ME5_F_22313544_15_10_2025_14_37_07_UTC.pdf"), documentAppliesTo, ComplianceDocumentReferences.HasCalibrationCertificate)
-        AFODictionary.addReferences(dccDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
-        AFODictionary.addReferences(pdfDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
+        // const dir  = "resources"
+        if (this.config.protocol === BalanceProtocols.SBI) {
+            const dccDocument = await this.documentSet.addDCCFromFile(dir, "224G372", calibrationDocumentAppliesTo)
+            const pdfDocument = this.documentSet.addPDFFile("24_08_224_G372_ME5_F_22313544", new Date(), join(dir, "24_08_224_G372_ME5_F_22313544_15_10_2025_14_37_07_UTC.pdf"), calibrationDocumentAppliesTo)
+            const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "sartorius quintix doc.pdf"), [{node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity}])
+            AFODictionary.addReferences(dccDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
+            AFODictionary.addReferences(pdfDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
+            AFODictionary.addReferences(docDocument, AFODictionaryIds.conformance_assessment)
+        } else if (this.config.protocol === BalanceProtocols.SICS) {
+            const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "DoC_MS8001TS_00.pdf"), [{node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity}])
+            AFODictionary.addReferences(docDocument, AFODictionaryIds.conformance_assessment)
+        }
+        this.documentSet.save()
+
 
         // connect to balance object
         this.setStatusCodes(StatusCodes.BadWaitingForInitialData)
@@ -177,8 +196,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.balance.on(BalanceEvents.CalibrationReport, (calibrationReport: BalanceCalibrationReport) => {
             const timestampISOString = calibrationReport.timestamp.toISOString()
             if (timestampISOString != lastCalibrationTimestamp) {
-                const document = this.documentSet.addTextDocument(`CalInternal-${timestampISOString}`, calibrationReport.timestamp, calibrationReport.report, documentAppliesTo, ComplianceDocumentReferences.HasCalibrationCertificate)
-                AFODictionary.addReferences(document, AFODictionaryIds.calibration_time)
+                const document = this.documentSet.addTextDocument(`CalInternal-${timestampISOString}`, calibrationReport.timestamp, calibrationReport.report, calibrationDocumentAppliesTo)
                 AFODictionary.addReferences(document, AFODictionaryIds.calibration_report)
                 raiseEvent(this.functionalUnit, 'Received calibration report.')
                 lastCalibrationTimestamp = timestampISOString

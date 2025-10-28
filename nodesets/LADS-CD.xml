@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-10-22T10:12:03.984Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-10-25T16:22:35.311Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://aixengineers.de/LADS-CD/</Uri>
     </NamespaceUris>
@@ -28,7 +28,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="119245995a1313b0ccc0d70d80a1b44e"/>
+            <si:GeneratorExtension Hash="09482950e43041c4fa7ab80cc8c6962c"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_LADS_CD_" NodeId="ns=1;i=5000" BrowseName="1:http://aixengineers.de/LADS-CD/" ParentNodeId="i=11715">
@@ -223,7 +223,7 @@
         <References>
             <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
         </References>
-        <InverseName>CalibrationAppliesTo</InverseName>
+        <InverseName>CalibrationCerificateAppliesTo</InverseName>
     </UAReferenceType>
     <UAReferenceType NodeId="ns=1;i=4002" BrowseName="1:HasValidationReport">
         <DisplayName>HasValidationReport</DisplayName>
@@ -231,7 +231,7 @@
         <References>
             <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
         </References>
-        <InverseName>ValidationAppliesTo</InverseName>
+        <InverseName>ValidationReportAppliesTo</InverseName>
     </UAReferenceType>
     <UAReferenceType NodeId="ns=1;i=4003" BrowseName="1:HasQualificationProtocol">
         <DisplayName>HasQualificationProtocol</DisplayName>
@@ -239,7 +239,7 @@
         <References>
             <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
         </References>
-        <InverseName>QualificationAppliesTo</InverseName>
+        <InverseName>QualificationProtocolAppliesTo</InverseName>
     </UAReferenceType>
     <UAVariable DataType="String" NodeId="ns=1;i=6016" BrowseName="NodeVersion" ParentNodeId="ns=1;i=1000" UserAccessLevel="3" AccessLevel="3">
         <DisplayName>NodeVersion</DisplayName>
@@ -261,4 +261,20 @@
             <Reference ReferenceType="HasComponent">ns=1;i=6013</Reference>
         </References>
     </UAObject>
+    <UAReferenceType NodeId="ns=1;i=4004" BrowseName="1:HasCalibrationReport">
+        <DisplayName>HasCalibrationReport</DisplayName>
+        <Description>Links a Node to a ComplianceDocument representing a calibration report.</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
+        </References>
+        <InverseName>CalibrationReportAppliesTo</InverseName>
+    </UAReferenceType>
+    <UAReferenceType NodeId="ns=1;i=4005" BrowseName="1:HasDeclarationOfConformity">
+        <DisplayName>HasDeclarationOfConformity</DisplayName>
+        <Description>Links a Node to a ComplianceDocument representing a declaration of conformity (DoC) (e.g., CE DoC as PDF).</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=1;i=4000</Reference>
+        </References>
+        <InverseName>DeclarationOfConformityAppliesTo</InverseName>
+    </UAReferenceType>
 </UANodeSet>
