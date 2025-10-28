@@ -18,7 +18,7 @@
             "serialPort": "/dev/tty.PL2303-USBtoUART1130",
             "protocol": "SICS",
             "name": "My Mettler Toledo Balance",
-            "enabled": false
+            "enabled": true
         }
     ]
 }
