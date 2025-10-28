@@ -44,7 +44,7 @@ import {
     UAEventType,
     UADataType,
     ServerSession,
-    BrowseDirection
+    makeBrowsePath
 } from "node-opcua"
 import {
     LADSDevice,
@@ -161,24 +161,6 @@ function constructPropertyExtensionObject(dt: UADataType, property: LADSProperty
 //---------------------------------------------------------------
 // Browsing LADS structures support
 //---------------------------------------------------------------
-export function getBrowsePath(node: BaseNode): string {
-    const addressSpace = node.addressSpace
-    // base case
-    if (sameNodeId(node.nodeId, addressSpace.rootFolder.objects.nodeId)) {
-        return node.browseName.toString()
-    }
-    // find parent via HierarchicalReferences (inverse)
-    const parentRef = node.findReferencesEx("HierarchicalReferences", BrowseDirection.Inverse)[0]
-    const parentNode = parentRef?.node
-    // recursion
-    if (parentNode) {
-        return `${getBrowsePath(parentNode)}/${node.browseName.toString()}`
-    } else {
-        // orphan or top-level node
-        return node.browseName.toString()
-    }
-}
-
 export function getLADSObjectType(addressSpace: IAddressSpace, objectType: string): UAObjectType {
     const namespace = getLADSNamespace(addressSpace)
     assert(namespace)

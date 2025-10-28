@@ -16,7 +16,7 @@
 //---------------------------------------------------------------
 
 import { LADSComplianceDocument, LADSComplianceDocumentSet } from "@interfaces"
-import { AccessLevelFlag, BaseNode, BrowseDirection, DataType, INamespace, QualifiedName, UAFile, UAObject, UAObjectType, UAReference } from "node-opcua"
+import { AccessLevelFlag, BaseNode, BrowseDirection, DataType, INamespace, makeBrowsePath, QualifiedName, ReferenceTypeIds, UAObject, UAObjectType, UAReference } from "node-opcua"
 import { getDateTimeValue, getStringValue, setDateTimeValue, setStringValue } from "./lads-variable-utils"
 import { assert } from "console"
 import { join, sep, relative, resolve } from "path"
@@ -59,13 +59,14 @@ export interface ComplianceDocumentOptions {
     content?: string
     filePath?: string
     nodeReferences?: ComplianceDocumentNodeReferences
+    dictionaryEntries?: string[]
 }
 interface ComplianceDocumentExportOptions extends ComplianceDocumentOptions {
     contentFilePath?: string
-    nodePaths?: {
+    referencedNodes?: {
         reference: ComplianceDocumentReferences
         nodePath: string
-    }[] 
+    }[]
 }
 
 async function fileExists(path: string): Promise<boolean> {
@@ -153,6 +154,15 @@ export class ComplianceDocumentSetImpl {
             assert(referenceType)
             nr.node.addReference({ referenceType: referenceType, nodeId: document.nodeId })
         })
+
+        // eventually create dictionary references
+        const hasDictionaryEntryType = document.addressSpace.findReferenceType(ReferenceTypeIds.HasDictionaryEntry)
+        options.dictionaryEntries?.forEach(dictionaryEntry => {
+            const node = this.findNode(dictionaryEntry)
+            if (node) document.addReference({referenceType: hasDictionaryEntryType, nodeId: node})
+        })
+
+        // finished
         raiseEvent(this.documentSet, `Added compliance document "${options.documentName}"`)
         return document
     }
@@ -188,13 +198,16 @@ export class ComplianceDocumentSetImpl {
                 mimeType: mimeType,
                 schemaUri: document.schemaUri ? getStringValue(document.schemaUri) : undefined,
                 filePath: content ? undefined : filePath,
-                contentFilePath: content ? filePath: undefined,
-                nodePaths: nodeReferences.length > 0 ? nodeReferences.map(referencedNode =>  {
+                contentFilePath: content ? filePath : undefined,
+                referencedNodes: nodeReferences.length > 0 ? nodeReferences.map(referencedNode => {
                     return {
-                        reference: referencedNode.reference, 
+                        reference: referencedNode.reference,
                         nodePath: referencedNode.node.fullName()
-                     }
+                    }
+
+
                 }) : undefined,
+                dictionaryEntries: this.findDictionaryEntries(document).map(reference => { return reference.node.fullName() })
             }
 
             // eventually store content (if not alredy available, content should be immutable)
@@ -202,7 +215,7 @@ export class ComplianceDocumentSetImpl {
                 try {
                     if (!fileExists(filePath)) {
                         console.debug(`Saving document ${filePath}`)
-                        await writeFile(filePath, content, "utf-8")                        
+                        await writeFile(filePath, content, "utf-8")
                     }
                 } catch (err) {
                     console.debug(err)
@@ -217,6 +230,71 @@ export class ComplianceDocumentSetImpl {
             await writeFile(join(dir, "compliance_documents.json"), data, "utf-8")
         } catch (err) {
             console.debug(err)
+        }
+    }
+
+    findNode(nodePath: string) {
+        try {
+            const addressSpace = this.documentSet.addressSpace
+            const objectsFolder = addressSpace.rootFolder.objects
+            const bnf = `/${nodePath}`
+            const browsePath = makeBrowsePath(objectsFolder, bnf)
+            const result = addressSpace.browsePath(browsePath)
+            const targets = result.targets
+            if (targets?.length > 0) {
+                return addressSpace.findNode(targets[0].targetId)
+            }
+            return undefined
+        } catch (err) {
+            console.debug(err)
+        }
+    }
+
+
+    async load() {
+        const addressSpace = this.documentSet.addressSpace
+        const objectsFolder = addressSpace.rootFolder.objects
+        const dir = this.documentsDir
+        const appDir = this.appDir
+        let optionsList: ComplianceDocumentExportOptions[] = []
+        try {
+            const data = await readFile(join(dir, "compliance_documents.json"), "utf-8")
+            optionsList = JSON.parse(data)
+        } catch (err) {
+            console.debug(err)
+        }
+        for (const options of optionsList) {
+
+            // adjust Date items
+            options.issuedAt = new Date(options.issuedAt)
+            options.validFrom = options.validFrom ? new Date(options.validFrom) : undefined
+            options.validUntil = options.validUntil ? new Date(options.validUntil) : undefined
+
+            // rebuild node references
+            const nodeReferences: ComplianceDocumentNodeReferences = options.referencedNodes?.map(referencedNode => {
+                const node = this.findNode(referencedNode.nodePath)
+                if (node) return { node: node, reference: referencedNode.reference }
+            })
+            options.nodeReferences = nodeReferences
+
+            // eventually rebuild content
+            if (options.contentFilePath) {
+                try {
+                    const content: string = await readFile(join(appDir, options.contentFilePath), "utf-8")
+                    options.content = content
+                }
+                catch (err) {
+                    console.debug(err)
+                }
+            }
+
+            // adjust filepath
+            if (options.filePath) {
+                options.filePath = join(appDir, options.filePath)
+            }
+
+            // create document
+            this.addComplianceDocument(options)
         }
     }
 
@@ -294,11 +372,19 @@ export class ComplianceDocumentSetImpl {
         const referenceType = this.namespace.findReferenceType(reference)
         const references = document.findReferencesEx(referenceType.nodeId, BrowseDirection.Inverse)
         return references.map(reference => {
-            return  { 
-                reference: ((addressSpace.findReferenceType(reference.referenceType)).browseName.name) as ComplianceDocumentReferences, 
+            return {
+                reference: ((addressSpace.findReferenceType(reference.referenceType)).browseName.name) as ComplianceDocumentReferences,
                 node: reference.node
             }
         })
+    }
+
+    findDictionaryEntries(document: LADSComplianceDocument): UAReference[] {
+        if (!document) return []
+        const addressSpace = document.addressSpace
+        const referenceType = addressSpace.findReferenceType(ReferenceTypeIds.HasDictionaryEntry)
+        return document.findReferencesEx(referenceType.nodeId, BrowseDirection.Forward)
+
     }
 
     findComplianceDocumentsApplyingTo(node: UAObject, reference: ComplianceDocumentReferences = ComplianceDocumentReferences.HasComplianceDocument): LADSComplianceDocument[] {

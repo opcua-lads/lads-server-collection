@@ -136,28 +136,34 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         // experimental - create compliance-document-set & add fake DCC
         const device = this.parent.device
         const documentsDir = join(__dirname, "documents", device.browseName.name)
-        // const documentsDir = join("documents", device.browseName.name)
         this.documentSet = new ComplianceDocumentSetImpl(device, __dirname, documentsDir)
+
+        // load nodes
+        this.documentSet.load()
+
+        // create some nodes
         const calibrationDocumentAppliesTo: ComplianceDocumentNodeReferences = [
-            {node: device, reference:ComplianceDocumentReferences.HasCalibrationCertificate}, 
-            {node: functionalUnit, reference:ComplianceDocumentReferences.HasCalibrationCertificate}, 
-            {node: this.currentWeight, reference:ComplianceDocumentReferences.HasCalibrationCertificate}, 
+            { node: device, reference: ComplianceDocumentReferences.HasCalibrationCertificate },
+            { node: functionalUnit, reference: ComplianceDocumentReferences.HasCalibrationCertificate },
+            { node: this.currentWeight, reference: ComplianceDocumentReferences.HasCalibrationCertificate },
         ]
-        // add example docments from resoucres
-        const dir  = join(__dirname, "resources")
-        // const dir  = "resources"
-        if (this.config.protocol === BalanceProtocols.SBI) {
-            const dccDocument = await this.documentSet.addDCCFromFile(dir, "224G372", calibrationDocumentAppliesTo)
-            const pdfDocument = this.documentSet.addPDFFile("24_08_224_G372_ME5_F_22313544", new Date(), join(dir, "24_08_224_G372_ME5_F_22313544_15_10_2025_14_37_07_UTC.pdf"), calibrationDocumentAppliesTo)
-            const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "sartorius quintix doc.pdf"), [{node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity}])
-            AFODictionary.addReferences(dccDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
-            AFODictionary.addReferences(pdfDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
-            AFODictionary.addReferences(docDocument, AFODictionaryIds.conformance_assessment)
-        } else if (this.config.protocol === BalanceProtocols.SICS) {
-            const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "DoC_MS8001TS_00.pdf"), [{node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity}])
-            AFODictionary.addReferences(docDocument, AFODictionaryIds.conformance_assessment)
+        if (false) {
+            // add example docments from resoucres
+            const dir = join(__dirname, "resources")
+            // const dir  = "resources"
+            if (this.config.protocol === BalanceProtocols.SBI) {
+                const dccDocument = await this.documentSet.addDCCFromFile(dir, "224G372", calibrationDocumentAppliesTo)
+                const pdfDocument = this.documentSet.addPDFFile("24_08_224_G372_ME5_F_22313544", new Date(), join(dir, "24_08_224_G372_ME5_F_22313544_15_10_2025_14_37_07_UTC.pdf"), calibrationDocumentAppliesTo)
+                const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "sartorius quintix doc.pdf"), [{ node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity }])
+                AFODictionary.addReferences(dccDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
+                AFODictionary.addReferences(pdfDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
+                AFODictionary.addReferences(docDocument, AFODictionaryIds.conformance_assessment)
+            } else if (this.config.protocol === BalanceProtocols.SICS) {
+                const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "DoC_MS8001TS_00.pdf"), [{ node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity }])
+                AFODictionary.addReferences(docDocument, AFODictionaryIds.conformance_assessment)
+            }
+            this.documentSet.save()
         }
-        this.documentSet.save()
 
 
         // connect to balance object
