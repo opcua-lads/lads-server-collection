@@ -32,6 +32,9 @@ export enum ComplianceDocumentReferences {
     HasCalibrationReport = "HasCalibrationReport",
     HasValidationReport = "HasValidationReport",
     HasQualificationProtocol = "HasQualificationProtocol",
+    HasInstallationQualificationProtocol = "HasInstallationQualificationProtocol",
+    HasOperationQualificationProtocol = "HasOperationQualificationProtocol",
+    HasProcessQualificationProtocol = "HasProcessQualificationProtocol",
     HasDeclarationOfConformity = "HasDeclarationOfConformity",
 }
 
