@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AnIML xmlns="urn:org:astm:animl:schema:core:draft:0.90" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns5="http://schemas.animl.org/current/animl-core.xsd" version="0.90" xsi:schemaLocation="http://schemas.animl.org/current/animl-core.xsd">
+	<SampleSet>
+		<Sample id="sample_1" name="WEIGHT-SAMPLE" sampleID="WEIGHT-SAMPLE">
+			<Category name="Substance">
+				<Parameter name="Name" parameterType="String">
+					<S>Net Weight</S>
+				</Parameter>
+			</Category>
+		</Sample>
+	</SampleSet>
+	<ExperimentStepSet>
+		<ExperimentStep id="step_1" name="Measurement" experimentStepID="measurement">
+			<Infrastructure>
+				<SampleReferenceSet>
+					<SampleReference id="sample_ref_1" samplePurpose="consumed" role="Weighted Sample" sampleID="WEIGHT-SAMPLE"/>
+				</SampleReferenceSet>
+				<Timestamp>2023-01-19T10:31:50.814260</Timestamp>
+			</Infrastructure>
+			<Method id="method_1" name="Weighing">
+				<Author userType="software">
+					<Name>Matthias Arnold</Name>
+					<Role>Lab Technician</Role>
+				</Author>
+				<Device>
+					<DeviceIdentifier>avg-scale-ot-1200-264</DeviceIdentifier>
+					<Name>Scale OT-1200</Name>
+					<SerialNumber>SN423123</SerialNumber>
+					<Manufacturer>AVG</Manufacturer>
+					<FirmwareVersion>M006</FirmwareVersion>
+				</Device>
+				<Software>
+					<Manufacturer>AixEngineers</Manufacturer>
+					<Name>LADS OPC UA Balance Gateway</Name>
+					<Version>0.1</Version>
+				</Software>
+			</Method>
+			<Result id="measurement" name="Weighing Results">
+				<Category name="Assay">
+					<Parameter name="Net Weight" parameterType="Float32">
+						<F>0.86</F>
+						<Unit quantity="weight" label="g">
+							<SIUnit exponent="-3.0" factor="0.001">kg</SIUnit>
+						</Unit>
+					</Parameter>
+					<Parameter name="Gross Weight" parameterType="Float32">
+						<F>1.86</F>
+						<Unit quantity="weight" label="g">
+							<SIUnit exponent="-3.0" factor="0.001">kg</SIUnit>
+						</Unit>
+					</Parameter>
+					<Parameter name="Tare Weight" parameterType="Float32">
+						<F>1.00</F>
+						<Unit quantity="weight" label="g">
+							<SIUnit exponent="-3.0" factor="0.001">kg</SIUnit>
+						</Unit>
+					</Parameter>
+				</Category>
+			</Result>
+		</ExperimentStep>
+	</ExperimentStepSet>
+	<AuditTrailEntrySet>
+	</AuditTrailEntrySet>
+</AnIML>
