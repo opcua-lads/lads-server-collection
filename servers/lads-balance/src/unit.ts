@@ -24,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSDeviceState, LADSComplianceDocumentSet } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, constructPropertiesExtensionObject, getNumericValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
+import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, DTKeyValuePair } from "node-opcua"
-import { join } from "path"
+import { dirname, join } from "path"
 import { BalanceDeviceImpl, getBalanceNameSpace } from "./device"
 import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
@@ -35,6 +35,7 @@ import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, Balan
 import { EventEmitter } from "events"
 import { ComplianceDocumentNodeReferences, ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "utils/src/lads-cd"
 import { BalanceDeviceConfig, BalanceProtocols } from "./server"
+import { addAnimlWeighingDocument, AnimlWeighingDocumentOptions } from "lib/animl/src"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -142,18 +143,23 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.documentSet.load()
 
         // create some nodes
-        const calibrationDocumentAppliesTo: ComplianceDocumentNodeReferences = [
+        const calibrationCertificateAppliesTo: ComplianceDocumentNodeReferences = [
             { node: device, reference: ComplianceDocumentReferences.HasCalibrationCertificate },
             { node: functionalUnit, reference: ComplianceDocumentReferences.HasCalibrationCertificate },
             { node: this.currentWeight, reference: ComplianceDocumentReferences.HasCalibrationCertificate },
+        ]
+        const calibrationReportAppliesTo: ComplianceDocumentNodeReferences = [
+            { node: device, reference: ComplianceDocumentReferences.HasCalibrationReport },
+            { node: functionalUnit, reference: ComplianceDocumentReferences.HasCalibrationReport },
+            { node: this.currentWeight, reference: ComplianceDocumentReferences.HasCalibrationReport },
         ]
         if (false) {
             // add example docments from resoucres
             const dir = join(__dirname, "resources")
             // const dir  = "resources"
             if (this.config.protocol === BalanceProtocols.SBI) {
-                const dccDocument = await this.documentSet.addDCCFromFile(dir, "224G372", calibrationDocumentAppliesTo)
-                const pdfDocument = this.documentSet.addPDFFile("24_08_224_G372_ME5_F_22313544", new Date(), join(dir, "24_08_224_G372_ME5_F_22313544_15_10_2025_14_37_07_UTC.pdf"), calibrationDocumentAppliesTo)
+                const dccDocument = await this.documentSet.addDCCFromFile(dir, "224G372", calibrationCertificateAppliesTo)
+                const pdfDocument = this.documentSet.addPDFFile("24_08_224_G372_ME5_F_22313544", new Date(), join(dir, "24_08_224_G372_ME5_F_22313544_15_10_2025_14_37_07_UTC.pdf"), calibrationCertificateAppliesTo)
                 const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "sartorius quintix doc.pdf"), [{ node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity }])
                 AFODictionary.addReferences(dccDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
                 AFODictionary.addReferences(pdfDocument, AFODictionaryIds.calibration_certificate, AFODictionaryIds.calibration_certificate_identifier)
@@ -202,7 +208,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.balance.on(BalanceEvents.CalibrationReport, (calibrationReport: BalanceCalibrationReport) => {
             const timestampISOString = calibrationReport.timestamp.toISOString()
             if (timestampISOString != lastCalibrationTimestamp) {
-                const document = this.documentSet.addTextDocument(`CalInternal-${timestampISOString}`, calibrationReport.timestamp, calibrationReport.report, calibrationDocumentAppliesTo)
+                const document = this.documentSet.addTextDocument(`CalInternal-${timestampISOString}`, calibrationReport.timestamp, calibrationReport.report, calibrationReportAppliesTo)
                 AFODictionary.addReferences(document, AFODictionaryIds.calibration_report)
                 raiseEvent(this.functionalUnit, 'Received calibration report.')
                 lastCalibrationTimestamp = timestampISOString
@@ -464,38 +470,23 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                     // set stopped timestamp
                     setDateTimeValue(result.stopped, new Date())
 
-                    // add end-points
-                    const variableSet = result.variableSet
+                    // add results
                     const dataRecorder = options.recorder.dataRecorder
                     const lastRecord = dataRecorder.getLastRecord()
                     if (lastRecord) {
-                        const sampleWeight = (this.netWeight) ? this.netWeight : this.currentWeight
-                        const sampleWeightTrackIndex = dataRecorder.trackIndex(sampleWeight.sensorValue)
-                        if (sampleWeightTrackIndex >= 0) {
-                            const sampleWeightResult = result.namespace.addVariable({
-                                componentOf: variableSet,
-                                browseName: "Sample Weight",
-                                description: "Weighing endpoint.",
-                                dataType: DataType.Double,
-                                value: { dataType: DataType.Double, value: lastRecord.tracksRecord[sampleWeightTrackIndex] }
-                            })
-                            AFODictionary.addReferences(sampleWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.sample_weight)
-                        }
-                    }
-
-                    // create ASM
-                    const model = options.recorder.createModel()
-                    if (model) {
+                        const netWeightSensor = (this.netWeight) ? this.netWeight : this.currentWeight
+                        const netWeightTrackIndex = dataRecorder.trackIndex(netWeightSensor.sensorValue)
+                        const grossWeightTrackIndex = dataRecorder.trackIndex(this.grossWeight?.sensorValue)
+                        const tareWeightTrackIndex = dataRecorder.trackIndex(this.tareWeight?.sensorValue)
+                        const net = netWeightTrackIndex >= 0 ? Number(lastRecord.tracksRecord[netWeightTrackIndex]) : undefined
+                        const gross = grossWeightTrackIndex >= 0 ? Number(lastRecord.tracksRecord[grossWeightTrackIndex]) : undefined
+                        const tare = tareWeightTrackIndex >= 0 ? Number(lastRecord.tracksRecord[tareWeightTrackIndex]) : undefined
+                        // create endpoints
+                        this.addEndpointVariables(net, gross, tare)
+                        // create ASM & AniML
                         const resultsDirectory = join(__dirname, "data", "results")
-                        options.recorder.writeResultFile(result.fileSet, "ASM", resultsDirectory, options.runId, model)
-                        const json = JSON.stringify(model, null, 2)
-                        const asm = result.namespace.addVariable({
-                            componentOf: variableSet,
-                            browseName: "ASM",
-                            dataType: DataType.String,
-                            value: { dataType: DataType.String, value: json }
-                        })
-                        AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.weighing, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result)
+                        this.addASMWeighingDocument(resultsDirectory)
+                        this.addAnimlWeighingDocument(resultsDirectory, net, gross, tare)
                     }
                 }
                 // set state to stopped and leave    
@@ -506,6 +497,71 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             this.touchResult()
         }
         this.currentRunOptions = undefined
+    }
+
+    private async addEndpointVariables(net: number, gross: number | undefined, tare: number | undefined) {
+        const variableSet = this.currentRunOptions?.result.variableSet
+        if (!variableSet) return
+        const sampleWeightResult = variableSet.namespace.addVariable({
+            componentOf: variableSet,
+            browseName: "Sample Weight",
+            description: "Weighing endpoint.",
+            dataType: DataType.Double,
+            value: { dataType: DataType.Double, value: net }
+        })
+        AFODictionary.addReferences(sampleWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.sample_weight)
+        if (gross) {
+            const grossWeightResult = variableSet.namespace.addVariable({
+                componentOf: variableSet,
+                browseName: "Gross Weight",
+                dataType: DataType.Double,
+                value: { dataType: DataType.Double, value: gross }
+            })
+            AFODictionary.addReferences(grossWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.gross_weight)
+        }
+        if (tare) {
+            const tareWeightResult = variableSet.namespace.addVariable({
+                componentOf: variableSet,
+                browseName: "Tare Weight",
+                dataType: DataType.Double,
+                value: { dataType: DataType.Double, value: tare }
+            })
+            AFODictionary.addReferences(tareWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.tare_weight)
+        }
+    }
+
+    private async addASMWeighingDocument(dirName: string) {
+        const options = this.currentRunOptions
+        const model = options.recorder.createModel()
+        if (model) {
+            const result = options.result
+            options.recorder.writeResultFile(result.fileSet, "ASM", dirName, options.runId, model)
+            const json = JSON.stringify(model, null, 2)
+            const asm = result.namespace.addVariable({
+                propertyOf: result.variableSet,
+                browseName: "ASM",
+                dataType: DataType.String,
+                value: { dataType: DataType.String, value: json }
+            })
+            AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.weighing, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result)
+        }
+    }
+
+    private async addAnimlWeighingDocument(dirName: string, net: number, gross: number | undefined, tare: number | undefined) {
+        const options = this.currentRunOptions
+        const documentOptions: AnimlWeighingDocumentOptions = {
+            name: "AniML",
+            fileName: options.runId,
+            dirName: dirName,
+            net: net,
+            gross: gross,
+            tare: tare,
+            result: options.result,
+            sample: options.samples[0],
+            device: this.parent.device,
+            buildinfo: this.parent.parent.server.buildInfo,
+        }
+        addAnimlWeighingDocument(documentOptions)
     }
 
     private findProgramTemplate(programTemplateId: string): ProgramTemplateElement {

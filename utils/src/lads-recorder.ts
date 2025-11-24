@@ -44,7 +44,7 @@ export async function ensureDirectoryExists(dirPath: string): Promise<void> {
 export class DataExporter {
     static MimeTypeXSLX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     static MimeTypeJSON = "application/json"
-
+    
     static createResultFile(fileSet: UAObject, name: string, fileName: string, mimeType: string, path: string): LADSResultFile {
         // create LADS result file object in fileset
         const resultFileType = getLADSObjectType(fileSet.addressSpace, "ResultFileType")
