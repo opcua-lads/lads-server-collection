@@ -253,6 +253,10 @@ export interface LADSAnalogControlFunctionWithTotalizer extends LADSAnalogContro
     resetTotalizer?: UAMethod
 }
 
+export interface LADSTimerControlFunction extends LADSAnalogControlFunction {
+    differenceValue: UAAnalogUnitRange<number, DataType.Double>
+}
+
 export interface LADSControllerParameter {
     alarmMonitor?: UAExclusiveDeviationAlarm
     currentValue: UAAnalogUnitRange<number, DataType.Double>

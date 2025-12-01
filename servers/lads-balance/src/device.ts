@@ -69,7 +69,6 @@ export class BalanceDeviceImpl {
 
     
     getBalanceUnitImpl(config: BalanceDeviceConfig): BalanceUnitImpl {
-        const functionalUnit = this.getFunctionalUnit()
         const functionalUnitSet = this.getFunctionalUnitSet()
         switch (config.protocol) {
             case BalanceProtocols.SBI:

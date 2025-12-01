@@ -297,5 +297,3 @@ function test() {
     const xml: string = buildAnIML(options)
     console.log(xml)
 }
-
-test()
