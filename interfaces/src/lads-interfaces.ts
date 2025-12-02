@@ -15,6 +15,7 @@ import {
     DataType,
     DateTime,
     LocalizedText,
+    UAAnalogUnit,
     UAAnalogUnitRange,
     UAExclusiveDeviationAlarm,
     UAExclusiveLimitAlarm,
@@ -34,10 +35,20 @@ import { UAComponent, UADevice, UAFunctionalGroup, UALockingServices } from "nod
 export interface LADSComponent extends UAComponent {
     identification?: MachineIdentificationType
     components?: UAObject
+    lifetimeCounters?: UAObject
+    operationCounters?: OperationCounters
+    maintenance?: UAObject
 }
 
 export interface MachineIdentificationType extends UAComponent { 
     location?: UAProperty<UAString, DataType.String> 
+    initialOperationDate?: UAProperty<Date, DataType.DateTime> 
+}
+
+export interface LifetimeVariableType extends UAAnalogUnit<number, DataType.Double> {
+    limitValue: UAProperty<number, DataType.Double>
+    startValue: UAProperty<number, DataType.Double>
+    warningValues?: UAProperty<number[], DataType.Double>
 }
 
 export interface LADSDevice extends UADevice {
@@ -54,9 +65,9 @@ export interface LADSDevice extends UADevice {
 }
 
 export interface OperationCounters extends UAFunctionalGroup {
-    operationCycleCounter: UAProperty<number, DataType.UInt32>
-    operationDuration: UAProperty<number, DataType.Double>
-    powerOnDuration: UAProperty<number, DataType.Double>
+    operationCycleCounter?: UAProperty<number, DataType.UInt32>
+    operationDuration?: UAProperty<number, DataType.Double>
+    powerOnDuration?: UAProperty<number, DataType.Double>
 }
 
 export interface LADSFunctionalUnitSet  {
