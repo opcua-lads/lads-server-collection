@@ -23,6 +23,7 @@ import { ApplicationType, nodesets, OPCUAServer } from "node-opcua"
 import { join } from "path"
 import { WpsDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
+import { BlobOptions } from "buffer"
 
 //---------------------------------------------------------------
 // config
@@ -30,13 +31,42 @@ import { readFile } from "fs/promises"
 export interface ServerConfig {
     port?: number
     includeAfo?: boolean;
+    devices: DeviceConfig[]
+}
+
+export interface DeviceConfig {
+    enabled: boolean
     name: string
+    manufacturer: string
+    model: string
+    serialNumber: string
+    hasUF?: boolean
+    hasUV?: boolean
+    hasTOC?: boolean
 }
 
 const DefaultConfig: ServerConfig = {
     port: 4845,
     includeAfo: false,
-    name: "My Water Purification System"
+    devices: [
+        {
+            enabled: true,
+            name: "My Water Purification System",
+            manufacturer: "sartorius",
+            model: "arium pro VF",
+            serialNumber: "4711",
+            hasTOC: true,
+            hasUF: true,
+            hasUV: true
+        },     
+        {
+            enabled: false,
+            name: "My Simple Water Purification System",
+            manufacturer: "sartorius",
+            model: "arium pro DI",
+            serialNumber: "4712",
+        },     
+    ]
 }
 
 function isValid(config: ServerConfig): boolean { return false}
@@ -117,7 +147,12 @@ export class WpsServerImpl {
         // wait until server initialized
         await this.server.initialize()
 
-        const device = new WpsDeviceImpl(this, this.config) 
+        this.config.devices.forEach(deviceConfig => {
+            if (deviceConfig.enabled) {
+                const device = new WpsDeviceImpl(this, deviceConfig) 
+            }
+        })
+
 
         // finalize start
         await this.server.start()

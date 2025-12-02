@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-11-27T17:23:18.958Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-12-02T11:52:52.366Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -18,6 +18,8 @@
     </Models>
     <Aliases>
         <Alias Alias="Boolean">i=1</Alias>
+        <Alias Alias="Byte">i=3</Alias>
+        <Alias Alias="UInt16">i=5</Alias>
         <Alias Alias="UInt32">i=7</Alias>
         <Alias Alias="Double">i=11</Alias>
         <Alias Alias="DateTime">i=13</Alias>
@@ -42,7 +44,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="3a805a2ba3b47cb4a72327f6dbb0f521"/>
+            <si:GeneratorExtension Hash="af91c7b56b8f30986a9b51706dafb9a9"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_WaterPurificationSystem_" NodeId="ns=5;i=5000" BrowseName="5:http://aixengineers.de/WaterPurificationSystem/" ParentNodeId="i=11715">
@@ -1429,4 +1431,225 @@
             <Reference ReferenceType="HasProperty">i=2369</Reference>
         </References>
     </UAVariable>
+    <UAObjectType NodeId="ns=5;i=1003" BrowseName="5:WPSComponentType">
+        <DisplayName>WPSComponentType</DisplayName>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=4;i=1024</Reference>
+            <Reference ReferenceType="HasAddIn">ns=5;i=5021</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6036</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6037</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6038</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6040</Reference>
+            <Reference ReferenceType="HasAddIn">ns=5;i=5024</Reference>
+            <Reference ReferenceType="HasAddIn">ns=5;i=5037</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6050</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5258</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=5039</Reference>
+        </References>
+    </UAObjectType>
+    <UAObject NodeId="ns=5;i=5021" BrowseName="3:LifetimeCounters" ParentNodeId="ns=5;i=1003">
+        <DisplayName>LifetimeCounters</DisplayName>
+        <Description>Lifetime Counter provides information about the past and estimated remaining lifetime.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1015</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=3;i=6083</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6031</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Double" NodeId="ns=5;i=6031" BrowseName="5:RemainingLifetime" ParentNodeId="ns=5;i=5021" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>Remaining Lifetime</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=1;i=468</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6032</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6033</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6034</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6035</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=5;i=6032" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6031">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>5066574</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>mo</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>month</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=5;i=6033" BrowseName="1:LimitValue" ParentNodeId="ns=5;i=6031">
+        <DisplayName>LimitValue</DisplayName>
+        <Description>LimitValue indicates when the end of lifetime has been reached.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:Double>0</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=5;i=6034" BrowseName="1:StartValue" ParentNodeId="ns=5;i=6031">
+        <DisplayName>StartValue</DisplayName>
+        <Description>StartValue indicates the initial value, when there is still the full lifetime left.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:Double>6</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Double" ValueRank="1" NodeId="ns=5;i=6035" ArrayDimensions="1" BrowseName="1:WarningValues" ParentNodeId="ns=5;i=6031">
+        <DisplayName>WarningValues</DisplayName>
+        <Description>WarningValues indicates one or more levels when the end of lifetime is reached soon and may be used to inform the user when reached.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6036" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=1003">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6037" BrowseName="1:Model" ParentNodeId="ns=5;i=1003">
+        <DisplayName>Model</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6038" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=1003">
+        <DisplayName>SerialNumber</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6040" BrowseName="1:ProductCode" ParentNodeId="ns=5;i=1003">
+        <DisplayName>ProductCode</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=5;i=5024" BrowseName="1:Identification" ParentNodeId="ns=5;i=1003">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1005</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6041</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6042</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6043</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6044</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6045</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6046</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6047</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6041" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5024">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6042" BrowseName="1:Model" ParentNodeId="ns=5;i=5024">
+        <DisplayName>Model</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6043" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5024">
+        <DisplayName>SerialNumber</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6044" BrowseName="1:ProductCode" ParentNodeId="ns=5;i=5024">
+        <DisplayName>ProductCode</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="UInt16" NodeId="ns=5;i=6045" BrowseName="3:YearOfConstruction" ParentNodeId="ns=5;i=5024">
+        <DisplayName>YearOfConstruction</DisplayName>
+        <Description>The year (Gregorian calendar) in which the manufacturing process of the MachineryItem has been completed. It shall be a four-digit number and never change during the life-cycle of a MachineryItem.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Byte" NodeId="ns=5;i=6046" BrowseName="3:MonthOfConstruction" ParentNodeId="ns=5;i=5024">
+        <DisplayName>MonthOfConstruction</DisplayName>
+        <Description>The month in which the manufacturing process of the MachineryItem has been completed. It shall be a number between 1 and 12, representing the month from January to December.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DateTime" NodeId="ns=5;i=6047" BrowseName="3:InitialOperationDate" ParentNodeId="ns=5;i=5024">
+        <DisplayName>InitialOperationDate</DisplayName>
+        <Description>The date, when the MachineryItem was switched on the first time after it has left the manufacturer plant.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=5;i=5037" BrowseName="1:OperationCounters" ParentNodeId="ns=5;i=1003">
+        <DisplayName>OperationCounters</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=3;i=1009</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6049</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="UInt32" NodeId="ns=5;i=6049" BrowseName="1:OperationCycleCounter" ParentNodeId="ns=5;i=5037" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>OperationCycleCounter</DisplayName>
+        <Description>OperationCycleCounter is counting the times the component switches from not performing an activity to performing an activity. For example, each time a valve starts moving, is counted. This value shall only increase during the lifetime of the component and shall not be reset when the component is restarted.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="DeviceHealthEnumeration" NodeId="ns=5;i=6050" BrowseName="1:DeviceHealth" ParentNodeId="ns=5;i=1003" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>DeviceHealth</DisplayName>
+        <Description>DeviceHealth indicates the health status of a device as defined by NAMUR Recommendation NE 107.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=5;i=5039" BrowseName="4:Maintenance" ParentNodeId="ns=5;i=1003">
+        <DisplayName>Maintenance</DisplayName>
+        <Description>The MaintenanceSetType is a set containing all maintenance tasks for a Device or Component according to the recommendations in OPC UA 10000-110.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=1027</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6189</Reference>
+        </References>
+    </UAObject>
 </UANodeSet>

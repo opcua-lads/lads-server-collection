@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSFunctionalUnitStateMachine, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSTimerControlFunction } from "@interfaces"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSFunctionalUnitStateMachine, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSTimerControlFunction, LADSComponent } from "@interfaces"
 import { UAObject } from "node-opcua"
 
 //---------------------------------------------------------------
@@ -45,9 +45,18 @@ export interface WpsFunctionalUnit extends Omit<LADSFunctionalUnit, "functionSet
 export interface WpsFunctionalUnitSet extends UAObject {
     wpsUnit: WpsFunctionalUnit
 }
+
 export interface WpsDevice extends Omit<LADSDevice, "functionalUnitSet, components"> {
+    components: WpsComponents
     functionalUnitSet: WpsFunctionalUnitSet
     complianceDocumentSet?: LADSComplianceDocumentSet
+}
+
+export interface WpsComponents extends UAObject {
+    cartridge: LADSComponent
+    ultrafilter?: LADSComponent
+    uvLamp?: LADSComponent
+    endfilter: LADSComponent
 }
 
 export interface WpsFunctionalUnitStatemachine extends LADSFunctionalUnitStateMachine {

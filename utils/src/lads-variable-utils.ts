@@ -10,7 +10,7 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString, UATwoStateVariable } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
 
@@ -152,6 +152,18 @@ export function setSamplesValue(variable: UAVariable, samples: LADSSampleInfo[])
 export function setNameNodeIdValue(variable: UAVariable, name: string, nodeId: NodeId) {
     if (!variable) return
     variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructNameNodeIdExtensionObject(variable.addressSpace, name, nodeId) })
+}
+
+export function setNodeIdValue(variable: UAVariable, nodeId: NodeId) {
+    if (!variable) return
+    variable.setValueFromSource({ dataType: DataType.NodeId, value: nodeId })
+}
+
+export function setTwoStateVariable(variable: UATwoStateVariable<LocalizedText>, state: boolean, trueState = "on", falseState = "off") {
+    if (!variable) return
+    const stateName = state ? getStringValue(variable.trueState, trueState) : getStringValue(variable.falseState, falseState)
+    setStringValue(variable, stateName)
+    setBooleanValue(variable.id, state)
 }
 
 // ----------------------------------------------------------------------------
