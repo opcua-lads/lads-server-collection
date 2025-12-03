@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, touchNodes, setStringValue } from "@utils"
 import { WpsDevice, WpsFunctionalUnit, WpsFunctionalUnitSet } from "./interfaces"
-import { DeviceConfig, WpsServerImpl } from "./server"
+import { DeviceConfig, main, WpsServerImpl } from "./server"
 import { IAddressSpace, INamespace, UAObject } from "node-opcua"
 import { WpsUnitImpl } from "./unit"
 import { LADSComponent, LifetimeVariableType } from "@interfaces"
@@ -173,6 +173,8 @@ export class WpsComponentImpl {
 
         const componentType = getWpsNameSpace(options.parent.addressSpace).findObjectType("WPSComponentType")
         if (!componentType) return
+
+        // init nameplate
         const displayName = options.displayName ?? options.name
         const component = componentType.instantiate({
             componentOf: options.parent,
@@ -181,6 +183,8 @@ export class WpsComponentImpl {
             optionals: options.optionals
         }) as LADSComponent
         initComponent(component, options)
+
+        // init remainig lifetime variable
         const remainingLifetime = remainingLifetimeVariable(component)
         if (remainingLifetime) {
             setNumericValue(remainingLifetime.startValue, options.startValue)
@@ -192,10 +196,14 @@ export class WpsComponentImpl {
         }
         setNumericValue(component.operationCounters?.operationCycleCounter, 0)
 
+        // cretae associated maintenance task
+        const maintenance = component.maintenance
+        maintenance.setEventNotifier(1)
+        setStringValue(maintenance.getNodeVersion(), "0")
         const task = new MaintenanceTaskImpl({
-            parent: component.maintenance,
-            name: `${options.name}ReplaceRequired`,
-            displayName: `${displayName} Replace Required`,
+            parent: maintenance,
+            name: `Replace${options.name}Task`,
+            displayName: `Replace ${displayName} Task`,
             inputNode: component,
         })
 
