@@ -11,7 +11,7 @@
 
 import { LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction } from "@interfaces";
 import EventEmitter from "events";
-import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessRestrictionsFlag, AccessLevelFlag } from "node-opcua";
+import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessRestrictionsFlag, AccessLevelFlag, UAVariable } from "node-opcua";
 import { promoteToFiniteStateMachine } from "./lads-utils";
 import { getNumericValue, setNumericValue } from "./lads-variable-utils";
 
@@ -28,6 +28,12 @@ export interface AlarmMonitorOptions {
 //---------------------------------------------------------------
 // analog sensor function implementation
 //---------------------------------------------------------------
+function setAccessLevel(variable: UAVariable, accessLevel: number) {
+    if (!variable) return
+    variable.accessLevel = accessLevel
+    variable.userAccessLevel = accessLevel
+}
+
 export class AnalogScalarSensorFunctionImpl {
     sensorFunction: LADSAnalogScalarSensorFunction
     rawValue?: UAAnalogUnitRange<number, DataType.Double>
@@ -58,12 +64,12 @@ export class AnalogScalarSensorFunctionImpl {
                 inputNode: this.sensorValue,
                 optionals: ["AckedState", "Acknowledge"]
             }
-            const AccessReadWrite = AccessLevelFlag.CurrentRead || AccessLevelFlag.CurrentWrite
+            const accessReadWrite = AccessLevelFlag.CurrentRead | AccessLevelFlag.CurrentWrite
             this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, options)
-            this.alarmMonitor.highHighLimit.accessLevel = AccessReadWrite
-            this.alarmMonitor.highLimit.accessLevel = AccessReadWrite
-            this.alarmMonitor.lowLimit.accessLevel = AccessReadWrite
-            this.alarmMonitor.lowLowLimit.accessLevel = AccessReadWrite
+            setAccessLevel(this.alarmMonitor.highHighLimit, accessReadWrite)
+            setAccessLevel(this.alarmMonitor.highLimit, accessReadWrite)
+            setAccessLevel(this.alarmMonitor.lowLimit, accessReadWrite)
+            setAccessLevel(this.alarmMonitor.lowLowLimit, accessReadWrite)
             const alarmMonitor = this.alarmMonitor as any
             alarmMonitor._calculateConditionInfo = this._calculateConditionInfo.bind(this)
         }
