@@ -77,6 +77,14 @@ export enum DIObjectIds {
 //---------------------------------------------------------------
 export async function sleepMilliSeconds(ms: number): Promise<void> { return new Promise((resolve) => setTimeout(resolve, ms)) }
 
+export function installVariableHistory(variable: UAVariable) {
+    if (!variable) return
+    variable.historizing = true
+    variable.addressSpace.installHistoricalDataNode(variable)
+}
+
+export function noise(amplitude: number) { return amplitude * (Math.random() - 0.5) }
+
 const EventNotifierFlagSubscribeToEvents = 1
 let BaseModelChangedEventType: UAEventType = undefined
 export function touchNodes(...nodes: UAObject[]) {

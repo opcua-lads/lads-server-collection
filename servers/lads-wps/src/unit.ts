@@ -22,16 +22,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 // functional unit implementation
 //---------------------------------------------------------------
-
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSAnalogScalarSensorFunction, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSBaseControlFunction, LADSAnalogControlFunction } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, modifyStatusCode, getNumericValue } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAAnalogUnitRange, UAVariable, UAState, UAMultiStateDiscrete, DataValue } from "node-opcua"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer } from "@interfaces"
+import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
-import { ConductivitySensor, WpsFunctionalUnit, WpsFunctionalUnitStatemachine, WpsFunctionSet } from "./interfaces"
+import { WpsFunctionalUnit, WpsFunctionalUnitStatemachine, WpsFunctionSet } from "./interfaces"
 import { EventEmitter } from "events"
-import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "utils/src/lads-cd"
+import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
+import { MulitStateDiscreteControlFunctionImpl, TimerControlFunctionImpl, AnalogControlFunctionWithTotalizerImpl, AnalogScalarSensorFunctionImpl } from "@utils"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -50,6 +50,9 @@ interface CurrentRunOptions {
     runtimeInterval?: NodeJS.Timeout
 }
 
+//---------------------------------------------------------------
+// program templates
+//---------------------------------------------------------------
 interface WpsProgramTemplate {
     name: string,
     description?: string,
@@ -74,143 +77,9 @@ const ProgramTemplates: WpsProgramTemplate[] = [
     }
 ]
 
-function installVariableHistory(variable: UAVariable) {
-    if (!variable) return
-    variable.historizing = true
-    variable.addressSpace.installHistoricalDataNode(variable)
-}
-
-function noise(amplitude: number) { return amplitude * (Math.random() - 0.5) }
-
-
-interface ControlFunctionEvents {
-    "start": []
-    "stop": []
-}
-
-export class ControlFunctionImpl extends EventEmitter<ControlFunctionEvents> {
-    contolFunction: LADSBaseControlFunction
-    stateMachine: UAStateMachineEx
-    stateRunning: UAState
-    stateStopped: UAState
-
-    constructor(controlFunction: LADSBaseControlFunction) {
-        super()
-        this.contolFunction = controlFunction
-        this.stateMachine = promoteToFiniteStateMachine(controlFunction.controlFunctionState)
-        this.stateRunning = this.stateMachine.getStateByName(LADSFunctionalState.Running)
-        this.stateStopped = this.stateMachine.getStateByName(LADSFunctionalState.Stopped)
-        controlFunction.controlFunctionState.start?.bindMethod(this.handleStart.bind(this))
-        controlFunction.controlFunctionState.stop?.bindMethod(this.handleStop.bind(this))
-    }
-
-    private async handleStart(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        this.enterStart()
-        return { statusCode: StatusCodes.Good }
-    }
-    async enterStart() {
-        this.stateMachine.setState(LADSFunctionalState.Running)
-        this.emit("start")
-        this.onStart()
-    }
-    protected async onStart() { }
-
-    private async handleStop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        this.enterStop()
-        return { statusCode: StatusCodes.Good }
-    }
-    async enterStop() {
-        this.onStop()
-        this.emit("stop")
-        this.stateMachine.setState(LADSFunctionalState.Stopped)
-    }
-    protected async onStop() { }
-}
-
-export class MulitStateDiscreteControlFunctionImpl extends ControlFunctionImpl {
-    targetValue: UAMultiStateDiscrete<number, DataType.UInt32>
-    currentValue: UAMultiStateDiscrete<number, DataType.UInt32>
-
-    constructor(controlFunction: LADSMultiStateDiscreteControlFunction) {
-        super(controlFunction)
-        this.targetValue = controlFunction.targetValue
-        this.currentValue = controlFunction.currentValue
-    }
-}
-
-export class AnalogControlFunctionImpl extends ControlFunctionImpl {
-    targetValue: UAAnalogUnitRange<number, DataType.Double>
-    currentValue: UAAnalogUnitRange<number, DataType.Double>
-
-    constructor(controlFunction: LADSAnalogControlFunction) {
-        super(controlFunction)
-        this.targetValue = controlFunction.targetValue
-        this.currentValue = controlFunction.currentValue
-    }
-}
-export class AnalogControlFunctionWithTotalizerImpl extends AnalogControlFunctionImpl {
-    totalizedValue: UAAnalogUnitRange<number, DataType.Double>
-
-    constructor(controlFunction: LADSAnalogControlFunctionWithTotalizer) {
-        super(controlFunction)
-        this.totalizedValue = controlFunction.totalizedValue
-        controlFunction.resetTotalizer?.bindMethod(this.handleResetTotalizer.bind(this))
-    }
-
-    private async handleResetTotalizer(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        const value = inputArguments.length > 0 ? Number(inputArguments[0]) : 0
-        setNumericValue(this.totalizedValue, value)
-        return { statusCode: StatusCodes.Good }
-    }
-}
-
-export class TimerControlFunctionImpl extends AnalogControlFunctionImpl {
-    started: number
-    autoStop: boolean = false
-    differenceValue: UAAnalogUnitRange<number, DataType.Double>
-
-    constructor(controlFunction: LADSTimerControlFunction, autoStop = false) {
-        super(controlFunction)
-        this.started = Date.now()
-        this.autoStop = autoStop
-        this.differenceValue = controlFunction.differenceValue
-        this.targetValue?.on("value_changed", (dataValue) => { this.updateDifferenceValue() })
-        this.currentValue?.on("value_changed", (dataValue) => { this.updateDifferenceValue() })
-    }
-
-    private updateDifferenceValue() {
-        if (!this.targetValue) return
-        if (!this.currentValue) return
-        if (!this.differenceValue) return
-        setNumericValue(this.differenceValue, getNumericValue(this.targetValue) - getNumericValue(this.currentValue))
-    }
-
-    private updateCurrentValue() { setNumericValue(this.currentValue, Date.now() - this.started) }
-
-    protected onStart(): Promise<void> {
-        setNumericValue(this.currentValue, 0.0)
-        this.started = Date.now()
-        return
-    }
-
-    evaluate(): boolean {
-        if (this.stateMachine.currentStateNode !== this.stateRunning) return false
-        this.updateCurrentValue()
-        if (this.autoStop && this.targetValue && this.currentValue) {
-            const dt = getNumericValue(this.targetValue) - getNumericValue(this.currentValue)
-            if (dt <= 0) {
-                this.enterStop()
-            }
-        }
-        return true
-    }
-
-    protected onStop(): Promise<void> {
-        this.updateCurrentValue()
-        return
-    }
-}
-
+//---------------------------------------------------------------
+// specialized control functions
+//---------------------------------------------------------------
 class DispenseModeControlFunctionImpl extends MulitStateDiscreteControlFunctionImpl {
 
     constructor(controlFunction: LADSMultiStateDiscreteControlFunction) {
@@ -288,6 +157,8 @@ class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWithTotaliz
 }
 
 //---------------------------------------------------------------
+// unit implementation
+//---------------------------------------------------------------
 export class WpsUnitImpl extends EventEmitter {
     parent: WpsDeviceImpl
     functionalUnit: WpsFunctionalUnit
@@ -298,13 +169,15 @@ export class WpsUnitImpl extends EventEmitter {
     programTemplateElements: ProgramTemplateElement[] = []
     documentSet: ComplianceDocumentSetImpl
 
+
     // simulator
     flow: UAVariable
+    temperature: UAVariable
 
     // sensors
-    inletConductivitySensor: ConductivitySensor
-    outletConductivitySensor: ConductivitySensor
-    temperatureSensor: LADSAnalogScalarSensorFunction
+    inletConductivitySensor: AnalogScalarSensorFunctionImpl
+    outletConductivitySensor: AnalogScalarSensorFunctionImpl
+    temperatureSensor: AnalogScalarSensorFunctionImpl
 
     // controllers
     dispenseModeController: DispenseModeControlFunctionImpl
@@ -339,17 +212,17 @@ export class WpsUnitImpl extends EventEmitter {
         // init sensors
         const functionSet = this.functionalUnit.getComponentByName("FunctionSet") as WpsFunctionSet
         // conductivity sensors
-        this.inletConductivitySensor = functionSet.inletConductivity
-        this.outletConductivitySensor = functionSet.outletConductivity
-        this.temperatureSensor = functionSet.temperature
+        this.inletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.inletConductivity, { lowLowLimit: -0.1, lowLimit: 0.0, highLimit: 15.0, highHighLimit: 20.0 })
+        this.outletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.outletConductivity, { lowLowLimit: -0.01, lowLimit: 0.0, highLimit: 0.15, highHighLimit: 0.1 })
+        this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 10.0, highLimit: 35, highHighLimit: 40 })
         installVariableHistory(this.inletConductivitySensor.sensorValue)
         installVariableHistory(this.outletConductivitySensor.sensorValue)
         installVariableHistory(this.temperatureSensor.sensorValue)
 
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.purification)
-        AFODictionary.addSensorFunctionReferences(this.inletConductivitySensor, AFODictionaryIds.electric_conductivity)
-        AFODictionary.addSensorFunctionReferences(this.outletConductivitySensor, AFODictionaryIds.electric_conductivity)
+        AFODictionary.addSensorFunctionReferences(this.inletConductivitySensor.sensorFunction, AFODictionaryIds.electric_conductivity)
+        AFODictionary.addSensorFunctionReferences(this.outletConductivitySensor.sensorFunction, AFODictionaryIds.electric_conductivity)
 
         // experimental - create compliance-document-set & add fake DCC
         const device = this.parent.device
@@ -375,6 +248,13 @@ export class WpsUnitImpl extends EventEmitter {
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 1.4 }
         })
+        this.temperature = namespace.addVariable({
+            browseName: "Temperature",
+            propertyOf: simulator,
+            dataType: DataType.Double,
+            value: { dataType: DataType.Double, value: 25 }
+        })
+        this.temperature.on("value_changed", (dataValue) => setNumericValue(this.temperatureSensor.sensorValue, dataValue.value.value))
 
         // init program manager
         this.initProgramTemplates()
@@ -399,10 +279,10 @@ export class WpsUnitImpl extends EventEmitter {
         this.dispenseTimeController.evaluate()
         this.dispenseVolumeController.evaluate()
         const cycleTime = 60000.0
-        const y = 0.5 * (1 + Math.sin(2 * Math.PI * runtime / cycleTime))
+        const y = 1.0 + 0.5 * (Math.sin(2 * Math.PI * runtime / cycleTime))
         setNumericValue(this.inletConductivitySensor.sensorValue, 10.0 * (y + noise(0.05)))
         setNumericValue(this.outletConductivitySensor.sensorValue, 0.1 * (y + noise(0.05)))
-        setNumericValue(this.temperatureSensor.sensorValue, 25 + noise(0.05))
+        setNumericValue(this.temperatureSensor.sensorValue, getNumericValue(this.temperature) + noise(0.05))
     }
 
     //---------------------------------------------------------------

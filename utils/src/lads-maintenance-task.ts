@@ -1,8 +1,7 @@
-import { CallMethodResultOptions, DataType, LocalizedText, NodeId, ObjectTypeIds, SessionContext, StatusCode, StatusCodes, UAAlarmCondition, UACondition, UAFiniteStateMachine, UAMethod, UAObject, UAObjectType, UAProperty, UAState, UAStateMachineEx, VariantLike } from "node-opcua";
+import { BaseNode, CallMethodResultOptions, DataType, LocalizedText, NodeId, ObjectTypeIds, ReferenceTypeIds, SessionContext, StatusCode, StatusCodes, UAAlarmCondition, UAFiniteStateMachine, UAMethod, UAObject, UAObjectType, UAProperty, UAState, UAStateMachineEx, VariantLike } from "node-opcua";
 import { UAMaintenanceRequiredAlarm } from "node-opcua-nodeset-di";
 import { getLADSNamespace, promoteToFiniteStateMachine } from "./lads-utils";
-import { getBooleanValue, setDateTimeValue, setNodeIdValue, setStringValue, setTwoStateVariable } from "./lads-variable-utils";
-import { raiseEvent } from "./lads-event-utils";
+import { getBooleanValue, getDateTimeValue, getNumericValue, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue, setTwoStateVariable } from "./lads-variable-utils";
 
 export interface NameNodeId {
     name: string
@@ -11,28 +10,46 @@ export interface NameNodeId {
 
 export interface ConditionOptions {
     parent: UAObject
+    conditionSource: UAObject
     name: string
     displayName?: string
+    conditionClass: UAObjectType
     optionals?: string[]
 }
 
 export interface AlarmConditionOptions extends ConditionOptions{
-    inputNode: UAObject
+    inputNode: BaseNode
 }
 
 export class AlarmConditionImpl {
     options: AlarmConditionOptions
     alarmCondition: UAAlarmCondition
+    lastMessage: string = ""
     
     constructor(options: AlarmConditionOptions) {
         this.options = options
+        const conditionClass = options.conditionClass
         this.alarmCondition = this.objectType.instantiate({
             componentOf: options.parent,
             eventSourceOf: options.parent,
+            conditionSource: options.conditionSource,
             browseName: options.name,
             displayName: options.displayName ?? options.name,
             optionals: options.optionals
         }) as UAAlarmCondition
+        this.alarmCondition.namespace.addMethod(this.alarmCondition, {
+            browseName: "ConditionRefresh"
+        })
+        const referenceType = options.parent.addressSpace.findReferenceType(ReferenceTypeIds.HasCondition)
+        options.parent.addReference({
+            referenceType: referenceType,
+            nodeId: this.alarmCondition,
+        })
+        setStringValue(this.alarmCondition.conditionName, options.displayName)
+        setNodeIdValue(this.alarmCondition.conditionClassId, conditionClass.nodeId)
+        setStringValue(this.alarmCondition.conditionClassName, conditionClass.getDisplayName())
+        setNodeIdValue(this.alarmCondition.sourceNode, options.conditionSource.nodeId)
+        setStringValue(this.alarmCondition.sourceName, options.conditionSource.getDisplayName())
 
         this.postInitialize()
     }
@@ -48,10 +65,12 @@ export class AlarmConditionImpl {
         this.alarmCondition.disable?.bindMethod(this.disable.bind(this))
         this.alarmCondition.acknowledge?.bindMethod(this.acknowledge.bind(this))
         this.alarmCondition.confirm?.bindMethod(this.confirm.bind(this))
+        this.alarmCondition.conditionRefresh?.bindMethod(this.conditionRefresh.bind(this))
     
         this.ackedState = false
         this.confirmedState = false
         this.enabledState = true
+        this.retain = true
         this.activeState = false
 
         setNodeIdValue(this.alarmCondition.inputNode, options.inputNode.nodeId)
@@ -64,6 +83,9 @@ export class AlarmConditionImpl {
         setDateTimeValue(this.alarmCondition.comment.sourceTimestamp, new Date())
         return {statusCode: StatusCodes.Good }
     }
+
+    get retain(): boolean {return getBooleanValue(this.alarmCondition.retain)}
+    protected set retain(value: boolean) { setBooleanValue(this.alarmCondition.retain, value)}
 
     get ackedState(): boolean { return getBooleanValue(this.alarmCondition.ackedState.id) }
     protected set ackedState(state: boolean) { setTwoStateVariable(this.alarmCondition.ackedState, state, "Acknowledged", "Unacknowledged") }
@@ -87,14 +109,23 @@ export class AlarmConditionImpl {
     protected set enabledState(state: boolean) { setTwoStateVariable(this.alarmCondition.enabledState, state, "Enabled", "Disabled") }
 
     private async enable(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions>  { 
-        if (this.enabledState) return { statusCode: StatusCodes.BadInvalidState}
-        this.enabledState = true
-        return { statusCode: StatusCodes.Good }
+        return { statusCode: this.enterEnable() }
     }
     private async disable(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> { 
-        if (!this.enabledState) return { statusCode: StatusCodes.BadInvalidState}
+        return { statusCode: this.enterDisable()}
+    }
+
+    enterEnable(): StatusCode {
+        if (this.enabledState) return StatusCodes.BadInvalidState
+        this.enabledState = true
+        this.retain = true
+        return StatusCodes.Good
+    }
+    enterDisable(): StatusCode {
+        if (!this.enabledState) return StatusCodes.BadInvalidState
         this.enabledState = false
-        return { statusCode: StatusCodes.Good}
+        this.retain = false
+        return StatusCodes.Good
     }
 
     get activeState(): boolean { return getBooleanValue(this.alarmCondition.activeState.id) }
@@ -106,13 +137,40 @@ export class AlarmConditionImpl {
         this.activeState = true
         return StatusCodes.Good
     }
-
     enterInactive(): StatusCode  {
         if (!this.enabledState) return StatusCodes.BadStateNotActive
         if (!this.activeState) return StatusCodes.BadInvalidState
         this.activeState = false
         return StatusCodes.Good
     }
+
+    private async conditionRefresh(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions>  { 
+        this.raiseEvent(getDateTimeValue(this.alarmCondition.time), this.lastMessage, getNumericValue(this.alarmCondition.lastSeverity))
+        return { statusCode: StatusCodes.Good }
+    }
+
+    raiseEvent(time: Date, message: string, severity = 0) {
+        const condition = this.alarmCondition
+        this.options.conditionSource.raiseEvent(this.objectType, {
+            time: {dataType: DataType.DateTime, value: time},
+            sourceNode: condition.sourceNode.readValue().value,
+            sourceName: condition.sourceName.readValue().value,
+            message: { dataType: DataType.LocalizedText, value: message },
+            severity: {dataType: DataType.UInt16, value: severity },
+            activeState: condition.activeState.readValue().value,
+            ackedState: condition.ackedState.readValue().value,
+            confirmedState: condition.confirmedState?.readValue().value,
+        })
+        this.lastMessage = message
+        setDateTimeValue(condition.time, time)
+        setNumericValue(condition.lastSeverity, severity)
+    }
+}
+
+export interface RaiseAlarmConditionOptions {
+    message: string,
+    severity: string,
+    
 }
 
 export enum LADSMaintenanceState {
@@ -160,8 +218,8 @@ export class MaintenanceTaskImpl extends AlarmConditionImpl {
         this.enterFinished()
     }
 
-    raiseWarningEvent() { raiseEvent(this.maintenanceTask, `Maintenance due warning for ${this.options.inputNode.getDisplayName()}`)}
-    raiseAlarmEvent() { raiseEvent(this.maintenanceTask, `Maintenance required for ${this.options.inputNode.getDisplayName()}`) }
+    raiseWarningEvent() { this.raiseEvent(new Date(), `Maintenance due warning for ${this.options.inputNode.getDisplayName()}`)}
+    raiseAlarmEvent() { this.raiseEvent(new Date(), `Maintenance required for ${this.options.inputNode.getDisplayName()}`) }
 
     enterActive(): StatusCode {
         if (super.enterActive() !== StatusCodes.Good) return

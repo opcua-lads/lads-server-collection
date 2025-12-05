@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSFunctionalUnitStateMachine, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSTimerControlFunction, LADSComponent } from "@interfaces"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSFunctionalUnitStateMachine, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSTimerControlFunction, LADSComponent } from "@interfaces"
 import { UAObject } from "node-opcua"
 
 //---------------------------------------------------------------

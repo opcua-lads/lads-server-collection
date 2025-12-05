@@ -23,10 +23,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, touchNodes, setStringValue } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue } from "@utils"
 import { WpsDevice, WpsFunctionalUnit, WpsFunctionalUnitSet } from "./interfaces"
-import { DeviceConfig, main, WpsServerImpl } from "./server"
-import { IAddressSpace, INamespace, UAObject } from "node-opcua"
+import { DeviceConfig, WpsServerImpl } from "./server"
+import { IAddressSpace, INamespace, makeNodeId, ObjectTypeIds, UAObject } from "node-opcua"
 import { WpsUnitImpl } from "./unit"
 import { LADSComponent, LifetimeVariableType } from "@interfaces"
 import { MaintenanceTaskImpl } from "utils/src/lads-maintenance-task"
@@ -198,13 +198,16 @@ export class WpsComponentImpl {
 
         // cretae associated maintenance task
         const maintenance = component.maintenance
+        const maintenanceConditionClassType = maintenance.addressSpace.findObjectType(makeNodeId(ObjectTypeIds.MaintenanceConditionClassType))
         maintenance.setEventNotifier(1)
         setStringValue(maintenance.getNodeVersion(), "0")
         const task = new MaintenanceTaskImpl({
             parent: maintenance,
+            conditionSource: component,
+            conditionClass: maintenanceConditionClassType,
             name: `Replace${options.name}Task`,
             displayName: `Replace ${displayName} Task`,
-            inputNode: component,
+            inputNode: remainingLifetime,
         })
 
         this.component = component
