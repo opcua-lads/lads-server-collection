@@ -1,184 +1,28 @@
-import { BaseNode, CallMethodResultOptions, DataType, LocalizedText, NodeId, ObjectTypeIds, ReferenceTypeIds, SessionContext, StatusCode, StatusCodes, UAAlarmCondition, UAFiniteStateMachine, UAMethod, UAObject, UAObjectType, UAProperty, UAState, UAStateMachineEx, VariantLike } from "node-opcua";
+import { BaseNode, CallMethodResultOptions, ConditionInfoOptions, DataType, InstantiateAlarmConditionOptions, LocalizedText, makeNodeId, Namespace, NodeId, ReferenceTypeIds, SessionContext, StatusCodes, UADiscreteAlarmEx, UAFiniteStateMachine, UAMethod, UAObject, UAObjectType, UAProperty, UAState, UAStateMachineEx, VariantLike } from "node-opcua";
 import { UAMaintenanceRequiredAlarm } from "node-opcua-nodeset-di";
 import { getLADSNamespace, promoteToFiniteStateMachine } from "./lads-utils";
-import { getBooleanValue, getDateTimeValue, getNumericValue, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue, setTwoStateVariable } from "./lads-variable-utils";
+import { getBooleanValue } from "./lads-variable-utils";
+import { EventSeverity } from "./lads-functions";
+import { LADSComponent } from "@interfaces";
+import EventEmitter from "events";
+
+//---------------------------------------------------------------
+// maintenance task definitions
+//---------------------------------------------------------------
+export enum LADSMaintenanceState {
+    Planned = "Planned",
+    Executing = "Executing",
+    Finished = "Finished"
+}
+
+export interface MaintenanceEventStateMachine extends UAFiniteStateMachine { }
 
 export interface NameNodeId {
     name: string
     nodeId: NodeId
 }
 
-export interface ConditionOptions {
-    parent: UAObject
-    conditionSource: UAObject
-    name: string
-    displayName?: string
-    conditionClass: UAObjectType
-    optionals?: string[]
-}
-
-export interface AlarmConditionOptions extends ConditionOptions{
-    inputNode: BaseNode
-}
-
-export class AlarmConditionImpl {
-    options: AlarmConditionOptions
-    alarmCondition: UAAlarmCondition
-    lastMessage: string = ""
-    
-    constructor(options: AlarmConditionOptions) {
-        this.options = options
-        const conditionClass = options.conditionClass
-        this.alarmCondition = this.objectType.instantiate({
-            componentOf: options.parent,
-            eventSourceOf: options.parent,
-            conditionSource: options.conditionSource,
-            browseName: options.name,
-            displayName: options.displayName ?? options.name,
-            optionals: options.optionals
-        }) as UAAlarmCondition
-        this.alarmCondition.namespace.addMethod(this.alarmCondition, {
-            browseName: "ConditionRefresh"
-        })
-        const referenceType = options.parent.addressSpace.findReferenceType(ReferenceTypeIds.HasCondition)
-        options.parent.addReference({
-            referenceType: referenceType,
-            nodeId: this.alarmCondition,
-        })
-        setStringValue(this.alarmCondition.conditionName, options.displayName)
-        setNodeIdValue(this.alarmCondition.conditionClassId, conditionClass.nodeId)
-        setStringValue(this.alarmCondition.conditionClassName, conditionClass.getDisplayName())
-        setNodeIdValue(this.alarmCondition.sourceNode, options.conditionSource.nodeId)
-        setStringValue(this.alarmCondition.sourceName, options.conditionSource.getDisplayName())
-
-        this.postInitialize()
-    }
-
-    protected get objectType(): UAObjectType {
-        return this.options.parent.addressSpace.findObjectType(ObjectTypeIds.AlarmConditionType)
-    }
-
-    protected postInitialize() {
-        const options = this.options
-        this.alarmCondition.addComment?.bindMethod(this.addComment.bind(this))
-        this.alarmCondition.enable?.bindMethod(this.enable.bind(this))
-        this.alarmCondition.disable?.bindMethod(this.disable.bind(this))
-        this.alarmCondition.acknowledge?.bindMethod(this.acknowledge.bind(this))
-        this.alarmCondition.confirm?.bindMethod(this.confirm.bind(this))
-        this.alarmCondition.conditionRefresh?.bindMethod(this.conditionRefresh.bind(this))
-    
-        this.ackedState = false
-        this.confirmedState = false
-        this.enabledState = true
-        this.retain = true
-        this.activeState = false
-
-        setNodeIdValue(this.alarmCondition.inputNode, options.inputNode.nodeId)
-    }
-
-    private async addComment(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions>  { 
-        const branchId: NodeId = inputArguments[0].value
-        const comment: LocalizedText = inputArguments[1].value
-        setStringValue(this.alarmCondition.comment, comment)
-        setDateTimeValue(this.alarmCondition.comment.sourceTimestamp, new Date())
-        return {statusCode: StatusCodes.Good }
-    }
-
-    get retain(): boolean {return getBooleanValue(this.alarmCondition.retain)}
-    protected set retain(value: boolean) { setBooleanValue(this.alarmCondition.retain, value)}
-
-    get ackedState(): boolean { return getBooleanValue(this.alarmCondition.ackedState.id) }
-    protected set ackedState(state: boolean) { setTwoStateVariable(this.alarmCondition.ackedState, state, "Acknowledged", "Unacknowledged") }
-
-    private async acknowledge(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions>  { 
-        if (this.ackedState) return { statusCode: StatusCodes.BadInvalidState }
-        this.ackedState = true
-        return { statusCode: StatusCodes.Good }
-    }
-
-    get confirmedState(): boolean { return getBooleanValue(this.alarmCondition.confirmedState.id) }
-    protected set confirmedState(state: boolean) { setTwoStateVariable(this.alarmCondition.confirmedState, state, "Confirmed", "Unconfirmed") }
-
-    private async confirm(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions>  { 
-        if (this.confirmedState) return { statusCode: StatusCodes.BadInvalidState }
-        this.confirmedState = true
-        return { statusCode: StatusCodes.Good }
-    }
-
-    get enabledState(): boolean { return getBooleanValue(this.alarmCondition.enabledState.id) }
-    protected set enabledState(state: boolean) { setTwoStateVariable(this.alarmCondition.enabledState, state, "Enabled", "Disabled") }
-
-    private async enable(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions>  { 
-        return { statusCode: this.enterEnable() }
-    }
-    private async disable(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> { 
-        return { statusCode: this.enterDisable()}
-    }
-
-    enterEnable(): StatusCode {
-        if (this.enabledState) return StatusCodes.BadInvalidState
-        this.enabledState = true
-        this.retain = true
-        return StatusCodes.Good
-    }
-    enterDisable(): StatusCode {
-        if (!this.enabledState) return StatusCodes.BadInvalidState
-        this.enabledState = false
-        this.retain = false
-        return StatusCodes.Good
-    }
-
-    get activeState(): boolean { return getBooleanValue(this.alarmCondition.activeState.id) }
-    protected set activeState(state: boolean) { setTwoStateVariable(this.alarmCondition.activeState, state, "Active", "Inactive") }
-
-    enterActive(): StatusCode {
-        if (!this.enabledState) return StatusCodes.BadStateNotActive
-        if (this.activeState) return StatusCodes.BadInvalidState
-        this.activeState = true
-        return StatusCodes.Good
-    }
-    enterInactive(): StatusCode  {
-        if (!this.enabledState) return StatusCodes.BadStateNotActive
-        if (!this.activeState) return StatusCodes.BadInvalidState
-        this.activeState = false
-        return StatusCodes.Good
-    }
-
-    private async conditionRefresh(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions>  { 
-        this.raiseEvent(getDateTimeValue(this.alarmCondition.time), this.lastMessage, getNumericValue(this.alarmCondition.lastSeverity))
-        return { statusCode: StatusCodes.Good }
-    }
-
-    raiseEvent(time: Date, message: string, severity = 0) {
-        const condition = this.alarmCondition
-        this.options.conditionSource.raiseEvent(this.objectType, {
-            time: {dataType: DataType.DateTime, value: time},
-            sourceNode: condition.sourceNode.readValue().value,
-            sourceName: condition.sourceName.readValue().value,
-            message: { dataType: DataType.LocalizedText, value: message },
-            severity: {dataType: DataType.UInt16, value: severity },
-            activeState: condition.activeState.readValue().value,
-            ackedState: condition.ackedState.readValue().value,
-            confirmedState: condition.confirmedState?.readValue().value,
-        })
-        this.lastMessage = message
-        setDateTimeValue(condition.time, time)
-        setNumericValue(condition.lastSeverity, severity)
-    }
-}
-
-export interface RaiseAlarmConditionOptions {
-    message: string,
-    severity: string,
-    
-}
-
-export enum LADSMaintenanceState {
-    Planned = "Planned",
-    Executing = "Executing",
-    Finished = "Finished"
-}
-export interface MaintenanceEventStateMachine extends UAFiniteStateMachine {}
+export enum LADSMaintenanceTaskResult { Success = 0, Failure = 1, Undetermined = 2 }
 
 export interface LADSMaintenanceTask extends UAMaintenanceRequiredAlarm {
     maintenanceState: MaintenanceEventStateMachine
@@ -189,17 +33,93 @@ export interface LADSMaintenanceTask extends UAMaintenanceRequiredAlarm {
     partsOfAssetServiced: UAProperty<NameNodeId[], DataType.ExtensionObject>
 }
 
-export interface MaintenanceTaskOptiions extends AlarmConditionOptions {}
+export interface MaintenanceTaskOptions {
+    parent: UAObject
+    conditionSource: UAObject
+    name: string
+    displayName?: string
+    conditionClass: UAObjectType
+    optionals?: string[]
+    inputNode: BaseNode
+    component?: LADSComponent
+}
 
-export class MaintenanceTaskImpl extends AlarmConditionImpl {
+//---------------------------------------------------------------
+// maintenance task implementation
+//---------------------------------------------------------------
+interface MaintenanceTaskEvents {
+    "warning": []
+    "alarm": []
+    "executing": []
+    "finished": []
+    "planned": []
+}
+
+
+export class MaintenanceTaskImpl extends EventEmitter<MaintenanceTaskEvents> {
+    options: MaintenanceTaskOptions
+    discreteAlarm: UADiscreteAlarmEx
+    maintenanceTask: LADSMaintenanceTask
     maintenanceState: UAStateMachineEx
     statePlanned: UAState
     stateExecuting: UAState
     stateFinished: UAState
 
-    constructor(options: MaintenanceTaskOptiions) { super(options) }
+    constructor(options: MaintenanceTaskOptions) {
+        super()
+        this.options = options
 
-    get maintenanceTask(): LADSMaintenanceTask { return this.alarmCondition as LADSMaintenanceTask}
+        // mark the conditionSource (component/device) as EventSoucre
+        const conditionSource = options.conditionSource
+        const addressSpace = conditionSource.addressSpace
+        const hasEventSource = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasEventSource))
+        conditionSource.parent.addReference({ referenceType: hasEventSource, nodeId: conditionSource })
+
+        const namespace = options.parent.namespace as Namespace
+        const instantiateOptions: InstantiateAlarmConditionOptions = {
+            browseName: options.name,
+            displayName: options.displayName,
+            componentOf: options.parent,
+            conditionOf: options.parent,
+            eventSourceOf: options.parent,
+            conditionClass: options.conditionClass,
+            conditionSource: options.conditionSource,
+            inputNode: options.inputNode,
+            conditionName: options.name,
+            optionals: options.optionals
+        }
+        this.discreteAlarm = namespace.instantiateDiscreteAlarm(this.objectType, instantiateOptions)
+        this.maintenanceTask = (this.discreteAlarm as unknown) as LADSMaintenanceTask
+        this.postInitialize()
+
+        // testing
+        namespace.addMethod(this.maintenanceTask, { browseName: "RaiseWarning" }).bindMethod(
+            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+                this.raiseWarningEvent()
+                return { statusCode: StatusCodes.Good }
+            }).bind(this)
+        )
+        namespace.addMethod(this.maintenanceTask, { browseName: "RaiseAlarm" }).bindMethod(
+            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+                this.raiseAlarmEvent()
+                return { statusCode: StatusCodes.Good }
+            }).bind(this)
+        )
+        namespace.addMethod(this.maintenanceTask, { browseName: "EnterActive" }).bindMethod(
+            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+                this.enterActive()
+                console.log(this.discreteAlarm)
+                return { statusCode: StatusCodes.Good }
+            }).bind(this)
+        )
+        namespace.addMethod(this.maintenanceTask, { browseName: "EnterInactive" }).bindMethod(
+            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+                this.enterInactive()
+                console.log(this.discreteAlarm)
+                return { statusCode: StatusCodes.Good }
+            }).bind(this)
+        )
+    }
 
     protected get objectType(): UAObjectType {
         const ns = getLADSNamespace(this.options.parent.addressSpace)
@@ -207,7 +127,6 @@ export class MaintenanceTaskImpl extends AlarmConditionImpl {
     }
 
     protected postInitialize() {
-        super.postInitialize()
         this.maintenanceState = promoteToFiniteStateMachine(this.maintenanceTask.maintenanceState)
         this.maintenanceTask.startTask?.bindMethod(this.startTask.bind(this))
         this.maintenanceTask.stopTask?.bindMethod(this.stopTask.bind(this))
@@ -215,37 +134,67 @@ export class MaintenanceTaskImpl extends AlarmConditionImpl {
         this.statePlanned = this.maintenanceState.getStateByName(LADSMaintenanceState.Planned)
         this.stateExecuting = this.maintenanceState.getStateByName(LADSMaintenanceState.Executing)
         this.stateFinished = this.maintenanceState.getStateByName(LADSMaintenanceState.Finished)
-        this.enterFinished()
+        this.maintenanceState.setState(this.stateFinished) 
     }
 
-    raiseWarningEvent() { this.raiseEvent(new Date(), `Maintenance due warning for ${this.options.inputNode.getDisplayName()}`)}
-    raiseAlarmEvent() { this.raiseEvent(new Date(), `Maintenance required for ${this.options.inputNode.getDisplayName()}`) }
+    raiseEvent(message: string, severity: EventSeverity, event: keyof MaintenanceTaskEvents) {
+        const conditionInfo: ConditionInfoOptions = {
+            message: message,
+            time: new Date(),
+            severity: severity,
+        }
+        this.discreteAlarm.raiseNewCondition(conditionInfo)
+        if (event) this.emit(event)
+    }
+    raiseWarningEvent() { this.raiseEvent(`${this.taskName} due warning`, EventSeverity.Warning, "warning") }
+    raiseAlarmEvent() { this.raiseEvent(`${this.taskName} required alarm`, EventSeverity.Alarm, "alarm") }
 
-    enterActive(): StatusCode {
-        if (super.enterActive() !== StatusCodes.Good) return
+    enterPlanned() { 
+        this.maintenanceState.setState(this.statePlanned) 
+    }
+    private get taskName(): string {return this.maintenanceTask.getDisplayName() }
+    private get conditionSourceName(): string { return this.options.conditionSource.getDisplayName() }
+
+    enterExecuting() { 
+        this.maintenanceState.setState(this.stateExecuting) 
+        this.raiseEvent(`Executing ${this.taskName}`, EventSeverity.Info, "executing")    
+    }
+    enterFinished(result: LADSMaintenanceTaskResult, comment: VariantLike = undefined) { 
+        this.maintenanceState.setState(this.stateFinished) 
+        if (comment) this.maintenanceTask.comment.setValueFromSource(comment)
+        this.raiseEvent(`Finished ${this.taskName} with result ${LADSMaintenanceTaskResult[result]}`, EventSeverity.Info, "finished")    
+    }
+
+    get activeState(): boolean { return getBooleanValue(this.discreteAlarm.activeState.id) }
+
+    enterActive() {
+        if (this.activeState) return
+        this.discreteAlarm.activateAlarm()
         this.raiseAlarmEvent()
     }
+    enterInactive() {
+        if (!this.activeState) return
+        this.discreteAlarm.deactivateAlarm()
+    }
 
-    enterPlanned() { this.maintenanceState.setState(this.statePlanned)}
-    enterExecuting() { this.maintenanceState.setState(this.stateExecuting)}
-    enterFinished() { this.maintenanceState.setState(this.stateFinished)}
-
-    private async startTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> { 
+    private async startTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (this.maintenanceState.currentStateNode === this.stateExecuting) return { statusCode: StatusCodes.BadInvalidState }
         this.enterExecuting()
-        return  { statusCode: StatusCodes.Good}
+        return { statusCode: StatusCodes.Good }
     }
 
-    private async stopTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> { 
+    private async stopTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (this.maintenanceState.currentStateNode !== this.stateExecuting) return { statusCode: StatusCodes.BadInvalidState }
-        this.enterFinished()
-        return  { statusCode: StatusCodes.Good}
+        const result = Number(inputArguments[0].value.value) as LADSMaintenanceTaskResult
+        const comment: VariantLike = inputArguments[1]
+        this.enterFinished(result, comment)
+        return { statusCode: StatusCodes.Good }
     }
 
-    private async resetTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> { 
+    private async resetTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (this.maintenanceState.currentStateNode !== this.stateFinished) return { statusCode: StatusCodes.BadInvalidState }
         this.enterPlanned()
-        return  { statusCode: StatusCodes.Good}
+        return { statusCode: StatusCodes.Good }
     }
 
 }

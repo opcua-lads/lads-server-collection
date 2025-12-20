@@ -176,7 +176,7 @@ export interface LADSControlFunctionStateMachine extends LADSFunctionalStateMach
 // RunningStateMachine
 export enum LADSRunnnigState {
     Starting = 'Starting',
-    Executing = 'Executing',
+    Execute = 'Execute',
     Suspending = 'Suspending',
     Suspended = 'Suspended',
     Unsuspending = 'Unsuspending',

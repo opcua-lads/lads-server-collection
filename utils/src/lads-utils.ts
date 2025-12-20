@@ -333,7 +333,8 @@ export function addProgramTemplate(programTemplateSet: UAObject, options: Progra
     const programTemplateType = getLADSObjectType(programTemplateSet.addressSpace, "ProgramTemplateType")
     const programTemplate = programTemplateType.instantiate({
         componentOf: programTemplateSet,
-        browseName: options.identifier
+        browseName: options.identifier,
+        displayName: options.identifier,
     }) as LADSProgramTemplate
     setStringValue(getDescriptionVariable(programTemplate), options.description)
     setStringValue(programTemplate.author, options.author)

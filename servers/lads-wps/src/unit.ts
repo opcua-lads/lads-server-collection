@@ -23,15 +23,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue } from "node-opcua"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSRunnnigState } from "@interfaces"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, getStringValue, LADSMaintenanceTask, MaintenanceTaskImpl, LADSMaintenanceTaskResult } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, makeBrowsePath, resolveNodeId, BaseNode } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
-import { WpsFunctionalUnit, WpsFunctionalUnitStatemachine, WpsFunctionSet } from "./interfaces"
+import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
 import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
 import { MulitStateDiscreteControlFunctionImpl, TimerControlFunctionImpl, AnalogControlFunctionWithTotalizerImpl, AnalogScalarSensorFunctionImpl } from "@utils"
+import { main } from "./server"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -39,14 +40,16 @@ interface CurrentRunOptions {
     runId: string,
     started: Date,
     startedMilliseconds: number
-    estimatedRuntimeMilliseconds: number
-    programTemplate: LADSProgramTemplate
+    estimatedRuntime?: number
+    estimatedStepNumbers?: number
+    programTemplate: WpsProgramTemplate
+    maintenanceTask?: MaintenanceTaskImpl
     supervisoryJobId: string
     supervisoryTaskId: string
     properties?: LADSProperty[]
     samples?: LADSSampleInfo[]
     result?: LADSResult
-    steps: WpsProgramTemplateStep[]
+    // steps: WpsProgramTemplateStep[]
     runtimeInterval?: NodeJS.Timeout
 }
 
@@ -56,26 +59,79 @@ interface CurrentRunOptions {
 interface WpsProgramTemplate {
     name: string,
     description?: string,
+    component?: string
     steps: WpsProgramTemplateStep[]
 }
 
 interface WpsProgramTemplateStep {
     name: string,
-    duration: number
+    duration?: number
+    confirmation?: boolean
+}
+
+const DispenseId = "Dispense"
+
+const ProgramTemplateDispense: WpsProgramTemplate = {
+    name: DispenseId,
+    description: "Dispense based on current mode and set-points",
+    steps: [{ name: "Dispense", duration: 600000 }]
+}
+
+const ProgramTemplateReplaceCartridge: WpsProgramTemplate = {
+    name: "Replace Cartridge",
+    component: "Cartridge",
+    steps: [
+        { name: "Disconnect the feed-water hose from the device", confirmation: true },
+        { name: "Collect the water exiting from the outlet in a container (1 L) and start depressurization.", confirmation: true },
+        { name: "Depressurization 0.5 min", duration: 30000 },
+        { name: "Replace cartridges according to the instructions", confirmation: true },
+        { name: "Start the flushing process", confirmation: true },
+        { name: "Flushing 2min", duration: 120000 },
+    ]
+}
+
+const ProgramTemplateReplaceEndfilter: WpsProgramTemplate = {
+    name: "Replace Endfilter",
+    component: "Endfilter",
+    steps: [
+        { name: "Replace endfilter according to the instructions", confirmation: true },
+    ]
+}
+
+const ProgramTemplateDepressurization: WpsProgramTemplate = {
+    name: "Depressurization",
+    steps: [
+        { name: "Disconnect the feed-water hose from the device", confirmation: true },
+        { name: "Collect the water exiting from the outlet in a container (1 L) and start depressurization.", confirmation: true },
+        { name: "Depressurization 0.5 min", duration: 30000 },
+        { name: "Switch off the device", confirmation: true },
+    ]
+}
+
+const ProgramTemplateFlushTOC: WpsProgramTemplate = {
+    name: "Flush TOC",
+    steps: [
+        { name: "Flushing 5min", duration: 300000 },
+    ]
 }
 
 const ProgramTemplates: WpsProgramTemplate[] = [
-    {
-        name: "Dispense",
-        description: "Dispense based on current mode and set-points",
-        steps: [{ name: "Dispense", duration: 600000 }]
-    },
-    {
-        name: "Sanitize",
-        description: "Perform system sanitization",
-        steps: [{ name: "Prepare", duration: 5000 }]
-    }
+    ProgramTemplateDispense,
+    ProgramTemplateReplaceEndfilter,
+    ProgramTemplateReplaceCartridge,
+    ProgramTemplateDepressurization,
+    ProgramTemplateFlushTOC,
 ]
+
+export function findNode(parent: BaseNode, path: string[]): BaseNode {
+    // copy list via slice(), otherwise teh original array will be emptied by s
+    const _path = path.slice() 
+    const name = _path.shift()
+    if (!name) return parent
+    const child = parent.getChildByName(name)
+    if (!child) return undefined
+    return findNode(child, _path)
+}
 
 //---------------------------------------------------------------
 // specialized control functions
@@ -163,10 +219,9 @@ export class WpsUnitImpl extends EventEmitter {
     parent: WpsDeviceImpl
     functionalUnit: WpsFunctionalUnit
     functionalUnitState: UAStateMachineEx
+    runningState: UAStateMachineEx
     programTemplates: LADSProgramTemplate[] = []
-    activeProgram: LADSActiveProgram
     currentRunOptions: CurrentRunOptions
-    programTemplateElements: ProgramTemplateElement[] = []
     documentSet: ComplianceDocumentSetImpl
 
 
@@ -195,25 +250,32 @@ export class WpsUnitImpl extends EventEmitter {
             browseName: "WPSUnit",
             displayName: "WPS Unit",
             componentOf: functionalUnitSet,
-            optionals: optionals
+            optionals: optionals,
         }) as WpsFunctionalUnit
-        // this.functionalUnit = parent.getFunctionalUnit()
 
-        // init functional unit & state machine
+        // bind state machines
         const functionalUnit = this.functionalUnit
-        const stateMachine = functionalUnit.functionalUnitState as WpsFunctionalUnitStatemachine
-        stateMachine.start?.bindMethod(this.start.bind(this))
+        const stateMachine = functionalUnit.functionalUnitState
+        stateMachine.start?.bindMethod(this.startDispense.bind(this))
         stateMachine.startProgram?.bindMethod(this.startProgram.bind(this))
         stateMachine.stop?.bindMethod(this.stop.bind(this))
         stateMachine.abort?.bindMethod(this.abort.bind(this))
+        const runningStateMachine = functionalUnit.functionalUnitState.runningStateMachine
+        runningStateMachine.unhold?.bindMethod(this.resume.bind(this))
+        runningStateMachine.unsuspend?.bindMethod(this.resume.bind(this))
+        // promote & initialize state machines
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
+        this.functionalUnitState.currentState.on("value_changed", this.onFunctionalUnitStateChanged.bind(this))
+        this.runningState = promoteToFiniteStateMachine(runningStateMachine)
+        this.runningState.currentState.on("value_changed", this.onRunningStateChanged.bind(this))
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+        this.deactivateRunnnigState()
 
         // init sensors
         const functionSet = this.functionalUnit.getComponentByName("FunctionSet") as WpsFunctionSet
         // conductivity sensors
-        this.inletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.inletConductivity, { lowLowLimit: -0.1, lowLimit: 0.0, highLimit: 15.0, highHighLimit: 20.0 })
-        this.outletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.outletConductivity, { lowLowLimit: -0.01, lowLimit: 0.0, highLimit: 0.15, highHighLimit: 0.1 })
+        this.inletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.inletConductivity, { lowLowLimit: -0.1, lowLimit: 0.0, highLimit: 16.0, highHighLimit: 20.0 })
+        this.outletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.outletConductivity, { lowLowLimit: -0.01, lowLimit: 0.0, highLimit: 0.16, highHighLimit: 0.2 })
         this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 10.0, highLimit: 35, highHighLimit: 40 })
         installVariableHistory(this.inletConductivitySensor.sensorValue)
         installVariableHistory(this.outletConductivitySensor.sensorValue)
@@ -294,21 +356,16 @@ export class WpsUnitImpl extends EventEmitter {
         setStringValue(programTemplateSet.getNodeVersion(), "0")
         const date = new Date(Date.parse("2025-09-01T00:00:00.000Z"))
         ProgramTemplates.forEach(template => {
-            this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
+            this.programTemplates.push(addProgramTemplate(programTemplateSet, {
                 identifier: template.name,
                 description: template.description,
                 author: "AixEngineers",
                 created: date,
                 modified: date,
                 referenceIds: [AFODictionaryIds.preventative_maintenance],
-            }))
+            }).programTemplate)
         })
         touchNodes(programTemplateSet)
-    }
-
-    private touchResult() {
-        const result = this.currentRunOptions.result
-        touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result?.fileSet, result?.variableSet)
     }
 
     private readyToStart(): boolean {
@@ -322,25 +379,26 @@ export class WpsUnitImpl extends EventEmitter {
     }
 
     private initCurrentRunOptions(programTemplateId: string): boolean {
-        const element = this.findProgramTemplateElement(programTemplateId)
-        if (!element) return false
-        const steps = ProgramTemplates.find(template => (template.name == element.identifier)).steps
+        const id = programTemplateId.toLowerCase()
+        const template = ProgramTemplates.find(template => template.name.toLowerCase().includes(id))
+        if (!template) return false
+        const steps = template.steps
         const started = new Date()
         const iso = started.toISOString()
         const date = iso.slice(0, 10).replace(/-/g, "")
         const time = iso.slice(11, 19).replace(/:/g, "")
-        const deviceProgramRunId = `${date}-${time}-${this.name}-${element.identifier}`.replace(/[ (),°]/g, "")
-        const runTime = steps.reduce((sum, step) => sum + step.duration, 0)
+        const deviceProgramRunId = `${date}-${time}-${this.name}-${template.name}`.replace(/[ (),°]/g, "")
+        const runTime = steps.reduce((sum, step) => sum + (step.duration ? step.duration : 0), 0)
         this.currentRunOptions = {
-            programTemplateId: element.identifier,
+            programTemplateId: template.name,
             started: started,
             startedMilliseconds: Date.now(),
-            estimatedRuntimeMilliseconds: runTime,
-            programTemplate: element.programTemplate,
+            estimatedRuntime: runTime,
+            estimatedStepNumbers: steps.length,
+            programTemplate: template,
             runId: deviceProgramRunId,
             supervisoryJobId: "",
             supervisoryTaskId: "",
-            steps: steps,
         }
         return true
     }
@@ -352,29 +410,76 @@ export class WpsUnitImpl extends EventEmitter {
 
     private get name(): string { return this.parent.config.name }
 
-    private raiseMessage(message: string, severity = 0) {
-        console.info(message)
-        raiseEvent(this.functionalUnit, message, severity)
-    }
-
     protected async enterRunning() {
         const options = this.currentRunOptions
         raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
+        // find associated maintenance task (if any)
+        if (options.programTemplate.component) {
+            const component = this.parent.getComponent(options.programTemplate.component)
+            const maintenanceTask = component?.task
+            if (maintenanceTask) {
+                maintenanceTask.enterExecuting()
+                options.maintenanceTask = maintenanceTask
+            }
+        }
         const activeProgram = this.functionalUnit.programManager.activeProgram
         setNumericValue(activeProgram.currentRuntime, 0)
-        setNumericValue(activeProgram.estimatedRuntime, options.estimatedRuntimeMilliseconds)
+        setNumericValue(activeProgram.estimatedRuntime, options.estimatedRuntime)
+        setNumericValue(activeProgram.estimatedStepNumbers, options.estimatedStepNumbers)
         setStringValue(activeProgram.deviceProgramRunId, options.runId)
-        // run loop
-        const dT = 500
-        options.runtimeInterval = setInterval(() => {
-            const runtime = Date.now() - options.startedMilliseconds
-            setNumericValue(activeProgram.currentRuntime, runtime)
-            if (runtime > options.estimatedRuntimeMilliseconds) {
-                this.leaveRunning(LADSFunctionalState.Aborting)
-            }
-        }, dT)
         this.functionalUnitState.setState(LADSFunctionalState.Running)
+        this.runningState.setState(LADSRunnnigState.Execute)
         this.currentRunOptions = options
+        this.run()
+    }
+
+
+    protected enterStep(step: WpsProgramTemplateStep, stepNumber: number) {
+        const activeProgram = this.functionalUnit.programManager.activeProgram
+        setNumericValue(activeProgram.currentStepNumber, stepNumber)
+        setStringValue(activeProgram.currentStepName, step.name)
+        setNumericValue(activeProgram.currentStepRuntime, 0.0)
+        setNumericValue(activeProgram.estimatedStepRuntime, step.duration ? step.duration : 0)
+        const message = `${step.name}`
+        if (step.confirmation) {
+            this.hold()
+            raiseEvent(this.functionalUnit, `${message} - Invoke unhold to resume`)
+        } else {
+            raiseEvent(this.functionalUnit, message)
+        }
+    }
+
+    protected async run() {
+        const options = this.currentRunOptions
+        const activeProgram = this.functionalUnit.programManager.activeProgram
+        const started = Date.now()
+        let aborted = false
+        let index = 0
+        for (const step of options.programTemplate.steps) {
+            if (!aborted) {
+                const startedStep = Date.now()
+                this.enterStep(step, index++)
+                let waiting = true
+                while (waiting) {
+                    const now = Date.now()
+                    setNumericValue(activeProgram.currentRuntime, now - started)
+                    setNumericValue(activeProgram.currentStepRuntime, now - startedStep)
+                    if (step.duration) {
+                        waiting = (now - startedStep) < step.duration
+                    } else if (step.confirmation) {
+                        waiting = !this.isExecuting
+                    }
+                    if (this.functionalUnitState.getCurrentState().includes(LADSFunctionalState.Aborted)) {
+                        this.leaveRunning(LADSFunctionalState.Aborted)
+                        waiting = false
+                        aborted = true
+                    } else {
+                        await sleepMilliSeconds(200)
+                    }
+                }
+            }
+        }
+        if (!aborted) this.leaveRunning(LADSFunctionalState.Stopping)
     }
 
     private async leaveRunning(state: LADSFunctionalState) {
@@ -386,8 +491,10 @@ export class WpsUnitImpl extends EventEmitter {
             this.currentRunOptions = undefined
             if (state === LADSFunctionalState.Aborting) {
                 raiseEvent(this.functionalUnit, `Aborting method ${options.programTemplateId} with identifier ${options.runId}.`, 500)
+                options.maintenanceTask?.enterFinished(LADSMaintenanceTaskResult.Failure, {dataType: DataType.LocalizedText, value: "Task aborted"})
             } else {
                 raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
+                options.maintenanceTask?.enterFinished(LADSMaintenanceTaskResult.Success)
             }
         } else {
             raiseEvent(this.functionalUnit, `Stopping method.`, 100)
@@ -395,97 +502,42 @@ export class WpsUnitImpl extends EventEmitter {
         stateMachine.setState(LADSFunctionalState.Stopped)
     }
 
-
-    protected async enterMeasuring(context: SessionContext) {
-        const options = this.currentRunOptions
-        const programTemplateId = options.programTemplateId
-        raiseEvent(this.functionalUnit, `Starting method ${programTemplateId} with identifier ${options.runId}.`)
-
-        // create result
-        const createResult = false
-        if (createResult) {
-            const referenceIds: string[] = [AFODictionaryIds.purification, AFODictionaryIds.document]
-            const resultType = getLADSObjectType(this.functionalUnit.addressSpace, "ResultType")
-            const resultSet = <UAObject>this.functionalUnit.programManager.resultSet
-            options.result = <LADSResult><unknown>resultType.instantiate({
-                componentOf: resultSet,
-                browseName: options.runId,
-                optionals: ["NodeVersion", "FileSet.NodeVersion", "VariableSet.NodeVersion"]
-            })
-            const result = options.result
-            AFODictionary.addDefaultResultReferences(result)
-            AFODictionary.addReferences(result, ...referenceIds)
-
-            setSessionInformation(result, context)
-            setStringValue(getDescriptionVariable(result), `Run based on template ${options.programTemplateId}, started ${options.started.toLocaleDateString()}.`)
-            setPropertiesValue(result.properties, options.properties)
-            setSamplesValue(result.samples, options.samples)
-            setStringValue(result.supervisoryJobId, options.supervisoryJobId)
-            setStringValue(result.supervisoryTaskId, options.supervisoryTaskId)
-            setStringValue(result.deviceProgramRunId, options.runId)
-            setDateTimeValue(result.started, options.started)
-            copyProgramTemplate(options.programTemplate, result.programTemplate)
-            this.touchResult()
-
-        }
-
-    }
-
-    private async leaveMeasuring() {
-        const result = this.currentRunOptions?.result
-        if (result) {
-            // set stopped timestamp
-            setDateTimeValue(result.stopped, new Date())
-
-            // add results
-            this.touchResult()
-        }
-    }
-
-    private findProgramTemplateElement(programTemplateId: string): ProgramTemplateElement {
-        const id = programTemplateId.toLowerCase()
-        return this.programTemplateElements.find(value => value.identifier.toLowerCase().includes(id))
-    }
-
-    private async startMethod(context: SessionContext, programTemplateId: string, properties?: LADSProperty[], samples?: LADSSampleInfo[]): Promise<CallMethodResultOptions> {
-        if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
-        this.initCurrentRunOptions(programTemplateId)
-        this.currentRunOptions.properties = properties ?? []
-        this.currentRunOptions.samples = samples ?? []
-        this.enterMeasuring(context)
-        return { statusCode: StatusCodes.Good }
-    }
-
-    private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startDispense(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const mode = getNumericValue(this.dispenseModeController.currentValue)
         const controller = mode === 0 ? this.dispenseVolumeController : this.dispenseTimeController
-        this.initCurrentRunOptions("Dispense")
+        this.initCurrentRunOptions(DispenseId)
         // estimate runtimg
         const F = getNumericValue(this.flow) > 0 ? getNumericValue(this.flow) : 1.0
         const V = getNumericValue(this.dispenseVolumeController.targetValue)
         const T = getNumericValue(this.dispenseTimeController.targetValue)
         const estimatedRuntime = mode === 0 ? 60000 * V / F : T
-        this.currentRunOptions.estimatedRuntimeMilliseconds = estimatedRuntime
+        this.currentRunOptions.estimatedRuntime = estimatedRuntime
         this.enterRunning()
         controller.enterStart()
         controller.on("stop", () => this.leaveRunning(LADSFunctionalState.Stopping))
         return { statusCode: StatusCodes.Good }
-
-        // search key-value pairs for sampleId
-        /*const inputArgument = inputArguments[0].value
-        const keyValuePairs = (inputArgument === null) ? [] : (inputArgument as Variant[]).map(item => { return (<any>item) as DTKeyValuePair })
-        const sampleKeyValuePair = keyValuePairs.find(keyValuePair => (keyValuePair.key.name.toLowerCase().includes("sampleid")))
-        const sampleId: string = sampleKeyValuePair ? String(sampleKeyValuePair.value.value) : "Unknown"
-        const sampleInfo: LADSSampleInfo = { containerId: "", sampleId: sampleId, position: "", customData: "" }*/
-        //return await this.startMethod(context, ProgramTemplateIds.RegisterWeight, undefined, [sampleInfo])
     }
 
     private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
-        if (this.initCurrentRunOptions(programTemplateId)) {
-            this.runProgram(inputArguments, context)
+        if (programTemplateId === DispenseId) {
+            return this.startDispense(inputArguments, context)
+        } else if (this.initCurrentRunOptions(programTemplateId)) {
+            const options = this.currentRunOptions
+            options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
+            options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
+
+            // analyze properties
+            const propertiesValue = inputArguments[1].value
+            options.properties = propertiesValue === null ? [] : (propertiesValue as Variant[]).map(item => { return (<any>item) as LADSProperty })
+
+            // analyze samples
+            const samplesValue = inputArguments[4].value
+            options.samples = samplesValue === null ? [] : (samplesValue as Variant[]).map(item => { return (<any>item) as LADSSampleInfo })
+
+            this.enterRunning()
             return {
                 outputArguments: [new Variant({ dataType: DataType.String, value: this.currentRunOptions.runId })],
                 statusCode: StatusCodes.Good
@@ -493,22 +545,6 @@ export class WpsUnitImpl extends EventEmitter {
         } else {
             return { statusCode: StatusCodes.BadInvalidArgument }
         }
-    }
-
-    private async runProgram(inputArguments: VariantLike[], context: SessionContext) {
-        const options = this.currentRunOptions
-        options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
-        options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
-
-        // analyze properties
-        const propertiesValue = inputArguments[1].value
-        options.properties = propertiesValue === null ? [] : (propertiesValue as Variant[]).map(item => { return (<any>item) as LADSProperty })
-
-        // analyze samples
-        const samplesValue = inputArguments[4].value
-        options.samples = samplesValue === null ? [] : (samplesValue as Variant[]).map(item => { return (<any>item) as LADSSampleInfo })
-
-        this.enterMeasuring(context)
     }
 
     private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
@@ -521,5 +557,63 @@ export class WpsUnitImpl extends EventEmitter {
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveRunning(LADSFunctionalState.Aborting)
         return { statusCode: StatusCodes.Good }
+    }
+
+    // runnning state machine
+    private isInRunningState(state: LADSRunnnigState): boolean { return this.runningState.getCurrentState().includes(state) }
+    private get isHeld(): boolean { return this.isInRunningState(LADSRunnnigState.Held) }
+    private get isSuspended(): boolean { return this.isInRunningState(LADSRunnnigState.Suspended) }
+    private get isExecuting(): boolean { return this.isInRunningState(LADSRunnnigState.Execute) }
+
+    private onFunctionalUnitStateChanged(value: DataValue) {
+        const stateName: LocalizedText = value.value.value
+        if (stateName.text.includes(LADSFunctionalState.Running)) {
+            this.activateRunningState()
+        } else {
+            const lastState = this.functionalUnitState.getCurrentState()
+            if (lastState) {
+                if (lastState.includes(LADSFunctionalState.Running)) {
+                    this.deactivateRunnnigState()
+                }
+            }
+        }
+    }
+
+    private onRunningStateChanged(value: DataValue) {
+        const stateName: LocalizedText = value.value.value
+        if (value.statusCode === StatusCodes.Good) {
+            setStringValue(this.functionalUnitState.currentState.effectiveDisplayName, `${LADSFunctionalState.Running}.${stateName.text}`)
+        }
+    }
+    private activateRunningState(state = LADSRunnnigState.Execute) {
+        this.runningState.setState(state)
+        setStringValue(this.runningState.currentState, state, StatusCodes.Good)
+    }
+    private deactivateRunnnigState(state = LADSRunnnigState.Execute) {
+        setStringValue(this.runningState.currentState, state, StatusCodes.BadStateNotActive)
+    }
+
+    private async transiteRunningState(fromState: LADSRunnnigState, viaState: LADSRunnnigState, toState: LADSRunnnigState, wait = 1): Promise<StatusCode> {
+        if (!this.isInRunningState(fromState)) return StatusCodes.BadInvalidState
+        this.runningState.setState(viaState)
+        sleepMilliSeconds(wait)
+        this.runningState.setState(toState)
+        return StatusCodes.Good
+    }
+    private async hold() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Holding, LADSRunnnigState.Held) }
+    private async unhold() { this.transiteRunningState(LADSRunnnigState.Held, LADSRunnnigState.Unholding, LADSRunnnigState.Execute) }
+    private async suspend() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Suspending, LADSRunnnigState.Suspended) }
+    private async unsuspend() { this.transiteRunningState(LADSRunnnigState.Suspended, LADSRunnnigState.Unsuspending, LADSRunnnigState.Execute) }
+
+    private async resume(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (this.isHeld) {
+            this.unhold()
+            return { statusCode: StatusCodes.Good }
+        } else if (this.isSuspended) {
+            this.unsuspend()
+            return { statusCode: StatusCodes.Good }
+        } else {
+            return { statusCode: StatusCodes.BadInvalidState }
+        }
     }
 }

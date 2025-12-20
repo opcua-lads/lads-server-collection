@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-12-05T12:42:52.944Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2025-12-09T10:30:14.170Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -24,6 +24,7 @@
         <Alias Alias="Double">i=11</Alias>
         <Alias Alias="DateTime">i=13</Alias>
         <Alias Alias="String">i=12</Alias>
+        <Alias Alias="NodeId">i=17</Alias>
         <Alias Alias="LocalizedText">i=21</Alias>
         <Alias Alias="HasComponent">i=47</Alias>
         <Alias Alias="HasProperty">i=46</Alias>
@@ -44,7 +45,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="fbc509361d676450de27e954895e6f2a"/>
+            <si:GeneratorExtension Hash="e323b05061145e8492f13cf3459a207b"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_WaterPurificationSystem_" NodeId="ns=5;i=5000" BrowseName="5:http://aixengineers.de/WaterPurificationSystem/" ParentNodeId="i=11715">
@@ -215,6 +216,7 @@
             <Reference ReferenceType="HasComponent">ns=4;i=6039</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6017</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6160</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=5003</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="Double" NodeId="ns=5;i=6017" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5005">
@@ -476,7 +478,7 @@
             <Reference ReferenceType="HasComponent">ns=5;i=7013</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7014</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7015</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=5130</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=5004</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6086" BrowseName="CurrentState" ParentNodeId="ns=5;i=5018">
@@ -636,6 +638,7 @@
             <Reference ReferenceType="HasComponent">ns=4;i=6039</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6153</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6161</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=5003</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="Double" NodeId="ns=5;i=6153" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5025">
@@ -1458,4 +1461,79 @@
             <Reference ReferenceType="HasProperty">ns=4;i=6189</Reference>
         </References>
     </UAObject>
+    <UAObject NodeId="ns=5;i=5003" BrowseName="4:AlarmMonitor" ParentNodeId="ns=5;i=5005">
+        <DisplayName>AlarmMonitor</DisplayName>
+        <Description>AlarmMonitor indicates whether the limit of an analogue Sensor is exceeded. See: 10000-9: Alarms &amp; Conditions | ExclusiveLevelAlarmType.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=9482</Reference>
+            <Reference ReferenceType="HasModellingRule">i=80</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6199</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7038</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6191</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7039</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6203</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6204</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6205</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6207</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6208</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6209</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7040</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7041</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6195</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6215</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6216</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6197</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6210</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5070</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6217</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6212</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6218</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6214</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6219</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6220</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6221</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6198</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6222</Reference>
+            <Reference ReferenceType="HasProperty">i=16363</Reference>
+            <Reference ReferenceType="HasProperty">i=16364</Reference>
+        </References>
+    </UAObject>
+    <UAObject NodeId="ns=5;i=5004" BrowseName="4:RunningStateMachine" ParentNodeId="ns=5;i=5018">
+        <DisplayName>RunningStateMachine</DisplayName>
+        <Description>The RunningStateMachineType is a sub-state machine of the FunctionalStateMachine and includes detailed substates.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=1036</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6011</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7002</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7003</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6011" BrowseName="CurrentState" ParentNodeId="ns=5;i=5004">
+        <DisplayName>CurrentState</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6012</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NodeId" NodeId="ns=5;i=6012" BrowseName="Id" ParentNodeId="ns=5;i=6011">
+        <DisplayName>Id</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAMethod NodeId="ns=5;i=7002" BrowseName="4:Unhold" ParentNodeId="ns=5;i=5004">
+        <DisplayName>Unhold</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAMethod>
+    <UAMethod NodeId="ns=5;i=7003" BrowseName="4:Unsuspend" ParentNodeId="ns=5;i=5004">
+        <DisplayName>Unsuspend</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAMethod>
 </UANodeSet>

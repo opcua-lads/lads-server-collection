@@ -25,6 +25,17 @@ export interface AlarmMonitorOptions {
     lowLowLimit: number;
 }
 
+export enum EventSeverity {
+    Info = 0,
+    Warning = 300,
+    Alarm = 600,
+    Critical = 900,
+    LowLow = Alarm,
+    Low = Warning,
+    High = Warning,
+    HighHigh = Alarm
+}
+
 //---------------------------------------------------------------
 // analog sensor function implementation
 //---------------------------------------------------------------
@@ -54,7 +65,10 @@ export class AnalogScalarSensorFunctionImpl {
             const name = "AlarmMonitor"
             const options: InstantiateExclusiveLimitAlarmOptions = {
                 browseName: name,
+                displayName: "Alarm Monitor",
                 componentOf: sensorFunction,
+                conditionOf: sensorFunction,
+                eventSourceOf: sensorFunction,
                 conditionSource: sensorFunction,
                 conditionName: `${sensorFunction.getDisplayName()}-${name}`,
                 highHighLimit: alarmMonitorOptions.highHighLimit,
@@ -79,10 +93,10 @@ export class AnalogScalarSensorFunctionImpl {
         switch(stateData) {
             case "Low":
             case "High":
-                return 100
+                return EventSeverity.Warning
             case "LowLow":
             case "HighHigh":
-                return 200
+                return EventSeverity.Alarm
         }
     }
 

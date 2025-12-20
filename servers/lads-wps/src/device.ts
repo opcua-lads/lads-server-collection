@@ -26,10 +26,10 @@ import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue } from "@utils"
 import { WpsDevice, WpsFunctionalUnit, WpsFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, WpsServerImpl } from "./server"
-import { IAddressSpace, INamespace, makeNodeId, ObjectTypeIds, UAObject } from "node-opcua"
+import { IAddressSpace, INamespace, makeNodeId, n, ObjectTypeIds, UAObject } from "node-opcua"
 import { WpsUnitImpl } from "./unit"
 import { LADSComponent, LifetimeVariableType } from "@interfaces"
-import { MaintenanceTaskImpl } from "utils/src/lads-maintenance-task"
+import { MaintenanceTaskImpl } from "@utils"
 
 
 //--------------------------------------------------------------- 
@@ -162,14 +162,21 @@ export class WpsDeviceImpl {
             .filter(component => (component !== undefined))
     }
 
+    getComponent(componentName: string): WpsComponentImpl {
+        const name = componentName.trim().toLowerCase()
+        return this.components.find(component => (component.name.toLowerCase().includes(name)))
+    }
+
 }
 
 export class WpsComponentImpl {
+    name: string
     component: LADSComponent
     task: MaintenanceTaskImpl
     status: LifetimeStatus
 
     constructor(options: WpsComponentOptions) {
+        this.name = options.name
 
         const componentType = getWpsNameSpace(options.parent.addressSpace).findObjectType("WPSComponentType")
         if (!componentType) return
@@ -209,10 +216,15 @@ export class WpsComponentImpl {
             displayName: `Replace ${displayName} Task`,
             inputNode: remainingLifetime,
         })
+        task.on("finished", this.onTaskFinished.bind(this))
 
         this.component = component
         this.task = task
         this.status = LifetimeStatus.Good
+    }
+
+    onTaskFinished() {
+        setDateTimeValue(this.component.identification?.initialOperationDate, new Date())
     }
 
     evaluateLifetimeStatus(): LifetimeStatus {
