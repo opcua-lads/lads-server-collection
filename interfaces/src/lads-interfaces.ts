@@ -175,6 +175,7 @@ export interface LADSControlFunctionStateMachine extends LADSFunctionalStateMach
 
 // RunningStateMachine
 export enum LADSRunnnigState {
+    Idle = 'Idle',
     Starting = 'Starting',
     Execute = 'Execute',
     Suspending = 'Suspending',
@@ -185,6 +186,7 @@ export enum LADSRunnnigState {
     Unholding = 'Unholding',
     Completing = 'Completing',
     Completed = 'Completed',
+    Resetting = 'Resetting',
 }
 
 export interface LADSRunnnigStateMachine extends UAFiniteStateMachine {

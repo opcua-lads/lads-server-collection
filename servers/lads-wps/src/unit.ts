@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSRunnnigState } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, getStringValue, LADSMaintenanceTask, MaintenanceTaskImpl, LADSMaintenanceTaskResult } from "@utils"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSRunnnigState, LADSRunnnigStateMachine } from "@interfaces"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, getStringValue, LADSMaintenanceTask, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, LADSFiniteStateMachineHelper } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, makeBrowsePath, resolveNodeId, BaseNode } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
 import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
@@ -46,6 +46,7 @@ interface CurrentRunOptions {
     maintenanceTask?: MaintenanceTaskImpl
     supervisoryJobId: string
     supervisoryTaskId: string
+    programTemplateNode: LADSProgramTemplate
     properties?: LADSProperty[]
     samples?: LADSSampleInfo[]
     result?: LADSResult
@@ -123,6 +124,11 @@ const ProgramTemplates: WpsProgramTemplate[] = [
     ProgramTemplateFlushTOC,
 ]
 
+export interface ProgramTemplateTuple {
+    template: WpsProgramTemplate
+    node: LADSProgramTemplate
+}
+
 export function findNode(parent: BaseNode, path: string[]): BaseNode {
     // copy list via slice(), otherwise teh original array will be emptied by s
     const _path = path.slice() 
@@ -141,6 +147,7 @@ class DispenseModeControlFunctionImpl extends MulitStateDiscreteControlFunctionI
     constructor(controlFunction: LADSMultiStateDiscreteControlFunction) {
         super(controlFunction)
         this.targetValue?.on("value_changed", (dataValue: DataValue) => { this.currentValue.setValueFromSource(dataValue.value) })
+        setNumericValue(this.targetValue, 0)
     }
 }
 
@@ -148,6 +155,7 @@ class DispenseTimerControlFunctionImpl extends TimerControlFunctionImpl {
     dispenseController: DispenseVolumeControlFunctionImpl
     constructor(controlFuntion: LADSTimerControlFunction, dispenseController: DispenseVolumeControlFunctionImpl) {
         super(controlFuntion, true)
+        setNumericValue(this.targetValue, 60.0)
         this.dispenseController = dispenseController
     }
 
@@ -171,6 +179,7 @@ class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWithTotaliz
 
     constructor(controlFunction: LADSAnalogControlFunctionWithTotalizer, flow: UAVariable, timeBase = 60000) {
         super(controlFunction)
+        setNumericValue(this.targetValue, 1.0)
         this.flow = flow
         this.timeBase = timeBase
         this.timestamp = Date.now()
@@ -212,6 +221,7 @@ class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWithTotaliz
     }
 }
 
+
 //---------------------------------------------------------------
 // unit implementation
 //---------------------------------------------------------------
@@ -220,7 +230,7 @@ export class WpsUnitImpl extends EventEmitter {
     functionalUnit: WpsFunctionalUnit
     functionalUnitState: UAStateMachineEx
     runningState: UAStateMachineEx
-    programTemplates: LADSProgramTemplate[] = []
+    programTemplates: ProgramTemplateTuple[] = []
     currentRunOptions: CurrentRunOptions
     documentSet: ComplianceDocumentSetImpl
 
@@ -268,6 +278,7 @@ export class WpsUnitImpl extends EventEmitter {
         this.functionalUnitState.currentState.on("value_changed", this.onFunctionalUnitStateChanged.bind(this))
         this.runningState = promoteToFiniteStateMachine(runningStateMachine)
         this.runningState.currentState.on("value_changed", this.onRunningStateChanged.bind(this))
+        this.reset()
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
         this.deactivateRunnnigState()
 
@@ -356,14 +367,15 @@ export class WpsUnitImpl extends EventEmitter {
         setStringValue(programTemplateSet.getNodeVersion(), "0")
         const date = new Date(Date.parse("2025-09-01T00:00:00.000Z"))
         ProgramTemplates.forEach(template => {
-            this.programTemplates.push(addProgramTemplate(programTemplateSet, {
+            const node = addProgramTemplate(programTemplateSet, {
                 identifier: template.name,
                 description: template.description,
                 author: "AixEngineers",
                 created: date,
                 modified: date,
                 referenceIds: [AFODictionaryIds.preventative_maintenance],
-            }).programTemplate)
+            }).programTemplate
+            this.programTemplates.push({template: template, node: node})
         })
         touchNodes(programTemplateSet)
     }
@@ -380,8 +392,9 @@ export class WpsUnitImpl extends EventEmitter {
 
     private initCurrentRunOptions(programTemplateId: string): boolean {
         const id = programTemplateId.toLowerCase()
-        const template = ProgramTemplates.find(template => template.name.toLowerCase().includes(id))
-        if (!template) return false
+        const tuple = this.programTemplates.find(tuple => tuple.template.name.toLowerCase().includes(id))
+        if (!tuple) return false
+        const template = tuple.template
         const steps = template.steps
         const started = new Date()
         const iso = started.toISOString()
@@ -396,6 +409,7 @@ export class WpsUnitImpl extends EventEmitter {
             estimatedRuntime: runTime,
             estimatedStepNumbers: steps.length,
             programTemplate: template,
+            programTemplateNode: tuple.node,
             runId: deviceProgramRunId,
             supervisoryJobId: "",
             supervisoryTaskId: "",
@@ -423,12 +437,13 @@ export class WpsUnitImpl extends EventEmitter {
             }
         }
         const activeProgram = this.functionalUnit.programManager.activeProgram
+        setNameNodeIdValue(activeProgram.currentProgramTemplate, options.programTemplateId, options.programTemplateNode.nodeId)
         setNumericValue(activeProgram.currentRuntime, 0)
         setNumericValue(activeProgram.estimatedRuntime, options.estimatedRuntime)
         setNumericValue(activeProgram.estimatedStepNumbers, options.estimatedStepNumbers)
         setStringValue(activeProgram.deviceProgramRunId, options.runId)
         this.functionalUnitState.setState(LADSFunctionalState.Running)
-        this.runningState.setState(LADSRunnnigState.Execute)
+        this.start()
         this.currentRunOptions = options
         this.run()
     }
@@ -436,7 +451,7 @@ export class WpsUnitImpl extends EventEmitter {
 
     protected enterStep(step: WpsProgramTemplateStep, stepNumber: number) {
         const activeProgram = this.functionalUnit.programManager.activeProgram
-        setNumericValue(activeProgram.currentStepNumber, stepNumber)
+        setNumericValue(activeProgram.currentStepNumber, stepNumber + 1)
         setStringValue(activeProgram.currentStepName, step.name)
         setNumericValue(activeProgram.currentStepRuntime, 0.0)
         setNumericValue(activeProgram.estimatedStepRuntime, step.duration ? step.duration : 0)
@@ -499,6 +514,9 @@ export class WpsUnitImpl extends EventEmitter {
         } else {
             raiseEvent(this.functionalUnit, `Stopping method.`, 100)
         }
+        this.dispenseModeController.enterStop()
+        this.dispenseTimeController.enterStop()
+        this.reset()
         stateMachine.setState(LADSFunctionalState.Stopped)
     }
 
@@ -600,10 +618,18 @@ export class WpsUnitImpl extends EventEmitter {
         this.runningState.setState(toState)
         return StatusCodes.Good
     }
+    private async start() { this.transiteRunningState(LADSRunnnigState.Idle, LADSRunnnigState.Starting, LADSRunnnigState.Execute) }
     private async hold() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Holding, LADSRunnnigState.Held) }
     private async unhold() { this.transiteRunningState(LADSRunnnigState.Held, LADSRunnnigState.Unholding, LADSRunnnigState.Execute) }
     private async suspend() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Suspending, LADSRunnnigState.Suspended) }
     private async unsuspend() { this.transiteRunningState(LADSRunnnigState.Suspended, LADSRunnnigState.Unsuspending, LADSRunnnigState.Execute) }
+    private async toComplete() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Completing, LADSRunnnigState.Completed) }
+    private async reset(wait = 1): Promise<StatusCode> { 
+        this.runningState.setState(LADSRunnnigState.Resetting)
+        sleepMilliSeconds(wait)
+        this.runningState.setState(LADSRunnnigState.Idle)
+        return StatusCodes.Good
+    }
 
     private async resume(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (this.isHeld) {
