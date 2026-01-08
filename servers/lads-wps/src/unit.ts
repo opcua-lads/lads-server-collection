@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSRunnnigState, LADSRunnnigStateMachine } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, getStringValue, LADSMaintenanceTask, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, LADSFiniteStateMachineHelper } from "@utils"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, getStringValue, LADSMaintenanceTask, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, LADSFiniteStateMachineHelper, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, makeBrowsePath, resolveNodeId, BaseNode } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
 import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
@@ -32,7 +32,6 @@ import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
 import { MulitStateDiscreteControlFunctionImpl, TimerControlFunctionImpl, AnalogControlFunctionWithTotalizerImpl, AnalogScalarSensorFunctionImpl } from "@utils"
-import { main } from "./server"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -50,8 +49,7 @@ interface CurrentRunOptions {
     properties?: LADSProperty[]
     samples?: LADSSampleInfo[]
     result?: LADSResult
-    // steps: WpsProgramTemplateStep[]
-    runtimeInterval?: NodeJS.Timeout
+    eventRecorder?: EventDataRecorder
 }
 
 //---------------------------------------------------------------
@@ -78,6 +76,19 @@ const ProgramTemplateDispense: WpsProgramTemplate = {
     steps: [{ name: "Dispense", duration: 600000 }]
 }
 
+const ProgramTemplateSanitization: WpsProgramTemplate = {
+    name: "Sanitization",
+    steps: [
+        { name: "Disconnect the feed-water hose from the device", confirmation: true },
+        { name: "Disconnect endfilter and connect dispense tube at dispenser", confirmation: true },
+        { name: "Guide dispense tube to waste", confirmation: true },
+        { name: "Inject sanitization fluid acccording to the instructions", confirmation: true },
+        { name: "Reconnect the feed-water hose to the device", confirmation: true },
+        { name: "Start sanitization", duration: 120000 },
+        { name: "Disconnect dispense tube and install endfilter according to the instructions", confirmation: true },
+    ]
+}
+
 const ProgramTemplateReplaceCartridge: WpsProgramTemplate = {
     name: "Replace Cartridge",
     component: "Cartridge",
@@ -99,6 +110,14 @@ const ProgramTemplateReplaceEndfilter: WpsProgramTemplate = {
     ]
 }
 
+const ProgramTemplateReplaceUVLamp: WpsProgramTemplate = {
+    name: "Replace UV Lamp",
+    component: "UVLamp",
+    steps: [
+        { name: "Replace UV Lamp according to the instructions", confirmation: true },
+    ]
+}
+
 const ProgramTemplateDepressurization: WpsProgramTemplate = {
     name: "Depressurization",
     steps: [
@@ -116,18 +135,12 @@ const ProgramTemplateFlushTOC: WpsProgramTemplate = {
     ]
 }
 
-const ProgramTemplates: WpsProgramTemplate[] = [
-    ProgramTemplateDispense,
-    ProgramTemplateReplaceEndfilter,
-    ProgramTemplateReplaceCartridge,
-    ProgramTemplateDepressurization,
-    ProgramTemplateFlushTOC,
-]
-
 export interface ProgramTemplateTuple {
     template: WpsProgramTemplate
     node: LADSProgramTemplate
 }
+
+export const DataDirectory = join(__dirname, "data")
 
 export function findNode(parent: BaseNode, path: string[]): BaseNode {
     // copy list via slice(), otherwise teh original array will be emptied by s
@@ -148,15 +161,17 @@ class DispenseModeControlFunctionImpl extends MulitStateDiscreteControlFunctionI
         super(controlFunction)
         this.targetValue?.on("value_changed", (dataValue: DataValue) => { this.currentValue.setValueFromSource(dataValue.value) })
         setNumericValue(this.targetValue, 0)
+        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.setting, AFODictionaryIds.setting)
     }
 }
 
 class DispenseTimerControlFunctionImpl extends TimerControlFunctionImpl {
     dispenseController: DispenseVolumeControlFunctionImpl
-    constructor(controlFuntion: LADSTimerControlFunction, dispenseController: DispenseVolumeControlFunctionImpl) {
-        super(controlFuntion, true)
+    constructor(controlFunction: LADSTimerControlFunction, dispenseController: DispenseVolumeControlFunctionImpl) {
+        super(controlFunction, true)
         setNumericValue(this.targetValue, 60.0)
         this.dispenseController = dispenseController
+        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.dispensing_duration, AFODictionaryIds.dispensing, AFODictionaryIds.dispensing_duration)
     }
 
     protected onStart(): Promise<void> {
@@ -183,6 +198,7 @@ class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWithTotaliz
         this.flow = flow
         this.timeBase = timeBase
         this.timestamp = Date.now()
+        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.dispensing, AFODictionaryIds.dispensing, AFODictionaryIds.dispensed_volume)
     }
 
     protected onStart(): Promise<void> {
@@ -232,8 +248,8 @@ export class WpsUnitImpl extends EventEmitter {
     runningState: UAStateMachineEx
     programTemplates: ProgramTemplateTuple[] = []
     currentRunOptions: CurrentRunOptions
+    pendingRequest: LADSFunctionalState
     documentSet: ComplianceDocumentSetImpl
-
 
     // simulator
     flow: UAVariable
@@ -248,7 +264,6 @@ export class WpsUnitImpl extends EventEmitter {
     dispenseModeController: DispenseModeControlFunctionImpl
     dispenseTimeController: DispenseTimerControlFunctionImpl
     dispenseVolumeController: DispenseVolumeControlFunctionImpl
-
 
     constructor(parent: WpsDeviceImpl, optionals: string[] = []) {
         super()
@@ -278,7 +293,7 @@ export class WpsUnitImpl extends EventEmitter {
         this.functionalUnitState.currentState.on("value_changed", this.onFunctionalUnitStateChanged.bind(this))
         this.runningState = promoteToFiniteStateMachine(runningStateMachine)
         this.runningState.currentState.on("value_changed", this.onRunningStateChanged.bind(this))
-        this.reset()
+        this.transiteReset()
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
         this.deactivateRunnnigState()
 
@@ -296,18 +311,19 @@ export class WpsUnitImpl extends EventEmitter {
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.purification)
         AFODictionary.addSensorFunctionReferences(this.inletConductivitySensor.sensorFunction, AFODictionaryIds.electric_conductivity)
         AFODictionary.addSensorFunctionReferences(this.outletConductivitySensor.sensorFunction, AFODictionaryIds.electric_conductivity)
+        AFODictionary.addSensorFunctionReferences(this.temperatureSensor.sensorFunction, AFODictionaryIds.temperature, AFODictionaryIds.temperature_measurement)
 
-        // experimental - create compliance-document-set & add fake DCC
+        // experimental - create compliance-document-set & add DoC
         const device = this.parent.device
         const documentsDir = join(__dirname, "documents", device.browseName.name)
         this.documentSet = new ComplianceDocumentSetImpl(device, __dirname, documentsDir)
 
         // compliance documents
         // this.documentSet.load()
-        if (false) {
+        if (true) {
             // add example docments from resoucres
             const dir = join(__dirname, "resources")
-            const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "DoC_MS8001TS_00.pdf"), [{ node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity }])
+            const docDocument = this.documentSet.addPDFFile("EU Declaration of Conformity", new Date(), join(dir, "sartorius arium doc.pdf"), [{ node: device, reference: ComplianceDocumentReferences.HasDeclarationOfConformity }])
             AFODictionary.addReferences(docDocument, AFODictionaryIds.conformance_assessment)
             // this.documentSet.save()
         }
@@ -366,7 +382,17 @@ export class WpsUnitImpl extends EventEmitter {
         // pre-initialize nodeversion to avoid node-opcua stack messages
         setStringValue(programTemplateSet.getNodeVersion(), "0")
         const date = new Date(Date.parse("2025-09-01T00:00:00.000Z"))
-        ProgramTemplates.forEach(template => {
+        const config = this.parent.config
+        const programTemplates: WpsProgramTemplate[] = [
+            ProgramTemplateDispense,
+            ProgramTemplateReplaceCartridge,
+            ProgramTemplateReplaceEndfilter,
+            ProgramTemplateDepressurization,
+            ProgramTemplateSanitization,
+        ]
+        if (config.hasTOC) programTemplates.push(ProgramTemplateFlushTOC)
+        if (config.hasUV) programTemplates.push(ProgramTemplateReplaceUVLamp)
+        programTemplates.forEach(template => {
             const node = addProgramTemplate(programTemplateSet, {
                 identifier: template.name,
                 description: template.description,
@@ -424,14 +450,40 @@ export class WpsUnitImpl extends EventEmitter {
 
     private get name(): string { return this.parent.config.name }
 
-    protected async enterRunning() {
+    protected async enterRunning(context: SessionContext) {
         const options = this.currentRunOptions
+
+        // eventually create result structure
+        if (options.programTemplateId != DispenseId) {
+            const resultType = getLADSObjectType(this.functionalUnit.addressSpace, "ResultType")
+            const resultSet = <UAObject>this.functionalUnit.programManager.resultSet
+            options.result = <LADSResult><unknown>resultType.instantiate({
+                componentOf: resultSet,
+                browseName: options.runId,
+                optionals: ["NodeVersion", "FileSet.NodeVersion", "VariableSet.NodeVersion"]
+            })
+            const result = options.result
+            AFODictionary.addDefaultResultReferences(result)
+            setSessionInformation(result, context)
+            setStringValue(getDescriptionVariable(result), `Run based on template ${options.programTemplateId}, started ${options.started.toLocaleDateString()}.`)
+            setPropertiesValue(result.properties, options.properties)
+            setSamplesValue(result.samples, options.samples)
+            setStringValue(result.supervisoryJobId, options.supervisoryJobId)
+            setStringValue(result.supervisoryTaskId, options.supervisoryTaskId)
+            setStringValue(result.deviceProgramRunId, options.runId)
+            setDateTimeValue(result.started, options.started)
+            copyProgramTemplate(options.programTemplateNode, result.programTemplate)
+            touchNodes(result)
+            options.eventRecorder = new EventDataRecorder("Events", this.functionalUnit)
+        }
         raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
+
         // find associated maintenance task (if any)
         if (options.programTemplate.component) {
             const component = this.parent.getComponent(options.programTemplate.component)
             const maintenanceTask = component?.task
             if (maintenanceTask) {
+                await sleepMilliSeconds(100)
                 maintenanceTask.enterExecuting()
                 options.maintenanceTask = maintenanceTask
             }
@@ -442,10 +494,11 @@ export class WpsUnitImpl extends EventEmitter {
         setNumericValue(activeProgram.estimatedRuntime, options.estimatedRuntime)
         setNumericValue(activeProgram.estimatedStepNumbers, options.estimatedStepNumbers)
         setStringValue(activeProgram.deviceProgramRunId, options.runId)
-        this.functionalUnitState.setState(LADSFunctionalState.Running)
-        this.start()
         this.currentRunOptions = options
-        this.run()
+        this.pendingRequest = LADSFunctionalState.Running
+        this.functionalUnitState.setState(LADSFunctionalState.Running)
+        await this.transiteStart()
+        await this.run()
     }
 
 
@@ -457,7 +510,7 @@ export class WpsUnitImpl extends EventEmitter {
         setNumericValue(activeProgram.estimatedStepRuntime, step.duration ? step.duration : 0)
         const message = `${step.name}`
         if (step.confirmation) {
-            this.hold()
+            this.transiteHold()
             raiseEvent(this.functionalUnit, `${message} - Invoke unhold to resume`)
         } else {
             raiseEvent(this.functionalUnit, message)
@@ -484,10 +537,10 @@ export class WpsUnitImpl extends EventEmitter {
                     } else if (step.confirmation) {
                         waiting = !this.isExecuting
                     }
-                    if (this.functionalUnitState.getCurrentState().includes(LADSFunctionalState.Aborted)) {
-                        this.leaveRunning(LADSFunctionalState.Aborted)
+                    if ((this.pendingRequest === LADSFunctionalState.Stopping) || (this.pendingRequest === LADSFunctionalState.Aborted)) {
                         waiting = false
                         aborted = true
+                        this.leaveRunning(this.pendingRequest)
                     } else {
                         await sleepMilliSeconds(200)
                     }
@@ -502,21 +555,30 @@ export class WpsUnitImpl extends EventEmitter {
         stateMachine.setState(state)
         const options = this.currentRunOptions
         if (options) {
-            clearInterval(options.runtimeInterval)
             this.currentRunOptions = undefined
             if (state === LADSFunctionalState.Aborting) {
                 raiseEvent(this.functionalUnit, `Aborting method ${options.programTemplateId} with identifier ${options.runId}.`, 500)
+                await sleepMilliSeconds(100)
                 options.maintenanceTask?.enterFinished(LADSMaintenanceTaskResult.Failure, {dataType: DataType.LocalizedText, value: "Task aborted"})
             } else {
                 raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
+                await sleepMilliSeconds(100)
                 options.maintenanceTask?.enterFinished(LADSMaintenanceTaskResult.Success)
+            }
+            if (options.result) {
+                // document results
+                const result = options.result
+                setDateTimeValue(result.stopped, new Date())
+                const resultsDirectory = join(DataDirectory, "results")
+                new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder])
+                touchNodes(result, result.fileSet)   
             }
         } else {
             raiseEvent(this.functionalUnit, `Stopping method.`, 100)
         }
-        this.dispenseModeController.enterStop()
-        this.dispenseTimeController.enterStop()
-        this.reset()
+        await this.dispenseModeController.enterStop()
+        await this.dispenseTimeController.enterStop()
+        await this.transiteReset()
         stateMachine.setState(LADSFunctionalState.Stopped)
     }
 
@@ -531,9 +593,9 @@ export class WpsUnitImpl extends EventEmitter {
         const T = getNumericValue(this.dispenseTimeController.targetValue)
         const estimatedRuntime = mode === 0 ? 60000 * V / F : T
         this.currentRunOptions.estimatedRuntime = estimatedRuntime
-        this.enterRunning()
+        this.enterRunning(context)
         controller.enterStart()
-        controller.on("stop", () => this.leaveRunning(LADSFunctionalState.Stopping))
+        controller.on("stop", () => this.pendingRequest = LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
 
@@ -555,7 +617,7 @@ export class WpsUnitImpl extends EventEmitter {
             const samplesValue = inputArguments[4].value
             options.samples = samplesValue === null ? [] : (samplesValue as Variant[]).map(item => { return (<any>item) as LADSSampleInfo })
 
-            this.enterRunning()
+            this.enterRunning(context)
             return {
                 outputArguments: [new Variant({ dataType: DataType.String, value: this.currentRunOptions.runId })],
                 statusCode: StatusCodes.Good
@@ -567,13 +629,13 @@ export class WpsUnitImpl extends EventEmitter {
 
     private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
-        this.leaveRunning(LADSFunctionalState.Stopping)
+        this.pendingRequest = LADSFunctionalState.Stopping
         return { statusCode: StatusCodes.Good }
     }
 
     private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
-        this.leaveRunning(LADSFunctionalState.Aborting)
+        this.pendingRequest = LADSFunctionalState.Aborting
         return { statusCode: StatusCodes.Good }
     }
 
@@ -618,13 +680,13 @@ export class WpsUnitImpl extends EventEmitter {
         this.runningState.setState(toState)
         return StatusCodes.Good
     }
-    private async start() { this.transiteRunningState(LADSRunnnigState.Idle, LADSRunnnigState.Starting, LADSRunnnigState.Execute) }
-    private async hold() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Holding, LADSRunnnigState.Held) }
-    private async unhold() { this.transiteRunningState(LADSRunnnigState.Held, LADSRunnnigState.Unholding, LADSRunnnigState.Execute) }
-    private async suspend() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Suspending, LADSRunnnigState.Suspended) }
-    private async unsuspend() { this.transiteRunningState(LADSRunnnigState.Suspended, LADSRunnnigState.Unsuspending, LADSRunnnigState.Execute) }
-    private async toComplete() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Completing, LADSRunnnigState.Completed) }
-    private async reset(wait = 1): Promise<StatusCode> { 
+    private async transiteStart() { this.transiteRunningState(LADSRunnnigState.Idle, LADSRunnnigState.Starting, LADSRunnnigState.Execute) }
+    private async transiteHold() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Holding, LADSRunnnigState.Held) }
+    private async transiteUnhold() { this.transiteRunningState(LADSRunnnigState.Held, LADSRunnnigState.Unholding, LADSRunnnigState.Execute) }
+    private async transiteSuspend() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Suspending, LADSRunnnigState.Suspended) }
+    private async transiteUnsuspend() { this.transiteRunningState(LADSRunnnigState.Suspended, LADSRunnnigState.Unsuspending, LADSRunnnigState.Execute) }
+    private async transiteToComplete() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Completing, LADSRunnnigState.Completed) }
+    private async transiteReset(wait = 1): Promise<StatusCode> { 
         this.runningState.setState(LADSRunnnigState.Resetting)
         sleepMilliSeconds(wait)
         this.runningState.setState(LADSRunnnigState.Idle)
@@ -633,10 +695,10 @@ export class WpsUnitImpl extends EventEmitter {
 
     private async resume(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (this.isHeld) {
-            this.unhold()
+            this.transiteUnhold()
             return { statusCode: StatusCodes.Good }
         } else if (this.isSuspended) {
-            this.unsuspend()
+            this.transiteUnsuspend()
             return { statusCode: StatusCodes.Good }
         } else {
             return { statusCode: StatusCodes.BadInvalidState }

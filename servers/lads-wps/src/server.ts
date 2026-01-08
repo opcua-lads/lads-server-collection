@@ -23,7 +23,6 @@ import { ApplicationType, nodesets, OPCUAServer } from "node-opcua"
 import { join } from "path"
 import { WpsDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
-import { BlobOptions } from "buffer"
 
 //---------------------------------------------------------------
 // config
@@ -47,7 +46,7 @@ export interface DeviceConfig {
 
 const DefaultConfig: ServerConfig = {
     port: 4845,
-    includeAfo: false,
+    includeAfo: true,
     devices: [
         {
             enabled: true,
