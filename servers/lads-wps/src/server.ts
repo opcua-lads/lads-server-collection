@@ -50,7 +50,7 @@ const DefaultConfig: ServerConfig = {
     devices: [
         {
             enabled: true,
-            name: "My Water Purification System",
+            name: "My High-End Water Purification System",
             manufacturer: "sartorius",
             model: "arium pro VF",
             serialNumber: "4711",
@@ -59,8 +59,8 @@ const DefaultConfig: ServerConfig = {
             hasUV: true
         },     
         {
-            enabled: false,
-            name: "My Simple Water Purification System",
+            enabled: true,
+            name: "My Water Purification System",
             manufacturer: "sartorius",
             model: "arium pro DI",
             serialNumber: "4712",
