@@ -33,6 +33,7 @@ export interface WpsFunctionSet extends UAObject {
     inletConductivity: ConductivitySensor
     outletConductivity: ConductivitySensor
     temperature: LADSAnalogScalarSensorFunction
+    TOC?: LADSAnalogScalarSensorFunction,
     dispenseMode: LADSMultiStateDiscreteControlFunction
     dispenseTime: LADSTimerControlFunction
     dispenseVolume: LADSAnalogControlFunctionWithTotalizer
@@ -56,6 +57,7 @@ export interface WpsComponents extends UAObject {
     cartridge: LADSComponent
     ultrafilter?: LADSComponent
     uvLamp?: LADSComponent
+    tocSensor?:LADSComponent
     endfilter: LADSComponent
 }
 

@@ -55,7 +55,8 @@ export class WpsDeviceImpl {
     cartridge: WpsComponentImpl
     endfilter: WpsComponentImpl
     ultrafilter: WpsComponentImpl
-    uvlamp: WpsComponentImpl
+    uvLamp: WpsComponentImpl
+    tocSensor: WpsComponentImpl
     components: WpsComponentImpl[] = []
 
     constructor(server: WpsServerImpl, config: DeviceConfig) {
@@ -73,7 +74,8 @@ export class WpsDeviceImpl {
         this.initComponents(config)
 
         // create unit implementation
-        const unitImpl = new WpsUnitImpl(this)
+        const optionals = config.hasTOC ? ["FunctionSet.TOC"] : []
+        const unitImpl = new WpsUnitImpl(this, optionals)
 
         // attach device helper
         this.deviceHelper = new LADSDeviceHelper(device)
@@ -82,10 +84,12 @@ export class WpsDeviceImpl {
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
         AFODictionary.addReferences(device, AFODictionaryIds.purification)
 
+
         // evaluate asset managemnt
         setInterval(() => {
             this.components.forEach(component => component.evaluate())
         }, 1000)
+        console.log(`Added device "${config.name}" (${config.manufacturer} ${config.model} SN${config.serialNumber})`)
     }
 
 
@@ -141,7 +145,7 @@ export class WpsDeviceImpl {
             })
         }
         if (config.hasUV) {
-            this.uvlamp = new WpsComponentImpl({
+            this.uvLamp = new WpsComponentImpl({
                 parent: components,
                 name: "UVLamp",
                 displayName: "UV Lamp",
@@ -152,14 +156,26 @@ export class WpsDeviceImpl {
                 remaining: 3,
                 optionals: ["OperationCounters.OperationCycleCounter"]
             })
-            if (config.hasTOC) {}
+        }
+        if (config.hasTOC) {
+            this.uvLamp = new WpsComponentImpl({
+                parent: components,
+                name: "TOCSensor",
+                displayName: "TOC Sensor",
+                manufacturer: "sartorius",
+                model: "TOC 2000",
+                startValue: 12,
+                warningValues: [1],
+                remaining: 3,
+            })
         }
         this.components = [
             this.cartridge, 
             this.endfilter, 
             this.ultrafilter, 
-            this.uvlamp]
-            .filter(component => (component !== undefined))
+            this.uvLamp,
+            this.tocSensor
+        ].filter(component => (component !== undefined))
     }
 
     getComponent(componentName: string): WpsComponentImpl {

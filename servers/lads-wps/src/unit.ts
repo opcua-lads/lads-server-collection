@@ -23,15 +23,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSActiveProgram, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSRunnnigState, LADSRunnnigStateMachine } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, getStringValue, LADSMaintenanceTask, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, LADSFiniteStateMachineHelper, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, makeBrowsePath, resolveNodeId, BaseNode } from "node-opcua"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState } from "@interfaces"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
 import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
 import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
-import { MulitStateDiscreteControlFunctionImpl, TimerControlFunctionImpl, AnalogControlFunctionWithTotalizerImpl, AnalogScalarSensorFunctionImpl } from "@utils"
+import { AnalogScalarSensorFunctionImpl } from "@utils"
+import { WpsProgramTemplate, ProgramTemplateTuple, ProgramTemplateDispense, ProgramTemplateReplaceCartridge, ProgramTemplateReplaceEndfilter, ProgramTemplateDepressurization, ProgramTemplateSanitization, ProgramTemplateFlushTOC, ProgramTemplateReplaceUVLamp, DispenseId, WpsProgramTemplateStep } from "./templates"
+import { DispenseModeControlFunctionImpl, DispenseTimerControlFunctionImpl, DispenseVolumeControlFunctionImpl } from "./functions"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -52,94 +54,6 @@ interface CurrentRunOptions {
     eventRecorder?: EventDataRecorder
 }
 
-//---------------------------------------------------------------
-// program templates
-//---------------------------------------------------------------
-interface WpsProgramTemplate {
-    name: string,
-    description?: string,
-    component?: string
-    steps: WpsProgramTemplateStep[]
-}
-
-interface WpsProgramTemplateStep {
-    name: string,
-    duration?: number
-    confirmation?: boolean
-}
-
-const DispenseId = "Dispense"
-
-const ProgramTemplateDispense: WpsProgramTemplate = {
-    name: DispenseId,
-    description: "Dispense based on current mode and set-points",
-    steps: [{ name: "Dispense", duration: 600000 }]
-}
-
-const ProgramTemplateSanitization: WpsProgramTemplate = {
-    name: "Sanitization",
-    steps: [
-        { name: "Disconnect the feed-water hose from the device", confirmation: true },
-        { name: "Disconnect endfilter and connect dispense tube at dispenser", confirmation: true },
-        { name: "Guide dispense tube to waste", confirmation: true },
-        { name: "Inject sanitization fluid acccording to the instructions", confirmation: true },
-        { name: "Reconnect the feed-water hose to the device", confirmation: true },
-        { name: "Start sanitization", duration: 120000 },
-        { name: "Disconnect dispense tube and install endfilter according to the instructions", confirmation: true },
-    ]
-}
-
-const ProgramTemplateReplaceCartridge: WpsProgramTemplate = {
-    name: "Replace Cartridge",
-    component: "Cartridge",
-    steps: [
-        { name: "Disconnect the feed-water hose from the device", confirmation: true },
-        { name: "Collect the water exiting from the outlet in a container (1 L) and start depressurization.", confirmation: true },
-        { name: "Depressurization 0.5 min", duration: 30000 },
-        { name: "Replace cartridges according to the instructions", confirmation: true },
-        { name: "Start the flushing process", confirmation: true },
-        { name: "Flushing 2min", duration: 120000 },
-    ]
-}
-
-const ProgramTemplateReplaceEndfilter: WpsProgramTemplate = {
-    name: "Replace Endfilter",
-    component: "Endfilter",
-    steps: [
-        { name: "Replace endfilter according to the instructions", confirmation: true },
-    ]
-}
-
-const ProgramTemplateReplaceUVLamp: WpsProgramTemplate = {
-    name: "Replace UV Lamp",
-    component: "UVLamp",
-    steps: [
-        { name: "Replace UV Lamp according to the instructions", confirmation: true },
-    ]
-}
-
-const ProgramTemplateDepressurization: WpsProgramTemplate = {
-    name: "Depressurization",
-    steps: [
-        { name: "Disconnect the feed-water hose from the device", confirmation: true },
-        { name: "Collect the water exiting from the outlet in a container (1 L) and start depressurization.", confirmation: true },
-        { name: "Depressurization 0.5 min", duration: 30000 },
-        { name: "Switch off the device", confirmation: true },
-    ]
-}
-
-const ProgramTemplateFlushTOC: WpsProgramTemplate = {
-    name: "Flush TOC",
-    steps: [
-        { name: "Flushing 5min", duration: 300000 },
-    ]
-}
-
-export interface ProgramTemplateTuple {
-    template: WpsProgramTemplate
-    node: LADSProgramTemplate
-}
-
 export const DataDirectory = join(__dirname, "data")
 
 export function findNode(parent: BaseNode, path: string[]): BaseNode {
@@ -151,92 +65,6 @@ export function findNode(parent: BaseNode, path: string[]): BaseNode {
     if (!child) return undefined
     return findNode(child, _path)
 }
-
-//---------------------------------------------------------------
-// specialized control functions
-//---------------------------------------------------------------
-class DispenseModeControlFunctionImpl extends MulitStateDiscreteControlFunctionImpl {
-
-    constructor(controlFunction: LADSMultiStateDiscreteControlFunction) {
-        super(controlFunction)
-        this.targetValue?.on("value_changed", (dataValue: DataValue) => { this.currentValue.setValueFromSource(dataValue.value) })
-        setNumericValue(this.targetValue, 0)
-        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.setting, AFODictionaryIds.setting)
-    }
-}
-
-class DispenseTimerControlFunctionImpl extends TimerControlFunctionImpl {
-    dispenseController: DispenseVolumeControlFunctionImpl
-    constructor(controlFunction: LADSTimerControlFunction, dispenseController: DispenseVolumeControlFunctionImpl) {
-        super(controlFunction, true)
-        setNumericValue(this.targetValue, 60.0)
-        this.dispenseController = dispenseController
-        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.dispensing_duration, AFODictionaryIds.dispensing, AFODictionaryIds.dispensing_duration)
-    }
-
-    protected onStart(): Promise<void> {
-        super.onStart()
-        this.dispenseController.initComputeVolumes()
-        return
-    }
-
-    evaluate(): boolean {
-        const running = super.evaluate()
-        if (running) this.dispenseController.computeVolumes()
-        return running
-    }
-}
-
-class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWithTotalizerImpl {
-    flow: UAVariable
-    timeBase: number
-    timestamp: number
-
-    constructor(controlFunction: LADSAnalogControlFunctionWithTotalizer, flow: UAVariable, timeBase = 60000) {
-        super(controlFunction)
-        setNumericValue(this.targetValue, 1.0)
-        this.flow = flow
-        this.timeBase = timeBase
-        this.timestamp = Date.now()
-        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.dispensing, AFODictionaryIds.dispensing, AFODictionaryIds.dispensed_volume)
-    }
-
-    protected onStart(): Promise<void> {
-        this.initComputeVolumes()
-        return
-    }
-
-    initComputeVolumes() {
-        setNumericValue(this.currentValue, 0.0)
-        this.timestamp = Date.now()
-    }
-
-    computeVolumes(): number {
-        const t = Date.now()
-        const dT = t - this.timestamp
-        const dV = getNumericValue(this.flow) * dT / this.timeBase
-        const V = getNumericValue(this.currentValue) + dV
-        const Vtotal = getNumericValue(this.totalizedValue) + dV
-        this.timestamp = t
-        setNumericValue(this.currentValue, V)
-        setNumericValue(this.totalizedValue, Vtotal)
-        return V
-    }
-
-    evaluate() {
-        if (this.stateMachine.currentStateNode !== this.stateRunning) return
-        const V = this.computeVolumes()
-        if ((getNumericValue(this.targetValue) - V) <= 0) {
-            this.enterStop()
-        }
-    }
-
-    protected onStop(): Promise<void> {
-        this.computeVolumes()
-        return
-    }
-}
-
 
 //---------------------------------------------------------------
 // unit implementation
@@ -254,11 +82,13 @@ export class WpsUnitImpl extends EventEmitter {
     // simulator
     flow: UAVariable
     temperature: UAVariable
+    toc: UAVariable
 
     // sensors
     inletConductivitySensor: AnalogScalarSensorFunctionImpl
     outletConductivitySensor: AnalogScalarSensorFunctionImpl
     temperatureSensor: AnalogScalarSensorFunctionImpl
+    tocSensor: AnalogScalarSensorFunctionImpl
 
     // controllers
     dispenseModeController: DispenseModeControlFunctionImpl
@@ -303,9 +133,11 @@ export class WpsUnitImpl extends EventEmitter {
         this.inletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.inletConductivity, { lowLowLimit: -0.1, lowLimit: 0.0, highLimit: 16.0, highHighLimit: 20.0 })
         this.outletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.outletConductivity, { lowLowLimit: -0.01, lowLimit: 0.0, highLimit: 0.16, highHighLimit: 0.2 })
         this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 10.0, highLimit: 35, highHighLimit: 40 })
+        this.tocSensor = functionSet.TOC ?  new AnalogScalarSensorFunctionImpl(functionSet.TOC, { lowLowLimit: -0.1, lowLimit: -0.1, highLimit: 10, highHighLimit: 20 }) : undefined
         installVariableHistory(this.inletConductivitySensor.sensorValue)
         installVariableHistory(this.outletConductivitySensor.sensorValue)
         installVariableHistory(this.temperatureSensor.sensorValue)
+        installVariableHistory(this.tocSensor?.sensorValue)
 
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.purification)
@@ -344,6 +176,15 @@ export class WpsUnitImpl extends EventEmitter {
             value: { dataType: DataType.Double, value: 25 }
         })
         this.temperature.on("value_changed", (dataValue) => setNumericValue(this.temperatureSensor.sensorValue, dataValue.value.value))
+        if (this.tocSensor) {
+            this.toc = namespace.addVariable({
+                browseName: "TOC",
+                propertyOf: simulator,
+                dataType: DataType.Double,
+                value: { dataType: DataType.Double, value: 2.0 }
+            })
+            this.toc.on("value_changed", (dataValue) => setNumericValue(this.tocSensor.sensorValue, dataValue.value.value))
+        }
 
         // init program manager
         this.initProgramTemplates()
@@ -372,6 +213,7 @@ export class WpsUnitImpl extends EventEmitter {
         setNumericValue(this.inletConductivitySensor.sensorValue, 10.0 * (y + noise(0.05)))
         setNumericValue(this.outletConductivitySensor.sensorValue, 0.1 * (y + noise(0.05)))
         setNumericValue(this.temperatureSensor.sensorValue, getNumericValue(this.temperature) + noise(0.05))
+        setNumericValue(this.tocSensor?.sensorValue, getNumericValue(this.toc) + noise(0.01))
     }
 
     //---------------------------------------------------------------
