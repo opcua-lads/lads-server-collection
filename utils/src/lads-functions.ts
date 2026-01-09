@@ -11,8 +11,8 @@
 
 import { LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction } from "@interfaces";
 import EventEmitter from "events";
-import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessRestrictionsFlag, AccessLevelFlag, UAVariable } from "node-opcua";
-import { promoteToFiniteStateMachine } from "./lads-utils";
+import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessRestrictionsFlag, AccessLevelFlag, UAVariable, QualifiedName } from "node-opcua";
+import { getLADSNamespace, promoteToFiniteStateMachine } from "./lads-utils";
 import { getNumericValue, setNumericValue } from "./lads-variable-utils";
 
 //---------------------------------------------------------------
@@ -56,15 +56,15 @@ export class AnalogScalarSensorFunctionImpl {
         this.rawValue = sensorFunction.rawValue
         this.sensorValue = sensorFunction.sensorValue
         if (alarmMonitorOptions) {
-            const namespace = sensorFunction.namespace as Namespace
-            const addressSpace = namespace.addressSpace
+            const addressSpace = sensorFunction.addressSpace
+            const namespace = getLADSNamespace(addressSpace) as Namespace
             const functionSet = sensorFunction.parent
             const hasEventSource = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasEventSource))
             functionSet.addReference({ referenceType: hasEventSource, nodeId: sensorFunction })
             const alarmType = addressSpace.findEventType(makeNodeId(ObjectTypeIds.ExclusiveLimitAlarmType))
             const name = "AlarmMonitor"
             const options: InstantiateExclusiveLimitAlarmOptions = {
-                browseName: name,
+                browseName: new QualifiedName({name: "AlarmMonitor", namespaceIndex: namespace.index}),
                 displayName: "Alarm Monitor",
                 componentOf: sensorFunction,
                 conditionOf: sensorFunction,
