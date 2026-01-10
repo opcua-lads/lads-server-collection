@@ -43,7 +43,8 @@ import {
     UAProperty,
     UAEventType,
     UADataType,
-    ServerSession} from "node-opcua"
+    ServerSession,
+    StatusCode} from "node-opcua"
 import {
     LADSDevice,
     LADSDeviceState,
@@ -703,9 +704,17 @@ export function promoteToFiniteStateMachine(stateMachine: UAFiniteStateMachine):
             return { statusCode: StatusCodes.Good }
         }
 
-        async onGotoOperationMode(this: LADSDeviceHelper, operationMode: string, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-            this.machineryOperationMode?.setState(operationMode)
-            return { statusCode: StatusCodes.Good }
+        async onGotoOperationMode(this: LADSDeviceHelper, operationMode: MachineryOperationMode, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+            return { statusCode: this.enterOperationMode(operationMode) }
+        }
+
+        enterOperationMode(operationMode: MachineryOperationMode): StatusCode {
+            if (!this.machineryOperationMode) 
+                return StatusCodes.BadNotImplemented
+            if (this.machineryOperationMode.getCurrentState().includes(operationMode)) 
+                return StatusCodes.BadInvalidState
+            this.machineryOperationMode.setState(operationMode)
+            return StatusCodes.Good
         }
 
         enterDeviceInitialzation() {

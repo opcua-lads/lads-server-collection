@@ -8,6 +8,7 @@ export interface WpsProgramTemplate {
     name: string,
     description?: string,
     component?: string
+    maintenanceMode?: boolean
     steps: WpsProgramTemplateStep[]
 }
 
@@ -27,6 +28,7 @@ export const ProgramTemplateDispense: WpsProgramTemplate = {
 
 export const ProgramTemplateSanitization: WpsProgramTemplate = {
     name: "Sanitization",
+    maintenanceMode: true,
     steps: [
         { name: "Disconnect the feed-water hose from the device", confirmation: true },
         { name: "Disconnect endfilter and connect dispense tube at dispenser", confirmation: true },
@@ -41,6 +43,7 @@ export const ProgramTemplateSanitization: WpsProgramTemplate = {
 export const ProgramTemplateReplaceCartridge: WpsProgramTemplate = {
     name: "Replace Cartridge",
     component: "Cartridge",
+    maintenanceMode: true,
     steps: [
         { name: "Disconnect the feed-water hose from the device", confirmation: true },
         { name: "Collect the water exiting from the outlet in a container (1 L) and start depressurization.", confirmation: true },
@@ -54,6 +57,7 @@ export const ProgramTemplateReplaceCartridge: WpsProgramTemplate = {
 export const ProgramTemplateReplaceEndfilter: WpsProgramTemplate = {
     name: "Replace Endfilter",
     component: "Endfilter",
+    maintenanceMode: true,
     steps: [
         { name: "Replace endfilter according to the instructions", confirmation: true },
     ]
@@ -62,6 +66,7 @@ export const ProgramTemplateReplaceEndfilter: WpsProgramTemplate = {
 export const ProgramTemplateReplaceUVLamp: WpsProgramTemplate = {
     name: "Replace UV Lamp",
     component: "UVLamp",
+    maintenanceMode: true,
     steps: [
         { name: "Replace UV Lamp according to the instructions", confirmation: true },
     ]
@@ -69,6 +74,7 @@ export const ProgramTemplateReplaceUVLamp: WpsProgramTemplate = {
 
 export const ProgramTemplateDepressurization: WpsProgramTemplate = {
     name: "Depressurization",
+    maintenanceMode: true,
     steps: [
         { name: "Disconnect the feed-water hose from the device", confirmation: true },
         { name: "Collect the water exiting from the outlet in a container (1 L) and start depressurization.", confirmation: true },
@@ -84,6 +90,13 @@ export const ProgramTemplateFlushTOC: WpsProgramTemplate = {
     ]
 }
 
+export const ProgramTemplateRecalibrateTOC: WpsProgramTemplate = {
+    name: "Recalibrate TOC",
+    maintenanceMode: true,
+    steps: [
+        { name: "Recalibrating TOC", confirmation: true },
+    ]
+}
 export interface ProgramTemplateTuple {
     template: WpsProgramTemplate
     node: LADSProgramTemplate

@@ -26,14 +26,16 @@ import {
     UAObject,
     UAProperty,
     UAString,
-    UATwoStateDiscrete} from "node-opcua"
-import { UAComponent, UADevice, UAFunctionalGroup, UALockingServices } from "node-opcua-nodeset-di"
+    UATwoStateDiscrete,
+    UAVariable} from "node-opcua"
+import { EnumDeviceHealth, UAComponent, UADevice, UAFunctionalGroup, UALockingServices } from "node-opcua-nodeset-di"
 
 //---------------------------------------------------------------
 // Interfaces for LADS devices
 //---------------------------------------------------------------
 export interface LADSComponent extends UAComponent {
     identification?: MachineIdentificationType
+    deviceHealth?: UAVariable
     components?: UAObject
     lifetimeCounters?: UAObject
     operationCounters?: OperationCounters

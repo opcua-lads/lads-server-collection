@@ -23,13 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue, LADSMaintenanceTaskResult, raiseEvent } from "@utils"
 import { WpsDevice, WpsFunctionalUnit, WpsFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, WpsServerImpl } from "./server"
-import { IAddressSpace, INamespace, makeNodeId, n, ObjectTypeIds, UAObject } from "node-opcua"
+import { IAddressSpace, INamespace, LocalizedText, makeNodeId, n, ObjectTypeIds, UAObject } from "node-opcua"
 import { WpsUnitImpl } from "./unit"
 import { LADSComponent, LifetimeVariableType } from "@interfaces"
 import { MaintenanceTaskImpl } from "@utils"
+import { EnumDeviceHealth } from "node-opcua-nodeset-di"
 
 
 //--------------------------------------------------------------- 
@@ -78,17 +79,32 @@ export class WpsDeviceImpl {
         const unitImpl = new WpsUnitImpl(this, optionals)
 
         // attach device helper
-        this.deviceHelper = new LADSDeviceHelper(device)
+        this.deviceHelper = new LADSDeviceHelper(device, {raiseEvents: false})
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
         AFODictionary.addReferences(device, AFODictionaryIds.purification)
 
-
         // evaluate asset managemnt
+        let seconds = 0
         setInterval(() => {
             this.components.forEach(component => component.evaluate())
+            if (++seconds === 60) {
+                const counter = this.uvLamp?.component.operationCounters?.operationCycleCounter
+                if (counter) {
+                    const value = getNumericValue(counter)
+                    setNumericValue(counter, value + 1)
+                }
+                seconds = 0
+            }
+
         }, 1000)
+
+        // register events
+        this.device.deviceHealth?.on("value_changed", (dataValue) => raiseEvent(this.device, `Device health changed to ${EnumDeviceHealth[dataValue.value.value]}`))
+        this.device.machineryOperationMode?.currentState.on("value_changed", (dataValue) => raiseEvent(this.device, `Device operation mode changed to ${(dataValue.value.value as LocalizedText).text}`))
+        
+        // ready
         console.log(`Added device "${config.name}" (${config.manufacturer} ${config.model} SN${config.serialNumber})`)
     }
 
@@ -153,12 +169,12 @@ export class WpsDeviceImpl {
                 model: "UV Lamp Z",
                 startValue: 12,
                 warningValues: [1],
-                remaining: 3,
+                remaining: 0,
                 optionals: ["OperationCounters.OperationCycleCounter"]
             })
         }
         if (config.hasTOC) {
-            this.uvLamp = new WpsComponentImpl({
+            this.tocSensor = new WpsComponentImpl({
                 parent: components,
                 name: "TOCSensor",
                 displayName: "TOC Sensor",
@@ -176,6 +192,16 @@ export class WpsDeviceImpl {
             this.uvLamp,
             this.tocSensor
         ].filter(component => (component !== undefined))
+
+        // subscribe to device health changes
+        setNumericValue(this.device.deviceHealth, EnumDeviceHealth.NORMAL)
+        this.components.forEach(component => {component.component.deviceHealth?.on("value_changed", this.updateDeviceHealth.bind(this))})
+    }
+
+    updateDeviceHealth() {
+        const deviceHealths = this.components.map(component => getNumericValue(component.component.deviceHealth, EnumDeviceHealth.NORMAL) as EnumDeviceHealth)
+        const maintenanceRequired = deviceHealths.find(value => (value === EnumDeviceHealth.MAINTENANCE_REQUIRED)) != undefined
+        setNumericValue(this.device.deviceHealth, maintenanceRequired ? EnumDeviceHealth.MAINTENANCE_REQUIRED : EnumDeviceHealth.NORMAL)
     }
 
     getComponent(componentName: string): WpsComponentImpl {
@@ -214,7 +240,7 @@ export class WpsComponentImpl {
             setNumericValue(remainingLifetime.limitValue, 0)
             setNumericArrayValue(remainingLifetime.warningValues, options.warningValues)
             const now = Date.now()
-            const dateInstalled = monthsBackApprox(now, options.remaining ? options.startValue - options.remaining : 0.5 * options.startValue)
+            const dateInstalled = monthsBackApprox(now, (options.remaining != undefined) ? options.startValue - options.remaining : 0.5 * options.startValue)
             setDateTimeValue(component?.identification?.initialOperationDate, dateInstalled)
         }
         setNumericValue(component.operationCounters?.operationCycleCounter, 0)
@@ -237,10 +263,17 @@ export class WpsComponentImpl {
         this.component = component
         this.task = task
         this.status = LifetimeStatus.Good
+        setNumericValue(this.component.deviceHealth, EnumDeviceHealth.NORMAL)
     }
 
-    onTaskFinished() {
-        setDateTimeValue(this.component.identification?.initialOperationDate, new Date())
+    onTaskFinished(result: LADSMaintenanceTaskResult) {
+        if (this.task.lastResult === LADSMaintenanceTaskResult.Success) {
+            const component = this.component
+            setDateTimeValue(component.identification?.initialOperationDate, new Date())
+            setNumericValue(component.operationCounters?.operationCycleCounter, 0)
+            setNumericValue(component.operationCounters?.operationDuration, 0)
+            setNumericValue(component.operationCounters?.powerOnDuration, 0)
+        }
     }
 
     evaluateLifetimeStatus(): LifetimeStatus {
@@ -272,8 +305,10 @@ export class WpsComponentImpl {
             this.task.raiseWarningEvent()
         } else if (status === LifetimeStatus.Exceeded) {
             this.task.enterActive()
+            setNumericValue(this.component.deviceHealth, EnumDeviceHealth.MAINTENANCE_REQUIRED)
         } else if (status ==  LifetimeStatus.Good) {
             this.task.enterInactive()
+            setNumericValue(this.component.deviceHealth, EnumDeviceHealth.NORMAL)
         }
         this.status = status
     }

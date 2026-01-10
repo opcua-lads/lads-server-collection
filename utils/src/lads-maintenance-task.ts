@@ -53,6 +53,8 @@ interface MaintenanceTaskEvents {
     "executing": []
     "finished": []
     "planned": []
+    "activated": []
+    "deactivated": []
 }
 
 
@@ -64,6 +66,7 @@ export class MaintenanceTaskImpl extends EventEmitter<MaintenanceTaskEvents> {
     statePlanned: UAState
     stateExecuting: UAState
     stateFinished: UAState
+    lastResult: LADSMaintenanceTaskResult = LADSMaintenanceTaskResult.Undetermined
 
     constructor(options: MaintenanceTaskOptions) {
         super()
@@ -160,6 +163,7 @@ export class MaintenanceTaskImpl extends EventEmitter<MaintenanceTaskEvents> {
         this.raiseEvent(`Executing ${this.taskName}`, EventSeverity.Info, "executing")    
     }
     enterFinished(result: LADSMaintenanceTaskResult, comment: VariantLike = undefined) { 
+        this.lastResult = result
         this.maintenanceState.setState(this.stateFinished) 
         if (comment) this.maintenanceTask.comment.setValueFromSource(comment)
         this.raiseEvent(`Finished ${this.taskName} with result ${LADSMaintenanceTaskResult[result]}`, EventSeverity.Info, "finished")    
@@ -171,10 +175,12 @@ export class MaintenanceTaskImpl extends EventEmitter<MaintenanceTaskEvents> {
         if (this.activeState) return
         this.discreteAlarm.activateAlarm()
         this.raiseAlarmEvent()
+        this.emit("activated")
     }
     enterInactive() {
         if (!this.activeState) return
         this.discreteAlarm.deactivateAlarm()
+        this.emit("deactivated")
     }
 
     private async startTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {

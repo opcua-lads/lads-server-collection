@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState } from "@interfaces"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState, MachineryOperationMode } from "@interfaces"
 import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
@@ -32,7 +32,7 @@ import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
 import { AnalogScalarSensorFunctionImpl } from "@utils"
-import { WpsProgramTemplate, ProgramTemplateTuple, ProgramTemplateDispense, ProgramTemplateReplaceCartridge, ProgramTemplateReplaceEndfilter, ProgramTemplateDepressurization, ProgramTemplateSanitization, ProgramTemplateFlushTOC, ProgramTemplateReplaceUVLamp, DispenseId, WpsProgramTemplateStep } from "./templates"
+import { WpsProgramTemplate, ProgramTemplateTuple, ProgramTemplateDispense, ProgramTemplateReplaceCartridge, ProgramTemplateReplaceEndfilter, ProgramTemplateDepressurization, ProgramTemplateSanitization, ProgramTemplateFlushTOC, ProgramTemplateReplaceUVLamp, DispenseId, WpsProgramTemplateStep, ProgramTemplateRecalibrateTOC } from "./templates"
 import { DispenseModeControlFunctionImpl, DispenseTimerControlFunctionImpl, DispenseVolumeControlFunctionImpl } from "./functions"
 
 //---------------------------------------------------------------
@@ -80,6 +80,8 @@ export class WpsUnitImpl extends EventEmitter {
     documentSet: ComplianceDocumentSetImpl
 
     // simulator
+    inletConductivity: UAVariable
+    outletConductivity: UAVariable
     flow: UAVariable
     temperature: UAVariable
     toc: UAVariable
@@ -163,6 +165,18 @@ export class WpsUnitImpl extends EventEmitter {
         // create simulation variables
         const namespace = functionalUnit.namespace
         const simulator = namespace.addObject({ componentOf: functionalUnit, browseName: "Simulator" })
+        this.inletConductivity = namespace.addVariable({
+            browseName: "Inlet Conductivity",
+            propertyOf: simulator,
+            dataType: DataType.Double,
+            value: { dataType: DataType.Double, value: 10 }
+        })
+        this.outletConductivity = namespace.addVariable({
+            browseName: "Outlet Conductivity",
+            propertyOf: simulator,
+            dataType: DataType.Double,
+            value: { dataType: DataType.Double, value: 0.1 }
+        })
         this.flow = namespace.addVariable({
             browseName: "Flow",
             propertyOf: simulator,
@@ -210,8 +224,8 @@ export class WpsUnitImpl extends EventEmitter {
         this.dispenseVolumeController.evaluate()
         const cycleTime = 60000.0
         const y = 1.0 + 0.5 * (Math.sin(2 * Math.PI * runtime / cycleTime))
-        setNumericValue(this.inletConductivitySensor.sensorValue, 10.0 * (y + noise(0.05)))
-        setNumericValue(this.outletConductivitySensor.sensorValue, 0.1 * (y + noise(0.05)))
+        setNumericValue(this.inletConductivitySensor.sensorValue, getNumericValue(this.inletConductivity) * (y + noise(0.05)))
+        setNumericValue(this.outletConductivitySensor.sensorValue, getNumericValue(this.outletConductivity) * (y + noise(0.05)))
         setNumericValue(this.temperatureSensor.sensorValue, getNumericValue(this.temperature) + noise(0.05))
         setNumericValue(this.tocSensor?.sensorValue, getNumericValue(this.toc) + noise(0.01))
     }
@@ -232,7 +246,7 @@ export class WpsUnitImpl extends EventEmitter {
             ProgramTemplateDepressurization,
             ProgramTemplateSanitization,
         ]
-        if (config.hasTOC) programTemplates.push(ProgramTemplateFlushTOC)
+        if (config.hasTOC) programTemplates.push(ProgramTemplateFlushTOC, ProgramTemplateRecalibrateTOC)
         if (config.hasUV) programTemplates.push(ProgramTemplateReplaceUVLamp)
         programTemplates.forEach(template => {
             const node = addProgramTemplate(programTemplateSet, {
@@ -319,6 +333,11 @@ export class WpsUnitImpl extends EventEmitter {
             options.eventRecorder = new EventDataRecorder("Events", this.functionalUnit)
         }
         raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
+
+        // eventually enter maintenance mode
+        if (options.programTemplate.maintenanceMode) {
+            this.parent.deviceHelper.enterOperationMode(MachineryOperationMode.Maintenance)
+        } 
 
         // find associated maintenance task (if any)
         if (options.programTemplate.component) {
@@ -414,6 +433,10 @@ export class WpsUnitImpl extends EventEmitter {
                 const resultsDirectory = join(DataDirectory, "results")
                 new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder])
                 touchNodes(result, result.fileSet)   
+            }
+            if (options.programTemplate?.maintenanceMode) {
+                // go back to processing mode
+                this.parent.deviceHelper.enterOperationMode(MachineryOperationMode.Processing)
             }
         } else {
             raiseEvent(this.functionalUnit, `Stopping method.`, 100)
