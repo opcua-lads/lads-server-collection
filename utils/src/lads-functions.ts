@@ -88,6 +88,7 @@ export class AnalogScalarSensorFunctionImpl {
             alarmMonitor._calculateConditionInfo = this._calculateConditionInfo.bind(this)
         }
     }
+
     private severity(stateData: string) : number {
         if (!stateData) return 0
         switch(stateData) {

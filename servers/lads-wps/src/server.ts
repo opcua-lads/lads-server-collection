@@ -145,7 +145,8 @@ export class WpsServerImpl {
     async start() {
         // wait until server initialized
         await this.server.initialize()
-
+        
+        this.server.engine.addressSpace.installAlarmsAndConditionsService()
         this.config.devices.forEach(deviceConfig => {
             if (deviceConfig.enabled) {
                 const device = new WpsDeviceImpl(this, deviceConfig) 
