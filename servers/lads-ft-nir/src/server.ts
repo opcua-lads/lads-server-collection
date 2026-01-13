@@ -30,6 +30,7 @@ import {
     VariantArrayType,
     VariantLike,
     coerceNodeId,
+    RegisterServerMethod,
 } from "node-opcua"
 import { UADevice } from "node-opcua-nodeset-di"
 
@@ -115,6 +116,7 @@ class FtNirServerImpl {
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+                registerServerMethod: RegisterServerMethod.MDNS,
             })
 
         }
@@ -470,8 +472,24 @@ class FtNirDeviceImpl {
 }
 
 export async function main() {
-    const server = new FtNirServerImpl(12345)
-    await server.start()
+    const serverImpl = new FtNirServerImpl(12345)
+    await serverImpl.start()
+
+    // Graceful shutdown - send mDNS goodbye message
+    const shutdown = async (signal: string) => {
+        console.log(`\n${signal} received, shutting down gracefully...`)
+        try {
+            await serverImpl.server.shutdown()
+            console.log("Server shutdown complete, mDNS goodbye sent.")
+            process.exit(0)
+        } catch (err) {
+            console.error("Error during shutdown:", err)
+            process.exit(1)
+        }
+    }
+
+    process.on('SIGINT', () => shutdown('SIGINT'))
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
 }
 
-// main()
+main()

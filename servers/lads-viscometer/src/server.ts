@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { join } from 'path'
 import assert from "assert"
-import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, } from "node-opcua"
+import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, RegisterServerMethod } from "node-opcua"
 import { DIObjectIds, setStringValue, } from "@utils"
 import { ViscometerDevice } from './viscometer-interfaces'
 import { ViscometerDeviceImpl } from './viscometer-device'
@@ -72,6 +72,7 @@ class ViscometerServerImpl {
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+                registerServerMethod: RegisterServerMethod.MDNS,
             })
 
         }
@@ -113,8 +114,24 @@ class ViscometerServerImpl {
 // create and start server including a list of viscometers
 //---------------------------------------------------------------
 export async function main() {
-    const server = new ViscometerServerImpl(4840)
-    await server.start(['/dev/ttyUSB0'])
+    const serverImpl = new ViscometerServerImpl(4840)
+    await serverImpl.start(['/dev/ttyUSB0'])
+
+    // Graceful shutdown - send mDNS goodbye message
+    const shutdown = async (signal: string) => {
+        console.log(`\n${signal} received, shutting down gracefully...`)
+        try {
+            await serverImpl.server.shutdown()
+            console.log("Server shutdown complete, mDNS goodbye sent.")
+            process.exit(0)
+        } catch (err) {
+            console.error("Error during shutdown:", err)
+            process.exit(1)
+        }
+    }
+
+    process.on('SIGINT', () => shutdown('SIGINT'))
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
 }
 
 main()

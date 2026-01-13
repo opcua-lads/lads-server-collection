@@ -19,7 +19,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, assert, coerceNodeId, DataType, OPCUAServer, UAObject } from "node-opcua"
+import { ApplicationType, assert, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, UAObject } from "node-opcua"
 import { join } from "path"
 import { DIObjectIds, getChildObjects } from "@utils"
 import { pHMeterDevice } from "./ph-meter-interfaces"
@@ -66,11 +66,13 @@ class pHMeterServerImpl {
                     applicationName: "LADS pH-Meter",
                     applicationType: ApplicationType.Server,
                     productUri: uri,
-                    applicationUri: "LADS-SampleServer", // utilize the default certificate
+                    applicationUri: uri, // unique URI for mDNS discovery
 
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+                // Announce via mDNS for auto-discovery
+                registerServerMethod: RegisterServerMethod.MDNS,
             })
 
         }
@@ -107,6 +109,18 @@ class pHMeterServerImpl {
         await this.server.start()
         const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
         console.log(this.server.buildInfo.productName, "is ready on", endpoint);
+
+        // Validate mDNS registration - detect applicationUri mismatch
+        const configuredUri = this.server.serverInfo.applicationUri;
+        const expectedUri = this.server.buildInfo.productUri;
+        if (configuredUri !== expectedUri) {
+            console.error(`\n⚠️  mDNS CONFLICT DETECTED!`);
+            console.error(`   Expected applicationUri: "${expectedUri}"`);
+            console.error(`   Actual applicationUri:   "${configuredUri}"`);
+            console.error(`   Another server may be using the same name.`);
+            console.error(`   Fix: Ensure applicationUri is unique in serverInfo.\n`);
+        }
+
         console.log("CTRL+C to stop");
     }
 }
@@ -115,11 +129,27 @@ class pHMeterServerImpl {
 // create and start server including a list of viscometers
 //---------------------------------------------------------------
 export async function main() {
-    const server = new pHMeterServerImpl(4841)
+    const serverImpl = new pHMeterServerImpl(4843)
     const argv = process.argv.slice()
     const portIdx = argv.indexOf('-p');
     const port = portIdx !== -1 ? String(argv[portIdx + 1]) : '';
-    await server.start(port)
+    await serverImpl.start(port)
+
+    // Graceful shutdown - send mDNS goodbye message
+    const shutdown = async (signal: string) => {
+        console.log(`\n${signal} received, shutting down gracefully...`)
+        try {
+            await serverImpl.server.shutdown()
+            console.log("Server shutdown complete, mDNS goodbye sent.")
+            process.exit(0)
+        } catch (err) {
+            console.error("Error during shutdown:", err)
+            process.exit(1)
+        }
+    }
+
+    process.on('SIGINT', () => shutdown('SIGINT'))
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
 }
 
 main()

@@ -23,6 +23,7 @@ import { ApplicationType, nodesets, OPCUAServer } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
+ import { RegisterServerMethod } from "node-opcua";
 
 //---------------------------------------------------------------
 // config
@@ -138,6 +139,7 @@ export class BalanceServerImpl {
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+                registerServerMethod: RegisterServerMethod.MDNS,  // ← Das ist der Schlüssel
             })
 
         }
@@ -174,8 +176,24 @@ export async function main() {
     const config = await loadConfig()
     const includeAfo = config.includeAfo ?? true
     IncludeAFO = includeAfo
-    const server = new BalanceServerImpl(config)
-    await server.start()
+    const serverImpl = new BalanceServerImpl(config)
+    await serverImpl.start()
+
+    // Graceful shutdown - send mDNS goodbye message
+    const shutdown = async (signal: string) => {
+        console.log(`\n${signal} received, shutting down gracefully...`)
+        try {
+            await serverImpl.server.shutdown()
+            console.log("Server shutdown complete, mDNS goodbye sent.")
+            process.exit(0)
+        } catch (err) {
+            console.error("Error during shutdown:", err)
+            process.exit(1)
+        }
+    }
+
+    process.on('SIGINT', () => shutdown('SIGINT'))
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
 }
 
 main()

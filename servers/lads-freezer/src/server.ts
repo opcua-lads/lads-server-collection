@@ -12,7 +12,7 @@
 //---------------------------------------------------------------
 // interfaces
 
-import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
+import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSDevice, LADSFunctionalState, LADSFunctionalUnit } from "@interfaces"
 import { join } from "path"
 import { defaultLocation, DIObjectIds, getChildObjects, getStringValue, initComponent, LADSComponentOptions, promoteToFiniteStateMachine } from "@utils"
@@ -76,6 +76,8 @@ class FreezerServerImpl {
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+                // Announce via mDNS for auto-discovery
+                registerServerMethod: RegisterServerMethod.MDNS,
             })
 
         }
@@ -212,8 +214,24 @@ class FreezerUnitImpl {
 }
 
 export async function main() {
-    const server = new FreezerServerImpl(4842)
-    await server.start()
+    const serverImpl = new FreezerServerImpl(4842)
+    await serverImpl.start()
+
+    // Graceful shutdown - send mDNS goodbye message
+    const shutdown = async (signal: string) => {
+        console.log(`\n${signal} received, shutting down gracefully...`)
+        try {
+            await serverImpl.server.shutdown()
+            console.log("Server shutdown complete, mDNS goodbye sent.")
+            process.exit(0)
+        } catch (err) {
+            console.error("Error during shutdown:", err)
+            process.exit(1)
+        }
+    }
+
+    process.on('SIGINT', () => shutdown('SIGINT'))
+    process.on('SIGTERM', () => shutdown('SIGTERM'))
 }
 
 main()
