@@ -44,7 +44,9 @@ import {
     UAEventType,
     UADataType,
     ServerSession,
-    StatusCode} from "node-opcua"
+    StatusCode,
+    OPCUAServer
+} from "node-opcua"
 import {
     LADSDevice,
     LADSDeviceState,
@@ -557,7 +559,7 @@ export function buildComponentsEventNotifierTree(parent: UAObject, components: U
             })
         }
         // recurse
-        buildComponentsEventNotifierTree(component, component.components) 
+        buildComponentsEventNotifierTree(component, component.components)
     })
 }
 
@@ -573,224 +575,225 @@ export function buildComponentsEventNotifierTree(parent: UAObject, components: U
 //---------------------------------------------------------------
 
 export function promoteToFiniteStateMachine(stateMachine: UAFiniteStateMachine): UAStateMachineEx {
-        const helper = new LADSFiniteStateMachineHelper(stateMachine)
-        return helper.stateMachine
+    const helper = new LADSFiniteStateMachineHelper(stateMachine)
+    return helper.stateMachine
+}
+
+export class LADSFiniteStateMachineHelper {
+    stateMachine: UAStateMachineEx
+    parentStateMachineHelper?: LADSFiniteStateMachineHelper
+
+    constructor(stateMachine: UAFiniteStateMachine, parentStateMachineHelper?: LADSFiniteStateMachineHelper) {
+        this.stateMachine = promoteToStateMachine(stateMachine)
+        this.stateMachine.currentState.on("value_changed", this.onCurrentStateChanged.bind(this))
+        this.parentStateMachineHelper = parentStateMachineHelper
     }
 
-    export class LADSFiniteStateMachineHelper {
-        stateMachine: UAStateMachineEx
-        parentStateMachineHelper?: LADSFiniteStateMachineHelper
+    setEffectiveDisplayName(states: UAState[]) {
+        const effectiveDisplayName = this.stateMachine.currentState.effectiveDisplayName
+        if (effectiveDisplayName) {
+            const names = states.map((state) => state.displayName[0].text)
+            const name = names.join(".")
+            effectiveDisplayName.setValueFromSource({ dataType: DataType.LocalizedText, value: name })
+        }
+        if (this.parentStateMachineHelper) {
+            const parentState = this.parentStateMachineHelper.stateMachine.currentStateNode
+            if (parentState) {
+                states.unshift(parentState)
+                this.parentStateMachineHelper.setEffectiveDisplayName(states)
+            }
+        }
+    }
 
-        constructor(stateMachine: UAFiniteStateMachine, parentStateMachineHelper?: LADSFiniteStateMachineHelper) {
-            this.stateMachine = promoteToStateMachine(stateMachine)
-            this.stateMachine.currentState.on("value_changed", this.onCurrentStateChanged.bind(this))
-            this.parentStateMachineHelper = parentStateMachineHelper
+    async onCurrentStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
+        const stateName = dataValue.value.value.text
+        assert(stateName)
+        const states = this.stateMachine.getStates()
+        const state = states.find((value: UAState) => (stateName?.includes(value.browseName.name ? value.browseName.name : "")))
+        if (state) {
+            this.stateMachine.currentState.id.setValueFromSource({ value: state.nodeId, dataType: DataType.NodeId })
+            this.setEffectiveDisplayName([state])
+        }
+    }
+}
+
+export interface LADSDeviceHelperOptions {
+    initializationTime?: number
+    shutdownTime?: number
+    raiseEvents?: boolean
+}
+
+export class LADSDeviceHelper {
+    static eventType: UAObjectType
+    device: LADSDevice
+    options: LADSDeviceHelperOptions
+    deviceStateMachine: UAStateMachineEx
+    machineryItemState?: UAStateMachineEx
+    machineryOperationMode?: UAStateMachineEx
+    functionalUnitStateMachines: UAStateMachineEx[] = []
+
+    constructor(device: LADSDevice, options: LADSDeviceHelperOptions = {}) {
+        this.device = device
+        this.options = options
+        const addressSpace = device.addressSpace
+
+        // provide some geographical location
+        device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "N 51 E 6.2" })
+
+        // prepare event bubble up propagation
+        buildLADSEventNotifierTree(device)
+
+        // find event type
+        if (!LADSDeviceHelper.eventType) {
+            const eventType = addressSpace.findEventType(coerceNodeId(ObjectTypeIds.BaseEventType))
+            assert(eventType)
+            LADSDeviceHelper.eventType = eventType
         }
 
-        setEffectiveDisplayName(states: UAState[]) {
-            const effectiveDisplayName = this.stateMachine.currentState.effectiveDisplayName
-            if (effectiveDisplayName) {
-                const names = states.map((state) => state.displayName[0].text)
-                const name = names.join(".")
-                effectiveDisplayName.setValueFromSource({ dataType: DataType.LocalizedText, value: name })
-            }
-            if (this.parentStateMachineHelper) {
-                const parentState = this.parentStateMachineHelper.stateMachine.currentStateNode
-                if (parentState) {
-                    states.unshift(parentState)
-                    this.parentStateMachineHelper.setEffectiveDisplayName(states)
+        // provide link to device in machines folder
+        const organizesType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.Organizes))
+        assert(organizesType)
+        const machineryNamespaceIndex = getMachineryNamespace(addressSpace).index
+        const machinesFolder = addressSpace.findNode(coerceNodeId(1001, machineryNamespaceIndex))
+        machinesFolder?.addReference({ referenceType: organizesType, nodeId: device.nodeId })
+
+        // get and promote state-machines
+        this.deviceStateMachine = promoteToFiniteStateMachine(device.deviceState)
+        this.machineryItemState = device.machineryItemState ? promoteToFiniteStateMachine(device.machineryItemState) : undefined
+        this.machineryOperationMode = device.machineryOperationMode ? promoteToFiniteStateMachine(device.machineryOperationMode) : undefined
+        const functionalUnits = getLADSFunctionalUnits(device)
+        functionalUnits.forEach((functionalUnit) => {
+            const functionalUnitStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState)
+            functionalUnitStateMachine.currentState.on('value_changed', this.onFunctionalUnitStateChanged.bind(this, functionalUnit, functionalUnitStateMachine))
+            this.functionalUnitStateMachines.push(functionalUnitStateMachine)
+        })
+
+        // bind state changes
+        device.deviceState.currentState.on('value_changed', this.onDeviceStateChanged.bind(this))
+        device.machineryItemState?.currentState.on('value_changed', this.onMachineryItemStateChanged.bind(this))
+        device.machineryOperationMode?.currentState.on('value_changed', this.onMachineryOperationModeChanged.bind(this))
+        device.deviceHealth?.on('value_changed', this.onDeviceHealthChanged.bind(this))
+
+        // bind methods
+        device.deviceState.gotoOperate?.bindMethod(this.onGotoOperating.bind(this))
+        device.deviceState.gotoSleep?.bindMethod(this.onGotoSleep.bind(this))
+        device.deviceState.gotoShutdown?.bindMethod(this.onGotoShutdown.bind(this))
+        device.machineryOperationMode?.gotoMaintenance?.bindMethod(this.onGotoOperationMode.bind(this, MachineryOperationMode.Maintenance))
+        device.machineryOperationMode?.gotoProcessing?.bindMethod(this.onGotoOperationMode.bind(this, MachineryOperationMode.Processing))
+        device.machineryOperationMode?.gotoSetup?.bindMethod(this.onGotoOperationMode.bind(this, MachineryOperationMode.Setup))
+
+        // initialize device
+        this.enterDeviceInitialzation()
+    }
+
+    raiseEvent(message: string) {
+        if (!this.options.raiseEvents) return
+        this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: `${this.device.getDisplayName()} ${message}` } })
+    }
+
+    async onGotoOperating(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        this.enterDeviceOperating()
+        return { statusCode: StatusCodes.Good }
+    }
+
+    async onGotoSleep(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        this.enterDeviceSleep()
+        return { statusCode: StatusCodes.Good }
+    }
+
+    async onGotoShutdown(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        this.enterDeviceShutdown()
+        return { statusCode: StatusCodes.Good }
+    }
+
+    async onGotoOperationMode(this: LADSDeviceHelper, operationMode: MachineryOperationMode, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        return { statusCode: this.enterOperationMode(operationMode) }
+    }
+
+    enterOperationMode(operationMode: MachineryOperationMode): StatusCode {
+        if (!this.machineryOperationMode)
+            return StatusCodes.BadNotImplemented
+        if (this.machineryOperationMode.getCurrentState().includes(operationMode))
+            return StatusCodes.BadInvalidState
+        this.machineryOperationMode.setState(operationMode)
+        return StatusCodes.Good
+    }
+
+    enterDeviceInitialzation() {
+        this.deviceStateMachine.setState(LADSDeviceState.Initialization)
+        this.machineryOperationMode?.setState(MachineryOperationMode.None)
+        sleepMilliSeconds(this.options?.initializationTime ? this.options.initializationTime : 50).then(() => this.enterDeviceOperating())
+    }
+
+    enterDeviceOperating() {
+        const state = state2str(this.deviceStateMachine.getCurrentState())
+        if (state.includes(LADSDeviceState.Operate)) return
+        this.deviceStateMachine.setState(LADSDeviceState.Operate)
+        this.machineryOperationMode?.setState(MachineryOperationMode.Processing)
+    }
+
+    enterDeviceSleep() {
+        this.deviceStateMachine.setState(LADSDeviceState.Sleep)
+    }
+
+    enterDeviceShutdown() {
+        this.deviceStateMachine.setState(LADSDeviceState.Shutdown)
+        this.machineryOperationMode?.setState(MachineryOperationMode.None)
+        sleepMilliSeconds(this.options?.shutdownTime ? this.options.shutdownTime : 1000).then(() => { this.enterDeviceInitialzation() })
+    }
+
+    async onDeviceStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
+        const state = dataValue.value.value.text
+        if (!state) return
+        this.raiseEvent(`state changed to ${state} .. `)
+        if (!state.includes(LADSDeviceState.Operate)) {
+            this.adjustMachineryItemState()
+        }
+    }
+
+    async onDeviceHealthChanged(dataValue: DataValueT<EnumDeviceHealth, DataType.UInt32>) {
+        const value = dataValue.value.value
+        const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
+        this.raiseEvent(`health changed to ${key} .. `)
+        if (value == EnumDeviceHealth.FAILURE) {
+            this.machineryItemState?.setState(MachineryItemState.OutOfService)
+            this.functionalUnitStateMachines.forEach((stateMachine) => {
+                if (state2str(stateMachine.getCurrentState()).includes(LADSFunctionalState.Running)) {
+                    stateMachine.setState(LADSFunctionalState.Aborting)
+                    sleepMilliSeconds(1000).then(() => stateMachine.setState(LADSFunctionalState.Aborted))
                 }
-            }
-        }
-
-        async onCurrentStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-            const stateName = dataValue.value.value.text
-            assert(stateName)
-            const states = this.stateMachine.getStates()
-            const state = states.find((value: UAState) => (stateName?.includes(value.browseName.name ? value.browseName.name : "")))
-            if (state) {
-                this.stateMachine.currentState.id.setValueFromSource({ value: state.nodeId, dataType: DataType.NodeId })
-                this.setEffectiveDisplayName([state])
-            }
-        }
-    }
-
-    export interface LADSDeviceHelperOptions {
-        initializationTime?: number
-        shutdownTime?: number
-        raiseEvents?: boolean
-    }
-
-    export class LADSDeviceHelper {
-        static eventType: UAObjectType
-        device: LADSDevice
-        options: LADSDeviceHelperOptions
-        deviceStateMachine: UAStateMachineEx
-        machineryItemState?: UAStateMachineEx
-        machineryOperationMode?: UAStateMachineEx
-        functionalUnitStateMachines: UAStateMachineEx[] = []
-
-        constructor(device: LADSDevice, options: LADSDeviceHelperOptions = {}) {
-            this.device = device
-            this.options = options
-            const addressSpace = device.addressSpace
-
-            // provide some geographical location
-            device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "N 51 E 6.2" })
-
-            // prepare event bubble up propagation
-            buildLADSEventNotifierTree(device)
-
-            // find event type
-            if (!LADSDeviceHelper.eventType) {
-                const eventType = addressSpace.findEventType(coerceNodeId(ObjectTypeIds.BaseEventType))
-                assert(eventType)
-                LADSDeviceHelper.eventType = eventType
-            }
-
-            // provide link to device in machines folder
-            const organizesType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.Organizes))
-            assert(organizesType)
-            const machineryNamespaceIndex = getMachineryNamespace(addressSpace).index
-            const machinesFolder = addressSpace.findNode(coerceNodeId(1001, machineryNamespaceIndex))
-            machinesFolder?.addReference({ referenceType: organizesType, nodeId: device.nodeId })
-
-            // get and promote state-machines
-            this.deviceStateMachine = promoteToFiniteStateMachine(device.deviceState)
-            this.machineryItemState = device.machineryItemState ? promoteToFiniteStateMachine(device.machineryItemState) : undefined
-            this.machineryOperationMode = device.machineryOperationMode ? promoteToFiniteStateMachine(device.machineryOperationMode) : undefined
-            const functionalUnits = getLADSFunctionalUnits(device)
-            functionalUnits.forEach((functionalUnit) => {
-                const functionalUnitStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState)
-                functionalUnitStateMachine.currentState.on('value_changed', this.onFunctionalUnitStateChanged.bind(this, functionalUnit, functionalUnitStateMachine))
-                this.functionalUnitStateMachines.push(functionalUnitStateMachine)
-            })
-
-            // bind state changes
-            device.deviceState.currentState.on('value_changed', this.onDeviceStateChanged.bind(this))
-            device.machineryItemState?.currentState.on('value_changed', this.onMachineryItemStateChanged.bind(this))
-            device.machineryOperationMode?.currentState.on('value_changed', this.onMachineryOperationModeChanged.bind(this))
-            device.deviceHealth?.on('value_changed', this.onDeviceHealthChanged.bind(this))
-
-            // bind methods
-            device.deviceState.gotoOperate?.bindMethod(this.onGotoOperating.bind(this))
-            device.deviceState.gotoSleep?.bindMethod(this.onGotoSleep.bind(this))
-            device.deviceState.gotoShutdown?.bindMethod(this.onGotoShutdown.bind(this))
-            device.machineryOperationMode?.gotoMaintenance?.bindMethod(this.onGotoOperationMode.bind(this, MachineryOperationMode.Maintenance))
-            device.machineryOperationMode?.gotoProcessing?.bindMethod(this.onGotoOperationMode.bind(this, MachineryOperationMode.Processing))
-            device.machineryOperationMode?.gotoSetup?.bindMethod(this.onGotoOperationMode.bind(this, MachineryOperationMode.Setup))
-
-            // initialize device
-            this.enterDeviceInitialzation()
-        }
-
-        raiseEvent(message: string) {
-            if (!this.options.raiseEvents) return
-            this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: `${this.device.getDisplayName()} ${message}` } })
-        }
-
-        async onGotoOperating(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-            this.enterDeviceOperating()
-            return { statusCode: StatusCodes.Good }
-        }
-
-        async onGotoSleep(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-            this.enterDeviceSleep()
-            return { statusCode: StatusCodes.Good }
-        }
-
-        async onGotoShutdown(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-            this.enterDeviceShutdown()
-            return { statusCode: StatusCodes.Good }
-        }
-
-        async onGotoOperationMode(this: LADSDeviceHelper, operationMode: MachineryOperationMode, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-            return { statusCode: this.enterOperationMode(operationMode) }
-        }
-
-        enterOperationMode(operationMode: MachineryOperationMode): StatusCode {
-            if (!this.machineryOperationMode) 
-                return StatusCodes.BadNotImplemented
-            if (this.machineryOperationMode.getCurrentState().includes(operationMode)) 
-                return StatusCodes.BadInvalidState
-            this.machineryOperationMode.setState(operationMode)
-            return StatusCodes.Good
-        }
-
-        enterDeviceInitialzation() {
-            this.deviceStateMachine.setState(LADSDeviceState.Initialization)
-            this.machineryOperationMode?.setState(MachineryOperationMode.None)
-            sleepMilliSeconds(this.options?.initializationTime ? this.options.initializationTime : 50).then(() => this.enterDeviceOperating())
-        }
-
-        enterDeviceOperating() {
-            const state = state2str(this.deviceStateMachine.getCurrentState())
-            if (state.includes(LADSDeviceState.Operate)) return
-            this.deviceStateMachine.setState(LADSDeviceState.Operate)
-            this.machineryOperationMode?.setState(MachineryOperationMode.Processing)
-        }
-
-        enterDeviceSleep() {
-            this.deviceStateMachine.setState(LADSDeviceState.Sleep)
-        }
-
-        enterDeviceShutdown() {
-            this.deviceStateMachine.setState(LADSDeviceState.Shutdown)
-            this.machineryOperationMode?.setState(MachineryOperationMode.None)
-            sleepMilliSeconds(this.options?.shutdownTime ? this.options.shutdownTime : 1000).then(() => { this.enterDeviceInitialzation() })
-        }
-
-        async onDeviceStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-            const state = dataValue.value.value.text
-            if (!state) return
-            this.raiseEvent(`state changed to ${state} .. `)
-            if (!state.includes(LADSDeviceState.Operate)) {
-                this.adjustMachineryItemState()
-            }
-        }
-
-        async onDeviceHealthChanged(dataValue: DataValueT<EnumDeviceHealth, DataType.UInt32>) {
-            const value = dataValue.value.value
-            const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
-            this.raiseEvent(`health changed to ${key} .. `)
-            if (value == EnumDeviceHealth.FAILURE) {
-                this.machineryItemState?.setState(MachineryItemState.OutOfService)
-                this.functionalUnitStateMachines.forEach((stateMachine) => {
-                    if (state2str(stateMachine.getCurrentState()).includes(LADSFunctionalState.Running)) {
-                        stateMachine.setState(LADSFunctionalState.Aborting)
-                        sleepMilliSeconds(1000).then(() => stateMachine.setState(LADSFunctionalState.Aborted))
-                    }
-                })
-            }
-        }
-
-        async onMachineryOperationModeChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-            const state = dataValue.value.value.text
-            if (!state) return
-            this.raiseEvent(`operation mode changed to ${state} .. `)
-        }
-
-        async onMachineryItemStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-            const state = dataValue.value.value.text
-            if (!state) return
-            this.raiseEvent(`item state changed to ${state} .. `)
-        }
-
-        adjustMachineryItemState(): number {
-            const functionalUnitStates = this.functionalUnitStateMachines.map((stateMachine => (state2str(stateMachine.getCurrentState()))))
-            const functionalUnitsRunnning = functionalUnitStates.reduce((count, state) => { return state.includes(LADSFunctionalState.Running) ? count + 1 : count }, 0)
-            this.machineryItemState?.setState(functionalUnitsRunnning > 0 ? MachineryItemState.Executing : MachineryItemState.NotExecuting)
-            return functionalUnitsRunnning
-        }
-
-        async onFunctionalUnitStateChanged(functionalUnit: UAObject, stateMachine: UAStateMachineEx, dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-            const state = dataValue.value.value.text
-            if (!state) return
-            this.raiseEvent(`${functionalUnit.getDisplayName()} state changed to ${state} ..`)
-            sleepMilliSeconds(50).then(() => {
-                this.adjustMachineryItemState()
             })
         }
     }
 
-    function state2str(value: string | null) { return value ? value : '' }
+    async onMachineryOperationModeChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
+        const state = dataValue.value.value.text
+        if (!state) return
+        this.raiseEvent(`operation mode changed to ${state} .. `)
+    }
+
+    async onMachineryItemStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
+        const state = dataValue.value.value.text
+        if (!state) return
+        this.raiseEvent(`item state changed to ${state} .. `)
+    }
+
+    adjustMachineryItemState(): number {
+        const functionalUnitStates = this.functionalUnitStateMachines.map((stateMachine => (state2str(stateMachine.getCurrentState()))))
+        const functionalUnitsRunnning = functionalUnitStates.reduce((count, state) => { return state.includes(LADSFunctionalState.Running) ? count + 1 : count }, 0)
+        this.machineryItemState?.setState(functionalUnitsRunnning > 0 ? MachineryItemState.Executing : MachineryItemState.NotExecuting)
+        return functionalUnitsRunnning
+    }
+
+    async onFunctionalUnitStateChanged(functionalUnit: UAObject, stateMachine: UAStateMachineEx, dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
+        const state = dataValue.value.value.text
+        if (!state) return
+        this.raiseEvent(`${functionalUnit.getDisplayName()} state changed to ${state} ..`)
+        sleepMilliSeconds(50).then(() => {
+            this.adjustMachineryItemState()
+        })
+    }
+}
+
+function state2str(value: string | null) { return value ? value : '' }
+

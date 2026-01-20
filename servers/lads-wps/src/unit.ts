@@ -34,6 +34,7 @@ import { join } from "path"
 import { AnalogScalarSensorFunctionImpl } from "@utils"
 import { WpsProgramTemplate, ProgramTemplateTuple, ProgramTemplateDispense, ProgramTemplateReplaceCartridge, ProgramTemplateReplaceEndfilter, ProgramTemplateDepressurization, ProgramTemplateSanitization, ProgramTemplateFlushTOC, ProgramTemplateReplaceUVLamp, DispenseId, WpsProgramTemplateStep, ProgramTemplateRecalibrateTOC } from "./templates"
 import { DispenseModeControlFunctionImpl, DispenseTimerControlFunctionImpl, DispenseVolumeControlFunctionImpl } from "./functions"
+import { LockImpl } from "utils/src/lads-lock"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -78,6 +79,7 @@ export class WpsUnitImpl extends EventEmitter {
     currentRunOptions: CurrentRunOptions
     pendingRequest: LADSFunctionalState
     documentSet: ComplianceDocumentSetImpl
+    lock: LockImpl
 
     // simulator
     inletConductivity: UAVariable
@@ -103,6 +105,9 @@ export class WpsUnitImpl extends EventEmitter {
         // create unit object
         const functionalUnitSet = parent.getFunctionalUnitSet()
         const wpsUnitType = getWpsNameSpace(functionalUnitSet.addressSpace).findObjectType("WPSUnitType")
+        optionals.push(
+            "FunctionSet.DispenseVolume.ControlFunctionState.StartWithTargetValue", 
+            "FunctionSet.DispenseTime.ControlFunctionState.StartWithTargetValue")
         this.functionalUnit = wpsUnitType.instantiate({
             browseName: "WPSUnit",
             displayName: "WPS Unit",
@@ -129,6 +134,11 @@ export class WpsUnitImpl extends EventEmitter {
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
         this.deactivateRunnnigState()
 
+        // initialize lock
+        if (functionalUnit.lock) {
+            this.lock = new LockImpl(functionalUnit.lock, parent.lock)
+        }
+        
         // init sensors
         const functionSet = this.functionalUnit.getComponentByName("FunctionSet") as WpsFunctionSet
         // conductivity sensors
@@ -218,6 +228,8 @@ export class WpsUnitImpl extends EventEmitter {
         this.dispenseVolumeController = new DispenseVolumeControlFunctionImpl(functionSet.dispenseVolume, this.flow)
         this.dispenseTimeController = new DispenseTimerControlFunctionImpl(functionSet.dispenseTime, this.dispenseVolumeController)
     }
+
+    protected isAccessibleBy(sessionContext: SessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
 
     private evaluate(runtime: number, dT: number) {
         this.dispenseTimeController.evaluate()
@@ -448,6 +460,7 @@ export class WpsUnitImpl extends EventEmitter {
     }
 
     private async startDispense(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const mode = getNumericValue(this.dispenseModeController.currentValue)
         const controller = mode === 0 ? this.dispenseVolumeController : this.dispenseTimeController
@@ -465,6 +478,7 @@ export class WpsUnitImpl extends EventEmitter {
     }
 
     private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
         if (programTemplateId === DispenseId) {
@@ -493,12 +507,14 @@ export class WpsUnitImpl extends EventEmitter {
     }
 
     private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.pendingRequest = LADSFunctionalState.Stopping
         return { statusCode: StatusCodes.Good }
     }
 
     private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.pendingRequest = LADSFunctionalState.Aborting
         return { statusCode: StatusCodes.Good }
@@ -559,6 +575,7 @@ export class WpsUnitImpl extends EventEmitter {
     }
 
     private async resume(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (this.isHeld) {
             this.transiteUnhold()
             return { statusCode: StatusCodes.Good }

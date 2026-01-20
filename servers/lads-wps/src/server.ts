@@ -19,10 +19,11 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, nodesets, OPCUAServer } from "node-opcua"
-import { join } from "path"
+import { ApplicationType, nodesets, OPCUACertificateManager, OPCUAServer, RegisterServerMethod } from "node-opcua"
+import path, { join } from "path"
 import { WpsDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
+import { installShutdownService } from "@utils"
 
 //---------------------------------------------------------------
 // config
@@ -114,7 +115,11 @@ export class WpsServerImpl {
         try {
             // list of node-set files
             const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_afo, nodeset_wps,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_wps,]
-
+            // setup server specific certificate
+            const certRoot = path.join(__dirname, "certs");
+            const serverCertificateManager = new OPCUACertificateManager({ rootFolder: certRoot });
+            const certificateFile = path.join(certRoot, "own", "certs", "certificate.pem");
+            const privateKeyFile = path.join(certRoot, "own", "private", "private_key.pem");
             // build the server object
             this.server = new OPCUAServer({
                 port: port,
@@ -129,9 +134,22 @@ export class WpsServerImpl {
                     applicationName: "LADS Water Purification System",
                     applicationType: ApplicationType.Server,
                     productUri: uri,
-                    applicationUri: "LADS-SampleServer", // utilize the default certificate
+                    applicationUri: uri,
 
                 },
+                maxConnectionsPerEndpoint: 100,
+                serverCapabilities:{
+                    maxSessions: 100,
+                    maxSubscriptions: 1000,
+                    maxSubscriptionsPerSession: 50,
+                },
+                // certificate
+                serverCertificateManager,
+                certificateFile,
+                privateKeyFile,
+                // LDS
+                registerServerMethod: RegisterServerMethod.MDNS,
+                capabilitiesForMDNS: ["LADS", "DI", "AMB", "Machinery"],
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
             })
@@ -158,7 +176,8 @@ export class WpsServerImpl {
         await this.server.start()
         const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
         console.log(this.server.buildInfo.productName, "is ready on", endpoint);
-        console.log("CTRL+C to stop");
+        console.log("CTRL+C to stop")
+        installShutdownService(this.server)
     }
 }
 

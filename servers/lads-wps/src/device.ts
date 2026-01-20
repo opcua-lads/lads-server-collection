@@ -31,6 +31,7 @@ import { WpsUnitImpl } from "./unit"
 import { LADSComponent, LifetimeVariableType } from "@interfaces"
 import { MaintenanceTaskImpl } from "@utils"
 import { EnumDeviceHealth } from "node-opcua-nodeset-di"
+import { LockImpl } from "utils/src/lads-lock"
 
 
 //--------------------------------------------------------------- 
@@ -59,6 +60,7 @@ export class WpsDeviceImpl {
     uvLamp: WpsComponentImpl
     tocSensor: WpsComponentImpl
     components: WpsComponentImpl[] = []
+    lock: LockImpl = undefined
 
     constructor(server: WpsServerImpl, config: DeviceConfig) {
         // create device object
@@ -70,10 +72,16 @@ export class WpsDeviceImpl {
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
             browseName: config.name,
+            optionals: ["Lock"]
         }) as WpsDevice
         this.device = device
         this.initComponents(config)
 
+        // eventually initialize lock
+        if (this.device.lock) {
+            this.lock = new LockImpl(this.device.lock)
+        }
+        
         // create unit implementation
         const optionals = config.hasTOC ? ["FunctionSet.TOC"] : []
         const unitImpl = new WpsUnitImpl(this, optionals)
@@ -84,6 +92,7 @@ export class WpsDeviceImpl {
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
         AFODictionary.addReferences(device, AFODictionaryIds.purification)
+
 
         // evaluate asset managemnt
         let seconds = 0
