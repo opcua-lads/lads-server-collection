@@ -19,11 +19,11 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, nodesets, OPCUACertificateManager, OPCUAServer, RegisterServerMethod } from "node-opcua"
-import path, { join } from "path"
+import { nodesets, OPCUAServer } from "node-opcua"
+import { join } from "path"
 import { WpsDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
-import { installShutdownService } from "@utils"
+import { createServer } from "@utils"
 
 //---------------------------------------------------------------
 // config
@@ -104,7 +104,6 @@ export class WpsServerImpl {
         const nodeset_standard = nodesets.standard
         const nodeset_di = nodesets.di
         const nodeset_amb = nodesets.amb
-        // load additional nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
         const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')        
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
@@ -112,52 +111,14 @@ export class WpsServerImpl {
         const nodeset_afo = join(nodeset_path, 'AFO_Dictionary.NodeSet2.xml')
         const nodeset_wps = join(nodeset_path, 'WaterPurificationSystem.xml')
 
-        try {
-            // list of node-set files
-            const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_afo, nodeset_wps,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_wps,]
-            // setup server specific certificate
-            const certRoot = path.join(__dirname, "certs");
-            const serverCertificateManager = new OPCUACertificateManager({ rootFolder: certRoot });
-            const certificateFile = path.join(certRoot, "own", "certs", "certificate.pem");
-            const privateKeyFile = path.join(certRoot, "own", "private", "private_key.pem");
-            // build the server object
-            this.server = new OPCUAServer({
-                port: port,
-                // basic information about the server
-                buildInfo: {
-                    manufacturerName: "AixEngineers",
-                    productName: uri,
-                    productUri: uri,
-                    softwareVersion: "1.0.0",
-                },
-                serverInfo: {
-                    applicationName: "LADS Water Purification System",
-                    applicationType: ApplicationType.Server,
-                    productUri: uri,
-                    applicationUri: uri,
-
-                },
-                maxConnectionsPerEndpoint: 100,
-                serverCapabilities:{
-                    maxSessions: 100,
-                    maxSubscriptions: 1000,
-                    maxSubscriptionsPerSession: 50,
-                },
-                // certificate
-                serverCertificateManager,
-                certificateFile,
-                privateKeyFile,
-                // LDS
-                registerServerMethod: RegisterServerMethod.MDNS,
-                capabilitiesForMDNS: ["LADS", "DI", "AMB", "Machinery"],
-                // nodesets used by the server
-                nodeset_filename: node_set_filenames,
-            })
-
-        }
-        catch (err) {
-            console.log(err)
-        }
+        // list of node-set files
+        const nodeset_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_afo, nodeset_wps,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_wps,]
+        this.server = createServer({
+            applicationName: "LADS Water Purification System",
+            port, 
+            uri, 
+            nodeset_filenames
+        })
     }
 
     async start() {
@@ -177,7 +138,6 @@ export class WpsServerImpl {
         const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
         console.log(this.server.buildInfo.productName, "is ready on", endpoint);
         console.log("CTRL+C to stop")
-        installShutdownService(this.server)
     }
 }
 
