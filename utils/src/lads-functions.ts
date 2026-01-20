@@ -14,6 +14,7 @@ import EventEmitter from "events";
 import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessRestrictionsFlag, AccessLevelFlag, UAVariable, QualifiedName } from "node-opcua";
 import { getLADSNamespace, promoteToFiniteStateMachine } from "./lads-utils";
 import { getNumericValue, setNumericValue } from "./lads-variable-utils";
+import { Units } from "@asm";
 
 //---------------------------------------------------------------
 // generic definitions
@@ -124,7 +125,18 @@ interface ControlFunctionEvents {
     "stop": []
 }
 
-export class ControlFunctionImpl extends EventEmitter<ControlFunctionEvents> {
+export abstract class ControlFunctionImpl extends EventEmitter<ControlFunctionEvents> {
+    static stopped: UAState = undefined
+    static stopping: UAState = undefined
+    static running: UAState = undefined
+
+    static initialize(stateMachine: UAStateMachineEx) {
+        if (this.stopped != undefined) return
+        this.stopped = stateMachine.getStateByName(LADSFunctionalState.Stopped)
+        this.stopping = stateMachine.getStateByName(LADSFunctionalState.Stopping)
+        this.running = stateMachine.getStateByName(LADSFunctionalState.Running)
+    }
+
     contolFunction: LADSBaseControlFunction
     stateMachine: UAStateMachineEx
     stateRunning: UAState
@@ -138,9 +150,16 @@ export class ControlFunctionImpl extends EventEmitter<ControlFunctionEvents> {
         this.stateStopped = this.stateMachine.getStateByName(LADSFunctionalState.Stopped)
         controlFunction.controlFunctionState.start?.bindMethod(this.handleStart.bind(this))
         controlFunction.controlFunctionState.stop?.bindMethod(this.handleStop.bind(this))
+        ControlFunctionImpl.initialize(this.stateMachine)
     }
 
+    protected get isStopped(): boolean {return this.stateMachine.currentStateNode == ControlFunctionImpl.stopped}
+    protected get isStopping(): boolean {return this.stateMachine.currentStateNode == ControlFunctionImpl.stopping}
+    protected get isRunning(): boolean {return this.stateMachine.currentStateNode == ControlFunctionImpl.running}
+
     private async handleStart(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (this.isRunning) 
+            return {statusCode: StatusCodes.BadInvalidState}
         this.enterStart()
         return { statusCode: StatusCodes.Good }
     }
@@ -152,6 +171,8 @@ export class ControlFunctionImpl extends EventEmitter<ControlFunctionEvents> {
     protected async onStart() { }
 
     private async handleStop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isRunning) 
+            return {statusCode: StatusCodes.BadInvalidState}
         this.enterStop()
         return { statusCode: StatusCodes.Good }
     }
@@ -188,6 +209,16 @@ export class AnalogControlFunctionImpl extends ControlFunctionImpl {
         super(controlFunction)
         this.targetValue = controlFunction.targetValue
         this.currentValue = controlFunction.currentValue
+        controlFunction.controlFunctionState.startWithTargetValue?.bindMethod(this.handleStartWithTargetValue.bind(this))
+    }
+
+    private async handleStartWithTargetValue(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (this.isRunning) 
+            return {statusCode: StatusCodes.BadInvalidState}
+        if (inputArguments.length > 0)
+            setNumericValue(this.targetValue, inputArguments[0].value)
+        this.enterStart()
+        return { statusCode: StatusCodes.Good }
     }
 }
 export class AnalogControlFunctionWithTotalizerImpl extends AnalogControlFunctionImpl {
