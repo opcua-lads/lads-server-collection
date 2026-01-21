@@ -24,6 +24,7 @@ import { join } from "path"
 import { WpsDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 import { createServer } from "@utils"
+import { Duration, LockImpl } from "utils/src/lads-lock"
 
 //---------------------------------------------------------------
 // config
@@ -125,13 +126,18 @@ export class WpsServerImpl {
         // wait until server initialized
         await this.server.initialize()
         
-        this.server.engine.addressSpace.installAlarmsAndConditionsService()
+        // intall alarm & conditions
+        const addressSpace = this.server.engine.addressSpace
+        addressSpace.installAlarmsAndConditionsService()
+
+        // initialize locking services
+        LockImpl.initialize(addressSpace, 10 * Duration.Minute)
+
         this.config.devices.forEach(deviceConfig => {
             if (deviceConfig.enabled) {
                 const device = new WpsDeviceImpl(this, deviceConfig) 
             }
         })
-
 
         // finalize start
         await this.server.start()

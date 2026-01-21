@@ -9,12 +9,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AddressSpace, CallMethodResultOptions, coerceNodeId, DataType, ServerSession, SessionContext, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
+import { AddressSpace, CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ServerSession, SessionContext, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
 import { UALockingServices } from "node-opcua-nodeset-di";
 import { EventEmitter } from "stream";
 import { getBooleanValue, getNumericValue, getStringValue, setBooleanValue, setNumericValue, setStringValue } from "./lads-variable-utils";
 import { getDINamespace } from "./lads-utils";
 import { assert } from "console";
+
+export enum Duration {
+    Second = 1000,
+    Minute = 60 * Second,
+    Hour = 60 * Minute,
+    Day = 24 * Hour,
+    Week = 7 * Day
+}
 
 export enum LockResult {
     OK = 0,
@@ -26,12 +34,11 @@ export enum LockResult {
 export class LockImpl extends EventEmitter {
     static _maxInactiveLockTime: UAVariable = undefined
 
-    static initialize(lock: UALockingServices) {
+    static initialize(addressSpace: IAddressSpace, maxInactiveLockTime = 0) {
         if (this._maxInactiveLockTime != undefined) return
-        const addressSpace = lock.addressSpace as AddressSpace
         const nsDI = getDINamespace(addressSpace).index
         this._maxInactiveLockTime = addressSpace.findNode(coerceNodeId(6387, nsDI)) as UAVariable
-        this.maxInactiveLockTime = 60000
+        this.maxInactiveLockTime = maxInactiveLockTime > 0 ? maxInactiveLockTime: Duration.Minute
     }
     static set maxInactiveLockTime(duration: number) { setNumericValue(this._maxInactiveLockTime, duration) }
     static get maxInactiveLockTime(): number { return getNumericValue(this._maxInactiveLockTime) }
@@ -47,7 +54,7 @@ export class LockImpl extends EventEmitter {
         super()
         assert(lock != undefined)
 
-        LockImpl.initialize(lock)
+        LockImpl.initialize(lock.addressSpace)
         this.lock = lock
         lock.initLock?.bindMethod(this.initLock.bind(this))
         lock.renewLock?.bindMethod(this.renewLock.bind(this))
@@ -83,7 +90,8 @@ export class LockImpl extends EventEmitter {
         const applicationUri: string = session.clientDescription?.applicationUri ? session.clientDescription.applicationUri : ""
         const applicationName: string = session.clientDescription?.applicationName ? session.clientDescription?.applicationName.text : ""
         setStringValue(this.lock.lockingUser, userIdentity)
-        setStringValue(this.lock.lockingClient, `ApplicationName: ${applicationName}, ApplicationURI: ${applicationUri}`)
+        //setStringValue(this.lock.lockingClient, `ApplicationName: ${applicationName}, ApplicationURI: ${applicationUri}`)
+        setStringValue(this.lock.lockingClient, `${applicationName}`)
         this.renewTimer()
     }
 
