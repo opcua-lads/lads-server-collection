@@ -15,6 +15,7 @@ lib/asm/schemas/automated-reactors.json
 # pnpm-lock.yaml
 
 # — TypeScript build output —
+certs/
 out/
 dist/
 build/
