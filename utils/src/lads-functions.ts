@@ -11,10 +11,9 @@
 
 import { LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction } from "@interfaces";
 import EventEmitter from "events";
-import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessRestrictionsFlag, AccessLevelFlag, UAVariable, QualifiedName } from "node-opcua";
+import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessLevelFlag, UAVariable, QualifiedName } from "node-opcua";
 import { getLADSNamespace, promoteToFiniteStateMachine } from "./lads-utils";
 import { getNumericValue, setNumericValue } from "./lads-variable-utils";
-import { Units } from "@asm";
 
 //---------------------------------------------------------------
 // generic definitions
@@ -139,18 +138,14 @@ export abstract class ControlFunctionImpl extends EventEmitter<ControlFunctionEv
 
     contolFunction: LADSBaseControlFunction
     stateMachine: UAStateMachineEx
-    stateRunning: UAState
-    stateStopped: UAState
 
     constructor(controlFunction: LADSBaseControlFunction) {
         super()
+        ControlFunctionImpl.initialize(this.stateMachine)
         this.contolFunction = controlFunction
         this.stateMachine = promoteToFiniteStateMachine(controlFunction.controlFunctionState)
-        this.stateRunning = this.stateMachine.getStateByName(LADSFunctionalState.Running)
-        this.stateStopped = this.stateMachine.getStateByName(LADSFunctionalState.Stopped)
         controlFunction.controlFunctionState.start?.bindMethod(this.handleStart.bind(this))
         controlFunction.controlFunctionState.stop?.bindMethod(this.handleStop.bind(this))
-        ControlFunctionImpl.initialize(this.stateMachine)
     }
 
     protected get isStopped(): boolean {return this.stateMachine.currentStateNode == ControlFunctionImpl.stopped}
@@ -270,7 +265,7 @@ export class TimerControlFunctionImpl extends AnalogControlFunctionImpl {
     }
 
     evaluate(): boolean {
-        if (this.stateMachine.currentStateNode !== this.stateRunning) return false
+        if (!this.isRunning) return false
         this.updateCurrentValue()
         if (this.autoStop && this.targetValue && this.currentValue) {
             const dt = getNumericValue(this.targetValue) - getNumericValue(this.currentValue)
