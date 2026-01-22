@@ -89,7 +89,9 @@ export class LockImpl extends EventEmitter {
         const userIdentity = sessionContext.userIdentity
         const applicationUri: string = session.clientDescription?.applicationUri ? session.clientDescription.applicationUri : ""
         const applicationName: string = session.clientDescription?.applicationName ? session.clientDescription?.applicationName.text : ""
-        setStringValue(this.lock.lockingUser, userIdentity)
+        const policyId: string = session.userIdentityToken?.policyId ? session.userIdentityToken?.policyId : "unknown"
+        const user = userIdentity ? userIdentity : policyId
+        setStringValue(this.lock.lockingUser, user)
         //setStringValue(this.lock.lockingClient, `ApplicationName: ${applicationName}, ApplicationURI: ${applicationUri}`)
         setStringValue(this.lock.lockingClient, `${applicationName}`)
         this.renewTimer()

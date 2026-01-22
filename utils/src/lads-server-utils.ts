@@ -76,7 +76,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     try {
         // build the server object
         const server = new OPCUAServer(serverOptions)
-        if (ldsSupport) installShutdownService(server)
+        if (ldsSupport) installShutdownService(server, options.applicationName)
         return server
     }
     catch (err) {
@@ -85,12 +85,12 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     }
 }
 // shutdown including sending mDNS goodbye message
-function installShutdownService(server: OPCUAServer, signals = ['SIGINT', 'SIGTERM']): void {
+function installShutdownService(server: OPCUAServer, name: string, signals = ['SIGINT', 'SIGTERM']): void {
     const shutdown = async (signal: string) => {
         console.log(`\n${signal} received, shutting down gracefully...`)
         try {
             await server.shutdown()
-            console.log("Server shutdown complete, mDNS goodbye sent.")
+            console.log(`Server ${name} shutdown complete, mDNS goodbye sent.`)
             process.exit(0)
         } catch (err) {
             console.error("Error during shutdown:", err)
