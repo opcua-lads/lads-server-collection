@@ -52,6 +52,7 @@ class pHMeterServerImpl {
         const nodeset_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_phmeter,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_phmeter,]
         this.server = createServer({
             applicationName: "LADS pH-Meter",
+            applicationDirectory: __dirname,
             port,
             uri,
             nodeset_filenames

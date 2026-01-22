@@ -116,6 +116,7 @@ export class WpsServerImpl {
         const nodeset_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_afo, nodeset_wps,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_wps,]
         this.server = createServer({
             applicationName: "LADS Water Purification System",
+            applicationDirectory: __dirname,
             port, 
             uri, 
             nodeset_filenames

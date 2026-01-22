@@ -121,6 +121,7 @@ export class BalanceServerImpl {
         const nodeset_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd, nodeset_afo, nodeset_balance,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd, nodeset_balance,]
         this.server = createServer({
             applicationName: "LADS Balance",
+            applicationDirectory: __dirname,
             port,
             uri,
             nodeset_filenames
