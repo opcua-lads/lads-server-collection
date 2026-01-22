@@ -17,6 +17,7 @@ export interface CreateServerOptions {
     nodeset_filenames: string[]
     manufacturerName?: string
     applicationName: string
+    applicationDirectory: string
     softwareVersion?: string
     uri: string
     certificateSupport?: boolean
@@ -59,7 +60,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     // support self signed certifcate 
     const certificateSupport = options.certificateSupport ?? true
     if (certificateSupport) {
-        const certRoot = path.join(process.cwd(), "certs");
+        const certRoot = path.join(options.applicationDirectory, "certs");
         serverOptions.serverCertificateManager = new OPCUACertificateManager({ rootFolder: certRoot });
         serverOptions.certificateFile = path.join(certRoot, "own", "certs", "certificate.pem");
         serverOptions.privateKeyFile = path.join(certRoot, "own", "private", "private_key.pem");
