@@ -9,7 +9,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { AddressSpace, CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ServerSession, SessionContext, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
+import { CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ServerSession, SessionContext, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
 import { UALockingServices } from "node-opcua-nodeset-di";
 import { EventEmitter } from "stream";
 import { getBooleanValue, getNumericValue, getStringValue, setBooleanValue, setNumericValue, setStringValue } from "./lads-variable-utils";

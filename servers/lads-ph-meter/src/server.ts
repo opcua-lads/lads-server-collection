@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { assert, coerceNodeId, DataType, OPCUAServer, UAObject } from "node-opcua"
 import { join } from "path"
 import { createServer, DIObjectIds, getChildObjects } from "@utils"
-import { pHMeterDevice } from "./ph-meter-interfaces"
-import { pHMeterDeviceImpl } from "./ph-meter-device"
+import { pHMeterDevice } from "./interfaces"
+import { pHMeterDeviceImpl } from "./device"
 
 //---------------------------------------------------------------
 export const IncludeAFO = true

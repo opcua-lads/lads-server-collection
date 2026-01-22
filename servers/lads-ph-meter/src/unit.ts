@@ -29,8 +29,8 @@ import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnal
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
 import { join } from "path"
-import { pHMeterDeviceImpl } from "./ph-meter-device"
-import { pHMeterFunctionalUnit, pHMeterFunctionSet } from "./ph-meter-interfaces"
+import { pHMeterDeviceImpl } from "./device"
+import { pHMeterFunctionalUnit, pHMeterFunctionSet } from "./interfaces"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {

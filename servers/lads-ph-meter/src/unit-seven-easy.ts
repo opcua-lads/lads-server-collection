@@ -23,9 +23,9 @@ import { EventEmitter } from 'events';
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
 import { setNumericValue } from '@utils'
-import { pHMeterFunctionalUnit } from './ph-meter-interfaces';
-import { pHMeterDeviceImpl } from './ph-meter-device';
-import { pHMeterUnitImpl } from './ph-meter-unit';
+import { pHMeterFunctionalUnit } from './interfaces';
+import { pHMeterDeviceImpl } from './device';
+import { pHMeterUnitImpl } from './unit';
 
 //---------------------------------------------------------------
 export class pHMeterSevenEasyUnitImpl extends pHMeterUnitImpl {

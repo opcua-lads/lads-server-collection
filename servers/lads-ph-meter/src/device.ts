@@ -26,9 +26,9 @@ import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponent } from "@interfaces"
 import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper } from "@utils"
-import { pHMeterDevice, pHMeterFunctionalUnit, pHMeterFunctionalUnitSet } from "./ph-meter-interfaces"
-import { pHMeterSevenEasyUnitImpl } from "./ph-meter-unit-seven-easy"
-import { pHMeterSimulatorUnitImpl } from "./ph-meter-unit-simulator"
+import { pHMeterDevice, pHMeterFunctionalUnit, pHMeterFunctionalUnitSet } from "./interfaces"
+import { pHMeterSevenEasyUnitImpl } from "./unit-seven-easy"
+import { pHMeterSimulatorUnitImpl } from "./unit-simulator"
 
 //---------------------------------------------------------------
 export class pHMeterDeviceImpl {

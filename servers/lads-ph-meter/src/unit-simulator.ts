@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { getNumericArrayValue, getNumericValue, setNumericValue } from '@utils'
-import { pHMeterFunctionalUnit } from './ph-meter-interfaces';
-import { pHMeterDeviceImpl } from './ph-meter-device';
-import { Constants, pHMeterUnitImpl, ProgramTemplateIds } from './ph-meter-unit';
+import { pHMeterFunctionalUnit } from './interfaces';
+import { pHMeterDeviceImpl } from './device';
+import { Constants, pHMeterUnitImpl, ProgramTemplateIds } from './unit';
 import { AccessLevelFlag, DataType, SessionContext, UAVariable } from 'node-opcua';
 
 //---------------------------------------------------------------
