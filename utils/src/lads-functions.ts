@@ -9,9 +9,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction } from "@interfaces";
+import { LADSFunction, LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction } from "@interfaces";
 import EventEmitter from "events";
-import { UAAnalogUnitRange, DataType, UAExclusiveLimitAlarm, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds, InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessLevelFlag, UAVariable, QualifiedName } from "node-opcua";
+import {
+    UAAnalogUnitRange, DataType, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds,
+    InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessLevelFlag, UAVariable, QualifiedName, 
+    UAVariableT, UAExclusiveDeviationAlarmEx, UAExclusiveLimitAlarmEx, DataValue} from "node-opcua";
 import { getLADSNamespace, promoteToFiniteStateMachine } from "./lads-utils";
 import { getNumericValue, setNumericValue } from "./lads-variable-utils";
 
@@ -37,7 +40,7 @@ export enum EventSeverity {
 }
 
 //---------------------------------------------------------------
-// analog sensor function implementation
+// alarm monitor implementation
 //---------------------------------------------------------------
 function setAccessLevel(variable: UAVariable, accessLevel: number) {
     if (!variable) return
@@ -45,53 +48,54 @@ function setAccessLevel(variable: UAVariable, accessLevel: number) {
     variable.userAccessLevel = accessLevel
 }
 
-export class AnalogScalarSensorFunctionImpl {
-    sensorFunction: LADSAnalogScalarSensorFunction
-    rawValue?: UAAnalogUnitRange<number, DataType.Double>
-    sensorValue: UAAnalogUnitRange<number, DataType.Double>
-    alarmMonitor: UAExclusiveLimitAlarm
+type SetPointNodeType = UAVariableT<number, DataType.Float> | UAVariableT<number, DataType.Double> 
 
-    constructor(sensorFunction: LADSAnalogScalarSensorFunction, alarmMonitorOptions: AlarmMonitorOptions = undefined) {
-        this.sensorFunction = sensorFunction
-        this.rawValue = sensorFunction.rawValue
-        this.sensorValue = sensorFunction.sensorValue
-        if (alarmMonitorOptions) {
-            const addressSpace = sensorFunction.addressSpace
-            const namespace = getLADSNamespace(addressSpace) as Namespace
-            const functionSet = sensorFunction.parent
-            const hasEventSource = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasEventSource))
-            functionSet.addReference({ referenceType: hasEventSource, nodeId: sensorFunction })
-            const alarmType = addressSpace.findEventType(makeNodeId(ObjectTypeIds.ExclusiveLimitAlarmType))
-            const name = "AlarmMonitor"
-            const options: InstantiateExclusiveLimitAlarmOptions = {
-                browseName: new QualifiedName({name: "AlarmMonitor", namespaceIndex: namespace.index}),
-                displayName: "Alarm Monitor",
-                componentOf: sensorFunction,
-                conditionOf: sensorFunction,
-                eventSourceOf: sensorFunction,
-                conditionSource: sensorFunction,
-                conditionName: `${sensorFunction.getDisplayName()}-${name}`,
-                highHighLimit: alarmMonitorOptions.highHighLimit,
-                highLimit: alarmMonitorOptions.highLimit,
-                lowLimit: alarmMonitorOptions.lowLimit,
-                lowLowLimit: alarmMonitorOptions.lowLowLimit,
-                inputNode: this.sensorValue,
-                optionals: ["AckedState", "Acknowledge"]
-            }
-            const accessReadWrite = AccessLevelFlag.CurrentRead | AccessLevelFlag.CurrentWrite
-            this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, options)
-            setAccessLevel(this.alarmMonitor.highHighLimit, accessReadWrite)
-            setAccessLevel(this.alarmMonitor.highLimit, accessReadWrite)
-            setAccessLevel(this.alarmMonitor.lowLimit, accessReadWrite)
-            setAccessLevel(this.alarmMonitor.lowLowLimit, accessReadWrite)
-            const alarmMonitor = this.alarmMonitor as any
-            alarmMonitor._calculateConditionInfo = this._calculateConditionInfo.bind(this)
+export abstract class LimitAlarmImpl {
+    parentFunction: LADSFunction
+    options: InstantiateExclusiveLimitAlarmOptions
+    alarmMonitor: UAExclusiveLimitAlarmEx | UAExclusiveDeviationAlarmEx
+
+    constructor(parentFunction: LADSFunction, alarmMonitorOptions: AlarmMonitorOptions, inputNode: UAVariable, setpointNode: SetPointNodeType = undefined) {
+        this.parentFunction = parentFunction
+        const addressSpace = parentFunction.addressSpace
+        const namespace = getLADSNamespace(addressSpace) as Namespace
+        const functionSet = parentFunction.parent
+        const hasEventSource = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasEventSource))
+        functionSet.addReference({ referenceType: hasEventSource, nodeId: parentFunction })
+        const name = "AlarmMonitor"
+        this.options = {
+            browseName: new QualifiedName({ name: "AlarmMonitor", namespaceIndex: namespace.index }),
+            displayName: "Alarm Monitor",
+            componentOf: parentFunction,
+            conditionOf: parentFunction,
+            eventSourceOf: parentFunction,
+            conditionSource: parentFunction,
+            conditionName: `${parentFunction.getDisplayName()}-${name}`,
+            highHighLimit: alarmMonitorOptions.highHighLimit,
+            highLimit: alarmMonitorOptions.highLimit,
+            lowLimit: alarmMonitorOptions.lowLimit,
+            lowLowLimit: alarmMonitorOptions.lowLowLimit,
+            inputNode: inputNode,
+            setpointNode: setpointNode,
+            optionals: ["AckedState", "Acknowledge"]
         }
     }
 
-    private severity(stateData: string) : number {
+    setEnabledState(requestedEnabledState: boolean) { this.alarmMonitor.setEnabledState(requestedEnabledState)} 
+
+    protected postInitialize() {
+        const accessReadWrite = AccessLevelFlag.CurrentRead | AccessLevelFlag.CurrentWrite
+        setAccessLevel(this.alarmMonitor.highHighLimit, accessReadWrite)
+        setAccessLevel(this.alarmMonitor.highLimit, accessReadWrite)
+        setAccessLevel(this.alarmMonitor.lowLimit, accessReadWrite)
+        setAccessLevel(this.alarmMonitor.lowLowLimit, accessReadWrite)
+        const alarmMonitor = this.alarmMonitor as any
+        alarmMonitor._calculateConditionInfo = this._calculateConditionInfo.bind(this)
+    }
+
+    protected severity(stateData: string): number {
         if (!stateData) return 0
-        switch(stateData) {
+        switch (stateData) {
             case "Low":
             case "High":
                 return EventSeverity.Warning
@@ -101,8 +105,8 @@ export class AnalogScalarSensorFunctionImpl {
         }
     }
 
-    private _calculateConditionInfo(stateData: string | null, isActive: boolean, value: string, oldCondition: ConditionInfo): ConditionInfo {
-        const name = this.sensorFunction.getDisplayName()
+    protected _calculateConditionInfo(stateData: string | null, isActive: boolean, value: string, oldCondition: ConditionInfo): ConditionInfo {
+        const name = this.parentFunction.getDisplayName()
         const message = stateData ? `${name} sensor value ${stateData.toLowerCase()}` : `${name} sensor value normal`
         const result: ConditionInfo = {
             message: new LocalizedText(message),
@@ -113,6 +117,84 @@ export class AnalogScalarSensorFunctionImpl {
         }
         // console.log(name, oldCondition, result)
         return result
+    }
+}
+
+export class ExclusiveLimitAlarmImpl extends LimitAlarmImpl {
+    constructor(parent: AnalogScalarSensorFunctionImpl, alarmMonitorOptions: AlarmMonitorOptions) {
+        if (!alarmMonitorOptions) return
+        const sensorFunction = parent.sensorFunction
+        super(sensorFunction, alarmMonitorOptions, sensorFunction.sensorValue)
+        const addressSpace = sensorFunction.addressSpace
+        const namespace = getLADSNamespace(addressSpace) as Namespace
+        const alarmType = addressSpace.findEventType(makeNodeId(ObjectTypeIds.ExclusiveLimitAlarmType))
+        this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, this.options) as UAExclusiveDeviationAlarmEx
+
+        this.postInitialize()
+    }
+
+}
+
+export class ExclusiveDeviationAlarmImpl extends LimitAlarmImpl {
+    signalNewCondition: (stateName: string | null, isActive?: boolean, value?: string) => void
+    onSetpointDataValueChange: (dataValue: DataValue) => void
+    
+    
+    constructor(parent: AnalogControlFunctionImpl, alarmMonitorOptions: AlarmMonitorOptions) {
+        if (!alarmMonitorOptions) return
+        const controlFunction = parent.contolFunction as LADSAnalogControlFunction
+        super(controlFunction, alarmMonitorOptions, controlFunction.currentValue, controlFunction.targetValue)
+        const addressSpace = controlFunction.addressSpace
+        const namespace = getLADSNamespace(addressSpace) as Namespace
+        this.alarmMonitor = namespace.instantiateExclusiveDeviationAlarm(this.options)
+
+        // handling of enabled state in node-opcua default implmentation is somewhat stange - better don't enable/disable at all
+        if (false) {
+            // try to install guard
+            const alarmMonitor = this.alarmMonitor as any
+            this.onSetpointDataValueChange = alarmMonitor._onSetpointDataValueChange
+            this.signalNewCondition = alarmMonitor._signalNewCondition
+            alarmMonitor._signalNewCondition = this._signalNewCondition.bind(this)
+            alarmMonitor._onSetpointDataValueChange = this._onSetpointDataValueChange.bind(this)
+        }
+        if (false) {        
+            this.alarmMonitor.setEnabledState(false)
+            parent.on("start", () => this.alarmMonitor.setEnabledState(true))
+            parent.on("stop", () => this.alarmMonitor.setEnabledState(false))
+        }
+
+        this.postInitialize()
+    }
+
+    private _signalNewCondition(stateName: string | null, isActive?: boolean, value?: string): void {
+        if (this.alarmMonitor.getEnabledState()) {
+            this.signalNewCondition(stateName, isActive, value)
+        }
+    }
+
+    private _onSetpointDataValueChange(dataValue: DataValue): void {
+        if (this.alarmMonitor.getEnabledState()) {
+            this.onSetpointDataValueChange(dataValue)
+        }
+    }
+
+}
+
+//---------------------------------------------------------------
+// analog sensor function implementation
+//---------------------------------------------------------------
+export class AnalogScalarSensorFunctionImpl {
+    sensorFunction: LADSAnalogScalarSensorFunction
+    rawValue?: UAAnalogUnitRange<number, DataType.Double>
+    sensorValue: UAAnalogUnitRange<number, DataType.Double>
+    alarmMonitor: ExclusiveLimitAlarmImpl
+
+    constructor(sensorFunction: LADSAnalogScalarSensorFunction, alarmMonitorOptions: AlarmMonitorOptions = undefined) {
+        this.sensorFunction = sensorFunction
+        this.rawValue = sensorFunction.rawValue
+        this.sensorValue = sensorFunction.sensorValue
+        if (alarmMonitorOptions)
+            this.alarmMonitor = new ExclusiveLimitAlarmImpl(this, alarmMonitorOptions)
     }
 }
 
@@ -141,20 +223,20 @@ export abstract class ControlFunctionImpl extends EventEmitter<ControlFunctionEv
 
     constructor(controlFunction: LADSBaseControlFunction) {
         super()
-        ControlFunctionImpl.initialize(this.stateMachine)
         this.contolFunction = controlFunction
         this.stateMachine = promoteToFiniteStateMachine(controlFunction.controlFunctionState)
         controlFunction.controlFunctionState.start?.bindMethod(this.handleStart.bind(this))
         controlFunction.controlFunctionState.stop?.bindMethod(this.handleStop.bind(this))
+        ControlFunctionImpl.initialize(this.stateMachine)
     }
 
-    protected get isStopped(): boolean {return this.stateMachine.currentStateNode == ControlFunctionImpl.stopped}
-    protected get isStopping(): boolean {return this.stateMachine.currentStateNode == ControlFunctionImpl.stopping}
-    protected get isRunning(): boolean {return this.stateMachine.currentStateNode == ControlFunctionImpl.running}
+    protected get isStopped(): boolean { return this.stateMachine.currentStateNode == ControlFunctionImpl.stopped }
+    protected get isStopping(): boolean { return this.stateMachine.currentStateNode == ControlFunctionImpl.stopping }
+    protected get isRunning(): boolean { return this.stateMachine.currentStateNode == ControlFunctionImpl.running }
 
     private async handleStart(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        if (this.isRunning) 
-            return {statusCode: StatusCodes.BadInvalidState}
+        if (this.isRunning)
+            return { statusCode: StatusCodes.BadInvalidState }
         this.enterStart()
         return { statusCode: StatusCodes.Good }
     }
@@ -166,8 +248,8 @@ export abstract class ControlFunctionImpl extends EventEmitter<ControlFunctionEv
     protected async onStart() { }
 
     private async handleStop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        if (!this.isRunning) 
-            return {statusCode: StatusCodes.BadInvalidState}
+        if (!this.isRunning)
+            return { statusCode: StatusCodes.BadInvalidState }
         this.enterStop()
         return { statusCode: StatusCodes.Good }
     }
@@ -199,17 +281,20 @@ export class MulitStateDiscreteControlFunctionImpl extends ControlFunctionImpl {
 export class AnalogControlFunctionImpl extends ControlFunctionImpl {
     targetValue: UAAnalogUnitRange<number, DataType.Double>
     currentValue: UAAnalogUnitRange<number, DataType.Double>
+    alarmMonitor: ExclusiveDeviationAlarmImpl
 
-    constructor(controlFunction: LADSAnalogControlFunction) {
+    constructor(controlFunction: LADSAnalogControlFunction, alarmMonitorOptions: AlarmMonitorOptions = undefined) {
         super(controlFunction)
         this.targetValue = controlFunction.targetValue
         this.currentValue = controlFunction.currentValue
         controlFunction.controlFunctionState.startWithTargetValue?.bindMethod(this.handleStartWithTargetValue.bind(this))
+        if (alarmMonitorOptions)
+            this.alarmMonitor = new ExclusiveDeviationAlarmImpl(this, alarmMonitorOptions)
     }
 
     private async handleStartWithTargetValue(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
-        if (this.isRunning) 
-            return {statusCode: StatusCodes.BadInvalidState}
+        if (this.isRunning)
+            return { statusCode: StatusCodes.BadInvalidState }
         if (inputArguments.length > 0)
             setNumericValue(this.targetValue, inputArguments[0].value)
         this.enterStart()

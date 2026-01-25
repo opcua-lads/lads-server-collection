@@ -1,5 +1,18 @@
+// SPDX-FileCopyrightText: 2025, 2026 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-License-Identifier: MIT
+
+/**
+ *
+ * Copyright (c) 2025 - 2026 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+
 //---------------------------------------------------------------
 // specialized control functions
+//---------------------------------------------------------------
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogControlFunctionWithTotalizer } from "@interfaces"
@@ -76,7 +89,7 @@ export class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWith
     }
 
     evaluate() {
-        if (this.stateMachine.currentStateNode !== this.stateRunning) return
+        if (this.isRunning) return
         const V = this.computeVolumes()
         if ((getNumericValue(this.targetValue) - V) <= 0) {
             this.enterStop()

@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState, MachineryOperationMode } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode } from "node-opcua"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState, MachineryOperationMode, LADSAnalogControlFunction } from "@interfaces"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, getLADSNamespace, AnalogControlFunctionImpl, AlarmMonitorOptions } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode, AddressSpace } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
 import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
 import { EventEmitter } from "events"
@@ -59,7 +59,7 @@ export const DataDirectory = join(__dirname, "data")
 
 export function findNode(parent: BaseNode, path: string[]): BaseNode {
     // copy list via slice(), otherwise teh original array will be emptied by s
-    const _path = path.slice() 
+    const _path = path.slice()
     const name = _path.shift()
     if (!name) return parent
     const child = parent.getChildByName(name)
@@ -106,7 +106,7 @@ export class WpsUnitImpl extends EventEmitter {
         const functionalUnitSet = parent.getFunctionalUnitSet()
         const wpsUnitType = getWpsNameSpace(functionalUnitSet.addressSpace).findObjectType("WPSUnitType")
         optionals.push(
-            "FunctionSet.DispenseVolume.ControlFunctionState.StartWithTargetValue", 
+            "FunctionSet.DispenseVolume.ControlFunctionState.StartWithTargetValue",
             "FunctionSet.DispenseTime.ControlFunctionState.StartWithTargetValue")
         this.functionalUnit = wpsUnitType.instantiate({
             browseName: "WPSUnit",
@@ -138,14 +138,14 @@ export class WpsUnitImpl extends EventEmitter {
         if (functionalUnit.lock) {
             this.lock = new LockImpl(functionalUnit.lock, parent.lock)
         }
-        
+
         // init sensors
         const functionSet = this.functionalUnit.getComponentByName("FunctionSet") as WpsFunctionSet
         // conductivity sensors
         this.inletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.inletConductivity, { lowLowLimit: -0.1, lowLimit: 0.0, highLimit: 16.0, highHighLimit: 20.0 })
         this.outletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.outletConductivity, { lowLowLimit: -0.01, lowLimit: 0.0, highLimit: 0.16, highHighLimit: 0.2 })
         this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 10.0, highLimit: 35, highHighLimit: 40 })
-        this.tocSensor = functionSet.TOC ?  new AnalogScalarSensorFunctionImpl(functionSet.TOC, { lowLowLimit: -0.1, lowLimit: -0.1, highLimit: 10, highHighLimit: 20 }) : undefined
+        this.tocSensor = functionSet.TOC ? new AnalogScalarSensorFunctionImpl(functionSet.TOC, { lowLowLimit: -0.1, lowLimit: -0.1, highLimit: 10, highHighLimit: 20 }) : undefined
         installVariableHistory(this.inletConductivitySensor.sensorValue)
         installVariableHistory(this.outletConductivitySensor.sensorValue)
         installVariableHistory(this.temperatureSensor.sensorValue)
@@ -210,6 +210,26 @@ export class WpsUnitImpl extends EventEmitter {
             this.toc.on("value_changed", (dataValue) => setNumericValue(this.tocSensor.sensorValue, dataValue.value.value))
         }
 
+        // controller alarm test
+        if (true) {
+            const analogControlFunctionType = getLADSNamespace(functionalUnit.addressSpace).findObjectType("AnalogControlFunctionType")
+            const tc = analogControlFunctionType.instantiate({
+                componentOf: functionSet,
+                browseName: "Temperature Controller",
+                optionals: ["ControlFunctionState.Start", "ControlFunctionState.Stop"]
+            }) as LADSAnalogControlFunction
+            const temperatureController = new AnalogControlFunctionImpl(tc, {
+                lowLimit: -1,
+                lowLowLimit: -2,
+                highLimit: 1,
+                highHighLimit: 2
+            })
+            setNumericValue(tc.currentValue, 25)
+            setNumericValue(tc.targetValue, 37)
+            this.temperature.on("value_changed", (dataValue: DataValue) => setNumericValue(tc.currentValue, dataValue.value.value))
+            // temperatureController.alarmMonitor.setEnabledState(false)
+        }
+
         // init program manager
         this.initProgramTemplates()
         this.initControllers(functionSet)
@@ -269,7 +289,7 @@ export class WpsUnitImpl extends EventEmitter {
                 modified: date,
                 referenceIds: [AFODictionaryIds.preventative_maintenance],
             }).programTemplate
-            this.programTemplates.push({template: template, node: node})
+            this.programTemplates.push({ template: template, node: node })
         })
         touchNodes(programTemplateSet)
     }
@@ -349,7 +369,7 @@ export class WpsUnitImpl extends EventEmitter {
         // eventually enter maintenance mode
         if (options.programTemplate.maintenanceMode) {
             this.parent.deviceHelper.enterOperationMode(MachineryOperationMode.Maintenance)
-        } 
+        }
 
         // find associated maintenance task (if any)
         if (options.programTemplate.component) {
@@ -432,7 +452,7 @@ export class WpsUnitImpl extends EventEmitter {
             if (state === LADSFunctionalState.Aborting) {
                 raiseEvent(this.functionalUnit, `Aborting method ${options.programTemplateId} with identifier ${options.runId}.`, 500)
                 await sleepMilliSeconds(100)
-                options.maintenanceTask?.enterFinished(LADSMaintenanceTaskResult.Failure, {dataType: DataType.LocalizedText, value: "Task aborted"})
+                options.maintenanceTask?.enterFinished(LADSMaintenanceTaskResult.Failure, { dataType: DataType.LocalizedText, value: "Task aborted" })
             } else {
                 raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
                 await sleepMilliSeconds(100)
@@ -444,7 +464,7 @@ export class WpsUnitImpl extends EventEmitter {
                 setDateTimeValue(result.stopped, new Date())
                 const resultsDirectory = join(DataDirectory, "results")
                 new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder])
-                touchNodes(result, result.fileSet)   
+                touchNodes(result, result.fileSet)
             }
             if (options.programTemplate?.maintenanceMode) {
                 // go back to processing mode
@@ -567,7 +587,7 @@ export class WpsUnitImpl extends EventEmitter {
     private async transiteSuspend() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Suspending, LADSRunnnigState.Suspended) }
     private async transiteUnsuspend() { this.transiteRunningState(LADSRunnnigState.Suspended, LADSRunnnigState.Unsuspending, LADSRunnnigState.Execute) }
     private async transiteToComplete() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Completing, LADSRunnnigState.Completed) }
-    private async transiteReset(wait = 1): Promise<StatusCode> { 
+    private async transiteReset(wait = 1): Promise<StatusCode> {
         this.runningState.setState(LADSRunnnigState.Resetting)
         sleepMilliSeconds(wait)
         this.runningState.setState(LADSRunnnigState.Idle)
