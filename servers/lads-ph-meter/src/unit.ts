@@ -26,11 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { pHSensorRecorder } from "@asm"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement } from "@utils"
+import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement, AnalogScalarSensorFunctionImpl, AnalogScalarSensorWithCompenstionFunctionImpl } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
 import { join } from "path"
 import { pHMeterDeviceImpl } from "./device"
 import { pHMeterFunctionalUnit, pHMeterFunctionSet } from "./interfaces"
+import { LockImpl } from "utils/src/lads-lock"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -68,8 +69,9 @@ export abstract class pHMeterUnitImpl {
     parent: pHMeterDeviceImpl
     functionalUnit: pHMeterFunctionalUnit
     functionalUnitState: UAStateMachineEx
-    temperatureSensor: LADSAnalogScalarSensorFunction
-    pHSensor: LADSAnalogScalarSensorWithCompensationFunction
+    lock: LockImpl
+    temperatureSensor: AnalogScalarSensorFunctionImpl
+    pHSensor: AnalogScalarSensorWithCompenstionFunctionImpl
     programTemplates: LADSProgramTemplate[] = []
     activeProgram: LADSActiveProgram
     currentRunOptions: CurrentRunOptions
@@ -89,22 +91,22 @@ export abstract class pHMeterUnitImpl {
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
 
+        this.lock = new LockImpl(functionalUnit.lock)
+
         // init sensors
-        const addressSpace = this.functionalUnit.addressSpace
         const functionSet = true ? this.functionalUnit.getComponentByName("FunctionSet") as pHMeterFunctionSet : functionalUnit.functionSet
         // pH sensor
-        this.pHSensor = true ? functionSet.getComponentByName("pHSensor") as LADSAnalogScalarSensorWithCompensationFunction : functionSet.pHSensor
-        this.pHSensor.sensorValue.historizing = true
-        addressSpace.installHistoricalDataNode(this.pHSensor.sensorValue)
+        const pHSensorNode = functionSet.getComponentByName("pHSensor") as LADSAnalogScalarSensorWithCompensationFunction
+        this.pHSensor = new AnalogScalarSensorWithCompenstionFunctionImpl(pHSensorNode, {highHighLimit: 14, highLimit: 12, lowLimit: 2, lowLowLimit: 0})
+     
         // temperature sensor
-        this.temperatureSensor = functionSet.getComponentByName("TemperatureSensor") as LADSAnalogScalarSensorFunction
-        this.temperatureSensor.sensorValue.historizing = true
-        addressSpace.installHistoricalDataNode(this.temperatureSensor.sensorValue)
+        const temperatureSensorNode = functionSet.getComponentByName("TemperatureSensor") as LADSAnalogScalarSensorFunction
+        this.temperatureSensor = new AnalogScalarSensorFunctionImpl(temperatureSensorNode, {highHighLimit: 100, highLimit: 95, lowLimit: 5, lowLowLimit: 0})
 
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.pH_measurement)
-        AFODictionary.addSensorFunctionReferences(this.pHSensor, AFODictionaryIds.pH_measurement, AFODictionaryIds.pH)
+        AFODictionary.addSensorFunctionReferences(this.pHSensor.sensorFunction, AFODictionaryIds.pH_measurement, AFODictionaryIds.pH)
         AFODictionary.addReferences(this.pHSensor.compensationValue, AFODictionaryIds.temperature)
-        AFODictionary.addSensorFunctionReferences(this.temperatureSensor, AFODictionaryIds.temperature_measurement, AFODictionaryIds.temperature)
+        AFODictionary.addSensorFunctionReferences(this.temperatureSensor.sensorFunction, AFODictionaryIds.temperature_measurement, AFODictionaryIds.temperature)
 
         // init program manager
         this.initProgramTemplates()
@@ -120,6 +122,7 @@ export abstract class pHMeterUnitImpl {
     private initProgramTemplates() {
         const programTemplateSet = this.functionalUnit.programManager.programTemplateSet as UAObject
         const date = new Date(Date.parse("2025-04-01T00:00:00.000Z"))
+        setStringValue(programTemplateSet.getNodeVersion(), "")
         this.programTemplatesElements.push(addProgramTemplate(programTemplateSet, {
             identifier: ProgramTemplateIds.Measure,
             description: "pH-Measurement",
@@ -153,6 +156,8 @@ export abstract class pHMeterUnitImpl {
         const result = this.currentRunOptions.result
         touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result.fileSet, result.variableSet)
     }
+
+    private isAccessibleBy(sessionContext: SessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
 
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
@@ -375,6 +380,7 @@ export abstract class pHMeterUnitImpl {
     }
 
     private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         // search properties for sampleId
         const propertiesValue = inputArguments[0].value
@@ -394,6 +400,7 @@ export abstract class pHMeterUnitImpl {
     }
 
     private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
         const programTemplate = this.programTemplatesElements.find(value => value.identifier.toLowerCase().includes(programTemplateId.toLowerCase()))
@@ -428,11 +435,13 @@ export abstract class pHMeterUnitImpl {
     }
 
     private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
     private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Aborting)
         return { statusCode: StatusCodes.Good }
