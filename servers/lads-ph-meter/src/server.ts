@@ -24,6 +24,7 @@ import { join } from "path"
 import { createServer, DIObjectIds, getChildObjects } from "@utils"
 import { pHMeterDevice } from "./interfaces"
 import { pHMeterDeviceImpl } from "./device"
+import { exit } from "process"
 
 //---------------------------------------------------------------
 export const IncludeAFO = true
@@ -84,10 +85,16 @@ class pHMeterServerImpl {
         })
 
         // finalize start
-        await this.server.start()
-        const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
-        console.log(this.server.buildInfo.productName, "is ready on", endpoint);
-        console.log("CTRL+C to stop");
+        try {
+            await this.server.start()
+            const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
+            console.log(this.server.buildInfo.productName, "is ready on", endpoint);
+            console.log("CTRL+C to stop");
+        }
+        catch (err) {
+            console.error("Unable to start server: ", err.message)
+            exit()
+        }
     }
 }
 

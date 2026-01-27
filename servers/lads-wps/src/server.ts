@@ -25,6 +25,7 @@ import { WpsDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 import { createServer } from "@utils"
 import { Duration, LockImpl } from "utils/src/lads-lock"
+import { exit } from "process"
 
 //---------------------------------------------------------------
 // config
@@ -59,18 +60,18 @@ const DefaultConfig: ServerConfig = {
             hasTOC: true,
             hasUF: true,
             hasUV: true
-        },     
+        },
         {
             enabled: true,
             name: "My Water Purification System",
             manufacturer: "sartorius",
             model: "arium pro DI",
             serialNumber: "4712",
-        },     
+        },
     ]
 }
 
-function isValid(config: ServerConfig): boolean { return false}
+function isValid(config: ServerConfig): boolean { return false }
 
 async function loadConfig(): Promise<ServerConfig> {
     // load config
@@ -106,19 +107,19 @@ export class WpsServerImpl {
         const nodeset_di = nodesets.di
         const nodeset_amb = nodesets.amb
         const nodeset_path = join(process.cwd(), 'nodesets')
-        const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')        
+        const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
         const nodeset_lads_cd = join(nodeset_path, 'LADS-CD.xml')
         const nodeset_afo = join(nodeset_path, 'AFO_Dictionary.NodeSet2.xml')
         const nodeset_wps = join(nodeset_path, 'WaterPurificationSystem.xml')
 
         // list of node-set files
-        const nodeset_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_afo, nodeset_wps,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd , nodeset_wps,]
+        const nodeset_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd, nodeset_afo, nodeset_wps,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_lads_cd, nodeset_wps,]
         this.server = createServer({
             applicationName: "LADS Water Purification System",
             applicationDirectory: __dirname,
-            port, 
-            uri, 
+            port,
+            uri,
             nodeset_filenames
         })
     }
@@ -126,7 +127,7 @@ export class WpsServerImpl {
     async start() {
         // wait until server initialized
         await this.server.initialize()
-        
+
         // intall alarm & conditions
         const addressSpace = this.server.engine.addressSpace
         addressSpace.installAlarmsAndConditionsService()
@@ -136,15 +137,21 @@ export class WpsServerImpl {
 
         this.config.devices.forEach(deviceConfig => {
             if (deviceConfig.enabled) {
-                const device = new WpsDeviceImpl(this, deviceConfig) 
+                const device = new WpsDeviceImpl(this, deviceConfig)
             }
         })
 
         // finalize start
-        await this.server.start()
-        const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
-        console.log(this.server.buildInfo.productName, "is ready on", endpoint);
-        console.log("CTRL+C to stop")
+        try {
+            await this.server.start()
+            const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
+            console.log(this.server.buildInfo.productName, "is ready on", endpoint);
+            console.log("CTRL+C to stop")
+        }
+        catch (err) {
+            console.error("Unable to start server: ", err.message)
+            exit()
+        }
     }
 }
 

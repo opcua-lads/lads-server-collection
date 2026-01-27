@@ -36,6 +36,7 @@ import { EventEmitter } from "events"
 import { ComplianceDocumentNodeReferences, ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "utils/src/lads-cd"
 import { BalanceDeviceConfig, BalanceProtocols } from "./server"
 import { addAnimlWeighingDocument, AnimlWeighingDocumentOptions } from "lib/animl/src"
+import { LockImpl } from "utils/src/lads-lock"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -72,6 +73,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     lastReading: BalanceReading
     functionalUnit: BalanceFunctionalUnit
     functionalUnitState: UAStateMachineEx
+    lock: LockImpl
     currentWeight: LADSAnalogScalarSensorFunction
     netWeight: LADSAnalogScalarSensorFunction
     grossWeight: LADSAnalogScalarSensorFunction
@@ -97,6 +99,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             componentOf: functionalUnitSet,
             optionals: optionals
         }) as BalanceFunctionalUnit
+        this.lock = new LockImpl(this.functionalUnit.lock)
     }
 
     async postInitialize() {
@@ -292,6 +295,8 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         const result = this.currentRunOptions.result
         touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result?.fileSet, result?.variableSet)
     }
+
+    private isAccessibleBy(sessionContext: SessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
 
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
@@ -570,6 +575,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     }
 
     private async startMethod(context: SessionContext, programTemplateId: string, properties?: LADSProperty[], samples?: LADSSampleInfo[]): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         this.initCurrentRunOptions(this.findProgramTemplate(programTemplateId))
         this.currentRunOptions.properties = properties ?? []
@@ -606,6 +612,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     }
 
     private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
         const programTemplate = this.programTemplateElements.find(value => value.identifier.toLowerCase().includes(programTemplateId.toLowerCase()))
@@ -638,12 +645,14 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     }
 
     private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
 
     private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Aborting)
         return { statusCode: StatusCodes.Good }

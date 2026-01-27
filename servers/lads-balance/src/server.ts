@@ -24,6 +24,7 @@ import { join } from "path"
 import { BalanceDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 import { createServer } from "@utils"
+import { exit } from "process"
 
 //---------------------------------------------------------------
 // config
@@ -141,10 +142,16 @@ export class BalanceServerImpl {
         })
 
         // finalize start
-        await this.server.start()
-        const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
-        console.log(this.server.buildInfo.productName, "is ready on", endpoint);
-        console.log("CTRL+C to stop")
+        try {
+            await this.server.start()
+            const endpoint = this.server.endpoints[0].endpointDescriptions()[0].endpointUrl;
+            console.log(this.server.buildInfo.productName, "is ready on", endpoint);
+            console.log("CTRL+C to stop")
+        }
+        catch (err) {
+            console.error("Unable to start server: ", err.message)
+            exit()
+        }
     }
 }
 
