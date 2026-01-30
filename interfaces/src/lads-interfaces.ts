@@ -19,6 +19,7 @@ import {
     UAAnalogUnitRange,
     UAExclusiveDeviationAlarm,
     UAExclusiveLimitAlarm,
+    UAExclusiveLimitAlarm_Base,
     UAFile,
     UAFiniteStateMachine,
     UAMethod,
@@ -27,8 +28,9 @@ import {
     UAProperty,
     UAString,
     UATwoStateDiscrete,
-    UAVariable} from "node-opcua"
-import { EnumDeviceHealth, UAComponent, UADevice, UAFunctionalGroup, UALockingServices } from "node-opcua-nodeset-di"
+    UAVariable
+} from "node-opcua"
+import { UAComponent, UADevice, UAFunctionalGroup, UALockingServices } from "node-opcua-nodeset-di"
 
 //---------------------------------------------------------------
 // Interfaces for LADS devices
@@ -42,9 +44,9 @@ export interface LADSComponent extends UAComponent {
     maintenance?: UAObject
 }
 
-export interface MachineIdentificationType extends UAComponent { 
-    location?: UAProperty<UAString, DataType.String> 
-    initialOperationDate?: UAProperty<Date, DataType.DateTime> 
+export interface MachineIdentificationType extends UAComponent {
+    location?: UAProperty<UAString, DataType.String>
+    initialOperationDate?: UAProperty<Date, DataType.DateTime>
 }
 
 export interface LifetimeVariableType extends UAAnalogUnit<number, DataType.Double> {
@@ -72,14 +74,14 @@ export interface OperationCounters extends UAFunctionalGroup {
     powerOnDuration?: UAProperty<number, DataType.Double>
 }
 
-export interface LADSFunctionalUnitSet  {
+export interface LADSFunctionalUnitSet {
     [key: string]: LADSFunctionalUnit
 }
 
 //---------------------------------------------------------------
 // Interfaces for LADS functional unit
 //---------------------------------------------------------------
-export interface LADSSupportedProperty extends UAObject {}
+export interface LADSSupportedProperty extends UAObject { }
 export interface LADSSupportedPropertiesSet {
     [key: string]: LADSSupportedProperty
 }
@@ -129,7 +131,7 @@ export enum MachineryItemState {
 // MachineryOperationMode
 export enum MachineryOperationMode {
     None = 'None',
-    Processing ='Processing',
+    Processing = 'Processing',
     Maintenance = 'Maintenance',
     Setup = 'Setup',
 }
@@ -159,7 +161,7 @@ export enum LADSFunctionalState {
     Stopping = 'Stopping',
     Stopped = 'Stopped',
     Aborting = 'Aborting',
-    Aborted = 'Aborted', 
+    Aborted = 'Aborted',
 }
 export interface LADSFunctionalStateMachine extends UAFiniteStateMachine {
     runningStateMachine: LADSRunnnigStateMachine
@@ -204,51 +206,73 @@ export interface LADSRunnnigStateMachine extends UAFiniteStateMachine {
 //---------------------------------------------------------------
 // Interfaces for LADS functions
 //---------------------------------------------------------------
-export interface LADSFunction extends UAObject {
+export interface LADSFunction_Base {
     isEnabled: UAProperty<boolean, DataType.Boolean>
     functionSet?: LADSFunctionSet
 }
+export interface LADSFunction extends LADSFunction_Base, UAObject { }
 
-export interface LADSCoverFunction extends LADSFunction {
+export interface LADSCoverFunction_Base extends LADSFunction_Base {
     coverState: LADSCoverStateMachine
 }
+export interface LADSCoverFunction extends LADSFunction, LADSCoverFunction_Base { }
 
 //---------------------------------------------------------------
 // Interfaces for LADS sensor-functions
 //---------------------------------------------------------------
-export interface LADSBaseSensorFunction extends LADSFunction {}
+export interface LADSBaseSensorFunction_Base extends LADSFunction_Base { }
+export interface LADSBaseSensorFunction extends LADSFunction, LADSBaseSensorFunction_Base { }
 
-export interface LADSAnalogSensorFunction extends LADSBaseSensorFunction {
-    alarmMonitor?: UAExclusiveLimitAlarm
+//---------------------------------------------------------------
+export interface LADSAnalogSensorFunction_Base extends LADSBaseSensorFunction_Base {
+    alarmMonitor?: UAExclusiveLimitAlarm_Base
     damping?: UAProperty<number, DataType.Double>
 }
 
-export interface LADSAnalogScalarSensorFunction extends LADSAnalogSensorFunction {
+export interface LADSAnalogSensorFunction extends LADSBaseSensorFunction, Omit<LADSAnalogSensorFunction_Base, "alarmMonitor"> { 
+    alarmMonitor?: UAExclusiveLimitAlarm
+}
+
+//---------------------------------------------------------------
+export interface LADSAnalogScalarSensorFunction_Base extends LADSAnalogSensorFunction_Base {
     calibrationValues?: UAProperty<number[], DataType.Double>
     rawValue?: UAAnalogUnitRange<number, DataType.Double>
     sensorValue: UAAnalogUnitRange<number, DataType.Double>
 }
+export interface LADSAnalogScalarSensorFunction extends LADSAnalogSensorFunction, Omit<LADSAnalogScalarSensorFunction_Base, "alarmMonitor"> { }
 
-export interface LADSAnalogScalarSensorWithCompensationFunction extends LADSAnalogScalarSensorFunction {
+//---------------------------------------------------------------
+export interface LADSAnalogScalarSensorWithCompensationFunction_Base extends LADSAnalogScalarSensorFunction_Base {
     compensationValue?: UAAnalogUnitRange<number, DataType.Double>
 }
+export interface LADSAnalogScalarSensorWithCompensationFunction extends LADSAnalogScalarSensorFunction, Omit<LADSAnalogScalarSensorWithCompensationFunction_Base, "alarmMonitor"> { }
 
-export interface LADSAnalogArraySensorFunction extends LADSAnalogSensorFunction {
+//---------------------------------------------------------------
+export interface LADSAnalogArraySensorFunction_Base extends LADSAnalogSensorFunction_Base {
     rawValue?: UAAnalogUnitRange<Float64Array, DataType.Double>
     sensorValue: UAAnalogUnitRange<Float64Array, DataType.Double>
 }
+export interface LADSAnalogArraySensorFunction extends LADSAnalogSensorFunction, Omit<LADSAnalogArraySensorFunction_Base, "alarmMonitor"> { }
 
-export interface LADSDiscreteSensorFunction extends LADSBaseSensorFunction {}
+//---------------------------------------------------------------
+export interface LADSDiscreteSensorFunction_Base extends LADSBaseSensorFunction_Base { }
+export interface LADSDiscreteSensorFunction extends LADSBaseSensorFunction, LADSDiscreteSensorFunction_Base { }
 
-export interface LADSTwoStateDiscreteSensorFunction extends LADSDiscreteSensorFunction {
+//---------------------------------------------------------------
+export interface LADSTwoStateDiscreteSensorFunction_Base extends LADSDiscreteSensorFunction_Base {
     sensorValue: UATwoStateDiscrete<boolean>
 }
+export interface LADSTwoStateDiscreteSensorFunction extends LADSDiscreteSensorFunction, LADSTwoStateDiscreteSensorFunction_Base { }
 
-export interface LADSMultiStateDiscreteSensorFunction extends LADSDiscreteSensorFunction {
+//---------------------------------------------------------------
+export interface LADSMultiStateDiscreteSensorFunction_Base extends LADSDiscreteSensorFunction_Base {
     sensorValue: UAMultiStateDiscrete<number, DataType.UInt32>
 }
+export interface LADSMultiStateDiscreteSensorFunction extends LADSDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction_Base { }
 
-export interface LADSMultiSensorFunctionType extends LADSBaseSensorFunction {}
+//---------------------------------------------------------------
+export interface LADSMultiSensorFunctionType_Base extends LADSBaseSensorFunction_Base { }
+export interface LADSMultiSensorFunctionType extends LADSBaseSensorFunction, LADSMultiSensorFunctionType_Base  { }
 
 //---------------------------------------------------------------
 // Interfaces for LADS control-functions
