@@ -25,6 +25,7 @@ import { BalanceDeviceImpl } from './device';
 import { BalanceUnitImpl } from './unit';
 import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';
 import { SimulatedBalance } from './balance-simulator';
+import { BalanceEvents } from './balance';
 
 //---------------------------------------------------------------
 export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
@@ -33,7 +34,8 @@ export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
     private simZeroWeight: UAVariable
     private simGrossWeight: UAVariable
     private simRawWeight: UAVariable
-    private filteredRawWeight = 0
+    // Initialize to 50g (matching initial simSampleWeight) to avoid starting at 0
+    private filteredRawWeight = 50.0
 
     constructor(parent: BalanceDeviceImpl, functionalUnitSet: BalanceFunctionalUnitSet) {
         super(parent)
@@ -82,24 +84,70 @@ export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
         })
 
         // start simulation loop
-        const dT = 200
-        setInterval(async () => { this.evaluate(dT) }, 200)
-        
+        setInterval(async () => { this.evaluate() }, 200)
+
+        // Weight change simulation: change weight every 5 seconds
+        // Simulates realistic balance behavior:
+        // - Weight changes (sample added/removed)
+        // - Brief instability, then settles to stable
+        // - TareMode stays at "None" (no tare set)
+        let weightDirection = 1
+
+        setInterval(async () => {
+            const simulatedBalance = this.balance as SimulatedBalance
+
+            // Change weight by ±0.5g (simulates sample weight variation)
+            const currentWeight = getNumericValue(this.simSampleWeight)
+            const newWeight = currentWeight + (weightDirection * 0.5)
+            setNumericValue(this.simSampleWeight, newWeight)
+            weightDirection *= -1
+
+            // Set unstable immediately when weight changes
+            simulatedBalance.simulatedStable = false
+            console.log(`[Balance Simulator] Weight changed: ${newWeight.toFixed(2)}g, Stable: false`)
+
+            // Emit reading immediately with unstable state
+            const unstableReading = await simulatedBalance.getCurrentReading()
+            simulatedBalance.emit(BalanceEvents.Reading, unstableReading)
+
+            // Capture the weight value for the stable reading (don't re-read)
+            const capturedWeight = unstableReading.weight
+            const capturedTareMode = unstableReading.tareMode
+
+            // After 1 second, measurement has settled -> stable
+            setTimeout(() => {
+                simulatedBalance.simulatedStable = true
+                console.log(`[Balance Simulator] Measurement settled, Stable: true`)
+
+                // Emit reading with same weight but stable=true
+                simulatedBalance.emit(BalanceEvents.Reading, {
+                    weight: capturedWeight,
+                    unit: "g",
+                    stable: true,
+                    tareMode: capturedTareMode
+                })
+            }, 1000)
+        }, 5000)
+
         // finalize iitialization
         this.postInitialize()
     }
 
     getRawWeight(): number { return this.filteredRawWeight }
 
-    private async evaluate(dT: number) {        
-        // compute simulated values
-        const gross = getNumericValue(this.simSampleWeight) + getNumericValue(this.simTareWeight)
+    private async evaluate() {
+        // compute simulated values with noise (like viscometer simulator)
+        // noise simulates real balance behavior with small fluctuations
+        const noise = 0.002 * (Math.random() - 0.5)
+        const gross = getNumericValue(this.simSampleWeight) + getNumericValue(this.simTareWeight) + noise
         const raw = gross + getNumericValue(this.simZeroWeight)
         setNumericValue(this.simGrossWeight, gross)
         setNumericValue(this.simRawWeight, raw)
 
-        // evaluate low pass filter
-        const cf = 0.2
+        // evaluate low pass filter with fast convergence (cf=0.8)
+        // Higher cf = faster response: converges within 2-3 iterations (~400-600ms)
+        // This gives brief "unstable" period after 5-second step changes, then settles to "stable"
+        const cf = 0.8
         this.filteredRawWeight = (1.0 - cf) * this.filteredRawWeight + cf * raw
     }
 

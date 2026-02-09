@@ -383,6 +383,7 @@ export interface LADSComponentOptions {
 
 export function initComponent(component: UAComponent, options: LADSComponentOptions) {
     if (!component) return
+    console.log(`[initComponent] component=${component.browseName?.name}, manufacturer=${!!component.manufacturer}, model=${!!component.model}, serialNumber=${!!component.serialNumber}`)
     options.manufacturer ? setStringValue(component.manufacturer, options.manufacturer) : 0
     options.manufacturerUri ? setStringValue(component.manufacturerUri, options.manufacturerUri) : 0
     options.model ? setStringValue(component.model, options.model) : 0

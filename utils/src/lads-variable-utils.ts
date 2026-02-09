@@ -102,7 +102,12 @@ export function setStringValue(variable: UAVariable, value: string | LocalizedTe
     if (!variable) return
     const dataType = variable.dataTypeObj.basicDataType
     assert((dataType === DataType.String) || (dataType === DataType.LocalizedText))
-    variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
+    // Convert string to LocalizedText if the variable expects LocalizedText
+    const actualValue = (dataType === DataType.LocalizedText && typeof value === "string")
+        ? new LocalizedText({ text: value })
+        : value
+    console.log(`[setStringValue] ${variable.browseName.name}: dataType=${DataType[dataType]}, value=${JSON.stringify(actualValue)}`)
+    variable.setValueFromSource({ dataType: dataType, value: actualValue }, statusCode)
 }
 
 export function setStringArrayValue(variable: UAVariable, value: string[] | LocalizedText[], statusCode = StatusCodes.Good) {

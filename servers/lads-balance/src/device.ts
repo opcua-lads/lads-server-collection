@@ -52,6 +52,18 @@ export class BalanceDeviceImpl {
         }) as BalanceDevice
         this.device = device
 
+        // Set initial SerialNumber immediately (like freezer does)
+        // This ensures the OPC-UA client can read it before DeviceInfo event
+        const initialSerialNumber = config.protocol === BalanceProtocols.Simulator ? "47110815" : "Unknown"
+        const initialOptions: LADSComponentOptions = {
+            manufacturer: "Unknown",
+            model: "Unknown",
+            serialNumber: initialSerialNumber,
+            componentName: config.name,
+            location: defaultLocation,
+        }
+        initComponent(device, initialOptions)
+
         // create unit implementation
         this.config = config
         const balanceUnitImpl = this.getBalanceUnitImpl(config)
@@ -105,4 +117,3 @@ export class BalanceDeviceImpl {
     }
 
 }
-

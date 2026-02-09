@@ -31,6 +31,7 @@ import {
     VariantLike,
     coerceNodeId,
     RegisterServerMethod,
+    AddressSpace,
 } from "node-opcua"
 import { UADevice } from "node-opcua-nodeset-di"
 
@@ -76,6 +77,29 @@ interface FtNirDevice extends Omit<LADSDevice, "functionalUnitSet"> {
 }
 
 //---------------------------------------------------------------
+// Detect capabilities from loaded namespaces
+//---------------------------------------------------------------
+function detectCapabilitiesFromNamespaces(addressSpace: AddressSpace): string[] {
+    const capabilities: string[] = []
+    const namespaceArray = addressSpace.getNamespaceArray()
+
+    for (const ns of namespaceArray) {
+        const uri = ns.namespaceUri
+        // Match OPC Foundation companion specs: http://opcfoundation.org/UA/XXXX/
+        if (uri.startsWith('http://opcfoundation.org/UA/') && uri !== 'http://opcfoundation.org/UA/') {
+            // Extract capability name from URI (e.g., "LADS" from "http://opcfoundation.org/UA/LADS/")
+            const parts = uri.replace('http://opcfoundation.org/UA/', '').split('/')
+            const capName = parts[0]
+            if (capName && capName.length > 0) {
+                capabilities.push(capName)
+            }
+        }
+    }
+
+    return [...new Set(capabilities)] // Deduplicate
+}
+
+//---------------------------------------------------------------
 // server implmentation
 //---------------------------------------------------------------
 class FtNirServerImpl {
@@ -116,7 +140,9 @@ class FtNirServerImpl {
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+                // Register with GDS for auto-discovery
                 registerServerMethod: RegisterServerMethod.MDNS,
+                // discoveryServerEndpointUrl: process.env.GDS_URL || "opc.tcp://localhost:4850",
             })
 
         }
@@ -128,8 +154,16 @@ class FtNirServerImpl {
     async start() {
 
         // get objects
-        await this.server.start()
+        await this.server.initialize()
         const addressSpace = this.server.engine.addressSpace
+
+        // Detect and set capabilities from loaded namespaces
+        const capabilities = detectCapabilitiesFromNamespaces(addressSpace)
+        console.log(`Detected capabilities: ${capabilities.join(', ')}`)
+        // Set capabilities before start() triggers GDS registration
+        ;(this.server as any).capabilitiesForMDNS = capabilities
+
+        await this.server.start()
         const nameSpaceDI = addressSpace.getNamespace('http://opcfoundation.org/UA/DI/')
         const nameSpaceFtNir = addressSpace.getNamespace("http://aixengineers.de/FT-NIR/")
         assert(nameSpaceFtNir)
@@ -475,12 +509,12 @@ export async function main() {
     const serverImpl = new FtNirServerImpl(12345)
     await serverImpl.start()
 
-    // Graceful shutdown - send mDNS goodbye message
+    // Graceful shutdown - unregister from GDS
     const shutdown = async (signal: string) => {
         console.log(`\n${signal} received, shutting down gracefully...`)
         try {
             await serverImpl.server.shutdown()
-            console.log("Server shutdown complete, mDNS goodbye sent.")
+            console.log("Server shutdown complete, unregistered from GDS.")
             process.exit(0)
         } catch (err) {
             console.error("Error during shutdown:", err)

@@ -19,47 +19,38 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, assert, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, UAObject, AddressSpace } from "node-opcua"
-import { join } from "path"
+import { ApplicationType, assert, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, UAObject, MessageSecurityMode, SecurityPolicy, OPCUACertificateManager } from "node-opcua"
+import { join, resolve } from "path"
+import { existsSync } from "fs"
 import { DIObjectIds, getChildObjects } from "@utils"
 import { pHMeterDevice } from "./ph-meter-interfaces"
 import { pHMeterDeviceImpl } from "./ph-meter-device"
 
-//---------------------------------------------------------------
-export const IncludeAFO = true
+// PKI folder for certificates (node-opcua standard structure)
+const PKI_DIR = process.env.OPCUA_PKI_DIR || resolve(__dirname, "../../../../lcc-backend/test/integration/certs/server-pki")
 
 //---------------------------------------------------------------
-// Detect capabilities from loaded namespaces
-//---------------------------------------------------------------
-function detectCapabilitiesFromNamespaces(addressSpace: AddressSpace): string[] {
-    const capabilities: string[] = []
-    const namespaceArray = addressSpace.getNamespaceArray()
-
-    for (const ns of namespaceArray) {
-        const uri = ns.namespaceUri
-        // Match OPC Foundation companion specs: http://opcfoundation.org/UA/XXXX/
-        if (uri.startsWith('http://opcfoundation.org/UA/') && uri !== 'http://opcfoundation.org/UA/') {
-            // Extract capability name from URI (e.g., "LADS" from "http://opcfoundation.org/UA/LADS/")
-            const parts = uri.replace('http://opcfoundation.org/UA/', '').split('/')
-            const capName = parts[0]
-            if (capName && capName.length > 0) {
-                capabilities.push(capName)
-            }
-        }
-    }
-
-    return [...new Set(capabilities)] // Deduplicate
-}
+export const IncludeAFO = false  // Disabled for faster test startup
 
 //---------------------------------------------------------------
 // server implementation
 //---------------------------------------------------------------
 class pHMeterServerImpl {
     server: OPCUAServer
+    private serverCertificateManager: OPCUACertificateManager
 
     constructor(port: number) {
-        const uri = "LADS-pH-Meter-Server"
-        console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
+        const uri = `urn:${require("os").hostname()}:LADS-Test-Server`
+        console.log(`LADS-pH-Meter-Secure starting with OPCUACertificateManager...`);
+        console.log(`  PKI folder: ${PKI_DIR}`);
+        console.log(`  Application URI: ${uri}`);
+
+        // Verify PKI folder exists
+        if (!existsSync(PKI_DIR)) {
+            console.error(`ERROR: PKI folder not found at ${PKI_DIR}`);
+            console.error(`Run: cd lcc-backend/test/integration/certs && bash generate-certs.sh`);
+            process.exit(1);
+        }
 
         // provide paths for the nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
@@ -71,6 +62,13 @@ class pHMeterServerImpl {
         const nodeset_afo = join(nodeset_path, 'AFO_Dictionary.NodeSet2.xml')
         const nodeset_phmeter = join(nodeset_path, 'pHMeter.xml')
 
+        // Create certificate manager with PKI folder structure
+        this.serverCertificateManager = new OPCUACertificateManager({
+            automaticallyAcceptUnknownCertificate: true, // For testing - accept client certs
+            rootFolder: PKI_DIR,
+            name: "ServerPKI",
+        });
+
         try {
             // list of node-set files
             const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_phmeter,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_phmeter,]
@@ -81,23 +79,46 @@ class pHMeterServerImpl {
                 // basic information about the server
                 buildInfo: {
                     manufacturerName: "AixEngineers",
-                    productName: uri,
+                    productName: "LADS-pH-Meter-Secure",
                     productUri: uri,
                     softwareVersion: "1.0.0",
                 },
                 serverInfo: {
-                    applicationName: "LADS pH-Meter",
+                    applicationName: { text: "LADS pH-Meter Secure" },
                     applicationType: ApplicationType.Server,
                     productUri: uri,
-                    applicationUri: uri, // unique URI for GDS registration
+                    applicationUri: uri, // Must match certificate subjectAltName URI
 
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+
+                // Use OPCUACertificateManager for security
+                serverCertificateManager: this.serverCertificateManager,
+                securityPolicies: [
+                    SecurityPolicy.None,
+                    SecurityPolicy.Basic256Sha256,
+                ],
+                securityModes: [
+                    MessageSecurityMode.None,
+                    MessageSecurityMode.SignAndEncrypt,
+                ],
+
+                // User authentication
+                allowAnonymous: true,
+                userManager: {
+                    isValidUserAsync: async (userName: string | null, password: string | null): Promise<boolean> => {
+                        // Allow anonymous
+                        if (!userName && !password) return true;
+                        // Test credentials
+                        if (userName === "testuser" && password === "testpass") return true;
+                        return false;
+                    },
+                },
+
                 // Register with GDS for auto-discovery
-                registerServerMethod: RegisterServerMethod.MDNS,
-                // discoveryServerEndpointUrl: process.env.GDS_URL || "opc.tcp://localhost:4850",
-                // Capabilities will be set dynamically after initialize()
+                registerServerMethod: RegisterServerMethod.LDS,
+                discoveryServerEndpointUrl: process.env.GDS_URL || "opc.tcp://localhost:4850",
             })
 
         }
@@ -107,17 +128,15 @@ class pHMeterServerImpl {
     }
 
     async start(serialPort: string) {
+        // Initialize certificate manager first
+        await this.serverCertificateManager.initialize();
+        console.log(`  PKI initialized`);
+
         // wait until server initialized
         await this.server.initialize()
 
-        // Detect and set capabilities from loaded namespaces
-        const addressSpace = this.server.engine.addressSpace
-        const capabilities = detectCapabilitiesFromNamespaces(addressSpace)
-        console.log(`Detected capabilities: ${capabilities.join(', ')}`)
-        // Set capabilities before start() triggers GDS registration
-        ;(this.server as any).capabilitiesForMDNS = capabilities
-
         // build structure
+        const addressSpace = this.server.engine.addressSpace
         const nameSpaceDI = addressSpace.getNamespace('http://opcfoundation.org/UA/DI/')
         const nameSpacepH = addressSpace.getNamespace("http://spectaris.de/pHMeter/")
         assert(nameSpacepH)

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { join } from 'path'
 import assert from "assert"
-import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, RegisterServerMethod } from "node-opcua"
+import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, RegisterServerMethod, AddressSpace } from "node-opcua"
 import { DIObjectIds, setStringValue, } from "@utils"
 import { ViscometerDevice } from './viscometer-interfaces'
 import { ViscometerDeviceImpl } from './viscometer-device'
@@ -30,6 +30,29 @@ import { ViscometerDeviceImpl } from './viscometer-device'
 // Allotrope Foundation Ontology
 //---------------------------------------------------------------
 const IncludeAFO = true
+
+//---------------------------------------------------------------
+// Detect capabilities from loaded namespaces
+//---------------------------------------------------------------
+function detectCapabilitiesFromNamespaces(addressSpace: AddressSpace): string[] {
+    const capabilities: string[] = []
+    const namespaceArray = addressSpace.getNamespaceArray()
+
+    for (const ns of namespaceArray) {
+        const uri = ns.namespaceUri
+        // Match OPC Foundation companion specs: http://opcfoundation.org/UA/XXXX/
+        if (uri.startsWith('http://opcfoundation.org/UA/') && uri !== 'http://opcfoundation.org/UA/') {
+            // Extract capability name from URI (e.g., "LADS" from "http://opcfoundation.org/UA/LADS/")
+            const parts = uri.replace('http://opcfoundation.org/UA/', '').split('/')
+            const capName = parts[0]
+            if (capName && capName.length > 0) {
+                capabilities.push(capName)
+            }
+        }
+    }
+
+    return [...new Set(capabilities)] // Deduplicate
+}
 
 //---------------------------------------------------------------
 // server implmentation
@@ -72,7 +95,9 @@ class ViscometerServerImpl {
                 },
                 // nodesets used by the server
                 nodeset_filename: node_set_filenames,
+                // Register with GDS for auto-discovery
                 registerServerMethod: RegisterServerMethod.MDNS,
+                // discoveryServerEndpointUrl: process.env.GDS_URL || "opc.tcp://localhost:4850",
             })
 
         }
@@ -85,6 +110,13 @@ class ViscometerServerImpl {
         // get objects
         await this.server.initialize()
         const addressSpace = this.server.engine.addressSpace
+
+        // Detect and set capabilities from loaded namespaces
+        const capabilities = detectCapabilitiesFromNamespaces(addressSpace)
+        console.log(`Detected capabilities: ${capabilities.join(', ')}`)
+        // Set capabilities before start() triggers GDS registration
+        ;(this.server as any).capabilitiesForMDNS = capabilities
+
         const nameSpaceDI = addressSpace.getNamespace('http://opcfoundation.org/UA/DI/')
         const nameSpaceVM = addressSpace.getNamespace("http://spectaris.de/Viscometer/")
         assert(nameSpaceVM)
@@ -117,12 +149,12 @@ export async function main() {
     const serverImpl = new ViscometerServerImpl(4840)
     await serverImpl.start(['/dev/ttyUSB0'])
 
-    // Graceful shutdown - send mDNS goodbye message
+    // Graceful shutdown - unregister from GDS
     const shutdown = async (signal: string) => {
         console.log(`\n${signal} received, shutting down gracefully...`)
         try {
             await serverImpl.server.shutdown()
-            console.log("Server shutdown complete, mDNS goodbye sent.")
+            console.log("Server shutdown complete, unregistered from GDS.")
             process.exit(0)
         } catch (err) {
             console.error("Error during shutdown:", err)

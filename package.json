@@ -6,6 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lads-freezer": "ts-node -r tsconfig-paths/register servers/lads-freezer/src/server.ts",
     "lads-ft-nir": "ts-node -r tsconfig-paths/register servers/lads-ft-nir/src/server.ts",
+    "lads-ph-meter-secure": "ts-node -r tsconfig-paths/register servers/lads-ph-meter/src/server-with-cert-auth.ts",
     "lads-ph-meter": "ts-node -r tsconfig-paths/register servers/lads-ph-meter/src/server.ts",
     "lads-viscometer": "ts-node -r tsconfig-paths/register servers/lads-viscometer/src/server.ts",
     "lads-balance": "ts-node -r tsconfig-paths/register servers/lads-balance/src/server.ts",
@@ -19,9 +20,9 @@
     "@types/node": "^20.2.3",
     "csv-parser": "^3.2.0",
     "exceljs": "^4.4.0",
-    "node-opcua": "^2.157.0",
-    "node-opcua-file-transfer": "^2.157.0",
-    "node-opcua-nodeset-di": "^2.157.0",
+    "node-opcua": "2.163.1",
+    "node-opcua-file-transfer": "2.163.1",
+    "node-opcua-nodeset-di": "2.163.1",
     "serialport": "^13.0.0",
     "xmlbuilder2": "^3.1.1"
   },
@@ -31,5 +32,8 @@
     "tsc-alias": "^1.8.15",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.4"
+  },
+  "overrides": {
+    "node-opcua-server": "npm:@waldner-laboreinrichtungen/node-opcua-server@2.163.1"
   }
 }
