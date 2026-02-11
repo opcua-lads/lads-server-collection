@@ -45,7 +45,8 @@ import {
     UADataType,
     ServerSession,
     StatusCode,
-    OPCUAServer
+    OPCUAServer,
+    QualifiedName
 } from "node-opcua"
 import {
     LADSDevice,
@@ -167,6 +168,38 @@ function constructPropertyExtensionObject(dt: UADataType, property: LADSProperty
         Value: property.value,
     })
 }
+
+//---------------------------------------------------------------
+// Recurse through object structures and copy variable values
+//---------------------------------------------------------------
+export function copyValues(source: BaseNode, target: BaseNode) {
+    if (!source || !target) return
+    if (source.nodeClass != target.nodeClass) return
+    if (source.nodeClass == NodeClass.Variable) {
+        const sourceVariable = source as UAVariable
+        const targetVariable = target as UAVariable
+        const dataValue = sourceVariable.readValue()
+        try {
+            targetVariable.setValueFromSource(dataValue.value, dataValue.statusCode, dataValue.sourceTimestamp)
+        }
+        catch(err) {
+            // console.debug(`copyValues(${sourceVariable.browseName.name}): ${err}`)
+        }
+    }
+    if ((source.nodeClass == NodeClass.Variable) || source.nodeClass == NodeClass.Object) {
+        // recurse children
+        const hasChildReferencesType = source.addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.HasChild))
+        const sourceChildren = source.findReferencesExAsObject(hasChildReferencesType)
+        const targetChildren = target.findReferencesExAsObject(hasChildReferencesType)
+        sourceChildren.forEach((sourceChild: BaseNode) => {
+            const targetChild = targetChildren.find(node => node.browseName.equals(sourceChild.browseName))
+            if (targetChild) {
+                copyValues(sourceChild, targetChild)
+            }
+        })
+    }
+}
+
 
 //---------------------------------------------------------------
 // Browsing LADS structures support
