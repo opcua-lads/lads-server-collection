@@ -24,10 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, getStringValue, copyValues, getDateTimeValue } from "@utils"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, getStringValue, copyValues, getDateTimeValue, DataRecorder, VariableDataRecorder, TrackAggregates, setNumericArrayValue } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAProperty, readUAAnalogItem, UAObjectType, getAverageData } from "node-opcua"
 import { MWDeviceImpl, Manufacturer, getMWNameSpace as getMWNameSpace } from "./device"
-import { MWFunctionalUnit, MWFunctionSet, MWResult, Product, ProductSet } from "./interfaces"
+import { MeasurementResult, MWFunctionalUnit, MWFunctionSet, MWResult, Product, ProductSet } from "./interfaces"
 import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
@@ -49,6 +49,8 @@ interface CurrentRunOptions {
     samples?: LADSSampleInfo[]
     result?: MWResult
     eventRecorder?: EventDataRecorder
+    variableRecorder?: VariableDataRecorder
+    variableRecorderTimer?: NodeJS.Timeout
 }
 
 export const DataDirectory = join(__dirname, "data")
@@ -429,7 +431,11 @@ export class MWUnitImpl extends EventEmitter {
             copyProgramTemplate(options.programTemplateNode, result.programTemplate)
             copyValues(this.selectedProduct?.product, result.variableSet.product)
             touchNodes(result)
+
+            // create recorder
             options.eventRecorder = new EventDataRecorder("Events", this.functionalUnit)
+            options.variableRecorder = new VariableDataRecorder("Data", [this.moistureSensor.sensorValue, this.densitySensor.sensorValue, this.temperatureSensor.sensorValue])
+            setTimeout(() => options.variableRecorderTimer = setInterval(() => { options.variableRecorder.createRecord() }, 1000), 1000)
 
             // initialize last result structure
             setNameNodeIdValue(programManager.lastResult, options.runId, result.nodeId)
@@ -507,11 +513,18 @@ export class MWUnitImpl extends EventEmitter {
             }
             if (options.result) {
                 // document results
+                clearInterval(options.variableRecorderTimer)
                 const result = options.result
                 setDateTimeValue(result.stopped, new Date())
                 const resultsDirectory = join(DataDirectory, "results")
-                new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder])
+                new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder, options.variableRecorder])
                 touchNodes(result, result.fileSet)
+
+                const variableSet = options.result.variableSet
+                const recorder = options.variableRecorder
+                this.setMeasurementResult(recorder, variableSet.density, this.densitySensor.sensorValue) 
+                this.setMeasurementResult(recorder, variableSet.moisture, this.moistureSensor.sensorValue) 
+                this.setMeasurementResult(recorder, variableSet.temperature, this.temperatureSensor.sensorValue) 
 
                 // copy results
                 copyValues(result, programManager.lastResultData)
@@ -523,6 +536,13 @@ export class MWUnitImpl extends EventEmitter {
             raiseEvent(this.functionalUnit, `Stopping method.`, 100)
         }
         stateMachine.setState(LADSFunctionalState.Stopped)
+    }
+
+    private setMeasurementResult(recorder: VariableDataRecorder, measurement: MeasurementResult, variable: UAVariable) {
+        const aggregates = recorder.createAggregates(variable)
+        setNumericValue(measurement.average, aggregates.average)
+        setNumericValue(measurement.standardDeviation, aggregates.standardDeviation)
+        setNumericArrayValue(measurement.samples, aggregates.values as number[])
     }
 
     private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {

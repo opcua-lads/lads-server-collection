@@ -158,6 +158,9 @@ export class EventDataRecord {
     }
 }
 
+
+type TrackValues = (number | string)[]
+
 export class VariableDataRecorder extends DataRecorder {
     tracks: ResultTrack[]
     records: ResultRecord[] = []
@@ -227,13 +230,20 @@ export class VariableDataRecorder extends DataRecorder {
 
     trackIndex(variable: UAVariable): number { return this.tracks.findIndex(track => (track.variable === variable)) }
 
-    trackValues(variable: UAVariable): (number | string)[] {
+    trackValues(variable: UAVariable): TrackValues {
         const trackIndex = this.trackIndex(variable)
         if (trackIndex >= 0) {
             return this.records.map(record => record.tracksRecord[trackIndex])
         } else {
             console.warn(`Unable to find track for variable ${variable.browseName.name}`)
         }
+    }
+
+    createAggregates(variable: UAVariable): TrackAggregates | undefined {
+        const trackIndex = this.trackIndex(variable)
+        if (trackIndex < 0) return undefined
+        const aggregates = new TrackAggregates(this.tracks[trackIndex], this.records.map(record => record.tracksRecord[trackIndex]))
+        return aggregates
     }
 
 }
@@ -262,7 +272,7 @@ export class ResultTrack {
 export class ResultRecord {
     timestamp: Date
     tracks: ResultTrack[]
-    tracksRecord: (number | string)[]
+    tracksRecord: TrackValues
 
     constructor(tracks: ResultTrack[]) {
         this.timestamp = new Date()
@@ -301,6 +311,41 @@ export class ResultRecord {
             })
         })
         return resultObject
+    }
+}
+
+export class TrackAggregates {
+    track: ResultTrack
+    values: TrackValues
+
+    readonly count: number
+    readonly average: number
+    readonly standardDeviation: number
+    readonly minimum: number
+    readonly maximum: number
+
+    constructor(track: ResultTrack, values: TrackValues) {
+        this.track = track
+        this.values = values
+        this.count = values.length
+        if (this.count <= 0) return
+        if (typeof values[0] !== "number") return
+        
+        // compute aggregates
+        const data = values as number[]
+        let min = data[0]
+        let max = data[0]
+        let sum = 0
+        let sqrsum = 0
+        data.forEach((x) => {
+            sum += x
+            sqrsum += x * x
+            if (x < min) min = x
+            if (x > max) max = x
+        })
+        this.minimum = min
+        this.maximum = max
+        this.average = sum / this.count
     }
 }
 
