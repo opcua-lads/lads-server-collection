@@ -29,7 +29,7 @@ import {
     UAExclusiveLimitStateMachine
 } from "node-opcua";
 import { getLADSNamespace, installVariableHistory, promoteToFiniteStateMachine } from "./lads-utils";
-import { getEUInformation, getNumericValue, setNumericValue } from "./lads-variable-utils";
+import { getEUInformation, getNumericValue, setNumericValue, setStringArrayValue } from "./lads-variable-utils";
 import { raiseEvent } from "./lads-event-utils";
 
 //---------------------------------------------------------------
@@ -174,6 +174,10 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
     get confirm(): UAMethod { return this.alarmMonitor.confirm }
     get disable(): UAMethod { return this.alarmMonitor.disable }
     get enable(): UAMethod { return this.alarmMonitor.enable }
+    get lowLowLimit(): UAProperty<number, DataType.Double> { return this.alarmMonitor.lowLowLimit}
+    get lowLimit(): UAProperty<number, DataType.Double> { return this.alarmMonitor.lowLimit}
+    get highLimit(): UAProperty<number, DataType.Double> { return this.alarmMonitor.highLimit}
+    get highHighLimit(): UAProperty<number, DataType.Double> { return this.alarmMonitor.highHighLimit}
 
     protected getSeverity(stateData: string): number {
         if (!stateData) return 0
@@ -358,6 +362,11 @@ export class MulitStateDiscreteControlFunctionImpl extends ControlFunctionImpl {
     constructor(controlFunction: LADSMultiStateDiscreteControlFunction) { super(controlFunction) }
     get targetValue(): UAMultiStateDiscrete<number, DataType.UInt32> { return (this.controlFunction as LADSMultiStateDiscreteControlFunction).targetValue }
     get currentValue(): UAMultiStateDiscrete<number, DataType.UInt32> { return (this.controlFunction as LADSMultiStateDiscreteControlFunction).currentValue }
+
+    initEnumStrings(enumStrings: string[]) {
+        setStringArrayValue(this.targetValue.enumStrings, enumStrings)
+        setStringArrayValue(this.currentValue.enumStrings, enumStrings)
+    }
 }
 
 //---------------------------------------------------------------
