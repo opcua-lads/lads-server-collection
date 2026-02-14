@@ -248,7 +248,7 @@ export interface LADSAnalogScalarSensorWithCompensationFunction_Base extends LAD
 export interface LADSAnalogScalarSensorWithCompensationFunction extends LADSAnalogScalarSensorFunction, Omit<LADSAnalogScalarSensorWithCompensationFunction_Base, "alarmMonitor"> { }
 
 //---------------------------------------------------------------
-export interface LADSAnalogArraySensorFunction_Base extends LADSAnalogSensorFunction_Base {
+interface LADSAnalogArraySensorFunction_Base extends LADSAnalogSensorFunction_Base {
     rawValue?: UAAnalogUnitRange<Float64Array, DataType.Double>
     sensorValue: UAAnalogUnitRange<Float64Array, DataType.Double>
 }

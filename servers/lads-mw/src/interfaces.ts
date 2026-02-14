@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSProgramManager, LADSResult } from "@interfaces"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSProgramManager, LADSResult, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
 import { NameNodeId } from "@utils"
-import { DataType, EUInformation, NodeId, UAAnalogUnit, UAObject, UAProperty } from "node-opcua"
+import { DataType, EUInformation, UAObject, UAProperty } from "node-opcua"
 
 //---------------------------------------------------------------
 export interface MWFunctionSet extends UAObject {
@@ -33,6 +33,7 @@ export interface MWFunctionSet extends UAObject {
     temperature: LADSAnalogScalarSensorFunction
     density: LADSAnalogScalarSensorFunction
     moisture: LADSAnalogScalarSensorFunction
+    resultIndicator: LADSMultiStateDiscreteSensorFunction
 }
 
 export interface MWProgramManager extends LADSProgramManager {
@@ -68,6 +69,14 @@ export interface MWVariableSet extends UAObject {
     moisture: MeasurementResult
     density: MeasurementResult
     temperature: MeasurementResult
+    result: UAProperty<string, DataType.String>
+}
+
+export enum ResultsEnum {
+    Unknown = 0,
+    Passed = 1,
+    StandardDeviationHigh = 2,
+    Failed = 3
 }
 
 export interface MWResult extends Omit<LADSResult, "variableSet"> {
@@ -81,11 +90,14 @@ export interface Product extends UAObject{
     moistureOffset: UAProperty<number, DataType.Double>
     moistureLowLimit: UAProperty<number, DataType.Double>
     moistureHighLimit: UAProperty<number, DataType.Double>
+    moistureStandardDeviation: UAProperty<number, DataType.Double>
     densityOffset: UAProperty<number, DataType.Double>
     densityLowLimit: UAProperty<number, DataType.Double>
     densityHighLimit: UAProperty<number, DataType.Double>
+    densityStandardDeviation: UAProperty<number, DataType.Double>
     temperatureLowLimit: UAProperty<number, DataType.Double>
     temperatureHighLimit: UAProperty<number, DataType.Double>
+    temperatureStandardDeviation: UAProperty<number, DataType.Double>
     sampleCount: UAProperty<number, DataType.UInt32>
 }
 

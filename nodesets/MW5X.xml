@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2026-02-11T09:38:46.028Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-02-14T16:08:55.442Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -47,7 +47,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="f8becf87c1b6787063672a7067449a7a"/>
+            <si:GeneratorExtension Hash="9b88cc995705434166c27bd8edaa0b72"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___tewsworks_com_MW5X_" NodeId="ns=5;i=5000" BrowseName="5:http://tewsworks.com/MW5X/" ParentNodeId="i=11715">
@@ -168,6 +168,7 @@
             <Reference ReferenceType="HasComponent">ns=5;i=5049</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5050</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5052</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=5020</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5003" BrowseName="1:Lock" ParentNodeId="ns=5;i=1000">
@@ -1041,6 +1042,9 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6175</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6176</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6192</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6069</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6070</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6071</Reference>
         </References>
     </UAObjectType>
     <UAVariable DataType="Double" NodeId="ns=5;i=6168" BrowseName="5:MoistureOffset" ParentNodeId="ns=5;i=1002" UserAccessLevel="3" AccessLevel="3">
@@ -1156,6 +1160,9 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6175</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6176</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6192</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6069</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6070</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6071</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="String" NodeId="ns=5;i=6177" BrowseName="5:NodeVersion" ParentNodeId="ns=5;i=1003" UserAccessLevel="3" AccessLevel="3">
@@ -1596,6 +1603,7 @@
             <Reference ReferenceType="HasComponent">ns=5;i=5026</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5027</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5028</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6072</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5025" BrowseName="5:Product" ParentNodeId="ns=5;i=5024">
@@ -1613,6 +1621,9 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6174</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6176</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6175</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6069</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6070</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6071</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5026" BrowseName="5:Density" ParentNodeId="ns=5;i=5024">
@@ -1767,5 +1778,93 @@
                 </uax:Body>
             </uax:ExtensionObject>
         </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=5;i=5020" BrowseName="5:ResultIndictaor" ParentNodeId="ns=5;i=5002">
+        <DisplayName>Result Indictaor</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=1037</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5061</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6066</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6067</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Boolean" NodeId="ns=5;i=6066" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5020" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>IsEnabled</DisplayName>
+        <Description>IsEnabled indicates whether the Function can currently be executed on the Device. A Function may be disabled for several reasons including not licensed, missing hardware modules, or missing supplies</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="UInt32" NodeId="ns=5;i=6067" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5020">
+        <DisplayName>SensorValue</DisplayName>
+        <Description>Discrete sensor value.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2376</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6068</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" ValueRank="1" NodeId="ns=5;i=6068" ArrayDimensions="4" BrowseName="EnumStrings" ParentNodeId="ns=5;i=6067">
+        <DisplayName>EnumStrings</DisplayName>
+        <Description>List of human readable identifiers for the discrete sensor values.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ListOfLocalizedText>
+                <uax:LocalizedText>
+                    <uax:Text>Unknown</uax:Text>
+                </uax:LocalizedText>
+                <uax:LocalizedText>
+                    <uax:Text>Passed</uax:Text>
+                </uax:LocalizedText>
+                <uax:LocalizedText>
+                    <uax:Text>Standard Deviation High</uax:Text>
+                </uax:LocalizedText>
+                <uax:LocalizedText>
+                    <uax:Text>Failed</uax:Text>
+                </uax:LocalizedText>
+            </uax:ListOfLocalizedText>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=5;i=6069" BrowseName="5:DensityStandardDeviation" ParentNodeId="ns=5;i=1002" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>DensityStandardDeviation</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:Double>0.01</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=5;i=6070" BrowseName="5:MoistureStandardDeviation" ParentNodeId="ns=5;i=1002" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>MoistureStandardDeviation</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:Double>0.1</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=5;i=6071" BrowseName="5:TemperatureStandardDeviation" ParentNodeId="ns=5;i=1002" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>TemperatureStandardDeviation</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:Double>0.1</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6072" BrowseName="5:Result" ParentNodeId="ns=5;i=5024" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>Result</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
     </UAVariable>
 </UANodeSet>

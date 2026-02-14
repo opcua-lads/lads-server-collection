@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, copyValues, VariableDataRecorder, setNumericArrayValue } from "@utils"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSAnalogScalarSensorFunction, LADSMultiSensorFunctionType, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, copyValues, VariableDataRecorder, setNumericArrayValue, getStringValue, getNumericArrayValue } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAObjectType } from "node-opcua"
 import { MWDeviceImpl, Manufacturer, getMWNameSpace as getMWNameSpace } from "./device"
-import { MeasurementResult, MWFunctionalUnit, MWFunctionSet, MWResult, ProductSet } from "./interfaces"
+import { MeasurementResult, MWFunctionalUnit, MWFunctionSet, MWResult, ProductSet, ResultsEnum } from "./interfaces"
 import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
@@ -101,6 +101,7 @@ export class MWUnitImpl extends EventEmitter {
     temperatureSensor: AnalogScalarSensorFunctionImpl
     densitySensor: AnalogScalarSensorFunctionImpl
     moistureSensor: AnalogScalarSensorFunctionImpl
+    resultIndicator: LADSMultiStateDiscreteSensorFunction 
     lightBarrier1: LADSTwoStateDiscreteSensorFunction
     lightBarrier2: LADSTwoStateDiscreteSensorFunction
     lightBarrier3: LADSTwoStateDiscreteSensorFunction
@@ -156,6 +157,7 @@ export class MWUnitImpl extends EventEmitter {
         this.densitySensor = new AnalogScalarSensorFunctionImpl(functionSet.density, { lowLowLimit: 0.0, lowLimit: 0.1, highLimit: 2.0, highHighLimit: 4.0, historizing: true })
         this.moistureSensor = new AnalogScalarSensorFunctionImpl(functionSet.moisture, { lowLowLimit: 0.0, lowLimit: 20.0, highLimit: 40.0, highHighLimit: 100.0, historizing: true })
         this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 20.0, highLimit: 30, highHighLimit: 100.0, historizing: true })
+        this.resultIndicator = functionSet.resultIndicator
 
         // init controller
         this.selectedProductController = new MulitStateDiscreteControlFunctionImpl(functionSet.selectedProduct)
@@ -353,6 +355,7 @@ export class MWUnitImpl extends EventEmitter {
             setTimeout(() => options.variableRecorderTimer = setInterval(() => { options.variableRecorder.createRecord() }, 1000), InitialDelay)
 
             // initialize last result structure
+            setNumericValue(this.resultIndicator.sensorValue, ResultsEnum.Unknown)
             setNameNodeIdValue(programManager.lastResult, options.runId, result.nodeId)
             copyValues(result, programManager.lastResultData)
 
@@ -434,11 +437,19 @@ export class MWUnitImpl extends EventEmitter {
                 const resultsDirectory = join(DataDirectory, "results")
                 new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder, options.variableRecorder])
 
+                // compute aggregates and set measurement results
                 const variableSet = options.result.variableSet
                 const recorder = options.variableRecorder
-                this.setMeasurementResult(recorder, variableSet.density, this.densitySensor.sensorValue) 
-                this.setMeasurementResult(recorder, variableSet.moisture, this.moistureSensor.sensorValue) 
-                this.setMeasurementResult(recorder, variableSet.temperature, this.temperatureSensor.sensorValue) 
+                const densityResult = this.setMeasurementResult(recorder, variableSet.density, this.densitySensor) 
+                const moistureResult = this.setMeasurementResult(recorder, variableSet.moisture, this.moistureSensor) 
+                this.setMeasurementResult(recorder, variableSet.temperature, this.temperatureSensor) 
+                
+                // set overall result indicator
+                const resultIndicator = (densityResult === ResultsEnum.Passed) && (moistureResult === ResultsEnum.Passed) ? ResultsEnum.Passed : ResultsEnum.Failed
+                setNumericValue(this.resultIndicator.sensorValue, resultIndicator)
+                const resultEnumStrings = this.resultIndicator.sensorValue.enumStrings.readValue().value.value
+                const resultText =  resultEnumStrings ? resultEnumStrings[resultIndicator].text : "Unknown"
+                setStringValue(variableSet.result, resultText)
 
                 // copy results
                 copyValues(result, programManager.lastResultData)
@@ -458,11 +469,16 @@ export class MWUnitImpl extends EventEmitter {
         stateMachine.setState(LADSFunctionalState.Stopped)
     }
 
-    private setMeasurementResult(recorder: VariableDataRecorder, measurement: MeasurementResult, variable: UAVariable) {
+    private setMeasurementResult(recorder: VariableDataRecorder, measurement: MeasurementResult, sensor: AnalogScalarSensorFunctionImpl): ResultsEnum {
+        const variable = sensor.sensorValue
+        const lowLimit = getNumericValue(sensor.alarmMonitor.lowLimit)
+        const highLimit = getNumericValue(sensor.alarmMonitor.highLimit)
         const aggregates = recorder.createAggregates(variable)
+        const average = aggregates.average
         setNumericValue(measurement.average, aggregates.average)
         setNumericValue(measurement.standardDeviation, aggregates.standardDeviation)
         setNumericArrayValue(measurement.samples, aggregates.values as number[])
+        return (average >= lowLimit) && (average <= highLimit) ? ResultsEnum.Passed : ResultsEnum.Failed
     }
 
     private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
