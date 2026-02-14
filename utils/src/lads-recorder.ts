@@ -346,6 +346,7 @@ export class TrackAggregates {
         this.minimum = min
         this.maximum = max
         this.average = sum / this.count
+        this.standardDeviation = this.count >= 2 ? Math.sqrt(1 / (this.count - 1) * (sqrsum - sum * sum / this.count) ) : NaN
     }
 }
 

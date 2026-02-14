@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-FileCopyrightText: 2026 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 // SPDX-License-Identifier: AGPL 3
 
 /*
-LADS Water Purification System
-Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+LADS Microwave Density & Moisture Analyzer
+Copyright (C) 2026  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -33,6 +33,7 @@ import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
 import { AnalogScalarSensorFunctionImpl } from "@utils"
 import { Duration, LockImpl } from "utils/src/lads-lock"
+import { ProductImpl, Products, ProductSetImpl } from "./products"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -55,98 +56,6 @@ interface CurrentRunOptions {
 
 export const DataDirectory = join(__dirname, "data")
 
-interface ProductOptions {
-    name: string,
-    densityOffset?: number,
-    densityLowLimit?: number,
-    densityHighLimit?: number,
-    moistureOffset?: number,
-    moistureLowLimit?: number,
-    moistureHighLimit?: number,
-    temperatureLowLimit?: number,
-    temperatureHighLimit?: number,
-    samples?: number,
-}
-
-const Products: ProductOptions[] = [
-    {
-        name: "Tabacco",
-        densityLowLimit: 0.5,
-        densityHighLimit: 0.7,
-        moistureLowLimit: 30,
-        moistureHighLimit: 40,
-    },
-    {
-        name: "Robusta",
-        densityLowLimit: 0.6,
-        densityHighLimit: 0.8,
-        moistureLowLimit: 20,
-        moistureHighLimit: 30,
-    },
-    {
-        name: "Green Tea",
-        densityLowLimit: 0.25,
-        densityHighLimit: 0.35,
-        moistureLowLimit: 25,
-        moistureHighLimit: 35,
-    },
-]
-
-function initNumericProperty(property: UAVariable, value: number | undefined) {
-    if (!value) return
-    setNumericValue(property, value)
-}
-
-class ProductImpl extends EventEmitter {
-    product: Product
-    constructor(parent: ProductSet, options: ProductOptions) {
-        super()
-        const productType = getMWNameSpace(parent.addressSpace).findObjectType("ProductType")
-        const product = productType.instantiate({
-            componentOf: parent,
-            browseName: options.name
-        }) as Product
-        this.product = product
-        setStringValue(product.name, options.name)
-        initNumericProperty(product.densityOffset, options.densityOffset)
-        initNumericProperty(product.densityLowLimit, options.densityLowLimit)
-        initNumericProperty(product.densityHighLimit, options.densityHighLimit)
-        initNumericProperty(product.moistureOffset, options.moistureOffset)
-        initNumericProperty(product.moistureLowLimit, options.moistureLowLimit)
-        initNumericProperty(product.moistureHighLimit, options.moistureHighLimit)
-        initNumericProperty(product.temperatureLowLimit, options.temperatureLowLimit)
-        initNumericProperty(product.temperatureHighLimit, options.temperatureHighLimit)
-        initNumericProperty(product.sampleCount, options.samples)
-    }
-
-    get name(): string { return getStringValue(this.product.name) }
-    get densityOffset(): number { return getNumericValue(this.product.densityOffset) }
-    get densityLowLimit(): number { return getNumericValue(this.product.densityLowLimit) }
-    get densityHighLimit(): number { return getNumericValue(this.product.densityHighLimit) }
-    get moistureOffset(): number { return getNumericValue(this.product.moistureOffset) }
-    get moistureLowLimit(): number { return getNumericValue(this.product.moistureLowLimit) }
-    get moistureHighLimit(): number { return getNumericValue(this.product.moistureHighLimit) }
-    get temperatureLowLimit(): number { return getNumericValue(this.product.temperatureLowLimit) }
-    get temperatureHighLimit(): number { return getNumericValue(this.product.temperatureHighLimit) }
-    get samples(): number { return getNumericValue(this.product.sampleCount) }
-}
-
-class ProductSetImpl {
-    productSet: ProductSet
-    products: ProductImpl[] = []
-
-    constructor(productSet: ProductSet, options: ProductOptions[]) {
-        this.productSet = productSet
-        options.forEach((productOptions) => {
-            const product = new ProductImpl(productSet, productOptions)
-            this.products.push(product)
-        })
-    }
-
-    get productNames(): string[] { return this.products.map(product => product.name) }
-    findProduct(name: string): ProductImpl | undefined { return this.products.find(product => product.name == name) }
-}
-
 class TemplateIds {
     static readonly Measure = "Measure"
     static readonly EmptyCheck = "Empty Check"
@@ -168,6 +77,8 @@ const ProgramTemplates: ProgramTemplateOptions[] = [
     { name: TemplateIds.CalibrateDensity },
     { name: TemplateIds.CalibrateMoisture },
 ]
+
+const InitialDelay = 2 * Duration.Second
 
 //---------------------------------------------------------------
 // unit implementation
@@ -238,17 +149,21 @@ export class MWUnitImpl extends EventEmitter {
         this.productSet = new ProductSetImpl(this.functionalUnit.getComponentByName("ProductSet") as ProductSet, Products)
         this.selectedProduct = this.productSet.products[0]
 
-        // initialize functions set
+        // initialize function set
         const functionSet = this.functionalUnit.getComponentByName("FunctionSet") as MWFunctionSet
-        // init controller
-        this.selectedProductController = new MulitStateDiscreteControlFunctionImpl(functionSet.selectedProduct)
-        this.selectedProductController.initEnumStrings(Products.map(product => product.name))
-        this.selectedProductController.targetValue.on("value_changed", this.onSelectedProductChanged.bind(this))
 
         // init sensors
         this.densitySensor = new AnalogScalarSensorFunctionImpl(functionSet.density, { lowLowLimit: 0.0, lowLimit: 0.1, highLimit: 2.0, highHighLimit: 4.0, historizing: true })
         this.moistureSensor = new AnalogScalarSensorFunctionImpl(functionSet.moisture, { lowLowLimit: 0.0, lowLimit: 20.0, highLimit: 40.0, highHighLimit: 100.0, historizing: true })
         this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 20.0, highLimit: 30, highHighLimit: 100.0, historizing: true })
+
+        // init controller
+        this.selectedProductController = new MulitStateDiscreteControlFunctionImpl(functionSet.selectedProduct)
+        this.selectedProductController.initEnumStrings(Products.map(product => product.name))
+        this.selectedProductController.targetValue.on("value_changed", this.onSelectedProductChanged.bind(this))
+
+        // trigger initialization of sensor alarm-monitor limits according to selected product
+        this.onSelectedProductChanged(this.selectedProductController.currentValue.readValue())
 
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.densitometry, AFODictionaryIds.humidity)
@@ -382,7 +297,7 @@ export class MWUnitImpl extends EventEmitter {
         const time = iso.slice(11, 19).replace(/:/g, "")
         const deviceProgramRunId = `${date}-${time}-${this.name}-${template.name}`.replace(/[ (),°]/g, "")
         const seconds = this.selectedProduct?.samples ?? 20
-        const runTime = Duration.Second * seconds
+        const runTime = Duration.Second * seconds + InitialDelay
         this.currentRunOptions = {
             programTemplateId: template.name,
             started: started,
@@ -435,7 +350,7 @@ export class MWUnitImpl extends EventEmitter {
             // create recorder
             options.eventRecorder = new EventDataRecorder("Events", this.functionalUnit)
             options.variableRecorder = new VariableDataRecorder("Data", [this.moistureSensor.sensorValue, this.densitySensor.sensorValue, this.temperatureSensor.sensorValue])
-            setTimeout(() => options.variableRecorderTimer = setInterval(() => { options.variableRecorder.createRecord() }, 1000), 1000)
+            setTimeout(() => options.variableRecorderTimer = setInterval(() => { options.variableRecorder.createRecord() }, 1000), InitialDelay)
 
             // initialize last result structure
             setNameNodeIdValue(programManager.lastResult, options.runId, result.nodeId)
@@ -444,7 +359,7 @@ export class MWUnitImpl extends EventEmitter {
             // set simualted process values
             if (this.selectedProduct) {
 
-                function setSimulatedValue(variable: UAVariable, low: number, high: number, scale = 0.5) {
+                function setSimulatedValue(variable: UAVariable, low: number, high: number, scale = 0.6) {
                     const average = 0.5 * (low + high)
                     const span = high - low
                     setNumericValue(variable, average + noise(scale * span))
@@ -518,7 +433,6 @@ export class MWUnitImpl extends EventEmitter {
                 setDateTimeValue(result.stopped, new Date())
                 const resultsDirectory = join(DataDirectory, "results")
                 new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder, options.variableRecorder])
-                touchNodes(result, result.fileSet)
 
                 const variableSet = options.result.variableSet
                 const recorder = options.variableRecorder
@@ -528,9 +442,15 @@ export class MWUnitImpl extends EventEmitter {
 
                 // copy results
                 copyValues(result, programManager.lastResultData)
-                if (options.programTemplateId == TemplateIds.EmptyCheck) {
-                    setDateTimeValue(programManager.lastEmptyCheck, getDateTimeValue(result.started))
-                }
+
+                // remove sample (empty)
+                // setNumericValue(this.density, noise(0.01))
+                // setNumericValue(this.moisture, noise(0.1))
+
+                touchNodes(result, result.fileSet, result.variableSet)
+            }
+            if (options.programTemplateId == TemplateIds.EmptyCheck) {
+                setDateTimeValue(programManager.lastEmptyCheck, options.started)
             }
         } else {
             raiseEvent(this.functionalUnit, `Stopping method.`, 100)
