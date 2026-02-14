@@ -12,7 +12,7 @@
 //---------------------------------------------------------------
 // LADS data recorder
 //---------------------------------------------------------------
-import { AccessLevelFlag, assert, coerceNodeId, DataType, IEventData, ReferenceTypeIds, UAAnalogItem, UAObject, UAVariable, VariableTypeIds, VariantT } from "node-opcua"
+import { AccessLevelFlag, assert, coerceNodeId, DataType, IEventData, LocalizedText, ReferenceTypeIds, UAAnalogItem, UAObject, UAVariable, VariableTypeIds, VariantT } from "node-opcua"
 import Excel from "exceljs"
 import { resolve } from "path"
 import { LADSResultFile } from "@interfaces"
@@ -127,7 +127,7 @@ export class EventDataRecorder extends DataRecorder {
 
         // records
         this.records.forEach(record => {
-            const row = [record.timestamp, record.sourceName, record.message, record.severity]
+            const row = [record.timestamp, record.sourceName, record.message.text, record.severity]
             worksheet.addRow(row)
         })
         return worksheet
@@ -140,20 +140,20 @@ interface EventData extends IEventData {
     localTime?: VariantT<Date, DataType.DateTime>
     severity?: VariantT<number, DataType.UInt16>
     sourceName?: VariantT<string, DataType.String>
-    message?: VariantT<string, DataType.String>
+    message?: VariantT<LocalizedText, DataType.LocalizedText>
 }
 
 export class EventDataRecord {
     timestamp: Date
     severity: number
-    message: string
+    message: LocalizedText
     sourceName: string
 
     constructor(eventData: IEventData) {
         const ed: EventData = eventData
         this.timestamp = ed.time ? ed.time.value : new Date()
         this.severity = ed.severity ? ed.severity.value : 0
-        this.message = ed.message ? ed.message.value : "Unknown message"
+        this.message = ed.message ? ed.message.value : new LocalizedText("Unknown message")
         this.sourceName = ed.sourceName ? ed.sourceName.value : "Unknown source"
     }
 }

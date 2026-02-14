@@ -18,7 +18,7 @@ import { getEUInformation, getStringValue } from "./lads-variable-utils"
 export function raiseEvent(node: UAObject, message: string, severity: number = 0) {
     if (!node) return
     const eventType = node.addressSpace.findObjectType("BaseEventType")
-    node.raiseEvent(eventType, { message: { dataType: DataType.String, value: message }, severity: { dataType: DataType.UInt16, value: severity } })
+    node.raiseEvent(eventType, { message: { dataType: DataType.LocalizedText, value: message }, severity: { dataType: DataType.UInt16, value: severity } })
 }
 
 //---------------------------------------------------------------
