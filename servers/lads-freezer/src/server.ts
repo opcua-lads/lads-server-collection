@@ -12,7 +12,7 @@
 //---------------------------------------------------------------
 // interfaces
 
-import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike, AddressSpace, Variant } from "node-opcua"
+import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike, AddressSpace, Variant, UAVariable, NodeId } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSDevice, LADSFunctionalState, LADSFunctionalUnit } from "@interfaces"
 import { join } from "path"
 import { defaultLocation, DIObjectIds, getChildObjects, getStringValue, initComponent, LADSComponentOptions, promoteToFiniteStateMachine } from "@utils"
@@ -220,6 +220,8 @@ class FreezerUnitImpl {
      * - HighLimit: Warning high threshold
      * - LowLimit: Warning low threshold
      * - LowLowLimit: Critical low threshold
+     *
+     * These optional properties must be explicitly created if they don't exist.
      */
     private configureAlarmLimits(
         sensor: LADSAnalogScalarSensorFunction,
@@ -231,35 +233,60 @@ class FreezerUnitImpl {
             return
         }
 
+        const addressSpace = this.functionalUnit.addressSpace
+        const namespace = addressSpace.getOwnNamespace()
+
         console.log(`[AlarmLimits] Configuring limits: HH=${limits.highHighLimit}, H=${limits.highLimit}, L=${limits.lowLimit}, LL=${limits.lowLowLimit}`)
 
-        // Set each limit if the property exists and value is provided
-        if (limits.highHighLimit !== undefined && alarmMonitor.highHighLimit) {
-            alarmMonitor.highHighLimit.setValueFromSource(new Variant({
+        // Helper to get or create a limit property
+        const getOrCreateLimit = (name: string, existingVar: UAVariable | undefined): UAVariable => {
+            if (existingVar) {
+                return existingVar
+            }
+            // Create the limit variable as a child of AlarmMonitor
+            return namespace.addVariable({
+                componentOf: alarmMonitor,
+                browseName: name,
+                dataType: DataType.Double,
+                value: new Variant({ dataType: DataType.Double, value: 0 }),
+            })
+        }
+
+        // Create and set each limit
+        if (limits.highHighLimit !== undefined) {
+            const limitVar = getOrCreateLimit("HighHighLimit", alarmMonitor.highHighLimit)
+            limitVar.setValueFromSource(new Variant({
                 dataType: DataType.Double,
                 value: limits.highHighLimit
             }))
+            console.log(`[AlarmLimits] HighHighLimit set to ${limits.highHighLimit}`)
         }
 
-        if (limits.highLimit !== undefined && alarmMonitor.highLimit) {
-            alarmMonitor.highLimit.setValueFromSource(new Variant({
+        if (limits.highLimit !== undefined) {
+            const limitVar = getOrCreateLimit("HighLimit", alarmMonitor.highLimit)
+            limitVar.setValueFromSource(new Variant({
                 dataType: DataType.Double,
                 value: limits.highLimit
             }))
+            console.log(`[AlarmLimits] HighLimit set to ${limits.highLimit}`)
         }
 
-        if (limits.lowLimit !== undefined && alarmMonitor.lowLimit) {
-            alarmMonitor.lowLimit.setValueFromSource(new Variant({
+        if (limits.lowLimit !== undefined) {
+            const limitVar = getOrCreateLimit("LowLimit", alarmMonitor.lowLimit)
+            limitVar.setValueFromSource(new Variant({
                 dataType: DataType.Double,
                 value: limits.lowLimit
             }))
+            console.log(`[AlarmLimits] LowLimit set to ${limits.lowLimit}`)
         }
 
-        if (limits.lowLowLimit !== undefined && alarmMonitor.lowLowLimit) {
-            alarmMonitor.lowLowLimit.setValueFromSource(new Variant({
+        if (limits.lowLowLimit !== undefined) {
+            const limitVar = getOrCreateLimit("LowLowLimit", alarmMonitor.lowLowLimit)
+            limitVar.setValueFromSource(new Variant({
                 dataType: DataType.Double,
                 value: limits.lowLowLimit
             }))
+            console.log(`[AlarmLimits] LowLowLimit set to ${limits.lowLowLimit}`)
         }
     }
 
