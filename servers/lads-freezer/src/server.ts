@@ -12,7 +12,7 @@
 //---------------------------------------------------------------
 // interfaces
 
-import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike, AddressSpace } from "node-opcua"
+import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike, AddressSpace, Variant } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSDevice, LADSFunctionalState, LADSFunctionalUnit } from "@interfaces"
 import { join } from "path"
 import { defaultLocation, DIObjectIds, getChildObjects, getStringValue, initComponent, LADSComponentOptions, promoteToFiniteStateMachine } from "@utils"
@@ -201,6 +201,66 @@ class FreezerUnitImpl {
         const sensorValue = this.temperatureSensor.sensorValue
         sensorValue.historizing = true
         functionalUnit.addressSpace.installHistoricalDataNode(sensorValue)
+
+        // Configure alarm limits for temperature sensor
+        // Freezer should maintain -20°C, alarm if outside safe range
+        this.configureAlarmLimits(this.temperatureSensor, {
+            highHighLimit: -10,  // Critical: Freezer way too warm (defrost/failure)
+            highLimit: -15,      // Warning: Temperature rising
+            lowLimit: -25,       // Warning: Temperature dropping
+            lowLowLimit: -30,    // Critical: Freezer too cold (compressor issue)
+        })
+    }
+
+    /**
+     * Configure alarm limits on a sensor function's AlarmMonitor
+     *
+     * AlarmMonitor is an ExclusiveLevelAlarm (for sensors) with:
+     * - HighHighLimit: Critical high threshold
+     * - HighLimit: Warning high threshold
+     * - LowLimit: Warning low threshold
+     * - LowLowLimit: Critical low threshold
+     */
+    private configureAlarmLimits(
+        sensor: LADSAnalogScalarSensorFunction,
+        limits: { highHighLimit?: number; highLimit?: number; lowLimit?: number; lowLowLimit?: number }
+    ) {
+        const alarmMonitor = sensor.alarmMonitor
+        if (!alarmMonitor) {
+            console.log(`[AlarmLimits] No AlarmMonitor found on sensor`)
+            return
+        }
+
+        console.log(`[AlarmLimits] Configuring limits: HH=${limits.highHighLimit}, H=${limits.highLimit}, L=${limits.lowLimit}, LL=${limits.lowLowLimit}`)
+
+        // Set each limit if the property exists and value is provided
+        if (limits.highHighLimit !== undefined && alarmMonitor.highHighLimit) {
+            alarmMonitor.highHighLimit.setValueFromSource(new Variant({
+                dataType: DataType.Double,
+                value: limits.highHighLimit
+            }))
+        }
+
+        if (limits.highLimit !== undefined && alarmMonitor.highLimit) {
+            alarmMonitor.highLimit.setValueFromSource(new Variant({
+                dataType: DataType.Double,
+                value: limits.highLimit
+            }))
+        }
+
+        if (limits.lowLimit !== undefined && alarmMonitor.lowLimit) {
+            alarmMonitor.lowLimit.setValueFromSource(new Variant({
+                dataType: DataType.Double,
+                value: limits.lowLimit
+            }))
+        }
+
+        if (limits.lowLowLimit !== undefined && alarmMonitor.lowLowLimit) {
+            alarmMonitor.lowLowLimit.setValueFromSource(new Variant({
+                dataType: DataType.Double,
+                value: limits.lowLowLimit
+            }))
+        }
     }
 
     private async open(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
