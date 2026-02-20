@@ -163,16 +163,21 @@ export enum LADSFunctionalState {
     Aborting = 'Aborting',
     Aborted = 'Aborted',
 }
-export interface LADSFunctionalStateMachine extends UAFiniteStateMachine {
-    runningStateMachine: LADSRunnnigStateMachine
+
+export interface LADSFunctionalStateMachine_Base{
+    runningStateMachine?: LADSRunnnigStateMachine
     start: UAMethod
     stop: UAMethod
     abort: UAMethod
     clear?: UAMethod
-}
-export interface LADSFunctionalUnitStateMachine extends LADSFunctionalStateMachine {
+} 
+export interface LADSFunctionalStateMachine extends UAFiniteStateMachine, LADSFunctionalStateMachine_Base { }
+
+export interface LADSFunctionalUnitStateMachine_Base extends LADSFunctionalStateMachine_Base {
     startProgram?: UAMethod
 }
+export interface LADSFunctionalUnitStateMachine extends LADSFunctionalStateMachine, LADSFunctionalUnitStateMachine_Base { }
+
 export interface LADSControlFunctionStateMachine extends LADSFunctionalStateMachine {
     startWithTargetValue?: UAMethod
 }

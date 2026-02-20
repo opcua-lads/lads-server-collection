@@ -31,6 +31,7 @@ import {
 import { getLADSNamespace, installVariableHistory, promoteToFiniteStateMachine } from "./lads-utils";
 import { getEUInformation, getNumericValue, setNumericValue, setStringArrayValue } from "./lads-variable-utils";
 import { raiseEvent } from "./lads-event-utils";
+import { get } from "http";
 
 //---------------------------------------------------------------
 // generic definitions
@@ -367,6 +368,11 @@ export class MulitStateDiscreteControlFunctionImpl extends ControlFunctionImpl {
         setStringArrayValue(this.targetValue.enumStrings, enumStrings)
         setStringArrayValue(this.currentValue.enumStrings, enumStrings)
     }
+
+    get targetValueEnumStrings(): LocalizedText[] { return this.targetValue.enumStrings.readValue().value.value} 
+    get targetValueString(): string {return this.targetValueEnumStrings[getNumericValue(this.targetValue)].text }
+    get currentValueEnumStrings(): LocalizedText[] { return this.currentValue.enumStrings.readValue().value.value} 
+    get currentValueString(): string {return this.currentValueEnumStrings[getNumericValue(this.currentValue)].text }
 }
 
 //---------------------------------------------------------------

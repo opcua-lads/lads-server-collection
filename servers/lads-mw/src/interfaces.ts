@@ -23,17 +23,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSProgramManager, LADSResult, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSComplianceDocumentSet, LADSMultiStateDiscreteControlFunction, LADSProgramManager, LADSResult, LADSMultiStateDiscreteSensorFunction, LADSTwoStateDiscreteSensorFunction } from "@interfaces"
 import { NameNodeId } from "@utils"
 import { DataType, EUInformation, UAObject, UAProperty } from "node-opcua"
 
 //---------------------------------------------------------------
 export interface MWFunctionSet extends UAObject {
+    operationMode: LADSMultiStateDiscreteControlFunction
     selectedProduct: LADSMultiStateDiscreteControlFunction
     temperature: LADSAnalogScalarSensorFunction
     density: LADSAnalogScalarSensorFunction
     moisture: LADSAnalogScalarSensorFunction
     resultIndicator: LADSMultiStateDiscreteSensorFunction
+    lightBarrier1?: LADSTwoStateDiscreteSensorFunction
+    lightBarrier2?: LADSTwoStateDiscreteSensorFunction
+    lightBarrier3?: LADSTwoStateDiscreteSensorFunction
 }
 
 export interface MWProgramManager extends LADSProgramManager {
@@ -70,6 +74,10 @@ export interface MWVariableSet extends UAObject {
     density: MeasurementResult
     temperature: MeasurementResult
     result: UAProperty<string, DataType.String>
+}
+export enum OperationModeEnum {
+    Continuous = 0,
+    Bale = 1
 }
 
 export enum ResultsEnum {

@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSAnalogScalarSensorFunction, LADSMultiSensorFunctionType, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, copyValues, VariableDataRecorder, setNumericArrayValue, getStringValue, getNumericArrayValue } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAObjectType } from "node-opcua"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSAnalogScalarSensorFunction, LADSMultiSensorFunctionType, LADSMultiStateDiscreteSensorFunction, LADSRunnnigState } from "@interfaces"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, copyValues, VariableDataRecorder, setNumericArrayValue, getStringValue, getNumericArrayValue, setBooleanValue } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAObjectType, n, setNamespaceMetaData } from "node-opcua"
 import { MWDeviceImpl, Manufacturer, getMWNameSpace as getMWNameSpace } from "./device"
-import { MeasurementResult, MWFunctionalUnit, MWFunctionSet, MWResult, ProductSet, ResultsEnum } from "./interfaces"
+import { MeasurementResult, MWFunctionalUnit, MWFunctionSet, MWResult, OperationModeEnum, ProductSet, ResultsEnum } from "./interfaces"
 import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
@@ -37,6 +37,10 @@ import { ProductImpl, Products, ProductSetImpl } from "./products"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
+    operationMode: OperationModeEnum
+}
+
+interface CurrentExecutionOptions {
     programTemplateId: string
     runId: string,
     started: Date,
@@ -87,7 +91,9 @@ export class MWUnitImpl extends EventEmitter {
     parent: MWDeviceImpl
     functionalUnit: MWFunctionalUnit
     functionalUnitState: UAStateMachineEx
+    runningStateMachine: UAStateMachineEx
     currentRunOptions: CurrentRunOptions
+    currentExecutionOptions: CurrentExecutionOptions
     pendingRequest: LADSFunctionalState
     documentSet: ComplianceDocumentSetImpl
     lock: LockImpl
@@ -96,12 +102,18 @@ export class MWUnitImpl extends EventEmitter {
     temperature: UAVariable
     density: UAVariable
     moisture: UAVariable
+    bales: UAVariable
+    conveyorSpeed: UAVariable
+    runBales = false
+
+    // mode
+    operationMode: MulitStateDiscreteControlFunctionImpl
 
     // sensors
     temperatureSensor: AnalogScalarSensorFunctionImpl
     densitySensor: AnalogScalarSensorFunctionImpl
     moistureSensor: AnalogScalarSensorFunctionImpl
-    resultIndicator: LADSMultiStateDiscreteSensorFunction 
+    resultIndicator: LADSMultiStateDiscreteSensorFunction
     lightBarrier1: LADSTwoStateDiscreteSensorFunction
     lightBarrier2: LADSTwoStateDiscreteSensorFunction
     lightBarrier3: LADSTwoStateDiscreteSensorFunction
@@ -140,6 +152,8 @@ export class MWUnitImpl extends EventEmitter {
         // promote & initialize state machines
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+        this.runningStateMachine = promoteToFiniteStateMachine(stateMachine.runningStateMachine)
+        this.runningStateMachine.setState(LADSRunnnigState.Idle)
 
         // initialize lock
         if (functionalUnit.lock) {
@@ -159,10 +173,21 @@ export class MWUnitImpl extends EventEmitter {
         this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 20.0, highLimit: 30, highHighLimit: 100.0, historizing: true })
         this.resultIndicator = functionSet.resultIndicator
 
-        // init controller
+        // init select product
         this.selectedProductController = new MulitStateDiscreteControlFunctionImpl(functionSet.selectedProduct)
         this.selectedProductController.initEnumStrings(Products.map(product => product.name))
         this.selectedProductController.targetValue.on("value_changed", this.onSelectedProductChanged.bind(this))
+
+        // init operation mode
+        if (functionSet.operationMode) {
+            this.operationMode = new MulitStateDiscreteControlFunctionImpl(functionSet.operationMode)
+            this.operationMode.targetValue.on("value_changed", this.onOperationModeChanged)
+        }
+
+        // init light barriers
+        this.lightBarrier1 = functionSet.lightBarrier1
+        this.lightBarrier2 = functionSet.lightBarrier2
+        this.lightBarrier3 = functionSet.lightBarrier3
 
         // trigger initialization of sensor alarm-monitor limits according to selected product
         this.onSelectedProductChanged(this.selectedProductController.currentValue.readValue())
@@ -212,24 +237,36 @@ export class MWUnitImpl extends EventEmitter {
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 23 }
         })
+        if (this.lightBarrier1) {
+            this.runBales = true
+            this.bales = namespace.addVariable({
+                browseName: "Simulate Bales",
+                propertyOf: simulator,
+                dataType: DataType.Boolean,
+                value: { dataType: DataType.Boolean, value: this.runBales }
+            })
+            this.bales.on("value_changed", (dataValue: DataValue) => { this.runBales = dataValue.value.value })
+            this.conveyorSpeed = namespace.addVariable({
+                browseName: "Conveyor Speed",
+                propertyOf: simulator,
+                dataType: DataType.Double,
+                value: { dataType: DataType.Double, value: 50 }
+            })
+            setTimeout(() => this.evaluateBales())
+        }
 
         // init program manager
         this.initProgramTemplates()
 
         // start simlulation
         const dT = 500
-        let runTime = 0
-        setInterval(() => {
-            this.evaluate(runTime, dT)
-            runTime += dT
-        }, dT)
+        setInterval(() => { this.evaluate(dT) }, dT)
     }
 
     private onSelectedProductChanged(dataValue: DataValue) {
         const value: number = dataValue.value.value
         setNumericValue(this.selectedProductController.currentValue, value)
-        const productNames = this.selectedProductController.currentValue.enumStrings.readValue().value.value
-        const name = productNames[value].text
+        const name = this.selectedProductController.currentValueString
         const product = this.productSet.findProduct(name)
         raiseEvent(this.functionalUnit, `Selected product changed to ${name}`)
         if (!product) return
@@ -242,19 +279,104 @@ export class MWUnitImpl extends EventEmitter {
         this.selectedProduct = product
     }
 
-    protected isAccessibleBy(sessionContext: SessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
+    private onOperationModeChanged(dataValue: DataValue) {
+        const value: number = dataValue.value.value
+        setNumericValue(this.operationMode.currentValue, value)
+        raiseEvent(this.functionalUnit, `Operation mode changed to ${this.operationMode.currentValueString}`)
+    }
 
-    private evaluate(runtime: number, dT: number) {
+    private get currentOperationMode(): OperationModeEnum { 
+        return getNumericValue(this.operationMode?.currentValue, OperationModeEnum.Continuous) 
+    }
+
+    private setSimulatedProductValues() {
+        if (!this.selectedProduct) return
+
+        function setSimulatedValue(variable: UAVariable, low: number, high: number, scale = 0.6) {
+            const average = 0.5 * (low + high)
+            const span = high - low
+            setNumericValue(variable, average + noise(scale * span))
+        }
+
+        const product = this.selectedProduct
+        setSimulatedValue(this.density, product.densityLowLimit, product.densityHighLimit)
+        setSimulatedValue(this.moisture, product.moistureLowLimit, product.moistureHighLimit)
+        setSimulatedValue(this.temperature, product.temperatureLowLimit, product.temperatureHighLimit)
+    }
+
+    private setSimulatedEmptyValues() {
+        setNumericValue(this.density, noise(0.01))
+        setNumericValue(this.moisture, noise(0.1))
+        setNumericValue(this.temperature, 25.0)
+    }
+
+    private executeEmptyCheck() {}
+    private completeEmptyCheck() {}
+    private executeMeasureBale(id: number) {}
+    private completeMeasureBale() {}
+    
+    private async evaluateBales() {
+        let measureId = 0
+        while (true) {
+            const speed = getNumericValue(this.conveyorSpeed, 100)            
+            const scale = 1000 / (speed >=10 ? speed : 10)
+            if (this.runBales) {
+                // bale approaches LB1
+                setBooleanValue(this.lightBarrier1.sensorValue, true)
+                // start empty check
+                this.executeEmptyCheck()
+                await sleepMilliSeconds(520 * scale)
+                this.completeEmptyCheck()
+                // bale approaches LB2
+                setBooleanValue(this.lightBarrier2.sensorValue, true)
+                await sleepMilliSeconds(240 * scale)
+                // bale approaches sensor
+                this.setSimulatedProductValues()
+                await sleepMilliSeconds(240 * scale)
+                // bale approaches LB3
+                setBooleanValue(this.lightBarrier3.sensorValue, true)
+                // start measurement now
+                this.executeMeasureBale(++measureId)
+                // bale is 100mm longer than lb distance
+                await sleepMilliSeconds(100 * scale)
+                // bale leaves LB1
+                setBooleanValue(this.lightBarrier1.sensorValue, false)
+                await sleepMilliSeconds(520 * scale)
+                // bale leaves LB2
+                setBooleanValue(this.lightBarrier2.sensorValue, false)
+                // stop measurement now
+                this.completeMeasureBale()
+                await sleepMilliSeconds(240 * scale)
+                // bale leaves sensor
+                this.setSimulatedEmptyValues()
+                await sleepMilliSeconds(240 * scale)
+                // bale leaves LB3
+                setBooleanValue(this.lightBarrier3.sensorValue, false)
+                // wait for next bale 200mm in front of LB1
+                await sleepMilliSeconds(200 * scale)
+            } else {
+                setBooleanValue(this.lightBarrier1.sensorValue, false)
+                setBooleanValue(this.lightBarrier2.sensorValue, false)
+                setBooleanValue(this.lightBarrier3.sensorValue, false)
+                await sleepMilliSeconds(500)
+            }
+        }
+    }
+
+    private evaluate(dT: number) {
         function filterAndSet(yvar: UAVariable, xvar: UAVariable, distortion = 0.01) {
             const cf = 0.5
             const x = getNumericValue(xvar)
             const y = getNumericValue(yvar)
-            const y_ =  cf * x + (1 - cf) * y
+            const y_ = cf * x + (1 - cf) * y
             setNumericValue(yvar, y_ + noise(distortion))
         }
-
-        filterAndSet(this.densitySensor.sensorValue, this.density, 0.001)
-        filterAndSet(this.moistureSensor.sensorValue, this.moisture, 0.1)
+        if (this.isExecuting || this.currentOperationMode === OperationModeEnum.Continuous) {
+            filterAndSet(this.densitySensor.sensorValue, this.density, 0.001)
+            filterAndSet(this.moistureSensor.sensorValue, this.moisture, 0.1)
+        } else {
+            this.setStatusCodes(StatusCodes.UncertainLastUsableValue)
+        }
         filterAndSet(this.temperatureSensor.sensorValue, this.temperature, 0.01)
     }
 
@@ -279,6 +401,11 @@ export class MWUnitImpl extends EventEmitter {
         touchNodes(programTemplateSet)
     }
 
+    protected isAccessibleBy(sessionContext: SessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
+
+    get isRunning(): boolean { return this.functionalUnitState.getCurrentState().includes(LADSFunctionalState.Running) }
+    get isExecuting(): boolean { return this.runningStateMachine.getCurrentState().includes(LADSRunnnigState.Execute) }
+
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
         return (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted))
@@ -289,7 +416,7 @@ export class MWUnitImpl extends EventEmitter {
         return (currentState.includes(LADSFunctionalState.Running))
     }
 
-    private initCurrentRunOptions(programTemplateId: string): boolean {
+    private initCurrentExecutionOptions(programTemplateId: string): boolean {
         const id = programTemplateId.toLowerCase()
         const template = ProgramTemplates.find(programTemplate => programTemplate.template?.identifier.toLowerCase().includes(id))
         if (!template) return false
@@ -300,7 +427,7 @@ export class MWUnitImpl extends EventEmitter {
         const deviceProgramRunId = `${date}-${time}-${this.name}-${template.name}`.replace(/[ (),°]/g, "")
         const seconds = this.selectedProduct?.samples ?? 20
         const runTime = Duration.Second * seconds + InitialDelay
-        this.currentRunOptions = {
+        this.currentExecutionOptions = {
             programTemplateId: template.name,
             started: started,
             startedMilliseconds: Date.now(),
@@ -322,7 +449,15 @@ export class MWUnitImpl extends EventEmitter {
     private get name(): string { return this.parent.config.name }
 
     protected async enterRunning(context: SessionContext) {
-        const options = this.currentRunOptions
+        const operationMode = this.currentOperationMode
+        this.currentRunOptions.operationMode = operationMode
+        if (operationMode === OperationModeEnum.Continuous) {
+            await this.enterExecuting(context)
+        }
+    }
+
+    protected async enterExecuting(context: SessionContext) {
+        const options = this.currentExecutionOptions
 
         // eventually create result structure
         if (options.programTemplateId === TemplateIds.Measure) {
@@ -360,23 +495,9 @@ export class MWUnitImpl extends EventEmitter {
             copyValues(result, programManager.lastResultData)
 
             // set simualted process values
-            if (this.selectedProduct) {
-
-                function setSimulatedValue(variable: UAVariable, low: number, high: number, scale = 0.6) {
-                    const average = 0.5 * (low + high)
-                    const span = high - low
-                    setNumericValue(variable, average + noise(scale * span))
-                }
-
-                const product = this.selectedProduct
-                setSimulatedValue(this.density, product.densityLowLimit, product.densityHighLimit)
-                setSimulatedValue(this.moisture, product.moistureLowLimit, product.moistureHighLimit)
-                setSimulatedValue(this.temperature, product.temperatureLowLimit, product.temperatureHighLimit)              
-            }
-
+            this.setSimulatedProductValues()
         } else if (options.programTemplateId === TemplateIds.EmptyCheck) {
-            setNumericValue(this.density, noise(0.01))
-            setNumericValue(this.moisture, noise(0.1))
+            this.setSimulatedEmptyValues()
         }
         raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
 
@@ -386,15 +507,16 @@ export class MWUnitImpl extends EventEmitter {
         setNumericValue(activeProgram.currentRuntime, 0)
         setNumericValue(activeProgram.estimatedRuntime, options.estimatedRuntime)
         setStringValue(activeProgram.deviceProgramRunId, options.runId)
-        this.currentRunOptions = options
+        this.currentExecutionOptions = options
         this.pendingRequest = LADSFunctionalState.Running
         this.functionalUnitState.setState(LADSFunctionalState.Running)
-        await this.run()
+        this.runningStateMachine.setState(LADSRunnnigState.Execute)
+        await this.execute()
     }
 
 
-    protected async run() {
-        const options = this.currentRunOptions
+    protected async execute() {
+        const options = this.currentExecutionOptions
         const activeProgram = this.functionalUnit.programManager.activeProgram
         const started = Date.now()
         let aborted = false
@@ -407,22 +529,22 @@ export class MWUnitImpl extends EventEmitter {
             if ((this.pendingRequest === LADSFunctionalState.Stopping) || (this.pendingRequest === LADSFunctionalState.Aborted)) {
                 waiting = false
                 aborted = true
-                this.leaveRunning(this.pendingRequest)
+                this.leaveExecuting(this.pendingRequest, LADSRunnnigState.Resetting)
             } else {
                 await sleepMilliSeconds(200)
             }
         }
-        if (!aborted) this.leaveRunning(LADSFunctionalState.Stopping)
+        if (!aborted) this.leaveExecuting(LADSFunctionalState.Stopping, LADSRunnnigState.Completing)
     }
 
-    private async leaveRunning(state: LADSFunctionalState) {
-        const stateMachine = this.functionalUnitState
-        stateMachine.setState(state)
+    private async leaveExecuting(functionalState: LADSFunctionalState, runningState: LADSRunnnigState) {
+        const operationMode = this.currentRunOptions.operationMode
+        this.functionalUnitState.setState(functionalState)
         const programManager = this.functionalUnit.programManager
-        const options = this.currentRunOptions
+        const options = this.currentExecutionOptions
         if (options) {
-            this.currentRunOptions = undefined
-            if (state === LADSFunctionalState.Aborting) {
+            this.currentExecutionOptions = undefined
+            if (functionalState === LADSFunctionalState.Aborting) {
                 raiseEvent(this.functionalUnit, `Aborting method ${options.programTemplateId} with identifier ${options.runId}.`, 500)
                 await sleepMilliSeconds(100)
             } else {
@@ -440,15 +562,15 @@ export class MWUnitImpl extends EventEmitter {
                 // compute aggregates and set measurement results
                 const variableSet = options.result.variableSet
                 const recorder = options.variableRecorder
-                const densityResult = this.setMeasurementResult(recorder, variableSet.density, this.densitySensor) 
-                const moistureResult = this.setMeasurementResult(recorder, variableSet.moisture, this.moistureSensor) 
-                this.setMeasurementResult(recorder, variableSet.temperature, this.temperatureSensor) 
-                
+                const densityResult = this.setMeasurementResult(recorder, variableSet.density, this.densitySensor)
+                const moistureResult = this.setMeasurementResult(recorder, variableSet.moisture, this.moistureSensor)
+                this.setMeasurementResult(recorder, variableSet.temperature, this.temperatureSensor)
+
                 // set overall result indicator
                 const resultIndicator = (densityResult === ResultsEnum.Passed) && (moistureResult === ResultsEnum.Passed) ? ResultsEnum.Passed : ResultsEnum.Failed
                 setNumericValue(this.resultIndicator.sensorValue, resultIndicator)
                 const resultEnumStrings = this.resultIndicator.sensorValue.enumStrings.readValue().value.value
-                const resultText =  resultEnumStrings ? resultEnumStrings[resultIndicator].text : "Unknown"
+                const resultText = resultEnumStrings ? resultEnumStrings[resultIndicator].text : "Unknown"
                 setStringValue(variableSet.result, resultText)
 
                 // copy results
@@ -466,7 +588,23 @@ export class MWUnitImpl extends EventEmitter {
         } else {
             raiseEvent(this.functionalUnit, `Stopping method.`, 100)
         }
-        stateMachine.setState(LADSFunctionalState.Stopped)
+        if (operationMode == OperationModeEnum.Continuous) {
+            this.leaveRunning()
+        } else {
+            if (runningState === LADSRunnnigState.Completing) {
+                this.runningStateMachine.setState(LADSRunnnigState.Completed)
+                await sleepMilliSeconds(20)
+                this.runningStateMachine.setState(LADSRunnnigState.Idle)
+            } else {
+                // Forced to leave
+                this.runningStateMachine.setState(LADSRunnnigState.Idle)
+                this.leaveRunning()
+            }
+        }
+    }
+
+    private leaveRunning() {
+        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
     }
 
     private setMeasurementResult(recorder: VariableDataRecorder, measurement: MeasurementResult, sensor: AnalogScalarSensorFunctionImpl): ResultsEnum {
@@ -496,8 +634,8 @@ export class MWUnitImpl extends EventEmitter {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
-        if (this.initCurrentRunOptions(programTemplateId)) {
-            const options = this.currentRunOptions
+        if (this.initCurrentExecutionOptions(programTemplateId)) {
+            const options = this.currentExecutionOptions
             options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
             options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
 
@@ -511,7 +649,7 @@ export class MWUnitImpl extends EventEmitter {
 
             this.enterRunning(context)
             return {
-                outputArguments: [new Variant({ dataType: DataType.String, value: this.currentRunOptions.runId })],
+                outputArguments: [new Variant({ dataType: DataType.String, value: this.currentExecutionOptions.runId })],
                 statusCode: StatusCodes.Good
             }
         } else {

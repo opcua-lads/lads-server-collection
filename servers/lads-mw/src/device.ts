@@ -66,7 +66,7 @@ export class MWDeviceImpl {
             this.lock = new LockImpl(this.device.lock)
         }
         
-        const optionals = config.hasLB ? ["FunctionSet.LightBarrier1", "FunctionSet.LightBarrier2", "FunctionSet.LightBarrier3"] : []
+        const optionals = config.hasLB ? ["FunctionSet.LightBarrier1", "FunctionSet.LightBarrier2", "FunctionSet.LightBarrier3", "FunctionSet.OperationMode"] : []
         const unitImpl = new MWUnitImpl(this, optionals)
 
         // attach device helper
