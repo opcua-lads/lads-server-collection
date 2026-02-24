@@ -44,10 +44,7 @@ import {
     UAEventType,
     UADataType,
     ServerSession,
-    StatusCode,
-    OPCUAServer,
-    QualifiedName
-} from "node-opcua"
+    StatusCode} from "node-opcua"
 import {
     LADSDevice,
     LADSDeviceState,
@@ -69,7 +66,7 @@ import {
     LADSComponent
 } from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from "node-opcua-nodeset-di"
-import { setDateTimeValue, setStringValue } from "./lads-variable-utils"
+import { modifyStatusCode, setDateTimeValue, setStringValue } from "./lads-variable-utils"
 import { AFODictionary } from "@afo"
 
 export enum DIObjectIds {
@@ -597,14 +594,8 @@ export function buildComponentsEventNotifierTree(parent: UAObject, components: U
 }
 
 //---------------------------------------------------------------
-// LADSDeviceHelper class
+// LADSFiniteStateMachineHelper class
 //
-// Helper object to provide several features for a device object:
-// - automatically add an Organizes reference to the device within the Machines folder
-// - automatically add HasEventNotifier references to the device sub-tree as decribed above
-// - example implementation of state-machine logic and behavior as
-//   described in Annex B of LADS OPC UA 30500-1
-// - optionally raise events whenever one of the state-machine states changes
 //---------------------------------------------------------------
 
 export function promoteToFiniteStateMachine(stateMachine: UAFiniteStateMachine): UAStateMachineEx {
@@ -615,12 +606,22 @@ export function promoteToFiniteStateMachine(stateMachine: UAFiniteStateMachine):
 export class LADSFiniteStateMachineHelper {
     stateMachine: UAStateMachineEx
     parentStateMachineHelper?: LADSFiniteStateMachineHelper
+    activeState?: UAState
+    private isActive: boolean = false
 
-    constructor(stateMachine: UAFiniteStateMachine, parentStateMachineHelper?: LADSFiniteStateMachineHelper) {
+    constructor(stateMachine: UAFiniteStateMachine, parentStateMachineHelper?: LADSFiniteStateMachineHelper, activeStateName?: string) {
         this.stateMachine = promoteToStateMachine(stateMachine)
         this.stateMachine.currentState.on("value_changed", this.onCurrentStateChanged.bind(this))
         this.parentStateMachineHelper = parentStateMachineHelper
+        if (parentStateMachineHelper) {
+            this.parentStateMachineHelper = parentStateMachineHelper
+            this.activeState = this.parentStateMachineHelper.getStateByName(activeStateName)
+            this.parentStateMachineHelper.stateMachine.currentState.on("value_changed", this.onParentStateChanged.bind(this))
+            this.setActiveState(parentStateMachineHelper.stateMachine.getCurrentState())
+        }
     }
+
+    getStateByName(name: string): UAState { return this.stateMachine.getStateByName(name)}
 
     setEffectiveDisplayName(states: UAState[]) {
         const effectiveDisplayName = this.stateMachine.currentState.effectiveDisplayName
@@ -632,15 +633,29 @@ export class LADSFiniteStateMachineHelper {
         if (this.parentStateMachineHelper) {
             const parentState = this.parentStateMachineHelper.stateMachine.currentStateNode
             if (parentState) {
-                states.unshift(parentState)
-                this.parentStateMachineHelper.setEffectiveDisplayName(states)
+                if (this.isActive) {
+                    states.unshift(parentState)
+                    this.parentStateMachineHelper.setEffectiveDisplayName(states)
+                } else {
+                    this.parentStateMachineHelper.setEffectiveDisplayName([parentState])
+                }
             }
         }
     }
 
+    async onParentStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) { this.setActiveState(dataValue.value.value?.text) }
+
+    private setActiveState(stateName: string) {
+        if (!this.activeState) return
+        if (!stateName) return
+        this.isActive = (stateName.includes(this.activeState.getDisplayName()))
+        const statusCode = this.isActive ? StatusCodes.Good : StatusCodes.BadStateNotActive
+        modifyStatusCode(this.stateMachine.currentState, statusCode)
+    }
+
     async onCurrentStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
         const stateName = dataValue.value.value.text
-        assert(stateName)
+        if (!stateName) return
         const states = this.stateMachine.getStates()
         const state = states.find((value: UAState) => (stateName?.includes(value.browseName.name ? value.browseName.name : "")))
         if (state) {
@@ -649,6 +664,17 @@ export class LADSFiniteStateMachineHelper {
         }
     }
 }
+
+//---------------------------------------------------------------
+// LADSDeviceHelper class
+//
+// Helper object to provide several features for a device object:
+// - automatically add an Organizes reference to the device within the Machines folder
+// - automatically add HasEventNotifier references to the device sub-tree as decribed above
+// - example implementation of state-machine logic and behavior as
+//   described in Annex B of LADS OPC UA 30500-1
+// - optionally raise events whenever one of the state-machine states changes
+//---------------------------------------------------------------
 
 export interface LADSDeviceHelperOptions {
     initializationTime?: number

@@ -23,9 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSAnalogScalarSensorFunction, LADSMultiSensorFunctionType, LADSMultiStateDiscreteSensorFunction, LADSRunnnigState } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, copyValues, VariableDataRecorder, setNumericArrayValue, getStringValue, getNumericArrayValue, setBooleanValue } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAObjectType, n, setNamespaceMetaData } from "node-opcua"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSRunnnigState } from "@interfaces"
+import { setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, copyValues, VariableDataRecorder, setNumericArrayValue, setBooleanValue, LADSFiniteStateMachineHelper } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAObjectType } from "node-opcua"
 import { MWDeviceImpl, Manufacturer, getMWNameSpace as getMWNameSpace } from "./device"
 import { MeasurementResult, MWFunctionalUnit, MWFunctionSet, MWResult, OperationModeEnum, ProductSet, ResultsEnum } from "./interfaces"
 import { EventEmitter } from "events"
@@ -37,7 +37,13 @@ import { ProductImpl, Products, ProductSetImpl } from "./products"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
+    context?: SessionContext
     operationMode: OperationModeEnum
+    programTemplateId?: string
+    properties?: LADSProperty[]
+    supervisoryJobId?: string
+    supervisoryTaskId?: string
+    samples?: LADSSampleInfo[]
 }
 
 interface CurrentExecutionOptions {
@@ -46,12 +52,9 @@ interface CurrentExecutionOptions {
     started: Date,
     startedMilliseconds: number
     estimatedRuntime?: number
-    supervisoryJobId: string
-    supervisoryTaskId: string
+    executionTimer?: NodeJS.Timeout
     programTemplate: ProgramTemplateOptions
     programTemplateNode: LADSProgramTemplate
-    properties?: LADSProperty[]
-    samples?: LADSSampleInfo[]
     result?: MWResult
     eventRecorder?: EventDataRecorder
     variableRecorder?: VariableDataRecorder
@@ -92,9 +95,8 @@ export class MWUnitImpl extends EventEmitter {
     functionalUnit: MWFunctionalUnit
     functionalUnitState: UAStateMachineEx
     runningStateMachine: UAStateMachineEx
-    currentRunOptions: CurrentRunOptions
+    currentRunOptions: CurrentRunOptions = { operationMode: OperationModeEnum.Continuous }
     currentExecutionOptions: CurrentExecutionOptions
-    pendingRequest: LADSFunctionalState
     documentSet: ComplianceDocumentSetImpl
     lock: LockImpl
 
@@ -105,6 +107,7 @@ export class MWUnitImpl extends EventEmitter {
     bales: UAVariable
     conveyorSpeed: UAVariable
     runBales = false
+    transitionDelay: UAVariable
 
     // mode
     operationMode: MulitStateDiscreteControlFunctionImpl
@@ -150,9 +153,11 @@ export class MWUnitImpl extends EventEmitter {
         stateMachine.stop?.bindMethod(this.stop.bind(this))
         stateMachine.abort?.bindMethod(this.abort.bind(this))
         // promote & initialize state machines
-        this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
+        const functionalUnitStateHelper = new LADSFiniteStateMachineHelper(stateMachine)
+        const runningStateMachineHelper = new LADSFiniteStateMachineHelper(stateMachine.runningStateMachine, functionalUnitStateHelper, LADSFunctionalState.Running)
+        this.functionalUnitState = functionalUnitStateHelper.stateMachine
+        this.runningStateMachine = runningStateMachineHelper.stateMachine
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
-        this.runningStateMachine = promoteToFiniteStateMachine(stateMachine.runningStateMachine)
         this.runningStateMachine.setState(LADSRunnnigState.Idle)
 
         // initialize lock
@@ -181,7 +186,7 @@ export class MWUnitImpl extends EventEmitter {
         // init operation mode
         if (functionSet.operationMode) {
             this.operationMode = new MulitStateDiscreteControlFunctionImpl(functionSet.operationMode)
-            this.operationMode.targetValue.on("value_changed", this.onOperationModeChanged)
+            this.operationMode.targetValue.on("value_changed", this.onOperationModeChanged.bind(this))
         }
 
         // init light barriers
@@ -237,6 +242,7 @@ export class MWUnitImpl extends EventEmitter {
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 23 }
         })
+        
         if (this.lightBarrier1) {
             this.runBales = true
             this.bales = namespace.addVariable({
@@ -248,12 +254,21 @@ export class MWUnitImpl extends EventEmitter {
             this.bales.on("value_changed", (dataValue: DataValue) => { this.runBales = dataValue.value.value })
             this.conveyorSpeed = namespace.addVariable({
                 browseName: "Conveyor Speed",
+                displayName: "Conveyor Speed [mm/s]",
                 propertyOf: simulator,
                 dataType: DataType.Double,
                 value: { dataType: DataType.Double, value: 50 }
             })
             setTimeout(() => this.evaluateBales())
         }
+        this.transitionDelay = namespace.addVariable({
+            browseName: "Transition Delay",
+            displayName: "Transition Delay [ms]",
+            propertyOf: simulator,
+            dataType: DataType.UInt32,
+            value: { dataType: DataType.UInt32, value: 10 }
+        })
+        
 
         // init program manager
         this.initProgramTemplates()
@@ -262,6 +277,8 @@ export class MWUnitImpl extends EventEmitter {
         const dT = 500
         setInterval(() => { this.evaluate(dT) }, dT)
     }
+
+    private async delayTransition() { await sleepMilliSeconds(getNumericValue(this.transitionDelay))}
 
     private onSelectedProductChanged(dataValue: DataValue) {
         const value: number = dataValue.value.value
@@ -285,8 +302,8 @@ export class MWUnitImpl extends EventEmitter {
         raiseEvent(this.functionalUnit, `Operation mode changed to ${this.operationMode.currentValueString}`)
     }
 
-    private get currentOperationMode(): OperationModeEnum { 
-        return getNumericValue(this.operationMode?.currentValue, OperationModeEnum.Continuous) 
+    private get currentOperationMode(): OperationModeEnum {
+        return getNumericValue(this.operationMode?.currentValue, OperationModeEnum.Continuous)
     }
 
     private setSimulatedProductValues() {
@@ -310,16 +327,26 @@ export class MWUnitImpl extends EventEmitter {
         setNumericValue(this.temperature, 25.0)
     }
 
-    private executeEmptyCheck() {}
-    private completeEmptyCheck() {}
-    private executeMeasureBale(id: number) {}
-    private completeMeasureBale() {}
-    
+    private async executeEmptyCheck() { this.enterExecuting(TemplateIds.EmptyCheck) }
+    private async completeEmptyCheck() { this.leaveExecuting() }
+    private async executeMeasureBale(id: number) { 
+        const productName = this.selectedProduct ? this.selectedProduct.name : ""
+        const sample: LADSSampleInfo = {
+            sampleId: `${productName} Bale #${id}`,
+            containerId: `Bale #${id}`,
+            position: "",
+            customData: ""
+        }
+        this.currentRunOptions.samples = [sample]
+        this.enterExecuting(TemplateIds.Measure) 
+    }
+    private async completeMeasureBale() { this.leaveExecuting() }
+
     private async evaluateBales() {
         let measureId = 0
         while (true) {
-            const speed = getNumericValue(this.conveyorSpeed, 100)            
-            const scale = 1000 / (speed >=10 ? speed : 10)
+            const speed = getNumericValue(this.conveyorSpeed, 100)
+            const scale = 1000 / (speed >= 10 ? speed : 10)
             if (this.runBales) {
                 // bale approaches LB1
                 setBooleanValue(this.lightBarrier1.sensorValue, true)
@@ -416,7 +443,23 @@ export class MWUnitImpl extends EventEmitter {
         return (currentState.includes(LADSFunctionalState.Running))
     }
 
-    private initCurrentExecutionOptions(programTemplateId: string): boolean {
+    private initCurrentRunOptions(context: SessionContext, programTemplateId: string, properties: LADSProperty[], supervisoryJobId: string, supervisoryTaskId: string, samples: LADSSampleInfo[]): boolean {
+        const id = programTemplateId.toLowerCase()
+        const template = ProgramTemplates.find(programTemplate => programTemplate.template?.identifier.toLowerCase().includes(id))
+        if (!template) return false
+        this.currentRunOptions = {
+            context: context,
+            operationMode: this.currentOperationMode,
+            programTemplateId: programTemplateId,
+            supervisoryJobId: supervisoryJobId,
+            supervisoryTaskId: supervisoryTaskId,
+            properties: properties,
+            samples: samples,
+        }
+        return true
+    }
+
+    private initCurrentExecutionOptions(programTemplateId: string, estimatedSeconds = 20): boolean {
         const id = programTemplateId.toLowerCase()
         const template = ProgramTemplates.find(programTemplate => programTemplate.template?.identifier.toLowerCase().includes(id))
         if (!template) return false
@@ -424,19 +467,20 @@ export class MWUnitImpl extends EventEmitter {
         const iso = started.toISOString()
         const date = iso.slice(0, 10).replace(/-/g, "")
         const time = iso.slice(11, 19).replace(/:/g, "")
-        const deviceProgramRunId = `${date}-${time}-${this.name}-${template.name}`.replace(/[ (),°]/g, "")
-        const seconds = this.selectedProduct?.samples ?? 20
-        const runTime = Duration.Second * seconds + InitialDelay
+        // const deviceProgramRunId = `${date}-${time}-${this.name}-${template.name}`.replace(/[ (),°]/g, "")
+        const samples = this.currentRunOptions?.samples
+        const sampleId = samples ? samples.length > 0 ? `-${samples[0].sampleId}` : "" : ""
+        const deviceProgramRunId = `${date}-${time}-${template.name}${sampleId}`.replace(/[ (),°]/g, "")
+        const seconds = this.selectedProduct?.samples ?? estimatedSeconds
+        const estimatedRunTime = Duration.Second * seconds + InitialDelay
         this.currentExecutionOptions = {
             programTemplateId: template.name,
             started: started,
             startedMilliseconds: Date.now(),
-            estimatedRuntime: runTime,
+            estimatedRuntime: estimatedRunTime,
             programTemplate: template,
             programTemplateNode: template.template.programTemplate,
             runId: deviceProgramRunId,
-            supervisoryJobId: "",
-            supervisoryTaskId: "",
         }
         return true
     }
@@ -448,163 +492,130 @@ export class MWUnitImpl extends EventEmitter {
 
     private get name(): string { return this.parent.config.name }
 
-    protected async enterRunning(context: SessionContext) {
-        const operationMode = this.currentOperationMode
-        this.currentRunOptions.operationMode = operationMode
-        if (operationMode === OperationModeEnum.Continuous) {
-            await this.enterExecuting(context)
+    protected async enterRunning() {
+        this.functionalUnitState.setState(LADSFunctionalState.Running)
+        await this.delayTransition()
+        if (this.currentOperationMode === OperationModeEnum.Continuous) {
+            await this.enterExecuting(this.currentRunOptions.programTemplateId)
         }
     }
 
-    protected async enterExecuting(context: SessionContext) {
-        const options = this.currentExecutionOptions
+    private async enterExecuting(programTemplateId: string) {
+        if (!this.isRunning) return
+        this.runningStateMachine.setState(LADSRunnnigState.Starting)
+        await this.delayTransition()
+        this.initCurrentExecutionOptions(programTemplateId)
+        const runOptions = this.currentRunOptions
+        const executionOptions = this.currentExecutionOptions
 
         // eventually create result structure
-        if (options.programTemplateId === TemplateIds.Measure) {
+        if (executionOptions.programTemplateId === TemplateIds.Measure) {
             const resultType = getMWNameSpace(this.functionalUnit.addressSpace).findObjectType("MWResultType")
             const programManager = this.functionalUnit.programManager
             const resultSet = <UAObject>programManager.resultSet
             const result = <MWResult><unknown>resultType.instantiate({
                 componentOf: resultSet,
-                browseName: options.runId,
+                browseName: executionOptions.runId,
                 optionals: ["NodeVersion", "FileSet.NodeVersion", "VariableSet.NodeVersion"]
             })
-            options.result = result
+            executionOptions.result = result
 
             AFODictionary.addDefaultResultReferences(result)
-            setSessionInformation(result, context)
-            setStringValue(getDescriptionVariable(result), `Run based on template ${options.programTemplateId}, started ${options.started.toLocaleDateString()}.`)
-            setPropertiesValue(result.properties, options.properties)
-            setSamplesValue(result.samples, options.samples)
-            setStringValue(result.supervisoryJobId, options.supervisoryJobId)
-            setStringValue(result.supervisoryTaskId, options.supervisoryTaskId)
-            setStringValue(result.deviceProgramRunId, options.runId)
-            setDateTimeValue(result.started, options.started)
-            copyProgramTemplate(options.programTemplateNode, result.programTemplate)
+            setSessionInformation(result, runOptions.context)
+            setStringValue(getDescriptionVariable(result), `Run based on template ${executionOptions.programTemplateId}, started ${executionOptions.started.toLocaleDateString()}.`)
+            setPropertiesValue(result.properties, runOptions.properties)
+            setSamplesValue(result.samples, runOptions.samples)
+            setStringValue(result.supervisoryJobId, runOptions.supervisoryJobId)
+            setStringValue(result.supervisoryTaskId, runOptions.supervisoryTaskId)
+            setStringValue(result.deviceProgramRunId, executionOptions.runId)
+            setDateTimeValue(result.started, executionOptions.started)
+            copyProgramTemplate(executionOptions.programTemplateNode, result.programTemplate)
             copyValues(this.selectedProduct?.product, result.variableSet.product)
             touchNodes(result)
 
             // create recorder
-            options.eventRecorder = new EventDataRecorder("Events", this.functionalUnit)
-            options.variableRecorder = new VariableDataRecorder("Data", [this.moistureSensor.sensorValue, this.densitySensor.sensorValue, this.temperatureSensor.sensorValue])
-            setTimeout(() => options.variableRecorderTimer = setInterval(() => { options.variableRecorder.createRecord() }, 1000), InitialDelay)
+            executionOptions.eventRecorder = new EventDataRecorder("Events", this.functionalUnit)
+            executionOptions.variableRecorder = new VariableDataRecorder("Data", [this.moistureSensor.sensorValue, this.densitySensor.sensorValue, this.temperatureSensor.sensorValue])
+            setTimeout(() => executionOptions.variableRecorderTimer = setInterval(() => { executionOptions.variableRecorder.createRecord() }, 1000), InitialDelay)
 
             // initialize last result structure
             setNumericValue(this.resultIndicator.sensorValue, ResultsEnum.Unknown)
-            setNameNodeIdValue(programManager.lastResult, options.runId, result.nodeId)
+            setNameNodeIdValue(programManager.lastResult, executionOptions.runId, result.nodeId)
             copyValues(result, programManager.lastResultData)
 
             // set simualted process values
             this.setSimulatedProductValues()
-        } else if (options.programTemplateId === TemplateIds.EmptyCheck) {
+        } else if (executionOptions.programTemplateId === TemplateIds.EmptyCheck) {
             this.setSimulatedEmptyValues()
         }
-        raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
+        raiseEvent(this.functionalUnit, `Starting method ${executionOptions.programTemplateId} with identifier ${executionOptions.runId}.`)
 
 
         const activeProgram = this.functionalUnit.programManager.activeProgram
-        setNameNodeIdValue(activeProgram.currentProgramTemplate, options.programTemplateId, options.programTemplateNode.nodeId)
+        setNameNodeIdValue(activeProgram.currentProgramTemplate, executionOptions.programTemplateId, executionOptions.programTemplateNode.nodeId)
         setNumericValue(activeProgram.currentRuntime, 0)
-        setNumericValue(activeProgram.estimatedRuntime, options.estimatedRuntime)
-        setStringValue(activeProgram.deviceProgramRunId, options.runId)
-        this.currentExecutionOptions = options
-        this.pendingRequest = LADSFunctionalState.Running
-        this.functionalUnitState.setState(LADSFunctionalState.Running)
-        this.runningStateMachine.setState(LADSRunnnigState.Execute)
-        await this.execute()
-    }
-
-
-    protected async execute() {
-        const options = this.currentExecutionOptions
-        const activeProgram = this.functionalUnit.programManager.activeProgram
-        const started = Date.now()
-        let aborted = false
-        let waiting = true
-
-        while (waiting) {
+        setNumericValue(activeProgram.estimatedRuntime, executionOptions.estimatedRuntime)
+        setStringValue(activeProgram.deviceProgramRunId, executionOptions.runId)
+        executionOptions.executionTimer = setInterval(() => {
             const now = Date.now()
-            setNumericValue(activeProgram.currentRuntime, now - started)
-            waiting = (now - started) < options.estimatedRuntime
-            if ((this.pendingRequest === LADSFunctionalState.Stopping) || (this.pendingRequest === LADSFunctionalState.Aborted)) {
-                waiting = false
-                aborted = true
-                this.leaveExecuting(this.pendingRequest, LADSRunnnigState.Resetting)
-            } else {
-                await sleepMilliSeconds(200)
-            }
-        }
-        if (!aborted) this.leaveExecuting(LADSFunctionalState.Stopping, LADSRunnnigState.Completing)
+            const currentRunTime = now - executionOptions.startedMilliseconds
+            setNumericValue(activeProgram.currentRuntime, currentRunTime)
+            if ((currentRunTime > executionOptions.estimatedRuntime) && (this.currentOperationMode === OperationModeEnum.Continuous)) {
+                if (this.isRunning) this.leaveRunning(LADSFunctionalState.Stopping)
+            }            
+        }, 500)
+        this.currentExecutionOptions = executionOptions
+        this.runningStateMachine.setState(LADSRunnnigState.Execute)
     }
 
-    private async leaveExecuting(functionalState: LADSFunctionalState, runningState: LADSRunnnigState) {
-        const operationMode = this.currentRunOptions.operationMode
-        this.functionalUnitState.setState(functionalState)
+    private async leaveExecuting() {
+        if (!this.isExecuting) return
+        this.runningStateMachine.setState(LADSRunnnigState.Completing)
+        await this.delayTransition()
+        await this.completeExecution()
+        this.runningStateMachine.setState(LADSRunnnigState.Complete)
+        await this.delayTransition()
+        this.runningStateMachine.setState(LADSRunnnigState.Resetting)
+        await this.delayTransition()
+        this.runningStateMachine.setState(LADSRunnnigState.Idle)
+        await this.delayTransition()
+    }
+
+    private async completeExecution() {
+        if (!this.currentExecutionOptions) return
         const programManager = this.functionalUnit.programManager
-        const options = this.currentExecutionOptions
-        if (options) {
-            this.currentExecutionOptions = undefined
-            if (functionalState === LADSFunctionalState.Aborting) {
-                raiseEvent(this.functionalUnit, `Aborting method ${options.programTemplateId} with identifier ${options.runId}.`, 500)
-                await sleepMilliSeconds(100)
-            } else {
-                raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
-                await sleepMilliSeconds(100)
-            }
-            if (options.result) {
-                // document results
-                clearInterval(options.variableRecorderTimer)
-                const result = options.result
-                setDateTimeValue(result.stopped, new Date())
-                const resultsDirectory = join(DataDirectory, "results")
-                new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.runId, [options.eventRecorder, options.variableRecorder])
+        const executionOptions = this.currentExecutionOptions
+        clearInterval(executionOptions.executionTimer)
+        if (executionOptions.result) {
+            // document results
+            clearInterval(executionOptions.variableRecorderTimer)
+            const result = executionOptions.result
+            setDateTimeValue(result.stopped, new Date())
+            const resultsDirectory = join(DataDirectory, "results")
+            new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, executionOptions.runId, [executionOptions.eventRecorder, executionOptions.variableRecorder])
 
-                // compute aggregates and set measurement results
-                const variableSet = options.result.variableSet
-                const recorder = options.variableRecorder
-                const densityResult = this.setMeasurementResult(recorder, variableSet.density, this.densitySensor)
-                const moistureResult = this.setMeasurementResult(recorder, variableSet.moisture, this.moistureSensor)
-                this.setMeasurementResult(recorder, variableSet.temperature, this.temperatureSensor)
+            // compute aggregates and set measurement results
+            const variableSet = executionOptions.result.variableSet
+            const recorder = executionOptions.variableRecorder
+            const densityResult = this.setMeasurementResult(recorder, variableSet.density, this.densitySensor)
+            const moistureResult = this.setMeasurementResult(recorder, variableSet.moisture, this.moistureSensor)
+            this.setMeasurementResult(recorder, variableSet.temperature, this.temperatureSensor)
 
-                // set overall result indicator
-                const resultIndicator = (densityResult === ResultsEnum.Passed) && (moistureResult === ResultsEnum.Passed) ? ResultsEnum.Passed : ResultsEnum.Failed
-                setNumericValue(this.resultIndicator.sensorValue, resultIndicator)
-                const resultEnumStrings = this.resultIndicator.sensorValue.enumStrings.readValue().value.value
-                const resultText = resultEnumStrings ? resultEnumStrings[resultIndicator].text : "Unknown"
-                setStringValue(variableSet.result, resultText)
+            // set overall result indicator
+            const resultIndicator = (densityResult === ResultsEnum.Passed) && (moistureResult === ResultsEnum.Passed) ? ResultsEnum.Passed : ResultsEnum.Failed
+            setNumericValue(this.resultIndicator.sensorValue, resultIndicator)
+            const resultEnumStrings = this.resultIndicator.sensorValue.enumStrings.readValue().value.value
+            const resultText = resultEnumStrings ? resultEnumStrings[resultIndicator].text : "Unknown"
+            setStringValue(variableSet.result, resultText)
 
-                // copy results
-                copyValues(result, programManager.lastResultData)
-
-                // remove sample (empty)
-                // setNumericValue(this.density, noise(0.01))
-                // setNumericValue(this.moisture, noise(0.1))
-
-                touchNodes(result, result.fileSet, result.variableSet)
-            }
-            if (options.programTemplateId == TemplateIds.EmptyCheck) {
-                setDateTimeValue(programManager.lastEmptyCheck, options.started)
-            }
-        } else {
-            raiseEvent(this.functionalUnit, `Stopping method.`, 100)
+            // copy results
+            copyValues(result, programManager.lastResultData)
+            touchNodes(result, result.fileSet, result.variableSet)
         }
-        if (operationMode == OperationModeEnum.Continuous) {
-            this.leaveRunning()
-        } else {
-            if (runningState === LADSRunnnigState.Completing) {
-                this.runningStateMachine.setState(LADSRunnnigState.Completed)
-                await sleepMilliSeconds(20)
-                this.runningStateMachine.setState(LADSRunnnigState.Idle)
-            } else {
-                // Forced to leave
-                this.runningStateMachine.setState(LADSRunnnigState.Idle)
-                this.leaveRunning()
-            }
+        if (executionOptions.programTemplateId == TemplateIds.EmptyCheck) {
+            setDateTimeValue(programManager.lastEmptyCheck, executionOptions.started)
         }
-    }
-
-    private leaveRunning() {
-        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+        this.currentExecutionOptions = undefined
     }
 
     private setMeasurementResult(recorder: VariableDataRecorder, measurement: MeasurementResult, sensor: AnalogScalarSensorFunctionImpl): ResultsEnum {
@@ -617,6 +628,21 @@ export class MWUnitImpl extends EventEmitter {
         setNumericValue(measurement.standardDeviation, aggregates.standardDeviation)
         setNumericArrayValue(measurement.samples, aggregates.values as number[])
         return (average >= lowLimit) && (average <= highLimit) ? ResultsEnum.Passed : ResultsEnum.Failed
+    }
+    private async leaveRunning(functionalState: LADSFunctionalState) {
+        const executionOptions = this.currentExecutionOptions
+        if (this.isExecuting) this.leaveExecuting()
+        if (functionalState === LADSFunctionalState.Stopping) {
+            this.functionalUnitState.setState(LADSFunctionalState.Stopping)
+            if (executionOptions) raiseEvent(this.functionalUnit, `Finalized method ${executionOptions.programTemplateId} with identifier ${executionOptions.runId}.`, 100)
+            await this.delayTransition()
+            this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+        } else if (functionalState === LADSFunctionalState.Aborting) {
+            this.functionalUnitState.setState(LADSFunctionalState.Aborting)
+            if (executionOptions) raiseEvent(this.functionalUnit, `Aborting method ${executionOptions.programTemplateId} with identifier ${executionOptions.runId}.`, 500)
+            await this.delayTransition()
+            this.functionalUnitState.setState(LADSFunctionalState.Aborted)
+        }
     }
 
     private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
@@ -631,23 +657,24 @@ export class MWUnitImpl extends EventEmitter {
     }
 
     private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+
+        function stringValue(variant: VariantLike, defaultValue = "") { return variant === null ? defaultValue : variant.value }
+        function properties(variant: VariantLike): LADSProperty[] { return variant === null ? [] : (variant.value as Variant[]).map(item => { return (<any>item) as LADSProperty }) }
+        function samples(variant: VariantLike): LADSSampleInfo[] { return variant === null ? [] : (variant.value as Variant[]).map(item => { return (<any>item) as LADSSampleInfo }) }
+
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
-        const programTemplateId: string = inputArguments[0].value
-        if (this.initCurrentExecutionOptions(programTemplateId)) {
-            const options = this.currentExecutionOptions
-            options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
-            options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
+        const p = properties(inputArguments[1])
+        if (this.initCurrentRunOptions(
+            context,
+            stringValue(inputArguments[0]),
+            properties(inputArguments[1]),
+            stringValue(inputArguments[2]),
+            stringValue(inputArguments[3]),
+            samples(inputArguments[4])
 
-            // analyze properties
-            const propertiesValue = inputArguments[1].value
-            options.properties = propertiesValue === null ? [] : (propertiesValue as Variant[]).map(item => { return (<any>item) as LADSProperty })
-
-            // analyze samples
-            const samplesValue = inputArguments[4].value
-            options.samples = samplesValue === null ? [] : (samplesValue as Variant[]).map(item => { return (<any>item) as LADSSampleInfo })
-
-            this.enterRunning(context)
+        )) {
+            this.enterRunning()
             return {
                 outputArguments: [new Variant({ dataType: DataType.String, value: this.currentExecutionOptions.runId })],
                 statusCode: StatusCodes.Good
@@ -660,14 +687,14 @@ export class MWUnitImpl extends EventEmitter {
     private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
-        this.pendingRequest = LADSFunctionalState.Stopping
+        this.leaveRunning(LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
 
     private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
-        this.pendingRequest = LADSFunctionalState.Aborting
+        this.leaveRunning(LADSFunctionalState.Aborting)
         return { statusCode: StatusCodes.Good }
     }
 
