@@ -194,7 +194,7 @@ export enum LADSRunnnigState {
     Held = 'Held',
     Unholding = 'Unholding',
     Completing = 'Completing',
-    Completed = 'Completed',
+    Complete = 'Complete',
     Resetting = 'Resetting',
 }
 

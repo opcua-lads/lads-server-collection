@@ -586,7 +586,7 @@ export class WpsUnitImpl extends EventEmitter {
     private async transiteUnhold() { this.transiteRunningState(LADSRunnnigState.Held, LADSRunnnigState.Unholding, LADSRunnnigState.Execute) }
     private async transiteSuspend() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Suspending, LADSRunnnigState.Suspended) }
     private async transiteUnsuspend() { this.transiteRunningState(LADSRunnnigState.Suspended, LADSRunnnigState.Unsuspending, LADSRunnnigState.Execute) }
-    private async transiteToComplete() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Completing, LADSRunnnigState.Completed) }
+    private async transiteToComplete() { this.transiteRunningState(LADSRunnnigState.Execute, LADSRunnnigState.Completing, LADSRunnnigState.Complete) }
     private async transiteReset(wait = 1): Promise<StatusCode> {
         this.runningState.setState(LADSRunnnigState.Resetting)
         sleepMilliSeconds(wait)
