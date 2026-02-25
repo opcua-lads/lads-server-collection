@@ -122,6 +122,14 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.netWeight = functionSet.currentWeight.functionSet?.net
         this.tareWeight = functionSet.currentWeight.functionSet?.tare
 
+        // Enable all functions (LADS default is false)
+        setBooleanValue(this.currentWeight.isEnabled, true)
+        setBooleanValue(this.weightStable.isEnabled, true)
+        setBooleanValue(this.tareMode.isEnabled, true)
+        if (this.grossWeight) setBooleanValue(this.grossWeight.isEnabled, true)
+        if (this.netWeight) setBooleanValue(this.netWeight.isEnabled, true)
+        if (this.tareWeight) setBooleanValue(this.tareWeight.isEnabled, true)
+
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
         AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addSensorFunctionReferences(this.grossWeight, AFODictionaryIds.weighing, AFODictionaryIds.gross_weight)

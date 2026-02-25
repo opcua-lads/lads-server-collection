@@ -25,7 +25,7 @@ import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameter
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, setBooleanValue } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
 import { verify } from "crypto"
@@ -87,6 +87,14 @@ export abstract class ViscometerUnitImpl {
         this.temperature = functionSet.temperature
         this.temperature.sensorValue.setValueFromSource({dataType: DataType.Double, value: 25.0})
 
+        // Enable all functions (LADS default is false)
+        setBooleanValue(this.viscosity.isEnabled, true)
+        setBooleanValue(this.relativeTorque.isEnabled, true)
+        setBooleanValue(this.torque.isEnabled, true)
+        setBooleanValue(this.shearStress.isEnabled, true)
+        setBooleanValue(this.shearRate.isEnabled, true)
+        setBooleanValue(this.temperature.isEnabled, true)
+
         // add Allotrope Ontology References
         AFODictionary.addReferences(this.functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.rheometry, AFODictionaryIds.viscometry)
         AFODictionary.addSensorFunctionReferences(this.viscosity, AFODictionaryIds.viscosity)
@@ -143,6 +151,7 @@ export abstract class ViscometerUnitImpl {
         stateMachine.stop?.bindMethod(this.stopSpeedController.bind(this))
         this.speedControllerState = promoteToFiniteStateMachine(stateMachine)
         this.speedControllerState.setState(LADSFunctionalState.Stopped)
+        setBooleanValue(this.speedController.isEnabled, true)
         setNumericValue(this.speedController.currentValue, 0.0)
         setNumericValue(this.speedController.targetValue, 30.0)
         this.speedController.targetValue.on("value_changed", (dataValue => {raiseEvent(this.speedController, `Speed set-point changed to ${dataValue.value.value}rpm`)}))
@@ -185,6 +194,7 @@ export abstract class ViscometerUnitImpl {
         stateMachine.stop?.bindMethod(this.stopTemperatureController.bind(this))
         this.temperatureControllerState = promoteToFiniteStateMachine(stateMachine)
         this.temperatureControllerState.setState(LADSFunctionalState.Stopped)
+        setBooleanValue(controller.isEnabled, true)
         setNumericValue(controller.currentValue, 25.0)
         controller.currentValue.historizing = true
         controller.addressSpace.installHistoricalDataNode(controller.currentValue)
@@ -241,6 +251,7 @@ export abstract class ViscometerUnitImpl {
         const names = ViscometerSpindles.map(spindle => new LocalizedText({text: spindle.name}) )
         const codes = ViscometerSpindles.map(spindle => new LocalizedText({text: (spindle.code < 10)?`0${spindle.code}`:`${spindle.code}`}))
         const spindle = this.functionalUnit.functionSet.spindle
+        setBooleanValue(spindle.isEnabled, true)
         setStringArrayValue(spindle.targetValue.enumStrings, names)
         setStringArrayValue(spindle.currentValue.enumStrings, codes)
         const index = ViscometerSpindles.findIndex(spindle => (spindle.name == "SC4-31"))

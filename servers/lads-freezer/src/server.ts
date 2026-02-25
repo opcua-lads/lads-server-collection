@@ -15,7 +15,7 @@
 import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike, AddressSpace, Variant, UAVariable, NodeId } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSDevice, LADSFunctionalState, LADSFunctionalUnit } from "@interfaces"
 import { join } from "path"
-import { defaultLocation, DIObjectIds, getChildObjects, getStringValue, initComponent, LADSComponentOptions, promoteToFiniteStateMachine } from "@utils"
+import { defaultLocation, DIObjectIds, getChildObjects, getStringValue, initComponent, LADSComponentOptions, promoteToFiniteStateMachine, setBooleanValue } from "@utils"
 
 //---------------------------------------------------------------
 interface FreezerFunctionSet extends UAObject {
@@ -196,6 +196,11 @@ class FreezerUnitImpl {
         this.doorStateMachine.setState(LADSCoverState.Closed)
         stateMachine.open.bindMethod(this.open.bind(this))
         stateMachine.close.bindMethod(this.close.bind(this))
+
+        // Enable all functions (LADS default is false)
+        setBooleanValue(this.temperatureSensor.isEnabled, true)
+        setBooleanValue(this.temperatureController.isEnabled, true)
+        setBooleanValue(this.door.isEnabled, true)
 
         // history
         const sensorValue = this.temperatureSensor.sensorValue

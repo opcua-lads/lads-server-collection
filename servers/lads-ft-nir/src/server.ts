@@ -45,6 +45,7 @@ import {
     getLADSSupportedProperties,
     promoteToFiniteStateMachine,
     raiseEvent,
+    setBooleanValue,
     sleepMilliSeconds,
 } from "@utils"
 
@@ -231,6 +232,7 @@ class FtNirDeviceImpl {
         this.initPogramTemplates()
 
         // initialize carousel-controller
+        setBooleanValue(this.carouselContoller.isEnabled, true)
         this.initCarouselPositionNames(this.carouselContoller.targetValue)
         this.initCarouselPositionNames(this.carouselContoller.currentValue)
         this.runCarouselController()
