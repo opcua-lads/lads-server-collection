@@ -68,7 +68,7 @@ export function getItem<T>(item: T | null, propertyName: string): T {
 // ----------------------------------------------------------------------------
 export const NumericDataTypes = new Set<number>([DataType.Int16, DataType.Int32, DataType.Int64, DataType.UInt16, DataType.UInt32, DataType.UInt64, DataType.Byte, DataType.Float, DataType.Double])
 
-export function setBooleanValue(variable: UAVariable, value: boolean, statusCode = StatusCodes.Good) {
+export function setBooleanValue(variable: UAVariable, value: boolean, statusCode = StatusCodes.Good) {    
     if (!variable) return
     variable.setValueFromSource({ dataType: DataType.Boolean, value: value }, statusCode)
 }
@@ -85,6 +85,18 @@ export function setNumericValue(variable: UAVariable, value: number, statusCode 
     variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
 }
 
+function numericArray(dataType: DataType, value: number[]): Int16Array | Uint16Array | Int32Array | Uint32Array | Float32Array | Float64Array | number[] {
+    switch (dataType) {
+        case DataType.Int16: return new Int16Array(value)
+        case DataType.UInt16: return new Uint16Array(value)
+        case DataType.Int32: return new Int32Array(value)
+        case DataType.UInt32: return new Uint32Array(value)
+        case DataType.Float: return new Float32Array(value)
+        case DataType.Double: return new Float64Array(value)
+        default: return value
+    }
+}
+
 export function setNumericArrayValue(variable: UAVariable, value: number[], statusCode = StatusCodes.Good) {
     if (!variable) return
     const dataTypeObject = variable.dataTypeObj
@@ -95,7 +107,8 @@ export function setNumericArrayValue(variable: UAVariable, value: number[], stat
     } catch (err) {
         console.debug(err)
     }
-    variable.setValueFromSource({ dataType: dataType, value: value }, statusCode)
+    const arrayValue = numericArray(dataType, value)
+    variable.setValueFromSource({ dataType: dataType, arrayType: VariantArrayType.Array, value: arrayValue }, statusCode)
 }
 
 export function setStringValue(variable: UAVariable, value: string | LocalizedText, statusCode = StatusCodes.Good) {
