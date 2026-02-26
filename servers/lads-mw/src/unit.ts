@@ -104,7 +104,7 @@ export class MWUnitImpl extends EventEmitter {
     temperature: UAVariable
     density: UAVariable
     moisture: UAVariable
-    bales: UAVariable
+    simulateBales: UAVariable
     conveyorSpeed: UAVariable
     runBales = false
     transitionDelay: UAVariable
@@ -113,6 +113,7 @@ export class MWUnitImpl extends EventEmitter {
     operationMode: MulitStateDiscreteControlFunctionImpl
 
     // sensors
+    microwaveSensorOn: boolean = false
     temperatureSensor: AnalogScalarSensorFunctionImpl
     densitySensor: AnalogScalarSensorFunctionImpl
     moistureSensor: AnalogScalarSensorFunctionImpl
@@ -157,8 +158,8 @@ export class MWUnitImpl extends EventEmitter {
         const runningStateMachineHelper = new LADSFiniteStateMachineHelper(stateMachine.runningStateMachine, functionalUnitStateHelper, LADSFunctionalState.Running)
         this.functionalUnitState = functionalUnitStateHelper.stateMachine
         this.runningStateMachine = runningStateMachineHelper.stateMachine
-        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
-        this.runningStateMachine.setState(LADSRunnnigState.Idle)
+        this.setFunctionalUnitState(LADSFunctionalState.Stopped)
+        this.setRunningState(LADSRunnnigState.Idle)
 
         // initialize lock
         if (functionalUnit.lock) {
@@ -244,14 +245,14 @@ export class MWUnitImpl extends EventEmitter {
         })
         
         if (this.lightBarrier1) {
-            this.runBales = true
-            this.bales = namespace.addVariable({
+            this.runBales = false
+            this.simulateBales = namespace.addVariable({
                 browseName: "Simulate Bales",
                 propertyOf: simulator,
                 dataType: DataType.Boolean,
                 value: { dataType: DataType.Boolean, value: this.runBales }
             })
-            this.bales.on("value_changed", (dataValue: DataValue) => { this.runBales = dataValue.value.value })
+            this.simulateBales.on("value_changed", (dataValue: DataValue) => { this.runBales = dataValue.value.value })
             this.conveyorSpeed = namespace.addVariable({
                 browseName: "Conveyor Speed",
                 displayName: "Conveyor Speed [mm/s]",
@@ -300,6 +301,8 @@ export class MWUnitImpl extends EventEmitter {
         const value: number = dataValue.value.value
         setNumericValue(this.operationMode.currentValue, value)
         raiseEvent(this.functionalUnit, `Operation mode changed to ${this.operationMode.currentValueString}`)
+        // update simulation mode
+        setBooleanValue(this.simulateBales, value === OperationModeEnum.Bale)
     }
 
     private get currentOperationMode(): OperationModeEnum {
@@ -327,9 +330,16 @@ export class MWUnitImpl extends EventEmitter {
         setNumericValue(this.temperature, 25.0)
     }
 
-    private async executeEmptyCheck() { this.enterExecuting(TemplateIds.EmptyCheck) }
-    private async completeEmptyCheck() { this.leaveExecuting() }
+    private async executeEmptyCheck() { 
+        if (this.currentOperationMode === OperationModeEnum.Continuous) return 
+        this.enterExecuting(TemplateIds.EmptyCheck) 
+    }
+    private async completeEmptyCheck() { 
+        if (this.currentOperationMode === OperationModeEnum.Continuous) return 
+        this.leaveExecuting() 
+    }
     private async executeMeasureBale(id: number) { 
+        if (this.currentOperationMode === OperationModeEnum.Continuous) return 
         const productName = this.selectedProduct ? this.selectedProduct.name : ""
         const sample: LADSSampleInfo = {
             sampleId: `${productName} Bale #${id}`,
@@ -340,7 +350,10 @@ export class MWUnitImpl extends EventEmitter {
         this.currentRunOptions.samples = [sample]
         this.enterExecuting(TemplateIds.Measure) 
     }
-    private async completeMeasureBale() { this.leaveExecuting() }
+    private async completeMeasureBale() { 
+        if (this.currentOperationMode === OperationModeEnum.Continuous) return 
+        this.leaveExecuting() 
+    }
 
     private async evaluateBales() {
         let measureId = 0
@@ -398,7 +411,8 @@ export class MWUnitImpl extends EventEmitter {
             const y_ = cf * x + (1 - cf) * y
             setNumericValue(yvar, y_ + noise(distortion))
         }
-        if (this.isExecuting || this.currentOperationMode === OperationModeEnum.Continuous) {
+        this.microwaveSensorOn = this.isExecuting || this.currentOperationMode === OperationModeEnum.Continuous
+        if (this.microwaveSensorOn) {
             filterAndSet(this.densitySensor.sensorValue, this.density, 0.001)
             filterAndSet(this.moistureSensor.sensorValue, this.moisture, 0.1)
         } else {
@@ -469,7 +483,7 @@ export class MWUnitImpl extends EventEmitter {
         const time = iso.slice(11, 19).replace(/:/g, "")
         // const deviceProgramRunId = `${date}-${time}-${this.name}-${template.name}`.replace(/[ (),°]/g, "")
         const samples = this.currentRunOptions?.samples
-        const sampleId = samples ? samples.length > 0 ? `-${samples[0].sampleId}` : "" : ""
+        const sampleId = samples ? samples.length > 0 ? `-${samples[0].sampleId}`.replace(" ", "-") : "" : ""    
         const deviceProgramRunId = `${date}-${time}-${template.name}${sampleId}`.replace(/[ (),°]/g, "")
         const seconds = this.selectedProduct?.samples ?? estimatedSeconds
         const estimatedRunTime = Duration.Second * seconds + InitialDelay
@@ -490,10 +504,18 @@ export class MWUnitImpl extends EventEmitter {
         modifyStatusCode(this.moistureSensor.sensorValue, statusCode)
     }
 
-    private get name(): string { return this.parent.config.name }
+    private setFunctionalUnitState(state: LADSFunctionalState) {
+        this.functionalUnitState.setState(state)
+        console.debug(`Entering FunctionalUnitState ${state}`)
+    }
+
+    private setRunningState(state: LADSRunnnigState) {
+        this.runningStateMachine.setState(state)
+        console.debug(`Entering RunningState ${state}`)
+    }
 
     protected async enterRunning() {
-        this.functionalUnitState.setState(LADSFunctionalState.Running)
+        this.setFunctionalUnitState(LADSFunctionalState.Running)
         await this.delayTransition()
         if (this.currentOperationMode === OperationModeEnum.Continuous) {
             await this.enterExecuting(this.currentRunOptions.programTemplateId)
@@ -502,7 +524,7 @@ export class MWUnitImpl extends EventEmitter {
 
     private async enterExecuting(programTemplateId: string) {
         if (!this.isRunning) return
-        this.runningStateMachine.setState(LADSRunnnigState.Starting)
+        this.setRunningState(LADSRunnnigState.Starting)
         await this.delayTransition()
         this.initCurrentExecutionOptions(programTemplateId)
         const runOptions = this.currentRunOptions
@@ -548,6 +570,7 @@ export class MWUnitImpl extends EventEmitter {
         } else if (executionOptions.programTemplateId === TemplateIds.EmptyCheck) {
             this.setSimulatedEmptyValues()
         }
+        this.currentExecutionOptions = executionOptions
         raiseEvent(this.functionalUnit, `Starting method ${executionOptions.programTemplateId} with identifier ${executionOptions.runId}.`)
 
 
@@ -556,28 +579,30 @@ export class MWUnitImpl extends EventEmitter {
         setNumericValue(activeProgram.currentRuntime, 0)
         setNumericValue(activeProgram.estimatedRuntime, executionOptions.estimatedRuntime)
         setStringValue(activeProgram.deviceProgramRunId, executionOptions.runId)
-        executionOptions.executionTimer = setInterval(() => {
-            const now = Date.now()
-            const currentRunTime = now - executionOptions.startedMilliseconds
-            setNumericValue(activeProgram.currentRuntime, currentRunTime)
-            if ((currentRunTime > executionOptions.estimatedRuntime) && (this.currentOperationMode === OperationModeEnum.Continuous)) {
-                if (this.isRunning) this.leaveRunning(LADSFunctionalState.Stopping)
-            }            
-        }, 500)
-        this.currentExecutionOptions = executionOptions
-        this.runningStateMachine.setState(LADSRunnnigState.Execute)
+        this.currentExecutionOptions.executionTimer = setInterval(() => { this.execute()}, 500)
+        this.setRunningState(LADSRunnnigState.Execute)
+    }
+
+    private async execute() {
+        const executionOptions = this.currentExecutionOptions
+        const now = Date.now()
+        const currentRunTime = now - executionOptions.startedMilliseconds
+        setNumericValue(this.functionalUnit.programManager.activeProgram.currentRuntime, currentRunTime)
+        if ((currentRunTime > executionOptions.estimatedRuntime) && (this.currentOperationMode === OperationModeEnum.Continuous)) {
+            if (this.isRunning) await this.leaveRunning(LADSFunctionalState.Stopping)
+        }            
     }
 
     private async leaveExecuting() {
         if (!this.isExecuting) return
-        this.runningStateMachine.setState(LADSRunnnigState.Completing)
+        this.setRunningState(LADSRunnnigState.Completing)
         await this.delayTransition()
         await this.completeExecution()
-        this.runningStateMachine.setState(LADSRunnnigState.Complete)
+        this.setRunningState(LADSRunnnigState.Complete)
         await this.delayTransition()
-        this.runningStateMachine.setState(LADSRunnnigState.Resetting)
+        this.setRunningState(LADSRunnnigState.Resetting)
         await this.delayTransition()
-        this.runningStateMachine.setState(LADSRunnnigState.Idle)
+        this.setRunningState(LADSRunnnigState.Idle)
         await this.delayTransition()
     }
 
@@ -633,15 +658,15 @@ export class MWUnitImpl extends EventEmitter {
         const executionOptions = this.currentExecutionOptions
         if (this.isExecuting) this.leaveExecuting()
         if (functionalState === LADSFunctionalState.Stopping) {
-            this.functionalUnitState.setState(LADSFunctionalState.Stopping)
+            this.setFunctionalUnitState(LADSFunctionalState.Stopping)
             if (executionOptions) raiseEvent(this.functionalUnit, `Finalized method ${executionOptions.programTemplateId} with identifier ${executionOptions.runId}.`, 100)
             await this.delayTransition()
-            this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+            this.setFunctionalUnitState(LADSFunctionalState.Stopped)
         } else if (functionalState === LADSFunctionalState.Aborting) {
-            this.functionalUnitState.setState(LADSFunctionalState.Aborting)
+            this.setFunctionalUnitState(LADSFunctionalState.Aborting)
             if (executionOptions) raiseEvent(this.functionalUnit, `Aborting method ${executionOptions.programTemplateId} with identifier ${executionOptions.runId}.`, 500)
             await this.delayTransition()
-            this.functionalUnitState.setState(LADSFunctionalState.Aborted)
+            this.setFunctionalUnitState(LADSFunctionalState.Aborted)
         }
     }
 

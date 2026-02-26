@@ -23,13 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent, setStringArrayValue, getStringValue, setStringValue, setDateTimeValue, getChildObjects } from "@utils"
 import { MWDevice, MWFunctionalUnit, MWFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, MWServerImpl,  } from "./server"
 import { IAddressSpace, INamespace, LocalizedText, UAObject } from "node-opcua"
 import { EnumDeviceHealth } from "node-opcua-nodeset-di"
 import { LockImpl } from "utils/src/lads-lock"
 import { MWUnitImpl } from "./unit"
+import { LADSComponent } from "@interfaces"
 
 
 //--------------------------------------------------------------- 
@@ -56,7 +57,7 @@ export class MWDeviceImpl {
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
             browseName: config.name,
-            optionals: []
+            optionals: config.hasLB ? ["Components.Lightbarrier1", "Components.Lightbarrier2", "Components.Lightbarrier3"] : []
         }) as MWDevice
         this.device = device
         this.initComponents(config)
@@ -83,6 +84,28 @@ export class MWDeviceImpl {
         
         // ready
         console.log(`Added device "${config.name}" (${config.manufacturer ?? Manufacturer} ${config.model} SN${config.serialNumber})`)
+
+        // update operation counters
+        const dT = 500
+        const started = Date.now()
+        let isOperating = unitImpl.microwaveSensorOn
+        let operationCycles = 0
+        let operationDuration = 0
+        setInterval(() => {            
+            if (unitImpl.microwaveSensorOn) {
+                operationDuration += dT
+                if (!isOperating) {
+                    operationCycles++
+                    isOperating = true
+                }
+            } else {
+                isOperating = false
+            }
+            setNumericValue(device.operationCounters?.powerOnDuration, Date.now() - started)
+            setNumericValue(device.operationCounters?.operationDuration, operationDuration)
+            setNumericValue(device.operationCounters?.operationCycleCounter, operationCycles)
+
+        }, dT)
     }
 
 
@@ -93,23 +116,40 @@ export class MWDeviceImpl {
         return fus.getComponentByName("WPSUnit") as MWFunctionalUnit
     }
 
+    adjustIdentification(component: LADSComponent, initialOperationDate: Date) {
+        const identification = component.identification
+        if (!identification) return
+        setStringValue(identification.manufacturer, getStringValue(component.manufacturer))
+        setStringValue(identification.model, getStringValue(component.model))
+        setStringValue(identification.serialNumber, getStringValue(component.serialNumber))
+        setDateTimeValue(identification.initialOperationDate, initialOperationDate)
+        
+        // recurse sub components
+        const componentSet = component.components
+        if (!componentSet) return
+        const components = getChildObjects(componentSet) as LADSComponent[]
+        components.forEach((item) => this.adjustIdentification(item, initialOperationDate))
+    }
+
     initComponents(config: DeviceConfig) {
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
             manufacturer: config.manufacturer ?? Manufacturer,
             model: config.model,
-            serialNumber: config.serialNumber,
+            serialNumber: `${config.model}.${config.serialNumber}`,
             softwareRevision: "1.0",
             deviceRevision: "1.0",
-            assetId: "0815-4711",
+            assetId: `0815-${config.serialNumber}}`,
             componentName: config.name,
             location: defaultLocation,
         }
         initComponent(this.device, deviceOptions)
+        this.adjustIdentification(this.device, new Date())
 
-        // subscribe to device health changes
+        // device health
         setNumericValue(this.device.deviceHealth, EnumDeviceHealth.NORMAL)
     }
+
 
 
 }
