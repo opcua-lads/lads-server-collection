@@ -26,7 +26,8 @@ import {
     StatusCode,
     UAConditionVariable,
     UAExclusiveLimitAlarm_Base,
-    UAExclusiveLimitStateMachine
+    UAExclusiveLimitStateMachine,
+    UAExclusiveLimitAlarm
 } from "node-opcua";
 import { getLADSNamespace, installVariableHistory, promoteToFiniteStateMachine } from "./lads-utils";
 import { getEUInformation, getNumericValue, setNumericValue, setStringArrayValue } from "./lads-variable-utils";
@@ -77,6 +78,7 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
     parentFunction: LADSFunction
     options: InstantiateExclusiveLimitAlarmOptions
     alarmMonitor: UAExclusiveLimitAlarmEx | UAExclusiveDeviationAlarmEx
+    alarmMonitor_signalNewCondition: (stateName: string | null, isActive?: boolean, value?: string) => void
     eu: EUInformation
 
     constructor(parentFunction: LADSFunction, alarmMonitorOptions: AlarmMonitorOptions, inputNode: UAVariable, setpointNode: SetPointNodeType = undefined) {
@@ -120,6 +122,7 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         raiseEvent(this.parentFunction, `AlarmMonitor.${variable.getDisplayName()} changed to ${dataValue.value.value}${euStr}`)
     }
 
+    getEnabledState(): boolean { return this.alarmMonitor.getEnabledState() }
     setEnabledState(requestedEnabledState: boolean) { this.alarmMonitor.setEnabledState(requestedEnabledState) }
 
     protected postInitialize(alarmMonitorOptions: AlarmMonitorOptions) {
@@ -138,6 +141,8 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         // set custom message function
         const alarmMonitor = this.alarmMonitor as any
         alarmMonitor._calculateConditionInfo = this._calculateConditionInfo.bind(this)
+        this.alarmMonitor_signalNewCondition = alarmMonitor._signalNewCondition.bind(alarmMonitor)
+        alarmMonitor._signalNewCondition = this._signalNewCondition.bind(this)
     }
 
     // delegated members
@@ -205,6 +210,11 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         // console.log(name, oldCondition, result)
         return result
     }
+
+    private _signalNewCondition(stateName: string | null, isActive?: boolean, value?: string): void {
+        if (!this.alarmMonitor.getEnabledState()) return
+        this.alarmMonitor_signalNewCondition(stateName, isActive, value)
+    }
 }
 
 export class ExclusiveLimitAlarmImpl extends LimitAlarmImpl {
@@ -221,9 +231,6 @@ export class ExclusiveLimitAlarmImpl extends LimitAlarmImpl {
 }
 
 export class ExclusiveDeviationAlarmImpl extends LimitAlarmImpl {
-    signalNewCondition: (stateName: string | null, isActive?: boolean, value?: string) => void
-    onSetpointDataValueChange: (dataValue: DataValue) => void
-
 
     constructor(parent: AnalogControlFunctionImpl, alarmMonitorOptions: AlarmMonitorOptions) {
         if (!alarmMonitorOptions) return
@@ -232,37 +239,8 @@ export class ExclusiveDeviationAlarmImpl extends LimitAlarmImpl {
         const addressSpace = controlFunction.addressSpace
         const namespace = getLADSNamespace(addressSpace) as Namespace
         this.alarmMonitor = namespace.instantiateExclusiveDeviationAlarm(this.options)
-
-        // handling of enabled state in node-opcua default implmentation is somewhat stange - better don't enable/disable at all
-        if (false) {
-            // try to install guard
-            const alarmMonitor = this.alarmMonitor as any
-            this.onSetpointDataValueChange = alarmMonitor._onSetpointDataValueChange
-            this.signalNewCondition = alarmMonitor._signalNewCondition
-            alarmMonitor._signalNewCondition = this._signalNewCondition.bind(this)
-            alarmMonitor._onSetpointDataValueChange = this._onSetpointDataValueChange.bind(this)
-        }
-        if (false) {
-            this.alarmMonitor.setEnabledState(false)
-            parent.on("start", () => this.alarmMonitor.setEnabledState(true))
-            parent.on("stop", () => this.alarmMonitor.setEnabledState(false))
-        }
-
         this.postInitialize(alarmMonitorOptions)
     }
-
-    private _signalNewCondition(stateName: string | null, isActive?: boolean, value?: string): void {
-        if (this.alarmMonitor.getEnabledState()) {
-            this.signalNewCondition(stateName, isActive, value)
-        }
-    }
-
-    private _onSetpointDataValueChange(dataValue: DataValue): void {
-        if (this.alarmMonitor.getEnabledState()) {
-            this.onSetpointDataValueChange(dataValue)
-        }
-    }
-
 }
 
 //---------------------------------------------------------------

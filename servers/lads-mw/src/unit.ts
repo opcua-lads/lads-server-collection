@@ -330,12 +330,20 @@ export class MWUnitImpl extends EventEmitter {
         setNumericValue(this.temperature, 25.0)
     }
 
+    private setAlarmMonitorEnabledState(requestedEnabledState: boolean) {
+        this.densitySensor.alarmMonitor.setEnabledState(requestedEnabledState)
+        this.moistureSensor.alarmMonitor.setEnabledState(requestedEnabledState)
+        this.temperatureSensor.alarmMonitor.setEnabledState(requestedEnabledState)
+    }
+
     private async executeEmptyCheck() { 
         if (this.currentOperationMode === OperationModeEnum.Continuous) return 
+        this.setAlarmMonitorEnabledState(false)
         this.enterExecuting(TemplateIds.EmptyCheck) 
     }
     private async completeEmptyCheck() { 
         if (this.currentOperationMode === OperationModeEnum.Continuous) return 
+        this.setAlarmMonitorEnabledState(true)
         this.leaveExecuting() 
     }
     private async executeMeasureBale(id: number) { 
@@ -348,6 +356,7 @@ export class MWUnitImpl extends EventEmitter {
             customData: ""
         }
         this.currentRunOptions.samples = [sample]
+        this.setAlarmMonitorEnabledState(true)
         this.enterExecuting(TemplateIds.Measure) 
     }
     private async completeMeasureBale() { 
