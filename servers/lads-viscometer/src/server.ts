@@ -146,7 +146,7 @@ class ViscometerServerImpl {
 // create and start server including a list of viscometers
 //---------------------------------------------------------------
 export async function main() {
-    const serverImpl = new ViscometerServerImpl(4840)
+    const serverImpl = new ViscometerServerImpl(parseInt(process.env.PORT || "4840"))
     await serverImpl.start(['/dev/ttyUSB0'])
 
     // Graceful shutdown - unregister from GDS
