@@ -27,7 +27,7 @@ import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols } from "./server"
-import { IAddressSpace, INamespace } from "node-opcua"
+import { IAddressSpace, INamespace, DataType } from "node-opcua"
 import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
 import { BalanceUnitImpl } from "./unit"
@@ -63,6 +63,10 @@ export class BalanceDeviceImpl {
             location: defaultLocation,
         }
         initComponent(device, initialOptions)
+
+        // Set OperationalLocation and HierarchicalLocation directly on device
+        device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "Tisch_Links" })
+        device.hierarchicalLocation?.setValueFromSource({ dataType: DataType.String, value: "DE/Wangen/Building_24/24_00_00_rechts" })
 
         // create unit implementation
         this.config = config
