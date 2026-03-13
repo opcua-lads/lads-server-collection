@@ -49,6 +49,7 @@ export class BalanceDeviceImpl {
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
             browseName: config.name,
+            optionals: ["OperationalLocation", "HierarchicalLocation"],
         }) as BalanceDevice
         this.device = device
 
