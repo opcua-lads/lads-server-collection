@@ -65,10 +65,6 @@ export class BalanceDeviceImpl {
         }
         initComponent(device, initialOptions)
 
-        // Set OperationalLocation and HierarchicalLocation directly on device
-        device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "Tisch_Links" })
-        device.hierarchicalLocation?.setValueFromSource({ dataType: DataType.String, value: "DE/Wangen/Building_24/24_00_00_rechts" })
-
         // create unit implementation
         this.config = config
         const balanceUnitImpl = this.getBalanceUnitImpl(config)
@@ -76,6 +72,10 @@ export class BalanceDeviceImpl {
 
         // attach device helper
         this.deviceHelper = new LADSDeviceHelper(device)
+
+        // Set OperationalLocation and HierarchicalLocation AFTER DeviceHelper (which sets defaults)
+        device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "Tisch_Links" })
+        device.hierarchicalLocation?.setValueFromSource({ dataType: DataType.String, value: "DE/Wangen/Building_24/24_00_00_rechts" })
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
