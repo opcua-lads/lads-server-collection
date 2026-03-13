@@ -594,6 +594,10 @@ export class MWUnitImpl extends EventEmitter {
 
     private async execute() {
         const executionOptions = this.currentExecutionOptions
+        if (!executionOptions) {
+            console.debug("currentExecutionOptions undefined")
+            return
+        }
         const now = Date.now()
         const currentRunTime = now - executionOptions.startedMilliseconds
         setNumericValue(this.functionalUnit.programManager.activeProgram.currentRuntime, currentRunTime)

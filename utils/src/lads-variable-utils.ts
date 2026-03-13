@@ -139,7 +139,9 @@ export function setStatusCodeValue(variable: UAVariable, value: StatusCode, stat
 
 export function modifyStatusCode(variable: UAVariable, statusCode: StatusCode) {
     if (!variable) return
-    variable.setValueFromSource( variable.readValue().value, statusCode)
+    const dataValue = variable.readValue()
+    if (dataValue.statusCode != statusCode)
+        variable.setValueFromSource( dataValue.value, statusCode)
 }
 
 export function setDateTimeValue(variable: UAVariable, value: Date, statusCode = StatusCodes.Good) {

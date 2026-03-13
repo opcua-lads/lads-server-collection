@@ -79,6 +79,9 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
     options: InstantiateExclusiveLimitAlarmOptions
     alarmMonitor: UAExclusiveLimitAlarmEx | UAExclusiveDeviationAlarmEx
     alarmMonitor_signalNewCondition: (stateName: string | null, isActive?: boolean, value?: string) => void
+    alarmMonitor_onInputDataValueChange: (dataValue: DataValue) => void
+    lastInputDataValue: DataValue = undefined
+    maxInputDataDelta = 0.001
     eu: EUInformation
 
     constructor(parentFunction: LADSFunction, alarmMonitorOptions: AlarmMonitorOptions, inputNode: UAVariable, setpointNode: SetPointNodeType = undefined) {
@@ -138,11 +141,30 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         setAccessLevel(am.highLimit, accessReadWrite)
         setAccessLevel(am.lowLimit, accessReadWrite)
         setAccessLevel(am.lowLowLimit, accessReadWrite)
+        
         // set custom message function
         const alarmMonitor = this.alarmMonitor as any
         alarmMonitor._calculateConditionInfo = this._calculateConditionInfo.bind(this)
+        // install enable/dsiable functionality
         this.alarmMonitor_signalNewCondition = alarmMonitor._signalNewCondition.bind(alarmMonitor)
         alarmMonitor._signalNewCondition = this._signalNewCondition.bind(this)
+        // install improved data changed handler
+        this.alarmMonitor_onInputDataValueChange = alarmMonitor._onInputDataValueChange.bind(alarmMonitor)
+        const inputNodeId: NodeId = this.inputNode.readValue().value.value
+        const inputVariable = this.alarmMonitor.namespace.findNode(inputNodeId) as UAVariable
+        if (inputVariable) {
+            this.calculateMaxInputDataDelta()
+            inputVariable.off("value_changed", this.alarmMonitor_onInputDataValueChange)
+            inputVariable.on("value_changed", this._onInputDataValueChange.bind(this))
+            this.highHighLimit?.on("value_changed", this.calculateMaxInputDataDelta.bind(this))
+            this.lowLowLimit?.on("value_changed", this.calculateMaxInputDataDelta.bind(this))
+        }
+
+    }
+
+    private calculateMaxInputDataDelta() {
+        const range = getNumericValue(this.highHighLimit, 100.0) - getNumericValue(this.lowLowLimit, -100.0)
+        this.maxInputDataDelta = 0.001 * Math.abs(range)
     }
 
     // delegated members
@@ -215,6 +237,25 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         if (!this.alarmMonitor.getEnabledState()) return
         this.alarmMonitor_signalNewCondition(stateName, isActive, value)
     }
+
+    private _onInputDataValueChange(dataValue: DataValue) {
+        if (dataValue.statusCode === StatusCodes.UncertainLastUsableValue) return
+        if (!this.alarmMonitor.getEnabledState()) return
+        if (this.lastInputDataValue === undefined) {
+            this.alarmMonitor_onInputDataValueChange(dataValue)
+        } else {
+            try {
+                const delta = Number(dataValue.value.value - this.lastInputDataValue.value.value)
+                if (Math.abs(delta) >= this.maxInputDataDelta) {
+                    this.alarmMonitor_onInputDataValueChange(dataValue)
+                }
+            }
+            catch {
+                console.debug("Invalid input DataValue", dataValue)
+            }
+        }
+        this.lastInputDataValue = dataValue
+    }
 }
 
 export class ExclusiveLimitAlarmImpl extends LimitAlarmImpl {
@@ -227,7 +268,6 @@ export class ExclusiveLimitAlarmImpl extends LimitAlarmImpl {
         this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, this.options) as UAExclusiveDeviationAlarmEx
         this.postInitialize(alarmMonitorOptions)
     }
-
 }
 
 export class ExclusiveDeviationAlarmImpl extends LimitAlarmImpl {
