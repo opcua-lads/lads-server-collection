@@ -75,7 +75,7 @@ export class BalanceDeviceImpl {
 
         // Set OperationalLocation and HierarchicalLocation AFTER DeviceHelper (which sets defaults)
         device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "Tisch_Links" })
-        device.hierarchicalLocation?.setValueFromSource({ dataType: DataType.String, value: "DE/Wangen/Building_24/24_00_00_rechts" })
+        device.hierarchicalLocation?.setValueFromSource({ dataType: DataType.String, value: "DE/Wangen/Building_24/24_00_00_rechts/Tisch_Links" })
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
