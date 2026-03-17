@@ -229,7 +229,7 @@ export class MWUnitImpl extends EventEmitter {
             browseName: "Density",
             propertyOf: simulator,
             dataType: DataType.Double,
-            value: { dataType: DataType.Double, value: 0.7 }
+            value: { dataType: DataType.Double, value: 0.65 }
         })
         this.moisture = namespace.addVariable({
             browseName: "Moisture",

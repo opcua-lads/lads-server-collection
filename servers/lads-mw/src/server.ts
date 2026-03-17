@@ -51,13 +51,13 @@ const DefaultConfig: ServerConfig = {
     devices: [
         {
             enabled: true,
-            name: "My MW55 Analyzer",
-            model: "MW55",
+            name: "My MW53 Laboratory Analyzer",
+            model: "MW53",
             serialNumber: "4711",
         },
         {
             enabled: true,
-            name: "My MW55 Analyzer with LightBarrier",
+            name: "My MW55 Process Analyzer",
             model: "MW55",
             serialNumber: "4712",
             hasLB: true,

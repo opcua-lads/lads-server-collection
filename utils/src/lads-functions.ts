@@ -151,10 +151,10 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         // install improved data changed handler
         this.alarmMonitor_onInputDataValueChange = alarmMonitor._onInputDataValueChange.bind(alarmMonitor)
         const inputNodeId: NodeId = this.inputNode.readValue().value.value
-        const inputVariable = this.alarmMonitor.namespace.findNode(inputNodeId) as UAVariable
+        const inputVariable = this.alarmMonitor.addressSpace.findNode(inputNodeId) as UAVariable
         if (inputVariable) {
             this.calculateMaxInputDataDelta()
-            inputVariable.off("value_changed", this.alarmMonitor_onInputDataValueChange)
+            inputVariable.off("value_changed", alarmMonitor._onInputDataValueChange.bind(alarmMonitor))
             inputVariable.on("value_changed", this._onInputDataValueChange.bind(this))
             this.highHighLimit?.on("value_changed", this.calculateMaxInputDataDelta.bind(this))
             this.lowLowLimit?.on("value_changed", this.calculateMaxInputDataDelta.bind(this))
