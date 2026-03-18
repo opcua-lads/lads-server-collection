@@ -523,7 +523,7 @@ export class MWUnitImpl extends EventEmitter {
         console.debug(`Entering RunningState ${state}`)
     }
 
-    protected async enterRunning() {
+    private async enterRunning() {
         this.setFunctionalUnitState(LADSFunctionalState.Running)
         await this.delayTransition()
         if (this.currentOperationMode === OperationModeEnum.Continuous) {
@@ -691,7 +691,9 @@ export class MWUnitImpl extends EventEmitter {
             { dataType: DataType.String, value: "Measurement Task" },
             { dataType: DataType.ExtensionObject, value: [], arrayType: VariantArrayType.Array },
         ]
-        return await this.startProgram(args, context)
+        //return await this.startProgram(args, context)
+        const result = await this.startProgram(args, context)
+        return { statusCode: result.statusCode }
     }
 
     private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
@@ -702,19 +704,19 @@ export class MWUnitImpl extends EventEmitter {
 
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
-        const p = properties(inputArguments[1])
-        if (this.initCurrentRunOptions(
+        const programTemplate = stringValue(inputArguments[0])
+        const valid = this.initCurrentRunOptions(
             context,
-            stringValue(inputArguments[0]),
+            programTemplate,
             properties(inputArguments[1]),
             stringValue(inputArguments[2]),
             stringValue(inputArguments[3]),
-            samples(inputArguments[4])
+            samples(inputArguments[4]))
 
-        )) {
+        if (valid) {
             this.enterRunning()
             return {
-                outputArguments: [new Variant({ dataType: DataType.String, value: this.currentExecutionOptions.runId })],
+                outputArguments: [new Variant({ dataType: DataType.String, value: this.currentExecutionOptions?.runId ?? programTemplate})],
                 statusCode: StatusCodes.Good
             }
         } else {
