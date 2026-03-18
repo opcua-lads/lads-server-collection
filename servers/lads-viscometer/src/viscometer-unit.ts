@@ -109,8 +109,11 @@ export abstract class ViscometerUnitImpl {
         // future - initialize program mananger
         this.initProgramManager()
 
+        // Auto-start a program after init (delayed to allow program templates to load)
+        setTimeout(() => this.autoStartProgram(), 3000)
+
         // start run loop
-        const dT = 200 
+        const dT = 200
         setInterval( () => {this.evaluate(dT)}, dT)
     }
 
@@ -267,6 +270,29 @@ export abstract class ViscometerUnitImpl {
         raiseEvent(this.functionalUnit, `Spindle changed to type ${this.spindle.name} w/ code ${this.spindle.code}`)
     }
     
+    private async autoStartProgram() {
+        // Wait for program templates to be loaded
+        if (this.programTemplates.length === 0) {
+            console.log("[Viscometer] No program templates loaded yet, retrying in 2s...")
+            setTimeout(() => this.autoStartProgram(), 2000)
+            return
+        }
+        const template = this.programTemplates[0]
+        const templateName = template.browseName.name || "Analytical Method A (30rpm)"
+        console.log(`[Viscometer] Auto-starting program: ${templateName}`)
+
+        const inputArguments: VariantLike[] = [
+            new Variant({ dataType: DataType.String, value: templateName }),
+            new Variant({ dataType: DataType.Null, value: null }),
+            new Variant({ dataType: DataType.String, value: "" }),
+            new Variant({ dataType: DataType.String, value: "" }),
+            new Variant({ dataType: DataType.Null, value: null }),
+        ]
+        const context = SessionContext.defaultContext
+        const result = await this.startProgram(inputArguments, context)
+        console.log(`[Viscometer] Auto-start result:`, result.statusCode?.toString())
+    }
+
     //---------------------------------------------------------------
     // program manager implementation
     //---------------------------------------------------------------
