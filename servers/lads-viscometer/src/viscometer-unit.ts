@@ -447,8 +447,8 @@ export abstract class ViscometerUnitImpl {
             samples.push({containerId: "4711", sampleId: "08150001", position: "1", customData: ""})
         }
         
-        // set context information provided by input-arguments
-        setSessionInformation(result, context)
+        // set context information provided by input-arguments (skip if no real session, e.g. auto-start)
+        try { setSessionInformation(result, context) } catch { /* no session context available */ }
         setStringValue(getDescriptionVariable(result), `Run based on template ${programTemplateId}, started ${startedTimestamp.toLocaleDateString()}.`)
         result.properties?.setValueFromSource(inputArguments[1])
         result.supervisoryJobId?.setValueFromSource(inputArguments[2])
