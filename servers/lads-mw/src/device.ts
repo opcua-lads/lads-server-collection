@@ -75,7 +75,7 @@ export class MWDeviceImpl {
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
-        AFODictionary.addReferences(device, AFODictionaryIds.densitometry, AFODictionaryIds.humidity)
+        AFODictionary.addReferences(device, AFODictionaryIds.measurement_device, AFODictionaryIds.densitometry, AFODictionaryIds.humidity)
 
 
         // register events

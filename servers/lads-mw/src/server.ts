@@ -47,7 +47,7 @@ export interface DeviceConfig {
 
 const DefaultConfig: ServerConfig = {
     port: 4846,
-    includeAfo: false,
+    includeAfo: true,
     devices: [
         {
             enabled: true,

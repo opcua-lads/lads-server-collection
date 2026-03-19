@@ -199,7 +199,7 @@ export class MWUnitImpl extends EventEmitter {
         this.onSelectedProductChanged(this.selectedProductController.currentValue.readValue())
 
         // add AFO
-        AFODictionary.addReferences(functionalUnit, AFODictionaryIds.densitometry, AFODictionaryIds.humidity)
+        AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.densitometry, AFODictionaryIds.humidity)
         AFODictionary.addSensorFunctionReferences(this.densitySensor.sensorFunction, AFODictionaryIds.densitometry)
         AFODictionary.addSensorFunctionReferences(this.moistureSensor.sensorFunction, AFODictionaryIds.humidity, AFODictionaryIds.relative_humidity)
         AFODictionary.addSensorFunctionReferences(this.temperatureSensor.sensorFunction, AFODictionaryIds.temperature, AFODictionaryIds.temperature_measurement)
