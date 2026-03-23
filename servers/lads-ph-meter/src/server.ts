@@ -19,7 +19,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, assert, coerceNodeId, DataType, OPCUAServer, RegisterServerMethod, UAObject, AddressSpace } from "node-opcua"
+import { ApplicationType, assert, coerceNodeId, DataType, LocalizedText, OPCUAServer, RegisterServerMethod, UAObject, AddressSpace } from "node-opcua"
 import { join } from "path"
 import { DIObjectIds, getChildObjects } from "@utils"
 import { pHMeterDevice } from "./ph-meter-interfaces"
@@ -153,6 +153,33 @@ class pHMeterServerImpl {
         }
 
         console.log("CTRL+C to stop");
+
+        // TEST: Toggle FU DisplayName every 30s to trigger SemanticChangeEvent
+        if (deviceImplementations.length > 0) {
+            const firstDevice = deviceImplementations[0]
+            const fu = firstDevice.getFunctionalUnit()
+            const serverObject = addressSpace.rootFolder.objects.server
+            const semanticChangeEventType = addressSpace.findEventType("SemanticChangeEventType")
+            let toggle = false
+
+            setInterval(() => {
+                toggle = !toggle
+                const newName = toggle ? "pHMeterUnit (renamed)" : "pHMeterUnit"
+                fu.setDisplayName(new LocalizedText({ text: newName }))
+                console.log(`[TEST] DisplayName changed to "${newName}"`)
+
+                if (semanticChangeEventType) {
+                    serverObject.raiseEvent(semanticChangeEventType, {
+                        message: { dataType: DataType.String, value: `DisplayName changed to ${newName}` },
+                        sourceName: { dataType: DataType.String, value: fu.nodeId.toString() },
+                        severity: { dataType: DataType.UInt16, value: 0 },
+                    })
+                    console.log(`[TEST] SemanticChangeEvent raised for ${fu.nodeId.toString()}`)
+                } else {
+                    console.warn("[TEST] SemanticChangeEventType not found in address space")
+                }
+            }, 30000)
+        }
     }
 }
 
