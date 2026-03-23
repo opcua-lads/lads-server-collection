@@ -66,7 +66,7 @@ import {
     LADSComponent
 } from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from "node-opcua-nodeset-di"
-import { modifyStatusCode, setDateTimeValue, setStringValue } from "./lads-variable-utils"
+import { getNumericValue, modifyStatusCode, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
 import { AFODictionary } from "@afo"
 
 export enum DIObjectIds {
@@ -628,7 +628,7 @@ export class LADSFiniteStateMachineHelper {
         if (effectiveDisplayName) {
             const names = states.map((state) => state.displayName[0].text)
             const name = names.join(".")
-            effectiveDisplayName.setValueFromSource({ dataType: DataType.LocalizedText, value: name })
+            setStringValue(effectiveDisplayName, name)
         }
         if (this.parentStateMachineHelper) {
             const parentState = this.parentStateMachineHelper.stateMachine.currentStateNode
@@ -659,7 +659,8 @@ export class LADSFiniteStateMachineHelper {
         const states = this.stateMachine.getStates()
         const state = states.find((value: UAState) => (stateName?.includes(value.browseName.name ? value.browseName.name : "")))
         if (state) {
-            this.stateMachine.currentState.id.setValueFromSource({ value: state.nodeId, dataType: DataType.NodeId })
+            setNodeIdValue(this.stateMachine.currentState.id, state.nodeId)
+            setNumericValue(this.stateMachine.currentState.number, getNumericValue(state.stateNumber))
             this.setEffectiveDisplayName([state])
         }
     }
