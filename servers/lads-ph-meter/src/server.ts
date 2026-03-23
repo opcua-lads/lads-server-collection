@@ -162,23 +162,39 @@ class pHMeterServerImpl {
             const semanticChangeEventType = addressSpace.findEventType("SemanticChangeEventType")
             let toggle = false
 
+            const raiseSemanticChange = (node: UAObject, message: string) => {
+                if (semanticChangeEventType) {
+                    serverObject.raiseEvent(semanticChangeEventType, {
+                        message: { dataType: DataType.String, value: message },
+                        sourceName: { dataType: DataType.String, value: node.nodeId.toString() },
+                        severity: { dataType: DataType.UInt16, value: 0 },
+                    })
+                    console.log(`[TEST] SemanticChangeEvent raised for ${node.nodeId.toString()}`)
+                }
+            }
+
+            // Toggle FU DisplayName every 30s
             setInterval(() => {
                 toggle = !toggle
                 const newName = toggle ? "pHMeterUnit (renamed)" : "pHMeterUnit"
                 fu.setDisplayName(new LocalizedText({ text: newName }))
-                console.log(`[TEST] DisplayName changed to "${newName}"`)
-
-                if (semanticChangeEventType) {
-                    serverObject.raiseEvent(semanticChangeEventType, {
-                        message: { dataType: DataType.String, value: `DisplayName changed to ${newName}` },
-                        sourceName: { dataType: DataType.String, value: fu.nodeId.toString() },
-                        severity: { dataType: DataType.UInt16, value: 0 },
-                    })
-                    console.log(`[TEST] SemanticChangeEvent raised for ${fu.nodeId.toString()}`)
-                } else {
-                    console.warn("[TEST] SemanticChangeEventType not found in address space")
-                }
+                console.log(`[TEST] FU DisplayName changed to "${newName}"`)
+                raiseSemanticChange(fu as unknown as UAObject, `DisplayName changed to ${newName}`)
             }, 30000)
+
+            // Rotate a Function DisplayName every 10s: Sensor Fake → Sensor Fake 2 → Sensor Fake 3 → ...
+            const functionSet = fu.functionSet
+            const pHSensorFunction = functionSet.getComponentByName("pHSensor") as UAObject
+            if (pHSensorFunction) {
+                let counter = 1
+                setInterval(() => {
+                    counter++
+                    const fakeName = `Sensor Fake ${counter}`
+                    pHSensorFunction.setDisplayName(new LocalizedText({ text: fakeName }))
+                    console.log(`[TEST] Function DisplayName changed to "${fakeName}"`)
+                    raiseSemanticChange(pHSensorFunction, `DisplayName changed to ${fakeName}`)
+                }, 10000)
+            }
         }
     }
 }
