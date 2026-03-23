@@ -30,7 +30,7 @@ import {
     UATwoStateDiscrete,
     UAVariable
 } from "node-opcua"
-import { UAComponent, UADevice, UAFunctionalGroup, UALockingServices } from "node-opcua-nodeset-di"
+import { UAComponent, UADevice, UAFunctionalGroup, UALockingServices, UATopologyElement } from "node-opcua-nodeset-di"
 
 //---------------------------------------------------------------
 // Interfaces for LADS devices
@@ -92,7 +92,9 @@ export interface LADSProgramManager extends UAObject {
     resultSet: LADSResultSet | UAObject
 }
 
-export interface LADSFunctionalUnit extends UAObject {
+export interface LADSFunctionalUnit extends UATopologyElement {
+    assetId?: UAProperty<string, DataType.String>
+    componentName?: UAProperty<LocalizedText, DataType.LocalizedText>
     functionSet: LADSFunctionSet | UAObject
     programManager: LADSProgramManager
     functionalUnitState: LADSFunctionalUnitStateMachine
