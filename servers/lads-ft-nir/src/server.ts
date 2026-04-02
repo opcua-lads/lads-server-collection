@@ -122,7 +122,7 @@ class FtNirServerImpl {
             const node_set_filenames = [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_ft_nir,]
 
             // build the server object
-            const uri = "LADS-FT-NIR-Server"
+            const uri = "urn:MOCK930005:NodeOPCUA-Server"
             this.server = new OPCUAServer({
                 port: port,
                 // basic information about the server

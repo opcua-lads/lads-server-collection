@@ -58,7 +58,7 @@ class pHMeterServerImpl {
     server: OPCUAServer
 
     constructor(port: number) {
-        const uri = "LADS-pH-Meter-Server"
+        const uri = "urn:MOCK930001:NodeOPCUA-Server"
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
         // provide paths for the nodeset files

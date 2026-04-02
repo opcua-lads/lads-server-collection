@@ -80,7 +80,7 @@ class FreezerServerImpl {
             const node_set_filenames = [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_freezer,]
 
             // build the server object
-            const uri = "LADS-Freezer-Server"
+            const uri = "urn:MOCK930004:NodeOPCUA-Server"
             this.server = new OPCUAServer({
                 port: port,
                 // basic information about the server

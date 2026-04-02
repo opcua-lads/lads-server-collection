@@ -76,7 +76,7 @@ class ViscometerServerImpl {
             const node_set_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_viscometer,] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_viscometer,]
 
             // build the server object
-            const uri = "LADS-Viscometer-Server"
+            const uri = "urn:MOCK930006:NodeOPCUA-Server"
             this.server = new OPCUAServer({
                 port: port,
                 // basic information about the server

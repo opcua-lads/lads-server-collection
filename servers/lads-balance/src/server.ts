@@ -125,7 +125,7 @@ export class BalanceServerImpl {
     constructor(config: BalanceConfig) {
         this.config = config
         const port = this.config.port ?? 4844
-        const uri = "LADS-Balance-Server"
+        const uri = "urn:MOCK930002:NodeOPCUA-Server"
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
         // utilize node-opua nodeset files for built in version compatibility
@@ -157,7 +157,7 @@ export class BalanceServerImpl {
                     applicationName: "LADS Balance",
                     applicationType: ApplicationType.Server,
                     productUri: uri,
-                    applicationUri: "LADS-SampleServer", // utilize the default certificate
+                    applicationUri: uri,
 
                 },
                 // nodesets used by the server
