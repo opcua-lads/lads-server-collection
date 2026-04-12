@@ -21,6 +21,7 @@ export interface CreateServerOptions {
     softwareVersion?: string
     uri: string
     certificateSupport?: boolean
+    automaticallyAcceptUnknownCertificate?: boolean
     ldsSupport?: boolean
     increaseCapabilities?: boolean
 }
@@ -60,8 +61,9 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     // support self signed certifcate 
     const certificateSupport = options.certificateSupport ?? true
     if (certificateSupport) {
+        const automaticallyAcceptUnknownCertificate =  options.automaticallyAcceptUnknownCertificate ?? true
         const certRoot = path.join(options.applicationDirectory, "certs");
-        serverOptions.serverCertificateManager = new OPCUACertificateManager({ rootFolder: certRoot });
+        serverOptions.serverCertificateManager = new OPCUACertificateManager({ rootFolder: certRoot, automaticallyAcceptUnknownCertificate });
         serverOptions.certificateFile = path.join(certRoot, "own", "certs", "certificate.pem");
         serverOptions.privateKeyFile = path.join(certRoot, "own", "private", "private_key.pem");
     }
