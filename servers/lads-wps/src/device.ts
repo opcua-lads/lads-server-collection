@@ -31,7 +31,7 @@ import { WpsUnitImpl } from "./unit"
 import { LADSComponent, LifetimeVariableType } from "@interfaces"
 import { MaintenanceTaskImpl } from "@utils"
 import { EnumDeviceHealth } from "node-opcua-nodeset-di"
-import { LockImpl } from "utils/src/lads-lock"
+import { LockImpl } from "@utils"
 
 
 //--------------------------------------------------------------- 
@@ -275,7 +275,7 @@ export class WpsComponentImpl {
         setNumericValue(this.component.deviceHealth, EnumDeviceHealth.NORMAL)
     }
 
-    onTaskFinished(result: LADSMaintenanceTaskResult) {
+    onTaskFinished() {
         if (this.task.lastResult === LADSMaintenanceTaskResult.Success) {
             const component = this.component
             setDateTimeValue(component.identification?.initialOperationDate, new Date())

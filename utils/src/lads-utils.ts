@@ -21,7 +21,6 @@ import {
     NodeClass,
     ObjectTypeIds,
     ReferenceTypeIds,
-    SessionContext,
     StatusCodes,
     UAObject,
     UAObjectType,
@@ -44,7 +43,9 @@ import {
     UAEventType,
     UADataType,
     ServerSession,
-    StatusCode} from "node-opcua"
+    StatusCode,
+    ISessionContext,
+    DataValue} from "node-opcua"
 import {
     LADSDevice,
     LADSDeviceState,
@@ -245,9 +246,9 @@ export function getChildObjects(parent: UAObject): UAObject[] {
     const hasChildReferencesType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.HasChild))
     assert(hasChildReferencesType)
     const nodes = parent.findReferencesExAsObject(hasChildReferencesType)
-    nodes.forEach((node: UAObject) => {
+    nodes.forEach((node: BaseNode) => {
         if (node.nodeClass === NodeClass.Object) {
-            children.push(node)
+            children.push(node as UAObject)
         }
     })
     return children
@@ -262,9 +263,9 @@ export function getLADSFunctionalUnits(device: LADSDevice): LADSFunctionalUnit[]
     const hasChildReferencesType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.HasChild))
     assert(hasChildReferencesType)
     const nodes = functionalUnitSet.findReferencesExAsObject(hasChildReferencesType)
-    nodes.forEach((node: UAObject) => {
+    nodes.forEach((node: BaseNode) => {
         if (node.nodeClass === NodeClass.Object) {
-            if (node.typeDefinitionObj.isSubtypeOf(functionalUnitType)) {
+            if ((node as UAObject).typeDefinitionObj.isSubtypeOf(functionalUnitType)) {
                 const functionalUnit = <LADSFunctionalUnit>node
                 functionalUnits.push(functionalUnit)
             }
@@ -293,9 +294,9 @@ export function getLADSFunctions(parent: LADSFunctionalUnit | LADSFunction, recu
     }
     const nodes = functionSet.findReferencesExAsObject(hasChildReferencesType)
     const notifierReferences = parent.findReferencesAsObject(hasNotifierType)
-    nodes.forEach((node: UAObject) => {
+    nodes.forEach((node: BaseNode) => {
         if (node.nodeClass === NodeClass.Object) {
-            if (node.typeDefinitionObj.isSubtypeOf(functionType)) {
+            if ((node as UAObject).typeDefinitionObj.isSubtypeOf(functionType)) {
                 const ladsFunction = <LADSFunction>node
                 if (addHasNotifierReferences) {
                     if (!(notifierReferences.includes(ladsFunction))) {
@@ -389,7 +390,7 @@ export function createDeviceProgramRunId(programTemplateId: string): string {
 //---------------------------------------------------------------
 // LADS result support
 //---------------------------------------------------------------
-export function setSessionInformation(result: LADSResult, context: SessionContext) {
+export function setSessionInformation(result: LADSResult, context: ISessionContext) {
     // analyze session context
     const session = context.session as ServerSession
     const userIdentity = context.userIdentity
@@ -643,7 +644,7 @@ export class LADSFiniteStateMachineHelper {
         }
     }
 
-    async onParentStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) { this.setActiveState(dataValue.value.value?.text) }
+    async onParentStateChanged(dataValue: DataValue) { this.setActiveState((dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value?.text) }
 
     private setActiveState(stateName: string) {
         if (!this.activeState) return
@@ -653,8 +654,8 @@ export class LADSFiniteStateMachineHelper {
         modifyStatusCode(this.stateMachine.currentState, statusCode)
     }
 
-    async onCurrentStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-        const stateName = dataValue.value.value.text
+    async onCurrentStateChanged(dataValue: DataValue) {
+        const stateName = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!stateName) return
         const states = this.stateMachine.getStates()
         const state = states.find((value: UAState) => (stateName?.includes(value.browseName.name ? value.browseName.name : "")))
@@ -751,22 +752,22 @@ export class LADSDeviceHelper {
         this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: `${this.device.getDisplayName()} ${message}` } })
     }
 
-    async onGotoOperating(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    async onGotoOperating(this: LADSDeviceHelper, inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         this.enterDeviceOperating()
         return { statusCode: StatusCodes.Good }
     }
 
-    async onGotoSleep(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    async onGotoSleep(this: LADSDeviceHelper, inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         this.enterDeviceSleep()
         return { statusCode: StatusCodes.Good }
     }
 
-    async onGotoShutdown(this: LADSDeviceHelper, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    async onGotoShutdown(this: LADSDeviceHelper, inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         this.enterDeviceShutdown()
         return { statusCode: StatusCodes.Good }
     }
 
-    async onGotoOperationMode(this: LADSDeviceHelper, operationMode: MachineryOperationMode, inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    async onGotoOperationMode(this: LADSDeviceHelper, operationMode: MachineryOperationMode, inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return { statusCode: this.enterOperationMode(operationMode) }
     }
 
@@ -802,8 +803,8 @@ export class LADSDeviceHelper {
         sleepMilliSeconds(this.options?.shutdownTime ? this.options.shutdownTime : 1000).then(() => { this.enterDeviceInitialzation() })
     }
 
-    async onDeviceStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-        const state = dataValue.value.value.text
+    async onDeviceStateChanged(dataValue: DataValue) {
+        const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
         this.raiseEvent(`state changed to ${state} .. `)
         if (!state.includes(LADSDeviceState.Operate)) {
@@ -811,8 +812,8 @@ export class LADSDeviceHelper {
         }
     }
 
-    async onDeviceHealthChanged(dataValue: DataValueT<EnumDeviceHealth, DataType.UInt32>) {
-        const value = dataValue.value.value
+    async onDeviceHealthChanged(dataValue: DataValue) {
+        const value = (dataValue as DataValueT<EnumDeviceHealth, DataType.UInt32>).value.value
         const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
         this.raiseEvent(`health changed to ${key} .. `)
         if (value == EnumDeviceHealth.FAILURE) {
@@ -826,14 +827,14 @@ export class LADSDeviceHelper {
         }
     }
 
-    async onMachineryOperationModeChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-        const state = dataValue.value.value.text
+    async onMachineryOperationModeChanged(dataValue: DataValue) {
+        const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
         this.raiseEvent(`operation mode changed to ${state} .. `)
     }
 
-    async onMachineryItemStateChanged(dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-        const state = dataValue.value.value.text
+    async onMachineryItemStateChanged(dataValue: DataValue) {
+        const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
         this.raiseEvent(`item state changed to ${state} .. `)
     }
@@ -845,8 +846,8 @@ export class LADSDeviceHelper {
         return functionalUnitsRunnning
     }
 
-    async onFunctionalUnitStateChanged(functionalUnit: UAObject, stateMachine: UAStateMachineEx, dataValue: DataValueT<LocalizedText, DataType.LocalizedText>) {
-        const state = dataValue.value.value.text
+    async onFunctionalUnitStateChanged(functionalUnit: UAObject, stateMachine: UAStateMachineEx, dataValue: DataValue) {
+        const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
         this.raiseEvent(`${functionalUnit.getDisplayName()} state changed to ${state} ..`)
         sleepMilliSeconds(50).then(() => {

@@ -28,7 +28,7 @@ export function getNumericValue(variable: UAVariable, defaultValue = 0): number 
     return variable.readValue().value.value
 }
 
-export function getNumericArrayValue(variable: UAVariable, defaultValue = []): number[] {
+export function getNumericArrayValue(variable: UAVariable, defaultValue: number[] = []): number[] {
     if (!variable) return defaultValue
     return variable.readValue().value.value
 }

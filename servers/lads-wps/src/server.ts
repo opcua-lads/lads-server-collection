@@ -24,7 +24,7 @@ import { join } from "path"
 import { WpsDeviceImpl } from "./device"
 import { readFile } from "fs/promises"
 import { createServer } from "@utils"
-import { Duration, LockImpl } from "utils/src/lads-lock"
+import { Duration, LockImpl } from "@utils"
 import { exit } from "process"
 
 //---------------------------------------------------------------
@@ -149,7 +149,7 @@ export class WpsServerImpl {
             console.log("CTRL+C to stop")
         }
         catch (err) {
-            console.error("Unable to start server: ", err.message)
+            console.error("Unable to start server: ", (err as Error).message)
             exit()
         }
     }

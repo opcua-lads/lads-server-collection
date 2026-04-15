@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent, setStringArrayValue, getStringValue, setStringValue, setDateTimeValue, getChildObjects } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent, getStringValue, setStringValue, setDateTimeValue, getChildObjects } from "@utils"
 import { MWDevice, MWFunctionalUnit, MWFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, MWServerImpl,  } from "./server"
-import { IAddressSpace, INamespace, LocalizedText, UAObject } from "node-opcua"
+import { IAddressSpace, INamespace, LocalizedText } from "node-opcua"
 import { EnumDeviceHealth } from "node-opcua-nodeset-di"
-import { LockImpl } from "utils/src/lads-lock"
+import { LockImpl } from "@utils"
 import { MWUnitImpl } from "./unit"
 import { LADSComponent } from "@interfaces"
 

@@ -26,17 +26,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, DTKeyValuePair } from "node-opcua"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, DTKeyValuePair, utils, ISessionContext } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl, getBalanceNameSpace } from "./device"
 import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
 import { BalanceRecorder } from "@asm"
 import { Balance, BalanceCalibrationReport, BalanceEvents, BalanceReading, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance"
 import { EventEmitter } from "events"
-import { ComplianceDocumentNodeReferences, ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "utils/src/lads-cd"
+import { ComplianceDocumentNodeReferences, ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { BalanceDeviceConfig, BalanceProtocols } from "./server"
-import { addAnimlWeighingDocument, AnimlWeighingDocumentOptions } from "lib/animl/src"
-import { LockImpl } from "utils/src/lads-lock"
+import { addAnimlWeighingDocument, AnimlWeighingDocumentOptions } from "../../../lib/animl/src"
+import { LockImpl } from "@utils"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -296,7 +296,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result?.fileSet, result?.variableSet)
     }
 
-    private isAccessibleBy(sessionContext: SessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
+    private isAccessibleBy(sessionContext: ISessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
 
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
@@ -358,7 +358,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.parent.deviceHelper.enterDeviceSleep()
     }
 
-    protected async enterMeasuring(context: SessionContext) {
+    protected async enterMeasuring(context: ISessionContext) {
         const options = this.currentRunOptions
         const programTemplateId = options.programTemplateId
         raiseEvent(this.functionalUnit, `Starting method ${programTemplateId} with identifier ${options.runId}.`)
@@ -574,7 +574,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         return this.programTemplateElements.find(value => value.identifier.toLowerCase().includes(id))
     }
 
-    private async startMethod(context: SessionContext, programTemplateId: string, properties?: LADSProperty[], samples?: LADSSampleInfo[]): Promise<CallMethodResultOptions> {
+    private async startMethod(context: ISessionContext, programTemplateId: string, properties?: LADSProperty[], samples?: LADSSampleInfo[]): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         this.initCurrentRunOptions(this.findProgramTemplate(programTemplateId))
@@ -583,25 +583,25 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.enterMeasuring(context)
         return { statusCode: StatusCodes.Good }
     }
-    private async setTare(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async setTare(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return await this.startMethod(context, ProgramTemplateIds.SetTare)
     }
-    private async setPresetTare(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async setPresetTare(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         const property: LADSProperty = { key: "Tare", value: inputArguments[0].value }
         return await this.startMethod(context, ProgramTemplateIds.SetPresetTare, [property])
     }
-    private async clearTare(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async clearTare(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return await this.startMethod(context, ProgramTemplateIds.ClearTare)
     }
-    private async setZero(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async setZero(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return await this.startMethod(context, ProgramTemplateIds.SetZero)
     }
-    private async regsterWeight(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async regsterWeight(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         const sampleId = String(inputArguments[0]?.value.value)
         const sampleInfo: LADSSampleInfo = { containerId: "", sampleId: sampleId, position: "", customData: "", }
         return await this.startMethod(context, ProgramTemplateIds.RegisterWeight, undefined, [sampleInfo])
     }
-    private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async start(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         // search key-value pairs for sampleId
         const inputArgument = inputArguments[0].value
         const keyValuePairs = (inputArgument === null) ? [] : (inputArgument as Variant[]).map(item => { return (<any>item) as DTKeyValuePair })
@@ -611,7 +611,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         return await this.startMethod(context, ProgramTemplateIds.RegisterWeight, undefined, [sampleInfo])
     }
 
-    private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
@@ -628,7 +628,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         }
     }
 
-    private async runProgram(inputArguments: VariantLike[], context: SessionContext) {
+    private async runProgram(inputArguments: VariantLike[], context: ISessionContext) {
         const options = this.currentRunOptions
         options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
         options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
@@ -644,14 +644,14 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.enterMeasuring(context)
     }
 
-    private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stop(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
 
-    private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async abort(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Aborting)

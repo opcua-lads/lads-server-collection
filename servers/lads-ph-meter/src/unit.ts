@@ -27,11 +27,11 @@ import { AFODictionary, AFODictionaryIds } from "@afo"
 import { pHSensorRecorder } from "@asm"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
 import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement, AnalogScalarSensorFunctionImpl, AnalogScalarSensorWithCompenstionFunctionImpl } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, CallMethodResultOptions, Variant, ISessionContext } from "node-opcua"
 import { join } from "path"
 import { pHMeterDeviceImpl } from "./device"
 import { pHMeterFunctionalUnit, pHMeterFunctionSet } from "./interfaces"
-import { LockImpl } from "utils/src/lads-lock"
+import { LockImpl } from "@utils"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -157,7 +157,7 @@ export abstract class pHMeterUnitImpl {
         touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result.fileSet, result.variableSet)
     }
 
-    private isAccessibleBy(sessionContext: SessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
+    private isAccessibleBy(sessionContext: ISessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
 
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
@@ -188,7 +188,7 @@ export abstract class pHMeterUnitImpl {
         }
     }
 
-    protected enterMeasuring(context: SessionContext) {
+    protected enterMeasuring(context: ISessionContext) {
         const options = this.currentRunOptions
         raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
 
@@ -379,7 +379,7 @@ export abstract class pHMeterUnitImpl {
         return this.programTemplatesElements.find(value => value.identifier.toLowerCase().includes(id))
     }
 
-    private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async start(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         // search properties for sampleId
@@ -399,7 +399,7 @@ export abstract class pHMeterUnitImpl {
         return { statusCode: StatusCodes.Good }
     }
 
-    private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
@@ -416,7 +416,7 @@ export abstract class pHMeterUnitImpl {
         }
     }
 
-    private async runProgram(inputArguments: VariantLike[], context: SessionContext) {
+    private async runProgram(inputArguments: VariantLike[], context: ISessionContext) {
         const options = this.currentRunOptions
         options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
         options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
@@ -434,13 +434,13 @@ export abstract class pHMeterUnitImpl {
         this.enterMeasuring(context)
     }
 
-    private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stop(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
-    private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async abort(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Aborting)

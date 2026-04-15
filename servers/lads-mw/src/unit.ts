@@ -25,19 +25,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSRunnnigState } from "@interfaces"
 import { setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, noise, sleepMilliSeconds, setNameNodeIdValue, EventDataRecorder, DataExporter, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, MulitStateDiscreteControlFunctionImpl, ProgramTemplateElement, copyValues, VariableDataRecorder, setNumericArrayValue, setBooleanValue, LADSFiniteStateMachineHelper } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAObjectType } from "node-opcua"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, VariantArrayType, UAObjectType, ISessionContext } from "node-opcua"
 import { MWDeviceImpl, Manufacturer, getMWNameSpace as getMWNameSpace } from "./device"
 import { MeasurementResult, MWFunctionalUnit, MWFunctionSet, MWResult, OperationModeEnum, ProductSet, ResultsEnum } from "./interfaces"
 import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
 import { AnalogScalarSensorFunctionImpl } from "@utils"
-import { Duration, LockImpl } from "utils/src/lads-lock"
+import { Duration, LockImpl } from "@utils"
 import { ProductImpl, Products, ProductSetImpl } from "./products"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
-    context?: SessionContext
+    context?: ISessionContext
     operationMode: OperationModeEnum
     programTemplateId?: string
     properties?: LADSProperty[]
@@ -451,7 +451,7 @@ export class MWUnitImpl extends EventEmitter {
         touchNodes(programTemplateSet)
     }
 
-    protected isAccessibleBy(sessionContext: SessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
+    protected isAccessibleBy(sessionContext: ISessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
 
     get isRunning(): boolean { return this.functionalUnitState.getCurrentState().includes(LADSFunctionalState.Running) }
     get isExecuting(): boolean { return this.runningStateMachine.getCurrentState().includes(LADSRunnnigState.Execute) }
@@ -466,7 +466,7 @@ export class MWUnitImpl extends EventEmitter {
         return (currentState.includes(LADSFunctionalState.Running))
     }
 
-    private initCurrentRunOptions(context: SessionContext, programTemplateId: string, properties: LADSProperty[], supervisoryJobId: string, supervisoryTaskId: string, samples: LADSSampleInfo[]): boolean {
+    private initCurrentRunOptions(context: ISessionContext, programTemplateId: string, properties: LADSProperty[], supervisoryJobId: string, supervisoryTaskId: string, samples: LADSSampleInfo[]): boolean {
         const id = programTemplateId.toLowerCase()
         const template = ProgramTemplates.find(programTemplate => programTemplate.template?.identifier.toLowerCase().includes(id))
         if (!template) return false
@@ -683,7 +683,7 @@ export class MWUnitImpl extends EventEmitter {
         }
     }
 
-    private async start(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async start(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         const args: VariantLike[] = [
             { dataType: DataType.String, value: TemplateIds.Measure },
             { dataType: DataType.ExtensionObject, value: [], arrayType: VariantArrayType.Array },
@@ -696,7 +696,7 @@ export class MWUnitImpl extends EventEmitter {
         return { statusCode: result.statusCode }
     }
 
-    private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
 
         function stringValue(variant: VariantLike, defaultValue = "") { return variant === null ? defaultValue : variant.value }
         function properties(variant: VariantLike): LADSProperty[] { return variant === null ? [] : (variant.value as Variant[]).map(item => { return (<any>item) as LADSProperty }) }
@@ -724,14 +724,14 @@ export class MWUnitImpl extends EventEmitter {
         }
     }
 
-    private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stop(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveRunning(LADSFunctionalState.Stopping)
         return { statusCode: StatusCodes.Good }
     }
 
-    private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async abort(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveRunning(LADSFunctionalState.Aborting)

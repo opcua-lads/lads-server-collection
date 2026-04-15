@@ -91,8 +91,8 @@ class pHMeterServerImpl {
             console.log(this.server.buildInfo.productName, "is ready on", endpoint);
             console.log("CTRL+C to stop");
         }
-        catch (err) {
-            console.error("Unable to start server: ", err.message)
+        catch (err: unknown) {
+            console.error("Unable to start server: ", (err as Error).message)
             exit()
         }
     }

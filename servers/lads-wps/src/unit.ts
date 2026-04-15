@@ -24,8 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState, MachineryOperationMode, LADSAnalogControlFunction } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, getLADSNamespace, AnalogControlFunctionImpl, AlarmMonitorOptions } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode, AddressSpace } from "node-opcua"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, getLADSNamespace, AnalogControlFunctionImpl } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode, ISessionContext } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
 import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
 import { EventEmitter } from "events"
@@ -34,7 +34,7 @@ import { join } from "path"
 import { AnalogScalarSensorFunctionImpl } from "@utils"
 import { WpsProgramTemplate, ProgramTemplateTuple, ProgramTemplateDispense, ProgramTemplateReplaceCartridge, ProgramTemplateReplaceEndfilter, ProgramTemplateDepressurization, ProgramTemplateSanitization, ProgramTemplateFlushTOC, ProgramTemplateReplaceUVLamp, DispenseId, WpsProgramTemplateStep, ProgramTemplateRecalibrateTOC } from "./templates"
 import { DispenseModeControlFunctionImpl, DispenseTimerControlFunctionImpl, DispenseVolumeControlFunctionImpl } from "./functions"
-import { LockImpl } from "utils/src/lads-lock"
+import { LockImpl } from "@utils"
 
 //---------------------------------------------------------------
 interface CurrentRunOptions {
@@ -249,7 +249,7 @@ export class WpsUnitImpl extends EventEmitter {
         this.dispenseTimeController = new DispenseTimerControlFunctionImpl(functionSet.dispenseTime, this.dispenseVolumeController)
     }
 
-    protected isAccessibleBy(sessionContext: SessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
+    protected isAccessibleBy(sessionContext: ISessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
 
     private evaluate(runtime: number, dT: number) {
         this.dispenseTimeController.evaluate()
@@ -338,7 +338,7 @@ export class WpsUnitImpl extends EventEmitter {
 
     private get name(): string { return this.parent.config.name }
 
-    protected async enterRunning(context: SessionContext) {
+    protected async enterRunning(context: ISessionContext) {
         const options = this.currentRunOptions
 
         // eventually create result structure
@@ -479,7 +479,7 @@ export class WpsUnitImpl extends EventEmitter {
         stateMachine.setState(LADSFunctionalState.Stopped)
     }
 
-    private async startDispense(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startDispense(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const mode = getNumericValue(this.dispenseModeController.currentValue)
@@ -497,7 +497,7 @@ export class WpsUnitImpl extends EventEmitter {
         return { statusCode: StatusCodes.Good }
     }
 
-    private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const programTemplateId: string = inputArguments[0].value
@@ -526,14 +526,14 @@ export class WpsUnitImpl extends EventEmitter {
         }
     }
 
-    private async stop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stop(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.pendingRequest = LADSFunctionalState.Stopping
         return { statusCode: StatusCodes.Good }
     }
 
-    private async abort(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async abort(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.pendingRequest = LADSFunctionalState.Aborting
@@ -594,7 +594,7 @@ export class WpsUnitImpl extends EventEmitter {
         return StatusCodes.Good
     }
 
-    private async resume(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async resume(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (this.isHeld) {
             this.transiteUnhold()

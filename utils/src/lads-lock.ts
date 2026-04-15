@@ -9,7 +9,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ServerSession, SessionContext, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
+import { CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ISessionContext, ServerSession, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
 import { UALockingServices } from "node-opcua-nodeset-di";
 import { EventEmitter } from "stream";
 import { getBooleanValue, getNumericValue, getStringValue, setBooleanValue, setNumericValue, setStringValue } from "./lads-variable-utils";
@@ -45,7 +45,7 @@ export class LockImpl extends EventEmitter {
 
     lock: UALockingServices
     context: string = ""
-    sessionContext: SessionContext = undefined
+    sessionContext: ISessionContext = undefined
     timeout: NodeJS.Timeout = undefined
     timestampExpired: number
     parentLock: LockImpl
@@ -64,7 +64,7 @@ export class LockImpl extends EventEmitter {
         this.parentLock = parentLock
     }
 
-    isAccessibleBy(sessionContext: SessionContext): boolean {
+    isAccessibleBy(sessionContext: ISessionContext): boolean {
         // eventually renew lock on every call
         if (this.locked && (this.sessionContext === sessionContext)) {           
             this.renewTimer()
@@ -82,7 +82,7 @@ export class LockImpl extends EventEmitter {
     get lockingUser(): string { return getStringValue(this.lock.lockingUser) }
     get remainingLockTime(): number { return this.locked ? this.timestampExpired - Date.now() : 0 }
 
-    private startTimer(sessionContext: SessionContext) {
+    private startTimer(sessionContext: ISessionContext) {
         this.locked = true
         this.sessionContext = sessionContext
         const session = sessionContext.session as ServerSession
@@ -120,28 +120,28 @@ export class LockImpl extends EventEmitter {
         }
     }
 
-    private async initLock(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async initLock(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (this.locked) return LockImpl.methodResult({ result: LockResult.AlreadyLocked })
         this.context = inputArguments[0].value
         this.startTimer(context)
         return LockImpl.methodResult({ result: LockResult.OK })
     }
 
-    private async renewLock(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async renewLock(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.locked) return LockImpl.methodResult({ result: LockResult.NotLocked })
         if (context != this.sessionContext) return { statusCode: StatusCodes.BadLocked }
         this.startTimer(context)
         return LockImpl.methodResult({ result: LockResult.OK })
     }
 
-    private async exitLock(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async exitLock(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.locked) return LockImpl.methodResult({ result: LockResult.NotLocked })
         if (context != this.sessionContext) return { statusCode: StatusCodes.BadLocked }
         this.stopTimer()
         return LockImpl.methodResult({ result: LockResult.OK })
     }
 
-    private async breakLock(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async breakLock(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.locked) LockImpl.methodResult({ result: LockResult.NotLocked })
         this.stopTimer()
         return LockImpl.methodResult({ result: LockResult.OK })
