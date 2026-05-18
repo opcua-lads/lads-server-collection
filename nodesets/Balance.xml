@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-10-21T08:46:09.659Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-05-18T08:51:55.940Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/Machinery/</Uri>
@@ -20,6 +20,7 @@
         <Alias Alias="Double">i=11</Alias>
         <Alias Alias="DateTime">i=13</Alias>
         <Alias Alias="String">i=12</Alias>
+        <Alias Alias="NodeId">i=17</Alias>
         <Alias Alias="LocalizedText">i=21</Alias>
         <Alias Alias="HasComponent">i=47</Alias>
         <Alias Alias="HasProperty">i=46</Alias>
@@ -39,7 +40,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="bb4469bce65e655c15d882dafb38e98d"/>
+            <si:GeneratorExtension Hash="379ce60e0e2e70095a01e46301720aae"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_Balance_" NodeId="ns=4;i=5000" BrowseName="4:http://aixengineers.de/Balance/" ParentNodeId="i=11715">
@@ -130,8 +131,6 @@
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1043</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent">ns=3;i=6473</Reference>
-            <Reference ReferenceType="HasComponent">ns=3;i=6472</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7000</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7001</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7002</Reference>
@@ -142,6 +141,8 @@
             <Reference ReferenceType="HasComponent">ns=4;i=7006</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7007</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=7008</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6037</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=6038</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=4;i=5002" BrowseName="3:FunctionSet" ParentNodeId="ns=4;i=1000">
@@ -168,6 +169,7 @@
     </UAObject>
     <UAMethod NodeId="ns=4;i=7000" BrowseName="3:Start" ParentNodeId="ns=4;i=5001">
         <DisplayName>Start</DisplayName>
+        <Description>Start the default program "RegisterWeight".</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=3;i=6127</Reference>
@@ -175,6 +177,7 @@
     </UAMethod>
     <UAMethod NodeId="ns=4;i=7001" BrowseName="3:StartProgram" ParentNodeId="ns=4;i=5001">
         <DisplayName>StartProgram</DisplayName>
+        <Description>Start a selected program-template with detailed paramaters.</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=3;i=6098</Reference>
@@ -183,6 +186,7 @@
     </UAMethod>
     <UAMethod NodeId="ns=4;i=7002" BrowseName="3:Abort" ParentNodeId="ns=4;i=5001">
         <DisplayName>Abort</DisplayName>
+        <Description>Abort the currently executed program run,</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
@@ -224,6 +228,7 @@
     </UAVariable>
     <UAObject NodeId="ns=4;i=5006" BrowseName="4:WeightStable" ParentNodeId="ns=4;i=5002">
         <DisplayName>Weight Stable</DisplayName>
+        <Description>Indicates whether weight measurement is currently stable.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1031</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -234,6 +239,7 @@
     </UAObject>
     <UAObject NodeId="ns=4;i=5007" BrowseName="4:TareMode" ParentNodeId="ns=4;i=5002">
         <DisplayName>Tare Mode</DisplayName>
+        <Description>Current tare mode (available modes see enumeration).</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1037</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -443,13 +449,14 @@
     </UAObject>
     <UAMethod NodeId="ns=4;i=7003" BrowseName="3:Stop" ParentNodeId="ns=4;i=5001">
         <DisplayName>Stop</DisplayName>
+        <Description>Stop the currently executed program run.</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAMethod>
     <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6027" BrowseName="CurrentState" ParentNodeId="ns=4;i=5001">
         <DisplayName>CurrentState</DisplayName>
-        <Description>Shortcut to start the "Register Weight" program-template with defualt values.</Description>
+        <Description>Current state of operation.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -545,6 +552,7 @@
     </UAVariable>
     <UAMethod NodeId="ns=4;i=7006" BrowseName="4:RegisterWeight" ParentNodeId="ns=4;i=5001">
         <DisplayName>RegisterWeight</DisplayName>
+        <Description>Shortcut to start the "Register Weight" program-template with default values.</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6035</Reference>
@@ -611,8 +619,9 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
-    <UAObject NodeId="ns=4;i=5013" BrowseName="4:Gross" ParentNodeId="ns=4;i=5020">
-        <DisplayName>Gross</DisplayName>
+    <UAObject NodeId="ns=4;i=5013" BrowseName="4:GrossWeight" ParentNodeId="ns=4;i=5020">
+        <DisplayName>Gross Weight</DisplayName>
+        <Description>Current gross weight (sum of tare and net weights).</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -688,6 +697,7 @@
     </UAVariable>
     <UAObject NodeId="ns=4;i=5005" BrowseName="4:CurrentWeight" ParentNodeId="ns=4;i=5002">
         <DisplayName>Current Weight</DisplayName>
+        <Description>Current weight as displayed on the balance.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -788,6 +798,7 @@
     </UAVariable>
     <UAMethod NodeId="ns=4;i=7008" BrowseName="4:SetPresetTare" ParentNodeId="ns=4;i=5001">
         <DisplayName>SetPresetTare</DisplayName>
+        <Description>Shortcut to start the "Preset Tare" program-template with default values.</Description>
         <References>
             <Reference ReferenceType="HasModellingRule">i=80</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6042</Reference>
@@ -830,8 +841,9 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
-    <UAObject NodeId="ns=4;i=5016" BrowseName="4:Net" ParentNodeId="ns=4;i=5020">
-        <DisplayName>Net</DisplayName>
+    <UAObject NodeId="ns=4;i=5016" BrowseName="4:NetWeight" ParentNodeId="ns=4;i=5020">
+        <DisplayName>Net Weight</DisplayName>
+        <Description>Current net weight.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -905,8 +917,9 @@
             </uax:ExtensionObject>
         </Value>
     </UAVariable>
-    <UAObject NodeId="ns=4;i=5018" BrowseName="4:Tare" ParentNodeId="ns=4;i=5020">
-        <DisplayName>Tare</DisplayName>
+    <UAObject NodeId="ns=4;i=5018" BrowseName="4:TareWeight" ParentNodeId="ns=4;i=5020">
+        <DisplayName>Tare Weight</DisplayName>
+        <Description>Current tare weight.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -997,6 +1010,22 @@
         <References>
             <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NodeId" ValueRank="1" NodeId="ns=4;i=6037" ArrayDimensions="1" BrowseName="AvailableStates" ParentNodeId="ns=4;i=5001">
+        <DisplayName>AvailableStates</DisplayName>
+        <Description>Set of states supported by the implementation.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NodeId" ValueRank="1" NodeId="ns=4;i=6038" ArrayDimensions="1" BrowseName="AvailableTransitions" ParentNodeId="ns=4;i=5001">
+        <DisplayName>AvailableTransitions</DisplayName>
+        <Description>Set of transitions supported by the implementation.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
 </UANodeSet>

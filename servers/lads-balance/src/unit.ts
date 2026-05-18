@@ -127,9 +127,9 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         addressSpace.installHistoricalDataNode(this.currentWeight.sensorValue)
         this.weightStable = functionSet.weightStable
         this.tareMode = functionSet.tareMode
-        this.grossWeight = functionSet.currentWeight.functionSet?.gross
-        this.netWeight = functionSet.currentWeight.functionSet?.net
-        this.tareWeight = functionSet.currentWeight.functionSet?.tare
+        this.grossWeight = functionSet.currentWeight.functionSet?.grossWeight
+        this.netWeight = functionSet.currentWeight.functionSet?.netWeight
+        this.tareWeight = functionSet.currentWeight.functionSet?.tareWeight
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
         AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
@@ -523,6 +523,15 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 value: { dataType: DataType.Double, value: gross }
             })
             AFODictionary.addReferences(grossWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.gross_weight)
+        }
+        if (net) {
+            const tareWeightResult = variableSet.namespace.addVariable({
+                componentOf: variableSet,
+                browseName: "Net Weight",
+                dataType: DataType.Double,
+                value: { dataType: DataType.Double, value: net }
+            })
+            AFODictionary.addReferences(tareWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.tare_weight)
         }
         if (tare) {
             const tareWeightResult = variableSet.namespace.addVariable({

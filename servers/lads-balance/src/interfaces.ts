@@ -31,9 +31,9 @@ export const BalanceTareOptionals = ["FunctionSet.CurrentWeight.FunctionSet", "F
 
 export interface BalanceCurrentWeightType extends Omit<LADSAnalogScalarSensorFunction, "functionSet"> {
     functionSet?: {
-        gross: LADSAnalogScalarSensorFunction
-        net: LADSAnalogScalarSensorFunction
-        tare: LADSAnalogScalarSensorFunction
+        grossWeight: LADSAnalogScalarSensorFunction
+        netWeight: LADSAnalogScalarSensorFunction
+        tareWeight: LADSAnalogScalarSensorFunction
     }
 }
 
