@@ -597,7 +597,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         return await this.startMethod(context, ProgramTemplateIds.SetZero)
     }
     private async regsterWeight(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        const sampleId = String(inputArguments[0]?.value.value)
+        const sampleId: string = inputArguments[0]?.value
         const sampleInfo: LADSSampleInfo = { containerId: "", sampleId: sampleId, position: "", customData: "", }
         return await this.startMethod(context, ProgramTemplateIds.RegisterWeight, undefined, [sampleInfo])
     }
