@@ -71,7 +71,9 @@ export class SimulatedBalance extends Balance {
         const reading = await this.getCurrentReading()
         if (reading) this.emit(BalanceEvents.Reading, reading)
     }
-    async tryReconnect(): Promise<void> {}
+    async tryReconnect(): Promise<void> {
+        await this.connect()
+    }
 
     async disconnect(): Promise<void> {
         this.status = BalanceStatus.Online

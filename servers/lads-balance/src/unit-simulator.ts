@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { getNumericValue, setNumericValue } from '@utils'
-import { BalanceFunctionalUnitSet } from './interfaces';
+import { BalanceFunctionalUnitSet, BalanceTareOptionals } from './interfaces';
 import { BalanceDeviceImpl } from './device';
 import { BalanceUnitImpl } from './unit';
 import { AccessLevelFlag, DataType, UAVariable } from 'node-opcua';
@@ -37,7 +37,7 @@ export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
     private filteredRawWeight = 0
 
     constructor(parent: BalanceDeviceImpl, functionalUnitSet: BalanceFunctionalUnitSet) {
-        super(parent, {name: "My Simulated Balance", protocol: BalanceProtocols.Simulator, serialPort: "", })
+        super(parent, {name: "My Simulated Balance", protocol: BalanceProtocols.Simulator, serialPort: "" }, BalanceTareOptionals)
 
         // create balance
         this.balance = new SimulatedBalance(this.getRawWeight.bind(this))
@@ -47,7 +47,7 @@ export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
         const namespace = functionalUnit.namespace
         const simulator = namespace.addObject({
             componentOf: functionalUnit,
-            browseName: "Simulator"
+            browseName: "Simulator",
         })
         this.simSampleWeight = namespace.addVariable({
             componentOf: simulator,
@@ -88,6 +88,11 @@ export class SimulatedBalanceUnitImpl extends BalanceUnitImpl {
         
         // finalize iitialization
         this.postInitialize()
+    }
+
+    async postInitialize() {
+        await super.postInitialize()
+        await this.balance.connect()
     }
 
     getRawWeight(): number { return this.filteredRawWeight }

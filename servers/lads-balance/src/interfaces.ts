@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // interfaces
 //---------------------------------------------------------------
 
-import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSFunctionalUnitStateMachine, LADSComplianceDocument, LADSComplianceDocumentSet } from "@interfaces"
-import { DataType, UABaseDataVariable, UAMethod, UAObject } from "node-opcua"
+import { LADSAnalogScalarSensorFunction, LADSFunctionalUnit, LADSDevice, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction, LADSFunctionalUnitStateMachine, LADSComplianceDocumentSet } from "@interfaces"
+import { UAMethod, UAObject } from "node-opcua"
 
 export const BalanceTareOptionals = ["FunctionSet.CurrentWeight.FunctionSet", "FunctionalUnitState.SetPresetTare", "FunctionalUnitState.ClearTare"]
 //---------------------------------------------------------------
