@@ -12,7 +12,7 @@
 //---------------------------------------------------------------
 // interfaces
 
-import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, OPCUAServer, s, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
+import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, ISessionContext, OPCUAServer, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSDevice, LADSFunctionalState, LADSFunctionalUnit } from "@interfaces"
 import { join } from "path"
 import { defaultLocation, DIObjectIds, getChildObjects, getStringValue, initComponent, LADSComponentOptions, promoteToFiniteStateMachine } from "@utils"
@@ -140,6 +140,7 @@ class FreezerUnitImpl {
     functionalUnit: FreezerFunctionalUnit
     temperatureSensor: LADSAnalogScalarSensorFunction
     temperatureController: LADSAnalogControlFunction
+    temperatureControllerStateMachine: UAStateMachineEx
     door: LADSCoverFunction
     doorStateMachine: UAStateMachineEx
     functionalUnitStateMachine: UAStateMachineEx
@@ -155,6 +156,8 @@ class FreezerUnitImpl {
         // temperature sensor and controller
         this.temperatureSensor = functionSet.temperatureSensor
         this.temperatureController = functionSet.temperatureController
+        this.temperatureControllerStateMachine = promoteToFiniteStateMachine(this.temperatureController.controlFunctionState)
+        this.temperatureControllerStateMachine.setState(LADSFunctionalState.Running)
 
         // door state machine and methods
         this.door = functionSet.door
@@ -170,12 +173,12 @@ class FreezerUnitImpl {
         functionalUnit.addressSpace.installHistoricalDataNode(sensorValue)
     }
 
-    private async open(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async open(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         this.doorStateMachine.setState(LADSCoverState.Opened)
         return { statusCode: StatusCodes.Good }
     }
 
-    private async close(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async close(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         this.doorStateMachine.setState(LADSCoverState.Closed)
         return { statusCode: StatusCodes.Good }
     }

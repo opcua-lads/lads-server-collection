@@ -143,7 +143,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.documentSet = new ComplianceDocumentSetImpl(device, __dirname, documentsDir)
 
         // load nodes
-        this.documentSet.load()
+        // this.documentSet.load()
 
         // create some nodes
         const calibrationCertificateAppliesTo: ComplianceDocumentNodeReferences = [
@@ -156,7 +156,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             { node: functionalUnit, reference: ComplianceDocumentReferences.HasCalibrationReport },
             { node: this.currentWeight, reference: ComplianceDocumentReferences.HasCalibrationReport },
         ]
-        if (false) {
+        if (true) {
             // add example docments from resoucres
             const dir = join(__dirname, "resources")
             // const dir  = "resources"
@@ -613,9 +613,9 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     private async start(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         // search key-value pairs for sampleId
         const inputArgument = inputArguments[0].value
-        const keyValuePairs = (inputArgument === null) ? [] : (inputArgument as Variant[]).map(item => { return (<any>item) as DTKeyValuePair })
-        const sampleKeyValuePair = keyValuePairs.find(keyValuePair => (keyValuePair.key.name.toLowerCase().includes("sampleid")))
-        const sampleId: string = sampleKeyValuePair ? String(sampleKeyValuePair.value.value) : "Unknown"
+        const properties = (inputArgument === null) ? [] : (inputArgument as Variant[]).map(item => { return (<any>item) as LADSProperty })
+        const sampleProperty = properties.find(property => (property.key.toLowerCase().includes("sampleid")))
+        const sampleId: string = sampleProperty ? String(sampleProperty.value) : "Unknown"
         const sampleInfo: LADSSampleInfo = { containerId: "", sampleId: sampleId, position: "", customData: "" }
         return await this.startMethod(context, ProgramTemplateIds.RegisterWeight, undefined, [sampleInfo])
     }
