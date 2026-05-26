@@ -451,8 +451,9 @@ async function exportXML(dictionaryEntries: DictionaryEntry[], filePath: string)
   console.log(`XML exported to: ${filePath}`);
 }
 
-async function main(fileName = 'AFO_Dictionary-2025_03.csv') {
-  const basePath = path.resolve(__dirname, '../../../..')
+async function main(fileName = 'AFO_Dictionary-2026_03.csv') {
+  // const basePath = path.resolve(__dirname, '../../../..')
+  const basePath = process.cwd()
   const csvPath = path.resolve(basePath, 'lib/afo/tools/data', fileName)
   const dictionaryEntries = await importCSV(csvPath)
   await exportDictionaryEntryIds(dictionaryEntries, path.resolve(basePath, 'lib/afo/src/', 'lads-afo-ids.ts'), path.parse(fileName).name)

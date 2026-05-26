@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-04-30T15:09:21.260Z" xmlns="http://opcfoundation.org/UA/2011/03/UANodeset.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd">
+<UANodeSet LastModified="2026-05-26T09:52:04.582Z" xmlns="http://opcfoundation.org/UA/2011/03/UANodeset.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd">
   <NamespaceUris>
     <Uri>http://aixengineers.de/UA/Dictionary/AFO</Uri>
   </NamespaceUris>
   <Models>
-    <Model ModelUri="http://aixengineers.de/UA/Dictionary/AFO" PublicationDate="2025-04-30T00:00:00Z" Version="1.0.0">
+    <Model ModelUri="http://aixengineers.de/UA/Dictionary/AFO" PublicationDate="2026-05-26T00:00:00Z" Version="1.0.0">
       <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2022-06-28T00:00:00Z" Version="1.05.02"/>
     </Model>
   </Models>
@@ -38,7 +38,7 @@
       <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
     </References>
     <Value>
-      <uax:DateTime>2025-04-30T00:00:00Z</uax:DateTime>
+      <uax:DateTime>2026-05-26T00:00:00Z</uax:DateTime>
     </Value>
   </UAVariable>
   <UAVariable DataType="String" NodeId="ns=1;i=1003" BrowseName="NamespaceUri" ParentNodeId="ns=1;i=1000">
@@ -1071,6 +1071,22 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003210" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003210" BrowseName="1:AFR_0003210" ParentNodeId="ns=1;i=1100">
+    <DisplayName>absorbance area scan</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003210</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003208" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003208" BrowseName="1:AFR_0003208" ParentNodeId="ns=1;i=1100">
+    <DisplayName>absorbance area scan data cube</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003208</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFP_0003847" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003847" BrowseName="1:AFP_0003847" ParentNodeId="ns=1;i=1100">
     <DisplayName>absorbance process profile</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003847</Description>
@@ -1234,6 +1250,30 @@
   <UAObject SymbolicName="AFR_0000941" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0000941" BrowseName="1:AFR_0000941" ParentNodeId="ns=1;i=1100">
     <DisplayName>action specification</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0000941</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003239" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003239" BrowseName="1:AFR_0003239" ParentNodeId="ns=1;i=1100">
+    <DisplayName>action specification aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003239</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003240" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003240" BrowseName="1:AFR_0003240" ParentNodeId="ns=1;i=1100">
+    <DisplayName>action specification document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003240</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003238" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003238" BrowseName="1:AFR_0003238" ParentNodeId="ns=1;i=1100">
+    <DisplayName>action specification identifier</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003238</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -1527,6 +1567,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003233" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003233" BrowseName="1:AFR_0003233" ParentNodeId="ns=1;i=1100">
+    <DisplayName>algorithm name</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003233</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="PATO_0001421" NodeId="ns=1;s=http://purl.obolibrary.org/obo/PATO_0001421" BrowseName="1:PATO_0001421" ParentNodeId="ns=1;i=1100">
     <DisplayName>alive</DisplayName>
     <Description>http://purl.obolibrary.org/obo/PATO_0001421</Description>
@@ -1671,6 +1719,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003295" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003295" BrowseName="1:AFR_0003295" ParentNodeId="ns=1;i=1100">
+    <DisplayName>analysis code</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003295</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0002367" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002367" BrowseName="1:AFR_0002367" ParentNodeId="ns=1;i=1100">
     <DisplayName>analysis material role type</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002367</Description>
@@ -1698,6 +1754,14 @@
   <UAObject SymbolicName="AFR_0003054" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003054" BrowseName="1:AFR_0003054" ParentNodeId="ns=1;i=1100">
     <DisplayName>analysis sequence document</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0003054</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003241" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003241" BrowseName="1:AFR_0003241" ParentNodeId="ns=1;i=1100">
+    <DisplayName>analysis type</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003241</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -1802,6 +1866,14 @@
   <UAObject SymbolicName="AFR_0000895" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0000895" BrowseName="1:AFR_0000895" ParentNodeId="ns=1;i=1100">
     <DisplayName>analytical method</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0000895</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003242" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003242" BrowseName="1:AFR_0003242" ParentNodeId="ns=1;i=1100">
+    <DisplayName>analytical method document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003242</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -1986,6 +2058,14 @@
   <UAObject SymbolicName="AFP_0003757" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003757" BrowseName="1:AFP_0003757" ParentNodeId="ns=1;i=1100">
     <DisplayName>approval state</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003757</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFP_0003858" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003858" BrowseName="1:AFP_0003858" ParentNodeId="ns=1;i=1100">
+    <DisplayName>approved life cycle state</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003858</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -3143,9 +3223,25 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFQ_0000372" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/quality#AFQ_0000372" BrowseName="1:AFQ_0000372" ParentNodeId="ns=1;i=1100">
+    <DisplayName>biological activity (quality)</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/quality#AFQ_0000372</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFP_0001116" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0001116" BrowseName="1:AFP_0001116" ParentNodeId="ns=1;i=1100">
     <DisplayName>biological measurement method</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0001116</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003307" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003307" BrowseName="1:AFR_0003307" ParentNodeId="ns=1;i=1100">
+    <DisplayName>biological potency</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003307</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -3375,6 +3471,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFRL_0000587" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000587" BrowseName="1:AFRL_0000587" ParentNodeId="ns=1;i=1100">
+    <DisplayName>buffer solution role</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000587</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFSP_0000003" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/spatial#AFSP_0000003" BrowseName="1:AFSP_0000003" ParentNodeId="ns=1;i=1100">
     <DisplayName>building (site)</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/spatial#AFSP_0000003</Description>
@@ -3386,6 +3490,14 @@
   <UAObject SymbolicName="AFP_0003781" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003781" BrowseName="1:AFP_0003781" ParentNodeId="ns=1;i=1100">
     <DisplayName>bulk density</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003781</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003243" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003243" BrowseName="1:AFR_0003243" ParentNodeId="ns=1;i=1100">
+    <DisplayName>business purpose</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003243</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -3471,9 +3583,57 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003244" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003244" BrowseName="1:AFR_0003244" ParentNodeId="ns=1;i=1100">
+    <DisplayName>calculation aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003244</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0002141" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002141" BrowseName="1:AFR_0002141" ParentNodeId="ns=1;i=1100">
     <DisplayName>calculation description</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002141</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003245" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003245" BrowseName="1:AFR_0003245" ParentNodeId="ns=1;i=1100">
+    <DisplayName>calculation document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003245</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003246" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003246" BrowseName="1:AFR_0003246" ParentNodeId="ns=1;i=1100">
+    <DisplayName>calculation equation</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003246</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003247" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003247" BrowseName="1:AFR_0003247" ParentNodeId="ns=1;i=1100">
+    <DisplayName>calculation identifier</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003247</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003248" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003248" BrowseName="1:AFR_0003248" ParentNodeId="ns=1;i=1100">
+    <DisplayName>calculation name</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003248</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003249" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003249" BrowseName="1:AFR_0003249" ParentNodeId="ns=1;i=1100">
+    <DisplayName>calculation reference</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003249</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -3895,6 +4055,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003250" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003250" BrowseName="1:AFR_0003250" ParentNodeId="ns=1;i=1100">
+    <DisplayName>catalog number</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003250</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFP_0000747" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0000747" BrowseName="1:AFP_0000747" ParentNodeId="ns=1;i=1100">
     <DisplayName>catalymetric titration</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0000747</Description>
@@ -4167,6 +4335,38 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003312" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003312" BrowseName="1:AFR_0003312" ParentNodeId="ns=1;i=1100">
+    <DisplayName>certification</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003312</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003309" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003309" BrowseName="1:AFR_0003309" ParentNodeId="ns=1;i=1100">
+    <DisplayName>certification aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003309</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003310" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003310" BrowseName="1:AFR_0003310" ParentNodeId="ns=1;i=1100">
+    <DisplayName>certification document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003310</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003311" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003311" BrowseName="1:AFR_0003311" ParentNodeId="ns=1;i=1100">
+    <DisplayName>certifier</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003311</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0002992" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002992" BrowseName="1:AFR_0002992" ParentNodeId="ns=1;i=1100">
     <DisplayName>change II sign enabled setting</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002992</Description>
@@ -4175,9 +4375,33 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003251" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003251" BrowseName="1:AFR_0003251" ParentNodeId="ns=1;i=1100">
+    <DisplayName>change description</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003251</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0002399" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002399" BrowseName="1:AFR_0002399" ParentNodeId="ns=1;i=1100">
     <DisplayName>change rate end point setting</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002399</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003252" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003252" BrowseName="1:AFR_0003252" ParentNodeId="ns=1;i=1100">
+    <DisplayName>change reason</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003252</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003253" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003253" BrowseName="1:AFR_0003253" ParentNodeId="ns=1;i=1100">
+    <DisplayName>change type</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003253</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -5479,6 +5703,30 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003254" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003254" BrowseName="1:AFR_0003254" ParentNodeId="ns=1;i=1100">
+    <DisplayName>condition aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003254</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003255" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003255" BrowseName="1:AFR_0003255" ParentNodeId="ns=1;i=1100">
+    <DisplayName>condition document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003255</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003256" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003256" BrowseName="1:AFR_0003256" ParentNodeId="ns=1;i=1100">
+    <DisplayName>condition feature</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003256</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFRL_0000004" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000004" BrowseName="1:AFRL_0000004" ParentNodeId="ns=1;i=1100">
     <DisplayName>condition role</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000004</Description>
@@ -6722,6 +6970,14 @@
   <UAObject SymbolicName="AFR_0002040" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002040" BrowseName="1:AFR_0002040" ParentNodeId="ns=1;i=1100">
     <DisplayName>database</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002040</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003234" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003234" BrowseName="1:AFR_0003234" ParentNodeId="ns=1;i=1100">
+    <DisplayName>database identifier</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003234</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -8463,6 +8719,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFP_0003857" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003857" BrowseName="1:AFP_0003857" ParentNodeId="ns=1;i=1100">
+    <DisplayName>draft life cycle state</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003857</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFP_0003284" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003284" BrowseName="1:AFP_0003284" ParentNodeId="ns=1;i=1100">
     <DisplayName>drawing</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003284</Description>
@@ -8658,6 +8922,22 @@
   <UAObject SymbolicName="AFR_0003097" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003097" BrowseName="1:AFR_0003097" ParentNodeId="ns=1;i=1100">
     <DisplayName>editor</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0003097</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003257" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003257" BrowseName="1:AFR_0003257" ParentNodeId="ns=1;i=1100">
+    <DisplayName>effective date</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003257</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFP_0003860" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003860" BrowseName="1:AFP_0003860" ParentNodeId="ns=1;i=1100">
+    <DisplayName>effective life cycle state</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003860</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -9631,6 +9911,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003258" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003258" BrowseName="1:AFR_0003258" ParentNodeId="ns=1;i=1100">
+    <DisplayName>equivalence permitted</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003258</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0002046" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002046" BrowseName="1:AFR_0002046" ParentNodeId="ns=1;i=1100">
     <DisplayName>equivalence point volume</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002046</Description>
@@ -10359,6 +10647,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003235" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003235" BrowseName="1:AFR_0003235" ParentNodeId="ns=1;i=1100">
+    <DisplayName>fingerprint identifier</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003235</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFP_0002691" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0002691" BrowseName="1:AFP_0002691" ParentNodeId="ns=1;i=1100">
     <DisplayName>fingerprinting</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0002691</Description>
@@ -10642,6 +10938,22 @@
   <UAObject SymbolicName="PATO_0000018" NodeId="ns=1;s=http://purl.obolibrary.org/obo/PATO_0000018" BrowseName="1:PATO_0000018" ParentNodeId="ns=1;i=1100">
     <DisplayName>fluorescence (quality)</DisplayName>
     <Description>http://purl.obolibrary.org/obo/PATO_0000018</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003211" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003211" BrowseName="1:AFR_0003211" ParentNodeId="ns=1;i=1100">
+    <DisplayName>fluorescence area scan</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003211</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003209" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003209" BrowseName="1:AFR_0003209" ParentNodeId="ns=1;i=1100">
+    <DisplayName>fluorescence area scan data cube</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003209</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -11074,6 +11386,30 @@
   <UAObject SymbolicName="AFRL_0000518" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000518" BrowseName="1:AFRL_0000518" ParentNodeId="ns=1;i=1100">
     <DisplayName>fragment ion role</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000518</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFP_0003854" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003854" BrowseName="1:AFP_0003854" ParentNodeId="ns=1;i=1100">
+    <DisplayName>fragmentation</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003854</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003201" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003201" BrowseName="1:AFR_0003201" ParentNodeId="ns=1;i=1100">
+    <DisplayName>fragmentation aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003201</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003202" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003202" BrowseName="1:AFR_0003202" ParentNodeId="ns=1;i=1100">
+    <DisplayName>fragmentation document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003202</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -13615,6 +13951,30 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003207" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003207" BrowseName="1:AFR_0003207" ParentNodeId="ns=1;i=1100">
+    <DisplayName>isolation window</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003207</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003203" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003203" BrowseName="1:AFR_0003203" ParentNodeId="ns=1;i=1100">
+    <DisplayName>isolation window lower limit</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003203</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003204" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003204" BrowseName="1:AFR_0003204" ParentNodeId="ns=1;i=1100">
+    <DisplayName>isolation window upper limit</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003204</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0000091" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0000091" BrowseName="1:AFR_0000091" ParentNodeId="ns=1;i=1100">
     <DisplayName>isothermal titration calorimetry curve</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0000091</Description>
@@ -13898,6 +14258,30 @@
   <UAObject SymbolicName="AFR_0001615" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0001615" BrowseName="1:AFR_0001615" ParentNodeId="ns=1;i=1100">
     <DisplayName>library search upper limit</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0001615</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003289" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003289" BrowseName="1:AFR_0003289" ParentNodeId="ns=1;i=1100">
+    <DisplayName>life cycle code</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003289</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFP_0003856" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003856" BrowseName="1:AFP_0003856" ParentNodeId="ns=1;i=1100">
+    <DisplayName>life cycle state</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003856</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003259" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003259" BrowseName="1:AFR_0003259" ParentNodeId="ns=1;i=1100">
+    <DisplayName>life cycle status</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003259</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -14346,6 +14730,14 @@
   <UAObject SymbolicName="AFRL_0000041" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000041" BrowseName="1:AFRL_0000041" ParentNodeId="ns=1;i=1100">
     <DisplayName>lower bound</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000041</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003260" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003260" BrowseName="1:AFR_0003260" ParentNodeId="ns=1;i=1100">
+    <DisplayName>lower limit</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003260</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -14887,6 +15279,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003212" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003212" BrowseName="1:AFR_0003212" ParentNodeId="ns=1;i=1100">
+    <DisplayName>mass spectrum level</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003212</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFE_0000038" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/equipment#AFE_0000038" BrowseName="1:AFE_0000038" ParentNodeId="ns=1;i=1100">
     <DisplayName>mass-to-charge analyzer</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/equipment#AFE_0000038</Description>
@@ -14903,9 +15303,57 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003237" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003237" BrowseName="1:AFR_0003237" ParentNodeId="ns=1;i=1100">
+    <DisplayName>match quality index</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003237</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003231" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003231" BrowseName="1:AFR_0003231" ParentNodeId="ns=1;i=1100">
+    <DisplayName>match quality index aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003231</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003232" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003232" BrowseName="1:AFR_0003232" ParentNodeId="ns=1;i=1100">
+    <DisplayName>match quality index document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003232</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003227" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003227" BrowseName="1:AFR_0003227" ParentNodeId="ns=1;i=1100">
+    <DisplayName>match result aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003227</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003228" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003228" BrowseName="1:AFR_0003228" ParentNodeId="ns=1;i=1100">
+    <DisplayName>match result document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003228</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFM_0000275" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/material#AFM_0000275" BrowseName="1:AFM_0000275" ParentNodeId="ns=1;i=1100">
     <DisplayName>material</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/material#AFM_0000275</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003261" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003261" BrowseName="1:AFR_0003261" ParentNodeId="ns=1;i=1100">
+    <DisplayName>material aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003261</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -14930,6 +15378,14 @@
   <UAObject SymbolicName="AFR_0001565" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0001565" BrowseName="1:AFR_0001565" ParentNodeId="ns=1;i=1100">
     <DisplayName>material coordination</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0001565</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003262" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003262" BrowseName="1:AFR_0003262" ParentNodeId="ns=1;i=1100">
+    <DisplayName>material document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003262</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -14983,6 +15439,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003263" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003263" BrowseName="1:AFR_0003263" ParentNodeId="ns=1;i=1100">
+    <DisplayName>material grade</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003263</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0001745" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0001745" BrowseName="1:AFR_0001745" ParentNodeId="ns=1;i=1100">
     <DisplayName>material identifier</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0001745</Description>
@@ -15031,6 +15495,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003264" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003264" BrowseName="1:AFR_0003264" ParentNodeId="ns=1;i=1100">
+    <DisplayName>material role type</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003264</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0002508" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002508" BrowseName="1:AFR_0002508" ParentNodeId="ns=1;i=1100">
     <DisplayName>material specification</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002508</Description>
@@ -15042,6 +15514,14 @@
   <UAObject SymbolicName="AFR_0002438" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002438" BrowseName="1:AFR_0002438" ParentNodeId="ns=1;i=1100">
     <DisplayName>material suitability specification</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002438</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="OBI_0000018" NodeId="ns=1;s=http://purl.obolibrary.org/obo/OBI_0000018" BrowseName="1:OBI_0000018" ParentNodeId="ns=1;i=1100">
+    <DisplayName>material supplier role</DisplayName>
+    <Description>http://purl.obolibrary.org/obo/OBI_0000018</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -16975,6 +17455,22 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003265" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003265" BrowseName="1:AFR_0003265" ParentNodeId="ns=1;i=1100">
+    <DisplayName>objective specification aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003265</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003266" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003266" BrowseName="1:AFR_0003266" ParentNodeId="ns=1;i=1100">
+    <DisplayName>objective specification document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003266</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0000955" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0000955" BrowseName="1:AFR_0000955" ParentNodeId="ns=1;i=1100">
     <DisplayName>observation</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0000955</Description>
@@ -16994,6 +17490,14 @@
   <UAObject SymbolicName="AFP_0003305" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003305" BrowseName="1:AFP_0003305" ParentNodeId="ns=1;i=1100">
     <DisplayName>observing</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003305</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFP_0003861" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003861" BrowseName="1:AFP_0003861" ParentNodeId="ns=1;i=1100">
+    <DisplayName>obsolete life cycle state</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003861</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -18447,6 +18951,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003267" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003267" BrowseName="1:AFR_0003267" ParentNodeId="ns=1;i=1100">
+    <DisplayName>permitted phase description</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003267</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFM_0001083" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/material#AFM_0001083" BrowseName="1:AFM_0001083" ParentNodeId="ns=1;i=1100">
     <DisplayName>person</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/material#AFM_0001083</Description>
@@ -18474,6 +18986,22 @@
   <UAObject SymbolicName="NCIT_C42636" NodeId="ns=1;s=http://purl.obolibrary.org/obo/NCIT_C42636" BrowseName="1:NCIT_C42636" ParentNodeId="ns=1;i=1100">
     <DisplayName>pharmaceutical dosage form</DisplayName>
     <Description>http://purl.obolibrary.org/obo/NCIT_C42636</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003308" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003308" BrowseName="1:AFR_0003308" ParentNodeId="ns=1;i=1100">
+    <DisplayName>pharmaceutical strength</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003308</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFQ_0000373" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/quality#AFQ_0000373" BrowseName="1:AFQ_0000373" ParentNodeId="ns=1;i=1100">
+    <DisplayName>pharmaceutical strength (quality)</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/quality#AFQ_0000373</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -18658,6 +19186,22 @@
   <UAObject SymbolicName="AFR_0001501" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0001501" BrowseName="1:AFR_0001501" ParentNodeId="ns=1;i=1100">
     <DisplayName>plan specification</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0001501</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003268" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003268" BrowseName="1:AFR_0003268" ParentNodeId="ns=1;i=1100">
+    <DisplayName>plan specification aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003268</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003269" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003269" BrowseName="1:AFR_0003269" ParentNodeId="ns=1;i=1100">
+    <DisplayName>plan specification document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003269</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -18951,6 +19495,30 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFQ_0000371" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/quality#AFQ_0000371" BrowseName="1:AFQ_0000371" ParentNodeId="ns=1;i=1100">
+    <DisplayName>polarization orientation</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/quality#AFQ_0000371</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003198" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003198" BrowseName="1:AFR_0003198" ParentNodeId="ns=1;i=1100">
+    <DisplayName>polarization orientation code</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003198</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003197" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003197" BrowseName="1:AFR_0003197" ParentNodeId="ns=1;i=1100">
+    <DisplayName>polarization orientation setting</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003197</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0002227" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002227" BrowseName="1:AFR_0002227" ParentNodeId="ns=1;i=1100">
     <DisplayName>polarized light enabled setting</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002227</Description>
@@ -19074,6 +19642,14 @@
   <UAObject SymbolicName="AFRL_0000370" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000370" BrowseName="1:AFRL_0000370" ParentNodeId="ns=1;i=1100">
     <DisplayName>population role</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000370</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003270" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003270" BrowseName="1:AFR_0003270" ParentNodeId="ns=1;i=1100">
+    <DisplayName>pore diameter</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003270</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -19391,6 +19967,22 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003205" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003205" BrowseName="1:AFR_0003205" ParentNodeId="ns=1;i=1100">
+    <DisplayName>precursor ion aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003205</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003206" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003206" BrowseName="1:AFR_0003206" ParentNodeId="ns=1;i=1100">
+    <DisplayName>precursor ion document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003206</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFRL_0000497" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000497" BrowseName="1:AFRL_0000497" ParentNodeId="ns=1;i=1100">
     <DisplayName>precursor ion role</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000497</Description>
@@ -19418,6 +20010,14 @@
   <UAObject SymbolicName="AFR_0000694" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0000694" BrowseName="1:AFR_0000694" ParentNodeId="ns=1;i=1100">
     <DisplayName>prediction</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0000694</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003271" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003271" BrowseName="1:AFR_0003271" ParentNodeId="ns=1;i=1100">
+    <DisplayName>prerequisite identifier</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003271</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -19559,6 +20159,22 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003272" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003272" BrowseName="1:AFR_0003272" ParentNodeId="ns=1;i=1100">
+    <DisplayName>primary analyte</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003272</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003273" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003273" BrowseName="1:AFR_0003273" ParentNodeId="ns=1;i=1100">
+    <DisplayName>primary device material type</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003273</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFRL_0000276" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000276" BrowseName="1:AFRL_0000276" ParentNodeId="ns=1;i=1100">
     <DisplayName>primary response</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000276</Description>
@@ -19650,6 +20266,22 @@
   <UAObject SymbolicName="AFR_0000938" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0000938" BrowseName="1:AFR_0000938" ParentNodeId="ns=1;i=1100">
     <DisplayName>procedure specification</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0000938</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003274" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003274" BrowseName="1:AFR_0003274" ParentNodeId="ns=1;i=1100">
+    <DisplayName>procedure specification aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003274</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003275" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003275" BrowseName="1:AFR_0003275" ParentNodeId="ns=1;i=1100">
+    <DisplayName>procedure specification document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003275</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -20191,6 +20823,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003276" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003276" BrowseName="1:AFR_0003276" ParentNodeId="ns=1;i=1100">
+    <DisplayName>qualified location description</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003276</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFRL_0000502" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000502" BrowseName="1:AFRL_0000502" ParentNodeId="ns=1;i=1100">
     <DisplayName>qualified transition role</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000502</Description>
@@ -20410,6 +21050,22 @@
   <UAObject SymbolicName="AFQ_0000059" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/quality#AFQ_0000059" BrowseName="1:AFQ_0000059" ParentNodeId="ns=1;i=1100">
     <DisplayName>radiative emissivity</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/quality#AFQ_0000059</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="CHEBI_26519" NodeId="ns=1;s=http://purl.obolibrary.org/obo/CHEBI_26519" BrowseName="1:CHEBI_26519" ParentNodeId="ns=1;i=1100">
+    <DisplayName>radical</DisplayName>
+    <Description>http://purl.obolibrary.org/obo/CHEBI_26519</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFM_0001136" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/material#AFM_0001136" BrowseName="1:AFM_0001136" ParentNodeId="ns=1;i=1100">
+    <DisplayName>radical ion</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/material#AFM_0001136</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -20807,9 +21463,25 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003277" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003277" BrowseName="1:AFR_0003277" ParentNodeId="ns=1;i=1100">
+    <DisplayName>reference aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003277</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFRL_0000285" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000285" BrowseName="1:AFRL_0000285" ParentNodeId="ns=1;i=1100">
     <DisplayName>reference datum</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000285</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003278" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003278" BrowseName="1:AFR_0003278" ParentNodeId="ns=1;i=1100">
+    <DisplayName>reference document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003278</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -21106,6 +21778,14 @@
   <UAObject SymbolicName="AFP_0003361" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003361" BrowseName="1:AFP_0003361" ParentNodeId="ns=1;i=1100">
     <DisplayName>regulating material</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003361</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFP_0003859" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003859" BrowseName="1:AFP_0003859" ParentNodeId="ns=1;i=1100">
+    <DisplayName>rejected life cycle state</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003859</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -21599,6 +22279,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003236" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003236" BrowseName="1:AFR_0003236" ParentNodeId="ns=1;i=1100">
+    <DisplayName>retention index</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003236</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFR_0001089" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0001089" BrowseName="1:AFR_0001089" ParentNodeId="ns=1;i=1100">
     <DisplayName>retention time</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0001089</Description>
@@ -21842,6 +22530,14 @@
   <UAObject SymbolicName="AFP_0003665" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003665" BrowseName="1:AFP_0003665" ParentNodeId="ns=1;i=1100">
     <DisplayName>running state</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003665</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003279" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003279" BrowseName="1:AFR_0003279" ParentNodeId="ns=1;i=1100">
+    <DisplayName>safety information</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003279</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -25023,6 +25719,22 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003280" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003280" BrowseName="1:AFR_0003280" ParentNodeId="ns=1;i=1100">
+    <DisplayName>supplier</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003280</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003281" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003281" BrowseName="1:AFR_0003281" ParentNodeId="ns=1;i=1100">
+    <DisplayName>supplier lot number</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003281</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFP_0003553" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003553" BrowseName="1:AFP_0003553" ParentNodeId="ns=1;i=1100">
     <DisplayName>supplying state</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/process#AFP_0003553</Description>
@@ -25090,6 +25802,22 @@
   <UAObject SymbolicName="IAO_0000028" NodeId="ns=1;s=http://purl.obolibrary.org/obo/IAO_0000028" BrowseName="1:IAO_0000028" ParentNodeId="ns=1;i=1100">
     <DisplayName>symbol</DisplayName>
     <Description>http://purl.obolibrary.org/obo/IAO_0000028</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003229" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003229" BrowseName="1:AFR_0003229" ParentNodeId="ns=1;i=1100">
+    <DisplayName>synonym aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003229</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003230" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003230" BrowseName="1:AFR_0003230" ParentNodeId="ns=1;i=1100">
+    <DisplayName>synonym document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003230</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -25178,6 +25906,30 @@
   <UAObject SymbolicName="AFR_0002744" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002744" BrowseName="1:AFR_0002744" ParentNodeId="ns=1;i=1100">
     <DisplayName>system setting</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002744</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFP_0003855" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/process#AFP_0003855" BrowseName="1:AFP_0003855" ParentNodeId="ns=1;i=1100">
+    <DisplayName>system suitability</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/process#AFP_0003855</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003282" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003282" BrowseName="1:AFR_0003282" ParentNodeId="ns=1;i=1100">
+    <DisplayName>system suitability aggregate document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003282</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003283" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003283" BrowseName="1:AFR_0003283" ParentNodeId="ns=1;i=1100">
+    <DisplayName>system suitability document</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003283</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -26895,6 +27647,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003284" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003284" BrowseName="1:AFR_0003284" ParentNodeId="ns=1;i=1100">
+    <DisplayName>training requirements</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003284</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFRL_0000090" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000090" BrowseName="1:AFRL_0000090" ParentNodeId="ns=1;i=1100">
     <DisplayName>transfer medium role</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000090</Description>
@@ -27447,6 +28207,14 @@
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
     </References>
   </UAObject>
+  <UAObject SymbolicName="AFR_0003285" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003285" BrowseName="1:AFR_0003285" ParentNodeId="ns=1;i=1100">
+    <DisplayName>upper limit</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003285</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
   <UAObject SymbolicName="AFRL_0000252" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/role#AFRL_0000252" BrowseName="1:AFRL_0000252" ParentNodeId="ns=1;i=1100">
     <DisplayName>validation sample role</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/role#AFRL_0000252</Description>
@@ -27666,6 +28434,22 @@
   <UAObject SymbolicName="AFR_0002745" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0002745" BrowseName="1:AFR_0002745" ParentNodeId="ns=1;i=1100">
     <DisplayName>velocity setting</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0002745</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003286" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003286" BrowseName="1:AFR_0003286" ParentNodeId="ns=1;i=1100">
+    <DisplayName>version log</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003286</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003287" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003287" BrowseName="1:AFR_0003287" ParentNodeId="ns=1;i=1100">
+    <DisplayName>version log entry</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003287</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
@@ -28210,6 +28994,14 @@
   <UAObject SymbolicName="AFR_0003029" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003029" BrowseName="1:AFR_0003029" ParentNodeId="ns=1;i=1100">
     <DisplayName>weighing aggregate document</DisplayName>
     <Description>http://purl.allotrope.org/ontologies/result#AFR_0003029</Description>
+    <References>
+      <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
+      <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
+    </References>
+  </UAObject>
+  <UAObject SymbolicName="AFR_0003288" NodeId="ns=1;s=http://purl.allotrope.org/ontologies/result#AFR_0003288" BrowseName="1:AFR_0003288" ParentNodeId="ns=1;i=1100">
+    <DisplayName>weighing capability</DisplayName>
+    <Description>http://purl.allotrope.org/ontologies/result#AFR_0003288</Description>
     <References>
       <Reference ReferenceType="HasComponent" IsForward="false">ns=1;i=1100</Reference>
       <Reference ReferenceType="HasTypeDefinition">i=17600</Reference>
