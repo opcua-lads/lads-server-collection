@@ -25,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponent } from "@interfaces"
-import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper } from "@utils"
+import { LADSComponentOptions, getStringValue, defaultLocation, initComponent, LADSDeviceHelper, DeviceTypeImage } from "@utils"
 import { pHMeterDevice, pHMeterFunctionalUnit, pHMeterFunctionalUnitSet } from "./interfaces"
 import { pHMeterSevenEasyUnitImpl } from "./unit-seven-easy"
 import { pHMeterSimulatorUnitImpl } from "./unit-simulator"
+import { join } from "path"
 
 //---------------------------------------------------------------
 export class pHMeterDeviceImpl {
@@ -52,6 +53,10 @@ export class pHMeterDeviceImpl {
         const runAsSimulation = !pHMeterDeviceImpl.isSerialPortAvailable(serialPort)
         console.log(`Running ${runAsSimulation ? "as simulator" : "device at port " + serialPort}..`)
         const functionalUnitImpl = runAsSimulation ? new pHMeterSimulatorUnitImpl(this, functionalUnit) : new pHMeterSevenEasyUnitImpl(this, functionalUnit, serialPort)
+
+        // initialize device images
+        const imagesDir = join(__dirname, "resources", "images")
+        DeviceTypeImage.create({parent: this.device, imagesDir })
 
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {

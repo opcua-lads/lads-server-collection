@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2025-04-24T08:19:19.653Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-06-24T10:33:26.284Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/Machinery/</Uri>
@@ -8,7 +8,7 @@
     </NamespaceUris>
     <Models>
         <Model ModelUri="http://spectaris.de/pHMeter/" PublicationDate="2024-05-16T00:00:00Z" Version="1.00">
-            <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2022-11-01T00:00:00Z" Version="1.05.02"/>
+            <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2023-12-15T00:00:00Z" Version="1.05.03"/>
             <RequiredModel ModelUri="http://opcfoundation.org/UA/DI/" PublicationDate="2022-11-03T00:00:00Z" Version="1.04.0"/>
             <RequiredModel ModelUri="http://opcfoundation.org/UA/Machinery/" PublicationDate="2023-08-01T00:00:00Z" Version="1.03.0"/>
             <RequiredModel ModelUri="http://opcfoundation.org/UA/LADS/" PublicationDate="2023-11-30T00:00:00Z" Version="1.0.0"/>
@@ -38,10 +38,10 @@
     </Aliases>
     <Extensions>
         <Extension>
-            <si:Generator Product="SiOME" Edition="Standard" Version="2.8.5"/>
+            <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="e5bae5b55e664e5fd63b154ab0cc38ca"/>
+            <si:GeneratorExtension Hash="e68887b03a498fed6d358ea00cda8f06"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___spectaris_de_pHMeter_" NodeId="ns=4;i=5000" BrowseName="4:http://spectaris.de/pHMeter/" ParentNodeId="i=11715">
@@ -337,6 +337,7 @@
             <Reference ReferenceType="HasAddIn">ns=4;i=5031</Reference>
             <Reference ReferenceType="HasAddIn">ns=4;i=5032</Reference>
             <Reference ReferenceType="HasAddIn">ns=4;i=5035</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=5038</Reference>
         </References>
     </UAObjectType>
     <UAVariable DataType="LocalizedText" NodeId="ns=4;i=6017" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=1001">
@@ -2665,4 +2666,28 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
+    <UAVariable DataType="i=95" NodeId="ns=4;i=6087" BrowseName="DefaultAccessRestrictions" ParentNodeId="ns=4;i=5000">
+        <DisplayName>DefaultAccessRestrictions</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=5000</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=5038" BrowseName="1:DeviceTypeImage" ParentNodeId="ns=4;i=1001">
+        <DisplayName>DeviceTypeImage</DisplayName>
+        <Description>Organizes pictures of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=1;i=6210</Reference>
+        </References>
+    </UAObject>
+    <UAObject NodeId="ns=4;i=5040" BrowseName="1:DeviceTypeImage" ParentNodeId="ns=4;i=5006">
+        <DisplayName>DeviceTypeImage</DisplayName>
+        <Description>Organizes pictures of the device.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5006</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
+        </References>
+    </UAObject>
 </UANodeSet>
