@@ -1,4 +1,4 @@
-import { BaseNode, CallMethodResultOptions, ConditionInfoOptions, DataType, InstantiateAlarmConditionOptions, LocalizedText, makeNodeId, Namespace, NodeId, ReferenceTypeIds, SessionContext, StatusCodes, UADiscreteAlarmEx, UAFiniteStateMachine, UAMethod, UAObject, UAObjectType, UAProperty, UAState, UAStateMachineEx, VariantLike } from "node-opcua";
+import { BaseNode, CallMethodResultOptions, ConditionInfoOptions, DataType, InstantiateAlarmConditionOptions, ISessionContext, LocalizedText, makeNodeId, Namespace, NodeId, ReferenceTypeIds, SessionContext, StatusCodes, UADiscreteAlarmEx, UAFiniteStateMachine, UAMethod, UAObject, UAObjectType, UAProperty, UAState, UAStateMachineEx, VariantLike } from "node-opcua";
 import { UAMaintenanceRequiredAlarm } from "node-opcua-nodeset-di";
 import { getLADSNamespace, promoteToFiniteStateMachine } from "./lads-utils";
 import { getBooleanValue } from "./lads-variable-utils";
@@ -97,26 +97,26 @@ export class MaintenanceTaskImpl extends EventEmitter<MaintenanceTaskEvents> {
 
         // testing
         namespace.addMethod(this.maintenanceTask, { browseName: "RaiseWarning" }).bindMethod(
-            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+            (async (inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> => {
                 this.raiseWarningEvent()
                 return { statusCode: StatusCodes.Good }
             }).bind(this)
         )
         namespace.addMethod(this.maintenanceTask, { browseName: "RaiseAlarm" }).bindMethod(
-            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+            (async (inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> => {
                 this.raiseAlarmEvent()
                 return { statusCode: StatusCodes.Good }
             }).bind(this)
         )
         namespace.addMethod(this.maintenanceTask, { browseName: "EnterActive" }).bindMethod(
-            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+            (async (inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> => {
                 this.enterActive()
                 console.log(this.discreteAlarm)
                 return { statusCode: StatusCodes.Good }
             }).bind(this)
         )
         namespace.addMethod(this.maintenanceTask, { browseName: "EnterInactive" }).bindMethod(
-            (async (inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> => {
+            (async (inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> => {
                 this.enterInactive()
                 console.log(this.discreteAlarm)
                 return { statusCode: StatusCodes.Good }
@@ -183,13 +183,13 @@ export class MaintenanceTaskImpl extends EventEmitter<MaintenanceTaskEvents> {
         this.emit("deactivated")
     }
 
-    private async startTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startTask(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (this.maintenanceState.currentStateNode === this.stateExecuting) return { statusCode: StatusCodes.BadInvalidState }
         this.enterExecuting()
         return { statusCode: StatusCodes.Good }
     }
 
-    private async stopTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stopTask(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (this.maintenanceState.currentStateNode !== this.stateExecuting) return { statusCode: StatusCodes.BadInvalidState }
         const result = Number(inputArguments[0].value.value) as LADSMaintenanceTaskResult
         const comment: VariantLike = inputArguments[1]
@@ -197,7 +197,7 @@ export class MaintenanceTaskImpl extends EventEmitter<MaintenanceTaskEvents> {
         return { statusCode: StatusCodes.Good }
     }
 
-    private async resetTask(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async resetTask(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (this.maintenanceState.currentStateNode !== this.stateFinished) return { statusCode: StatusCodes.BadInvalidState }
         this.enterPlanned()
         return { statusCode: StatusCodes.Good }

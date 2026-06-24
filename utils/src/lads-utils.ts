@@ -45,7 +45,8 @@ import {
     ServerSession,
     StatusCode,
     ISessionContext,
-    DataValue} from "node-opcua"
+    DataValue,
+    SessionContext} from "node-opcua"
 import {
     LADSDevice,
     LADSDeviceState,
@@ -66,9 +67,8 @@ import {
     MachineIdentificationType,
     LADSComponent
 } from "@interfaces"
-import { EnumDeviceHealth, UAComponent } from "node-opcua-nodeset-di"
+import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
 import { getNumericValue, modifyStatusCode, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
-import { AFODictionary } from "@afo"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -375,7 +375,6 @@ export function addProgramTemplate(programTemplateSet: UAObject, options: Progra
     setStringValue(programTemplate.deviceTemplateId, options.identifier)
     setDateTimeValue(programTemplate.created, options.created)
     setDateTimeValue(programTemplate.modified, options.modified)
-    if (options.referenceIds) { AFODictionary.addReferences(programTemplate, ...options.referenceIds) }
     return { identifier: options.identifier, programTemplate: programTemplate }
 }
 
@@ -393,7 +392,8 @@ export function createDeviceProgramRunId(programTemplateId: string): string {
 export function setSessionInformation(result: LADSResult, context: ISessionContext) {
     // analyze session context
     const session = context.session as ServerSession
-    const userIdentity = context.userIdentity
+    const userIdentity = ""
+    //const userIdentity = (context as SessionContext).userIdentity
     const applicationUri: string = session.clientDescription?.applicationUri ? session.clientDescription.applicationUri : ""
     const applicationName: string = session.clientDescription?.applicationName ? session.clientDescription?.applicationName.text : ""
     const sessionName: string = session.sessionName
