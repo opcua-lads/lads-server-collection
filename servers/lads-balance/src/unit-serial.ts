@@ -53,6 +53,4 @@ export class SerialBalanceUnitImpl extends BalanceUnitImpl {
         // finalize iitialization
         this.postInitialize()
     }
-
-
 }

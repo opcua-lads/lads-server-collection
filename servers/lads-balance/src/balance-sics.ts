@@ -130,6 +130,7 @@ export class SicsBalance extends SerialBalance {
         const info: DeviceInfo = {
             manufacturer: "Mettler Toledo",
             model: "Unknown",
+            device_type_image: "mettler_toledo_ms.png"
         };
         try {
             const respI2 = await this.sendCommand("I2");

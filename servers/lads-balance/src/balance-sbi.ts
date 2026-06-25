@@ -109,7 +109,11 @@ export class SbiBalance extends SerialBalance {
      *   x4_ : hardware version
      */
     async getDeviceInfo(): Promise<DeviceInfo> {
-        const info: DeviceInfo = { manufacturer: "Sartorius", model: "Unknown" };
+        const info: DeviceInfo = { 
+            manufacturer: "Sartorius", 
+            model: "Unknown", 
+            device_type_image: "sartorius_quintix.png"
+        };
 
         try {
             const m = await this.sendEsc("x1_");

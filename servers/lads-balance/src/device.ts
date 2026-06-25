@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, DeviceTypeImage } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols, BalanceServerImpl } from "./server"
 import { IAddressSpace, INamespace } from "node-opcua"
@@ -31,6 +31,7 @@ import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
 import { BalanceUnitImpl } from "./unit"
 import { SerialBalanceUnitImpl } from "./unit-serial"
+import { join } from "path"
 
 //--------------------------------------------------------------- 
 export function getBalanceNameSpace(addressSpace: IAddressSpace): INamespace {return addressSpace.getNamespace("http://aixengineers.de/Balance/") }
@@ -57,7 +58,7 @@ export class BalanceDeviceImpl {
         // create unit implementation
         this.config = config
         const balanceUnitImpl = this.getBalanceUnitImpl(config)
-        balanceUnitImpl.balance.on(BalanceEvents.DeviceInfo, this.setNameplate.bind(this))
+        balanceUnitImpl.balance.on(BalanceEvents.DeviceInfo, this.setDeviceInfo.bind(this))
 
         // attach device helper
         this.deviceHelper = new LADSDeviceHelper(device)
@@ -90,7 +91,12 @@ export class BalanceDeviceImpl {
         }
     }
 
-    setNameplate(deviceInfo: DeviceInfo) {
+    setDeviceInfo(deviceInfo: DeviceInfo) {
+        // device type image - if any
+        const imageFile = deviceInfo.device_type_image ?? "default.png"
+        const imagesDir = join(__dirname, "resources", "images")
+        DeviceTypeImage.create({parent: this.device, imagesDir, imageFiles: [imageFile] })
+        
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
             manufacturer: deviceInfo.manufacturer,

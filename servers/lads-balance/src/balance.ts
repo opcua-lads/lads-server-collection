@@ -72,6 +72,7 @@ export interface DeviceInfo {
     serialNumber?: string
     firmware?: string
     hardware?: string
+    device_type_image?: string
 }
 
 /**
@@ -170,6 +171,7 @@ export abstract class Balance extends EventEmitter{
         }, intervalMs);
     }
 }
+
 
 /**
  * Helper to normalize a value to grams from common mass units.

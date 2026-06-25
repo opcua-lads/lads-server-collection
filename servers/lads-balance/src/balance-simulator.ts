@@ -120,7 +120,7 @@ export class SimulatedBalance extends Balance {
     }
 
     async getDeviceInfo(): Promise<DeviceInfo> {
-        const info: DeviceInfo = { manufacturer: "AixEngineers", model: "SuperBalance 2030", firmware: "1.0", hardware: "1.0", serialNumber: "47110815" }
+        const info: DeviceInfo = { manufacturer: "AixEngineers", model: "SuperBalance 2030", firmware: "1.0", hardware: "1.0", serialNumber: "47110815"}
         return info
     }
 }
