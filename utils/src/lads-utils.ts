@@ -45,8 +45,7 @@ import {
     ServerSession,
     StatusCode,
     ISessionContext,
-    DataValue,
-    SessionContext} from "node-opcua"
+    DataValue} from "node-opcua"
 import {
     LADSDevice,
     LADSDeviceState,
@@ -65,10 +64,9 @@ import {
     LADSSampleInfo,
     LADSProperty,
     MachineIdentificationType,
-    LADSComponent
-} from "@interfaces"
+    LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
-import { getNumericValue, modifyStatusCode, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
+import { getNumericValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -682,6 +680,7 @@ export interface LADSDeviceHelperOptions {
     initializationTime?: number
     shutdownTime?: number
     raiseEvents?: boolean
+    adjustFunctionIsEnabled?: boolean
 }
 
 export class LADSDeviceHelper {
@@ -717,6 +716,10 @@ export class LADSDeviceHelper {
         const machineryNamespaceIndex = getMachineryNamespace(addressSpace).index
         const machinesFolder = addressSpace.findNode(coerceNodeId(1001, machineryNamespaceIndex))
         machinesFolder?.addReference({ referenceType: organizesType, nodeId: device.nodeId })
+
+        // eventually adjust isEnabled of functions
+        if (options.adjustFunctionIsEnabled ?? true) 
+            this.adjustFunctionIsEnabled()
 
         // get and promote state-machines
         this.deviceStateMachine = promoteToFiniteStateMachine(device.deviceState)
@@ -853,6 +856,22 @@ export class LADSDeviceHelper {
         sleepMilliSeconds(50).then(() => {
             this.adjustMachineryItemState()
         })
+    }
+    
+    adjustFunctionIsEnabled() {
+
+        function adjustIsEnabled(functionSet: UAObject) {
+            if (!functionSet) return
+            const functions = functionSet.getComponents().map((node: BaseNode) => {if (node.nodeClass === NodeClass.Object) return <LADSFunction>node})
+            functions.forEach(func => { 
+                setBooleanValue(func.isEnabled, true) 
+                adjustIsEnabled(<UAObject>func.functionSet)
+            })
+        }
+
+        const functionalUnitSet = <UAObject>this.device.functionalUnitSet
+        const functionalUnits = functionalUnitSet.getComponents().map((node: BaseNode) => {if (node.nodeClass === NodeClass.Object) return <LADSFunctionalUnit>node})
+        functionalUnits.forEach(functionalUnit => adjustIsEnabled(<UAObject>functionalUnit?.functionSet))
     }
 }
 

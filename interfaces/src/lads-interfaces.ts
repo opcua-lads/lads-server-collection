@@ -215,7 +215,7 @@ export interface LADSRunnnigStateMachine extends UAFiniteStateMachine {
 //---------------------------------------------------------------
 export interface LADSFunction_Base {
     isEnabled: UAProperty<boolean, DataType.Boolean>
-    functionSet?: LADSFunctionSet
+    functionSet?: LADSFunctionSet | UAObject
 }
 export interface LADSFunction extends LADSFunction_Base, UAObject { }
 
