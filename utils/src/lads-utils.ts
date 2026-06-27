@@ -66,7 +66,7 @@ import {
     MachineIdentificationType,
     LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
-import { getNumericValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
+import { connectWritableVariables, getNumericValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -420,6 +420,8 @@ export interface LADSComponentOptions {
     assetId?: string
     componentName?: string
     location?: string
+    hierarchicalLocation?: string
+    operationalLocation?: string
 }
 
 export function initComponent(component: UAComponent, options: LADSComponentOptions) {
@@ -438,8 +440,13 @@ export function initComponent(component: UAComponent, options: LADSComponentOpti
     options.assetId ? setStringValue(component.assetId, options.assetId) : 0
     options.componentName ? setStringValue(component.componentName, options.componentName) : 0
     const mi = component as MachineIdentificationType
+    const lc = component as LADSComponent
     options.location ? setStringValue(mi.location, options.location) : 0
-    component.identification ? initComponent(component.identification, options) : 0
+    options.hierarchicalLocation ? setStringValue(lc.hierarchicalLocation, options.hierarchicalLocation) : 0
+    options.operationalLocation ? setStringValue(lc.operationalLocation, options.hierarchicalLocation) : 0
+    if (component.identification) {
+         initComponent(component.identification, options)
+    }
 }
 
 //---------------------------------------------------------------
@@ -696,9 +703,6 @@ export class LADSDeviceHelper {
         this.device = device
         this.options = options
         const addressSpace = device.addressSpace
-
-        // provide some geographical location
-        device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "N 51 E 6.2" })
 
         // prepare event bubble up propagation
         buildLADSEventNotifierTree(device)

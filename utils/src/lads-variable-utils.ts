@@ -10,7 +10,7 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString, UATwoStateVariable } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString, UATwoStateVariable, DataValue } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
 
@@ -179,6 +179,51 @@ export function setTwoStateVariable(variable: UATwoStateVariable<LocalizedText>,
     const stateName = state ? getStringValue(variable.trueState, trueState) : getStringValue(variable.falseState, falseState)
     setStringValue(variable, stateName)
     setBooleanValue(variable.id, state)
+}
+
+// ----------------------------------------------------------------------------
+// Variable connectors
+// ----------------------------------------------------------------------------
+export function connectVariables(source: UAVariable, ...targets: UAVariable[]) {
+    if (!source) return
+    targets.forEach(target => { source.on("value_changed", (dataValue) => { target?.setValueFromSource(dataValue.value, dataValue.statusCode, dataValue.sourceTimestamp) }) })
+}
+
+export function connectWritableVariables(...variables: UAVariable[]) {
+    let locked = false;
+
+    const listeners = new Map<UAVariable, (dv: DataValue) => void>();
+
+    const onChanged = (source: UAVariable, dataValue: DataValue) => {
+        if (locked) return;
+
+        locked = true;
+        try {
+            for (const target of variables) {
+                if (target !== source) {
+                    target.setValueFromSource(
+                        dataValue.value,
+                        dataValue.statusCode,
+                        dataValue.sourceTimestamp
+                    );
+                }
+            }
+        } finally {
+            locked = false;
+        }
+    };
+
+    for (const variable of variables) {
+        const listener = (dv: DataValue) => onChanged(variable, dv);
+        listeners.set(variable, listener);
+        variable.on("value_changed", listener);
+    }
+
+    return () => {
+        for (const [variable, listener] of listeners) {
+            variable.off("value_changed", listener);
+        }
+    };
 }
 
 // ----------------------------------------------------------------------------

@@ -37,6 +37,8 @@ import { UAComponent, UADevice, UAFunctionalGroup, UALockingServices, UATopology
 //---------------------------------------------------------------
 export interface LADSComponent extends UAComponent {
     identification?: MachineIdentificationType
+    operationalLocation?: UAProperty<UAString, DataType.String>
+    hierarchicalLocation?: UAProperty<UAString, DataType.String>
     deviceHealth?: UAVariable
     components?: UAObject
     lifetimeCounters?: UAObject

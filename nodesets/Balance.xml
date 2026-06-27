@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2026-06-26T07:22:22.375Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-06-26T15:47:13.540Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -26,7 +26,6 @@
         <Alias Alias="LocalizedText">i=21</Alias>
         <Alias Alias="HasComponent">i=47</Alias>
         <Alias Alias="HasProperty">i=46</Alias>
-        <Alias Alias="Organizes">i=35</Alias>
         <Alias Alias="HasSubtype">i=45</Alias>
         <Alias Alias="HasTypeDefinition">i=40</Alias>
         <Alias Alias="HasModellingRule">i=37</Alias>
@@ -43,7 +42,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="851a434865db6acacf487c60afe025ea"/>
+            <si:GeneratorExtension Hash="28a95b6da59a771f229a75eee543419d"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_Balance_" NodeId="ns=5;i=5000" BrowseName="5:http://aixengineers.de/Balance/" ParentNodeId="i=11715">
@@ -392,8 +391,8 @@
             <Reference ReferenceType="HasProperty">ns=4;i=6064</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6063</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6041</Reference>
-            <Reference ReferenceType="Organizes">ns=5;i=6054</Reference>
-            <Reference ReferenceType="Organizes">ns=5;i=6055</Reference>
+            <Reference ReferenceType="i=35">ns=4;i=6029</Reference>
+            <Reference ReferenceType="i=35">ns=4;i=6028</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5010" BrowseName="3:MachineryItemState" ParentNodeId="ns=5;i=1001">
@@ -1062,20 +1061,4 @@
             <Reference ReferenceType="HasComponent">ns=1;i=6210</Reference>
         </References>
     </UAObject>
-    <UAVariable DataType="String" NodeId="ns=5;i=6054" BrowseName="2:OperationalLocation" ParentNodeId="ns=5;i=5009" UserAccessLevel="3" AccessLevel="3">
-        <DisplayName>OperationalLocation</DisplayName>
-        <Description>OperationalLocation provides the operational location of the Device or Component. The structure within the string may expose several levels. How this is exposed, which delimiters are used, etc. is vendor-specific. Examples of such strings are “Warehouse1/Sheet3” or “StainlessSteelTote3” (see OPC UA OPC 10000-110 for more details).</Description>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-        </References>
-    </UAVariable>
-    <UAVariable DataType="String" NodeId="ns=5;i=6055" BrowseName="2:HierarchicalLocation" ParentNodeId="ns=5;i=5009" UserAccessLevel="3" AccessLevel="3">
-        <DisplayName>HierarchicalLocation</DisplayName>
-        <Description>HierarchicalLocation provides the hierarchical location of the LADSDevice.The structure within the string may expose several levels. How this is exposed, which delimiters are used, etc. is vendor-specific. Examples of such strings are “FactoryA/BuildingC/Floor1” or “Area1-ProcessCell17-Unit4” (see OPC UA OPC 10000-110 for more details).</Description>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-        </References>
-    </UAVariable>
 </UANodeSet>
