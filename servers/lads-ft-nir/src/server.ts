@@ -508,7 +508,7 @@ class FtNirDeviceImpl {
 }
 
 export async function main() {
-    const serverImpl = new FtNirServerImpl(12345)
+    const serverImpl = new FtNirServerImpl(parseInt(process.env.PORT || "12345"))
     await serverImpl.start()
 
     // Graceful shutdown - unregister from GDS

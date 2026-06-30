@@ -124,7 +124,7 @@ export class BalanceServerImpl {
 
     constructor(config: BalanceConfig) {
         this.config = config
-        const port = this.config.port ?? 4844
+        const port = parseInt(process.env.PORT || String(this.config.port ?? 4844))
         const uri = "urn:MOCK930002:NodeOPCUA-Server"
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 

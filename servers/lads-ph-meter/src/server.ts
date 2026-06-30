@@ -203,7 +203,7 @@ class pHMeterServerImpl {
 // create and start server including a list of viscometers
 //---------------------------------------------------------------
 export async function main() {
-    const serverImpl = new pHMeterServerImpl(4843)
+    const serverImpl = new pHMeterServerImpl(parseInt(process.env.PORT || "4843"))
     const argv = process.argv.slice()
     const portIdx = argv.indexOf('-p');
     const port = portIdx !== -1 ? String(argv[portIdx + 1]) : '';

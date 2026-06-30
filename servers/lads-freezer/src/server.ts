@@ -337,7 +337,7 @@ class FreezerUnitImpl {
 }
 
 export async function main() {
-    const serverImpl = new FreezerServerImpl(4842)
+    const serverImpl = new FreezerServerImpl(parseInt(process.env.PORT || "4842"))
     await serverImpl.start()
 
     // Graceful shutdown - unregister from GDS
