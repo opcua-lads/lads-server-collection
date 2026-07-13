@@ -149,7 +149,7 @@ export class BalanceServerImpl {
             console.log("CTRL+C to stop")
         }
         catch (err) {
-            console.error("Unable to start server: ", err.message)
+            console.error("Unable to start server: ", err instanceof Error ? err.message : String(err))
             exit()
         }
     }

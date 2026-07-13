@@ -33,20 +33,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *   - I10 : User-defined device ID (optional)
  */
 
-import { SerialBalance } from "./balance-serial";
-import { BalanceReading, toGrams, DeviceInfo, BalanceStatus, BalanceTareMode } from "./balance";
+//import { SerialBalance } from "./balance-serial";
 
-export class SicsBalance extends SerialBalance {
-    /**
-     * Query current weight and tare status.
-     * Polls SI for weight and TA for tare info.
-     */
+import { BalanceReading, toGrams, DeviceInfo, BalanceStatus, BalanceTareMode, BalanceEvents, getDecimalDigits } from "./balance";
+import { StreamBalance } from "./balance-stream";
+export class SicsBalance extends StreamBalance {
     status: BalanceStatus
     presetTare: number = 0
 
     get supportsPresetTare(): boolean { return true }
 
     async getCurrentReading(): Promise<BalanceReading> {
+
         // Current weight (and stable/unstable) from SI
         const siResp = await this.sendCommand("SI");
         const m = siResp.match(/S\s+([SD])\s+([+-]?\d+(?:\.\d+)?)\s*(\w+)/);
@@ -63,8 +61,13 @@ export class SicsBalance extends SerialBalance {
         } else {
             this.status = BalanceStatus.Online
             const stable = m[1] === "S";
-            const unit = m[3];
-            const weight = toGrams(Number(m[2]), unit);
+            const unit = m[3].trim()
+            const value = m[2].trim()
+            if ((unit == "g") && (this.digits == undefined)) {
+                this.digits = getDecimalDigits(value)
+                this.emit(BalanceEvents.Digits, this.digits)
+            }
+            const weight = toGrams(Number(value), unit);
 
             // Current tare value from TA (to determine if tared)
             const taResp = await this.sendCommand("TA");
@@ -72,7 +75,7 @@ export class SicsBalance extends SerialBalance {
             const tareWeight = tMatch ? toGrams(Number(tMatch[1]), tMatch[2]) : undefined
             let tareMode = BalanceTareMode.None
             if (tareWeight) {
-                if  (Math.abs(tareWeight) > 1e-6) {
+                if (Math.abs(tareWeight) > 1e-6) {
                     // balance is tared
                     tareMode = (Math.abs(tareWeight - this.presetTare) > 1e-6) ? BalanceTareMode.Manual : BalanceTareMode.Preset
                 }
@@ -83,16 +86,21 @@ export class SicsBalance extends SerialBalance {
                 unit,
                 stable,
                 tareMode,
-                tareWeight
+                tareWeight,
             }
         }
     }
 
     async getStatus(): Promise<BalanceStatus> {
+        if (!this.transport.isOpen) return BalanceStatus.Offline
+        return this.status ?? BalanceStatus.Online
+    }
+
+    /*async getStatus(): Promise<BalanceStatus> {
         if (!this.port) return BalanceStatus.Offline
         if (!this.port.isOpen) return BalanceStatus.Offline
         return this.status
-    }
+    }*/
 
     /**
      * Zero the balance
@@ -108,12 +116,12 @@ export class SicsBalance extends SerialBalance {
         await this.sendCommand("T");
     }
 
-    async clearTare(): Promise<void> { 
+    async clearTare(): Promise<void> {
         await this.sendCommand(`TAC`)
         this.presetTare = 0
     }
 
-    async setPresetTare(oresetTare: number): Promise<void> { 
+    async setPresetTare(oresetTare: number): Promise<void> {
         await this.sendCommand(`TA ${oresetTare.toFixed(2)} g`)
         this.presetTare = oresetTare
     }
@@ -135,7 +143,13 @@ export class SicsBalance extends SerialBalance {
         try {
             const respI2 = await this.sendCommand("I2");
             const m = respI2.slice(5).replaceAll('"', "")
-            if (m) info.model = m.trim();
+            if (m) {
+                info.model = m.trim()
+                if (info.model.startsWith("CUB")) {
+                    info.manufacturer = "Sartorius"
+                    info.device_type_image = "sartorius_cubis.png"
+                }
+            }
         } catch { }
 
         try {

@@ -32,10 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * Weight readings are always returned in grams.
  */
 
-import { SerialBalance } from "./balance-serial";
-import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType, BalanceStatus, BalanceTareMode } from "./balance";
+import { BalanceReading, toGrams, DeviceInfo, BalanceResponseType, BalanceStatus, BalanceTareMode, getDecimalDigits, BalanceEvents } from "./balance";
+import { StreamBalance } from "./balance-stream";
 
-export class SbiBalance extends SerialBalance {
+export class SbiBalance extends StreamBalance {
 
     /**
      * Send a PC-SBI command with ESC prefix and CR/LF termination.
@@ -65,6 +65,10 @@ export class SbiBalance extends SerialBalance {
             const weight = toGrams(Number((sign + value).replace(/\[|\]/g, "")), unit || "g")
             const s = value.toLowerCase()
             const responseType = (s === "high")?BalanceResponseType.High:(s === "low")?BalanceResponseType.Low:BalanceResponseType.Reading
+            if ((this.digits == undefined) && (unit == "g")) {
+                this.digits = getDecimalDigits(value)
+                this.emit(BalanceEvents.Digits, this.digits)
+            }
             return { weight, unit, stable, tareMode: tareMode, responseType }
         } else if ((l > 22) && (response.toLowerCase().includes("calibration"))) {
             this.calibrationReport = {
@@ -82,7 +86,7 @@ export class SbiBalance extends SerialBalance {
     }
 
     async checkStatus(): Promise<BalanceStatus> {
-        if (!this.port.isOpen) return BalanceStatus.Offline
+        if (!this.transport.isOpen) return BalanceStatus.Offline
         const response = await this.sendEsc("X1")
         return response.length > 0?BalanceStatus.Online:BalanceStatus.Offline
     }

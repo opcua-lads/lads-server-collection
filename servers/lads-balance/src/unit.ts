@@ -91,6 +91,13 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.parent = parent
         this.config = config
         // create unit object
+        optionals.push("FunctionSet.CurrentWeight.SensorValue.ValuePrecision")
+        if (optionals.includes("FunctionSet.CurrentWeight.FunctionSet")) {
+            optionals.push(
+                "FunctionSet.CurrentWeight.FunctionSet.GrossWeight.SensorValue.ValuePrecision",
+                "FunctionSet.CurrentWeight.FunctionSet.NetWeight.SensorValue.ValuePrecision",
+                "FunctionSet.CurrentWeight.FunctionSet.TareWeight.SensorValue.ValuePrecision")
+        }
         const functionalUnitSet = parent.getFunctionalUnitSet()
         const balanceUnitType = getBalanceNameSpace(functionalUnitSet.addressSpace).findObjectType("BalanceUnitType")
         this.functionalUnit = balanceUnitType.instantiate({
@@ -206,6 +213,12 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             this.lastReading = reading
         })
 
+        this.setDigits(1)
+        this.balance.on(BalanceEvents.Digits, (digits: number) => this.setDigits(digits) )
+
+        // start polling
+        this.balance.startPolling()
+
         // update calibration report
         let lastCalibrationTimestamp = new Date().toISOString()
         this.balance.on(BalanceEvents.CalibrationReport, (calibrationReport: BalanceCalibrationReport) => {
@@ -236,6 +249,17 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
         // init program manager
         this.initProgramTemplates()
+    }
+
+    private setDigits(digits: number) {
+        const cw = this.functionalUnit.functionSet.currentWeight
+        const fs = cw.functionSet
+        setNumericValue(cw.sensorValue.valuePrecision, digits)
+        if (fs) {
+            setNumericValue(fs.grossWeight?.sensorValue.valuePrecision, digits)
+            setNumericValue(fs.netWeight?.sensorValue.valuePrecision, digits)
+            setNumericValue(fs.tareWeight?.sensorValue.valuePrecision, digits)
+        }
     }
 
     //---------------------------------------------------------------

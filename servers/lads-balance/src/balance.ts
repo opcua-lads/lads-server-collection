@@ -52,6 +52,7 @@ export interface BalanceReading {
     stable: boolean
     tareMode: BalanceTareMode
     tareWeight?: number
+    digits?: number
     responseType?: BalanceResponseType
     response?: string
 }
@@ -84,6 +85,7 @@ export const BalanceEvents = {
     Reading: "reading",
     Status: "status",
     CalibrationReport: "calibrationReport",
+    Digits: "digits",
     Error: "error",
 } as const;
 
@@ -101,6 +103,10 @@ export type BalanceEventMap = {
     [BalanceEvents.Error]: Error;
 };
 
+export function getDecimalDigits(value: string): number {
+    const match = value.trim().match(/^[+-]?\d+(?:\.(\d+))?$/);
+    return match?.[1]?.length ?? 0;
+}
 
 /**
  * Abstract base class for all balances.
@@ -110,6 +116,7 @@ export abstract class Balance extends EventEmitter{
     private pollReading?: NodeJS.Timeout
     private pollStatus?: NodeJS.Timeout
     private lastStatus =  BalanceStatus.Offline
+    protected digits?: number = undefined
     calibrationReport?: BalanceCalibrationReport
 
     constructor() { super() }
@@ -123,6 +130,7 @@ export abstract class Balance extends EventEmitter{
 
     abstract getStatus(): Promise<BalanceStatus>;
     abstract getCurrentReading(): Promise<BalanceReading>;
+    getDigits(): number { return this.digits ?? 1 }
 
     abstract setZero(): Promise<void>;
     abstract setTare(): Promise<void>;
@@ -131,6 +139,7 @@ export abstract class Balance extends EventEmitter{
     async setPresetTare(presetTare: number): Promise<void> { return }
 
     abstract getDeviceInfo?(): Promise<DeviceInfo>;
+
 
     /**
      * Start automatic polling of weight readings at the given interval.

@@ -23,14 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, DeviceTypeImage } from "@utils"
+import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, DeviceTypeImage, getStringValue, setStringValue } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols, BalanceServerImpl } from "./server"
 import { IAddressSpace, INamespace } from "node-opcua"
 import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
 import { BalanceUnitImpl } from "./unit"
-import { SerialBalanceUnitImpl } from "./unit-serial"
+import { SerialBalanceUnitImpl } from "./unit-stream"
 import { join } from "path"
 
 //--------------------------------------------------------------- 
@@ -109,6 +109,10 @@ export class BalanceDeviceImpl {
             location: defaultLocation,
         }
         initComponent(this.device, deviceOptions)
+        
+        // LCC PoC integration
+        setStringValue(this.device.componentName, this.device.getDisplayName())
+        setStringValue(this.device.hierarchicalLocation, "DE/Munich/Schragenhofstr_35/A/Office")
     }
 
 }

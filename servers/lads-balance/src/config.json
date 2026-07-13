@@ -1,24 +1,30 @@
 {
-    "includeAfo": true,
+    "includeAfo": false,
     "port": 4844,
     "devices": [
         {
             "serialPort": "",
             "protocol": "Simulator",
             "name": "My Simulated Balance",
-            "enabled": true
+            "enabled": false
         },
         {
             "serialPort": "/dev/tty.usbmodem00294063041",
             "protocol": "SBI",
             "name": "My Sartorius Balance",
-            "enabled": false
+            "enabled": true
         },
         {
-            "serialPort": "/dev/tty.PL2303G-USBtoUART1130",
+            "serialPort": "/dev/tty.PL2303-USBtoUART1120",
             "protocol": "SICS",
             "name": "My Mettler Toledo Balance",
-            "enabled": false
+            "enabled": true
+        },
+        {
+            "serialPort": "socket://192.168.0.132:55555",
+            "protocol": "SICS",
+            "name": "My Sartorius Cubis III Balance",
+            "enabled": true
         }
     ]
 }

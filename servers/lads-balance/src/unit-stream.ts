@@ -25,9 +25,31 @@ import { BalanceUnitImpl } from './unit';
 import { BalanceDeviceConfig, BalanceProtocols } from './server';
 import { SbiBalance } from './balance-sbi';
 import { SicsBalance } from './balance-sics';
-import { SerialPortOpenOptions } from 'serialport';
+import { BalanceTransport, SerialBalanceTransport, TcpBalanceTransport } from './balance-transport';
 
 //---------------------------------------------------------------
+type Parity = "none" | "even" | "odd" | "mark" | "space";
+
+function createTransport(config: BalanceDeviceConfig): BalanceTransport {
+    const port = config.serialPort.trim()
+    const isUrl = port.includes("://")
+    if (isUrl) {
+        const url = new URL(port)
+        return new TcpBalanceTransport({
+            host: url.hostname, 
+            port: Number(url.port)
+        })
+    } else {
+        return new SerialBalanceTransport({
+            path: config.serialPort,
+            baudRate: config.baudRate ?? 9600,
+            parity: (config.parity ?? "none") as Parity,
+            dataBits: config.dataBits ?? 8,
+            stopBits: config.stopBits ?? 1,
+        })
+    }
+        
+}
 export class SerialBalanceUnitImpl extends BalanceUnitImpl {
 
     constructor(parent: BalanceDeviceImpl, functionalUnitSet: BalanceFunctionalUnitSet, config: BalanceDeviceConfig) {
@@ -37,17 +59,11 @@ export class SerialBalanceUnitImpl extends BalanceUnitImpl {
         super(parent, config, optionals)
         
         // create balance
-        const options: SerialPortOpenOptions<any> = {
-            path: config.serialPort,
-            baudRate: config.baudRate ?? 9600,
-            parity: config.parity ?? "none",
-            dataBits: config.dataBits ?? 8,
-            stopBits: config.stopBits ?? 1,
-        }
+        const transport: BalanceTransport = createTransport(config)
         if (sics) {
-            this.balance = new SicsBalance(options)
+            this.balance = new SicsBalance(transport)
         } else {
-            this.balance = new SbiBalance(options)
+            this.balance = new SbiBalance(transport)
         }
         
         // finalize iitialization
