@@ -16,6 +16,7 @@ import {
     CallMethodResultOptions,
     DataType,
     IAddressSpace,
+    ISessionContext,
     LocalizedText,
     OPCUAServer,
     ObjectTypeIds,
@@ -215,7 +216,7 @@ class FtNirDeviceImpl {
         })
     }
 
-    private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         // validate current state
         const currentState = this.functionalUnitState.getCurrentState();
         if (!(currentState && (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted)))) {
@@ -241,11 +242,11 @@ class FtNirDeviceImpl {
         }
     }
 
-    private async stopProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stopProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return this.stopOrAbortProgram(LADSFunctionalState.Stopping, LADSFunctionalState.Stopped)
     }
 
-    private async abortProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async abortProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return this.stopOrAbortProgram(LADSFunctionalState.Aborting, LADSFunctionalState.Aborted)
     }
 

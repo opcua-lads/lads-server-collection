@@ -12,13 +12,13 @@
             "serialPort": "/dev/tty.usbmodem00294063041",
             "protocol": "SBI",
             "name": "My Sartorius Balance",
-            "enabled": true
+            "enabled": false
         },
         {
             "serialPort": "/dev/tty.PL2303-USBtoUART1120",
             "protocol": "SICS",
             "name": "My Mettler Toledo Balance",
-            "enabled": true
+            "enabled": false
         },
         {
             "serialPort": "socket://192.168.0.132:55555",
