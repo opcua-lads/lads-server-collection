@@ -58,10 +58,10 @@ function isAtmoWebDeviceConfig(obj: any): obj is AtmoWebDeviceConfig {
 
 const DefaultConfig: AtmoWebConfig = {
     devices: [
-        { baseUrl: "http://localhost:8081", name: "My AtmoWEB Incubator #1", recorderInterval: 5 },
-        { baseUrl: "http://localhost:8082", name: "My AtmoWEB Incubator #2", recorderInterval: 5  },
-        { baseUrl: "http://localhost:8083", name: "My AtmoWEB Incubator #3", recorderInterval: 5  },
-        { baseUrl: "http://localhost:8084", name: "My AtmoWEB Incubator #4", recorderInterval: 5  },
+        { baseUrl: "http://localhost:8081", name: "My Memmert UN plus", recorderInterval: 5 },
+        { baseUrl: "http://localhost:8082", name: "My Memmert ICO", recorderInterval: 5  },
+        { baseUrl: "http://localhost:8083", name: "My Memmert IN plus", recorderInterval: 5  },
+        { baseUrl: "http://localhost:8084", name: "My Memmert VO", recorderInterval: 5  },
     ]
 }
 
@@ -106,7 +106,7 @@ export class AtmoWebServerImpl {
         // list of node-set files
         const nodeset_filenames = IncludeAFO ? [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_afo, nodeset_atmo_web] : [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_atmo_web]
         this.server = createServer({
-            applicationName: "LADS Balance",
+            applicationName: "LADS AtmoWEB Gateway",
             applicationDirectory: __dirname,
             port,
             uri,

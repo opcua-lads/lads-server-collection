@@ -23,7 +23,7 @@ import { LADSDevice } from "@interfaces";
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server";
 import { AtmoWebUnitImpl } from "./unit";
 import { AtmoWebClient } from "./client";
-import { defaultLocation, DeviceTypeImage, getStringValue, initComponent, LADSComponentOptions, LADSDeviceHelper } from "@utils";
+import { defaultLocation, DeviceTypeImage, getStringValue, initComponent, LADSComponentOptions, LADSDeviceHelper, setStringArrayValue, setStringValue } from "@utils";
 import { AFODictionary, AFODictionaryIds } from "@afo";
 import { join } from "path";
 
@@ -65,6 +65,8 @@ export class AtmoWebDeviceImpl {
                 location: defaultLocation,
             }
             initComponent(device, deviceOptions)
+            setStringValue(this.device.componentName, this.device.getDisplayName())
+            setStringValue(this.device.hierarchicalLocation, "DE/Munich/Schragenhofstr_35/A/Office")
 
             // device image
             function imageFile(model: string): string {
