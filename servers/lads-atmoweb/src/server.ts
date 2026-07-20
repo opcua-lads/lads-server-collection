@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-FileCopyrightText: 2025-2026 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 // SPDX-License-Identifier: AGPL 3
 
 /*
 LADS AtmoWEB gateway
-Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+Copyright (C) 2025-2026  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -39,6 +39,7 @@ export interface AtmoWebDeviceConfig {
     baseUrl: string
     name: string
     recorderInterval?: number
+    hierachicalLocation?: string
 }
 
 // Type guard
@@ -58,11 +59,11 @@ function isAtmoWebDeviceConfig(obj: any): obj is AtmoWebDeviceConfig {
 
 const DefaultConfig: AtmoWebConfig = {
     devices: [
-        { baseUrl: "http://localhost:8081", name: "My Memmert UN plus", recorderInterval: 5 },
-        { baseUrl: "http://localhost:8082", name: "My Memmert ICO", recorderInterval: 5  },
-        { baseUrl: "http://localhost:8083", name: "My Memmert IN plus", recorderInterval: 5  },
-        { baseUrl: "http://localhost:8084", name: "My Memmert VO", recorderInterval: 5  },
-    ]
+        { baseUrl: "http://localhost:8081", name: "My Memmert UN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
+        { baseUrl: "http://localhost:8082", name: "My Memmert ICO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
+        { baseUrl: "http://localhost:8083", name: "My Memmert IN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
+        { baseUrl: "http://localhost:8084", name: "My Memmert VO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
+    ],
 }
 
 async function loadConfig(): Promise<AtmoWebConfig> {

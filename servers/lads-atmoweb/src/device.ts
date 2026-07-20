@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-FileCopyrightText: 2025-2026 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 // SPDX-License-Identifier: AGPL 3
 
 /*
 LADS AtmoWEB gateway
-Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+Copyright (C) 2025-2026  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -65,8 +65,8 @@ export class AtmoWebDeviceImpl {
                 location: defaultLocation,
             }
             initComponent(device, deviceOptions)
-            setStringValue(this.device.componentName, this.device.getDisplayName())
-            setStringValue(this.device.hierarchicalLocation, "DE/Munich/Schragenhofstr_35/A/Office")
+            setStringValue(device.componentName, device.getDisplayName())
+            setStringValue(device.hierarchicalLocation, config.hierachicalLocation ?? "")
 
             // device image
             function imageFile(model: string): string {

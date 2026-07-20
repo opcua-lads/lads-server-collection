@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-FileCopyrightText: 2025-2026 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 // SPDX-License-Identifier: AGPL 3
 
 /*
 LADS AtmoWEB gateway
-Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+Copyright (C) 2025-2026  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import EventEmitter from "events"
 import { EUInformation, promoteToStateMachine, Range, standardUnits, UAObject, UAStateMachineEx } from "node-opcua"
-import { LADSFunctionalState, LADSFunctionalUnit } from "@interfaces"
-import { raiseEvent, touchNodes } from "@utils"
+import { LADSFunctionalState, LADSFunctionalUnit, LADSRunnnigState } from "@interfaces"
+import { LADSFiniteStateMachineHelper, raiseEvent, touchNodes } from "@utils"
 import { AFODictionaryIds } from "@afo"
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server"
 import { AtmoWebDeviceImpl } from "./device"
@@ -37,6 +37,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
     client: AtmoWebClient
     unit: LADSFunctionalUnit
     functionalUnitState: UAStateMachineEx
+    runningStateMachine: UAStateMachineEx
     functions: FunctionImpl[] = []
     variableBindings: VariableBinding[] = []
     programManager: AtmoWebProgramManagerImpl
@@ -53,7 +54,13 @@ export class AtmoWebUnitImpl extends EventEmitter {
             browseName: "AtmoWebUnit",
         }) as LADSFunctionalUnit
         this.functionalUnitState = promoteToStateMachine(this.unit.functionalUnitState)
-        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+        this.functionalUnitState.setState(LADSFunctionalState.Running)
+        this.runningStateMachine = promoteToStateMachine(this.unit.functionalUnitState.runningStateMachine)
+        const functionalUnitStateHelper = new LADSFiniteStateMachineHelper(this.functionalUnitState)
+        if (this.runningStateMachine) {
+            const runningStateMachineHelper = new LADSFiniteStateMachineHelper(this.runningStateMachine, functionalUnitStateHelper, LADSFunctionalState.Running)
+            this.runningStateMachine.setState(LADSRunnnigState.Idle)
+        }
 
         // connect to client
         this.client = deviceImpl.client

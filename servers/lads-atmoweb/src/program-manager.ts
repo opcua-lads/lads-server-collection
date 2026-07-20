@@ -1,9 +1,9 @@
-// SPDX-FileCopyrightText: 2025 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+// SPDX-FileCopyrightText: 2025-2026 Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 // SPDX-License-Identifier: AGPL 3
 
 /*
 LADS AtmoWEB gateway
-Copyright (C) 2025  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
+Copyright (C) 2025-2026  Dr. Matthias Arnold, AixEngineers, Aachen, Germany.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
-import { CallMethodResultOptions, ISessionContext, SessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
-import { LADSFunctionalState, LADSProgramManager, LADSProgramTemplate, LADSResult } from "@interfaces"
-import { copyProgramTemplate, createDeviceProgramRunId, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, promoteToFiniteStateMachine, raiseEvent, setDateTimeValue, setNumericValue, setSessionInformation, setStringValue, touchNodes, VariableDataRecorder } from "@utils"
+import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
+import { LADSProgramManager, LADSProgramTemplate, LADSResult, LADSRunnnigState } from "@interfaces"
+import { copyProgramTemplate, createDeviceProgramRunId, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, raiseEvent, setDateTimeValue, setNumericValue, setSessionInformation, setStringValue, touchNodes, VariableDataRecorder } from "@utils"
 import { AtmoWebUnitImpl } from "./unit"
 import { join } from "path"
 import { AFODictionary, AFODictionaryIds } from "@afo"
@@ -48,7 +48,7 @@ interface ProgramRunOptions {
 
 export class AtmoWebProgramManagerImpl {
     unitImpl: AtmoWebUnitImpl
-    functionalUnitState: UAStateMachineEx
+    runningStateMachine: UAStateMachineEx
     programManager: LADSProgramManager
     programTemplates: LADSProgramTemplate[] = []
     programRunOptions: ProgramRunOptions
@@ -60,8 +60,9 @@ export class AtmoWebProgramManagerImpl {
 
         const stateMachine = functionalUnit.functionalUnitState
         stateMachine.startProgram.bindMethod(this.startProgramMethod.bind(this))
+        stateMachine.start.bindMethod(this.startMethod.bind(this))
         stateMachine.stop.bindMethod(this.stopMethod.bind(this))
-        this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
+        this.runningStateMachine = unitImpl.runningStateMachine
 
         this.initProgramTemplates(data)
     }
@@ -90,10 +91,21 @@ export class AtmoWebProgramManagerImpl {
         })
         touchNodes(programTemplateSet)
     }
+
+    private async startMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        return await this.startProgramMethod([
+            { dataType: DataType.String, value: "Measure" },
+            { dataType: DataType.ExtensionObject, value: [] },
+            { dataType: DataType.String, value: "" },
+            { dataType: DataType.String, value: "" },
+            { dataType: DataType.ExtensionObject, value: [] },
+        ], context)
+    }
+
     private async startProgramMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        const state = this.functionalUnitState.getCurrentState()
-        if (!state.includes(LADSFunctionalState.Stopped)) {
-            return {statusCode: StatusCodes.BadInvalidState}
+        const state = this.runningStateMachine.getCurrentState()
+        if (!state.includes(LADSRunnnigState.Idle)) {
+            return { statusCode: StatusCodes.BadInvalidState }
         }
         const programTemplate = this.programTemplates[0]
         this.programRunOptions = {
@@ -110,22 +122,22 @@ export class AtmoWebProgramManagerImpl {
     }
 
     private async stopMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        const state = this.functionalUnitState.getCurrentState()
-        if (!(state.includes(LADSFunctionalState.Running) || state.includes(LADSFunctionalState.Aborted))) {
-            return {statusCode: StatusCodes.BadInvalidState}
+        const state = this.runningStateMachine.getCurrentState()
+        if (!state.includes(LADSRunnnigState.Execute)) {
+            return { statusCode: StatusCodes.BadInvalidState }
         }
         this.leaveRunning()
         return { statusCode: StatusCodes.Good }
     }
 
     private async enterRunning() {
+        this.runningStateMachine.setState(LADSRunnnigState.Starting)
         const options = this.programRunOptions
-
         // build result
         const result = getLADSObjectType(this.programManager.addressSpace, "ResultType").instantiate({
             componentOf: this.programManager.resultSet as UAObject,
             browseName: options.deviceProgramRunId,
-            optionals: ["NodeVersion", "VariableSet.NodeVersion", "FileSet.NodeVersion"] 
+            optionals: ["NodeVersion", "VariableSet.NodeVersion", "FileSet.NodeVersion"]
         }) as LADSResult
         result.properties.setValueFromSource(options.properties)
         result.supervisoryJobId.setValueFromSource(options.jobId)
@@ -152,14 +164,15 @@ export class AtmoWebProgramManagerImpl {
         const recorderInterval = this.unitImpl.deviceConfig.recorderInterval ? 1000 * Number(this.unitImpl.deviceConfig.recorderInterval) : 10000
         options.variableRecorderTimer = setInterval(() => options.variableRecorder.createRecord(), recorderInterval)
         options.progressTimer = setInterval(() => setNumericValue(this.programManager.activeProgram.currentRuntime, Date.now() - options.started), 1000)
-        this.functionalUnitState.setState(LADSFunctionalState.Running)
+
+        this.runningStateMachine.setState(LADSRunnnigState.Execute)
 
         // generate event
         raiseEvent(this.unitImpl.unit, `Run with id ${options.deviceProgramRunId} based on program-template ${options.programTemplate.browseName.name} started.`)
     }
 
     private async leaveRunning() {
-        this.functionalUnitState.setState(LADSFunctionalState.Stopping)
+        this.runningStateMachine.setState(LADSRunnnigState.Completing)
         const options = this.programRunOptions
         if (options) {
             options.stopped = Date.now()
@@ -168,7 +181,7 @@ export class AtmoWebProgramManagerImpl {
             const result = options.result
             setDateTimeValue(result.stopped, new Date())
             const resultsDirectory = join(__dirname, "results")
-            const xlsx = await new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.deviceProgramRunId, [options.variableRecorder, options.eventRecorder])        
+            const xlsx = await new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.deviceProgramRunId, [options.variableRecorder, options.eventRecorder])
             AFODictionary.addReferences(xlsx, AFODictionaryIds.temperature_measurement_result)
             touchNodes(result, result.fileSet, result.variableSet)
             // generate event
@@ -177,7 +190,8 @@ export class AtmoWebProgramManagerImpl {
             raiseEvent(this.unitImpl.unit, `Run stopped.`)
         }
         this.programRunOptions = undefined
-        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+        this.runningStateMachine.setState(LADSRunnnigState.Complete)
+        this.runningStateMachine.setState(LADSRunnnigState.Idle)
     }
 
 

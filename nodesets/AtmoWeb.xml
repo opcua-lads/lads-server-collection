@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2026-07-17T10:02:24.164Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-07-20T10:17:37.357Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -38,7 +38,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="2d0f4a5adbabff156a0aa7d68f3ffb86"/>
+            <si:GeneratorExtension Hash="d906caf16907a089b55acd748c86cf72"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_AtmoWeb_" NodeId="ns=5;i=5000" BrowseName="5:http://aixengineers.de/AtmoWeb/" ParentNodeId="i=11715">
@@ -318,6 +318,8 @@
             <Reference ReferenceType="HasComponent">ns=5;i=6036</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6042</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6043</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=5011</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7002</Reference>
         </References>
     </UAObject>
     <UAMethod NodeId="ns=5;i=7000" BrowseName="4:StartProgram" ParentNodeId="ns=5;i=5007">
@@ -566,4 +568,35 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
+    <UAObject NodeId="ns=5;i=5011" BrowseName="4:RunningStateMachine" ParentNodeId="ns=5;i=5007">
+        <DisplayName>RunningStateMachine</DisplayName>
+        <Description>The RunningStateMachineType is a sub-state machine of the FunctionalStateMachine and includes detailed substates.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=1036</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6044</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6044" BrowseName="CurrentState" ParentNodeId="ns=5;i=5011">
+        <DisplayName>CurrentState</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6045</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NodeId" NodeId="ns=5;i=6045" BrowseName="Id" ParentNodeId="ns=5;i=6044">
+        <DisplayName>Id</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAMethod NodeId="ns=5;i=7002" BrowseName="4:Start" ParentNodeId="ns=5;i=5007">
+        <DisplayName>Start</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6127</Reference>
+        </References>
+    </UAMethod>
 </UANodeSet>
