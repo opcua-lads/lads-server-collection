@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSProgramManager, LADSProgramTemplate, LADSResult, LADSRunnnigState } from "@interfaces"
-import { copyProgramTemplate, createDeviceProgramRunId, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, raiseEvent, setDateTimeValue, setNumericValue, setSessionInformation, setStringValue, touchNodes, VariableDataRecorder } from "@utils"
+import { copyProgramTemplate, createDeviceProgramRunId, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, raiseEvent, setDateTimeValue, setNameNodeIdValue, setNumericValue, setSessionInformation, setStringValue, touchNodes, VariableDataRecorder } from "@utils"
 import { AtmoWebUnitImpl } from "./unit"
 import { join } from "path"
 import { AFODictionary, AFODictionaryIds } from "@afo"
@@ -155,7 +155,9 @@ export class AtmoWebProgramManagerImpl {
         // initialize active program
         const activeProgram = this.programManager.activeProgram
         setNumericValue(activeProgram.currentRuntime, 0)
-
+        setNameNodeIdValue(activeProgram.currentProgramTemplate, options.programTemplate.browseName.name, options.programTemplate.nodeId)
+        setStringValue(activeProgram.deviceProgramRunId, options.deviceProgramRunId)
+        
         // initialize recorder?
         const recorderVariables = this.unitImpl.functions.flatMap(func => func.recorderVariables())
         options.eventRecorder = new EventDataRecorder("Events", this.unitImpl.unit)
