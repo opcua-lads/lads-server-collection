@@ -27,7 +27,7 @@ import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols } from "./server"
-import { IAddressSpace, INamespace } from "node-opcua"
+import { IAddressSpace, INamespace, DataType } from "node-opcua"
 import { SimulatedBalanceUnitImpl } from "./unit-simulator"
 import { BalanceEvents, DeviceInfo } from "./balance"
 import { BalanceUnitImpl } from "./unit"
@@ -49,8 +49,21 @@ export class BalanceDeviceImpl {
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
             browseName: config.name,
+            optionals: ["OperationalLocation", "HierarchicalLocation"],
         }) as BalanceDevice
         this.device = device
+
+        // Set initial SerialNumber immediately (like freezer does)
+        // This ensures the OPC-UA client can read it before DeviceInfo event
+        const initialSerialNumber = config.protocol === BalanceProtocols.Simulator ? "47110815" : "Unknown"
+        const initialOptions: LADSComponentOptions = {
+            manufacturer: "Unknown",
+            model: "Unknown",
+            serialNumber: initialSerialNumber,
+            componentName: config.name,
+            location: defaultLocation,
+        }
+        initComponent(device, initialOptions)
 
         // create unit implementation
         this.config = config
@@ -59,6 +72,10 @@ export class BalanceDeviceImpl {
 
         // attach device helper
         this.deviceHelper = new LADSDeviceHelper(device)
+
+        // Set OperationalLocation and HierarchicalLocation AFTER DeviceHelper (which sets defaults)
+        device.operationalLocation?.setValueFromSource({ dataType: DataType.String, value: "Tisch_Links" })
+        device.hierarchicalLocation?.setValueFromSource({ dataType: DataType.String, value: "DE/Wangen/Building_24/24_00_00_rechts/Tisch_Links" })
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
@@ -105,4 +122,3 @@ export class BalanceDeviceImpl {
     }
 
 }
-

@@ -25,7 +25,7 @@ import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameter
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, setBooleanValue } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
 import { verify } from "crypto"
@@ -87,6 +87,14 @@ export abstract class ViscometerUnitImpl {
         this.temperature = functionSet.temperature
         this.temperature.sensorValue.setValueFromSource({dataType: DataType.Double, value: 25.0})
 
+        // Enable all functions (LADS default is false)
+        setBooleanValue(this.viscosity.isEnabled, true)
+        setBooleanValue(this.relativeTorque.isEnabled, true)
+        setBooleanValue(this.torque.isEnabled, true)
+        setBooleanValue(this.shearStress.isEnabled, true)
+        setBooleanValue(this.shearRate.isEnabled, true)
+        setBooleanValue(this.temperature.isEnabled, true)
+
         // add Allotrope Ontology References
         AFODictionary.addReferences(this.functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.rheometry, AFODictionaryIds.viscometry)
         AFODictionary.addSensorFunctionReferences(this.viscosity, AFODictionaryIds.viscosity)
@@ -101,8 +109,11 @@ export abstract class ViscometerUnitImpl {
         // future - initialize program mananger
         this.initProgramManager()
 
+        // Auto-start a program after init (delayed to allow program templates to load)
+        setTimeout(() => this.autoStartProgram(), 3000)
+
         // start run loop
-        const dT = 200 
+        const dT = 200
         setInterval( () => {this.evaluate(dT)}, dT)
     }
 
@@ -143,6 +154,7 @@ export abstract class ViscometerUnitImpl {
         stateMachine.stop?.bindMethod(this.stopSpeedController.bind(this))
         this.speedControllerState = promoteToFiniteStateMachine(stateMachine)
         this.speedControllerState.setState(LADSFunctionalState.Stopped)
+        setBooleanValue(this.speedController.isEnabled, true)
         setNumericValue(this.speedController.currentValue, 0.0)
         setNumericValue(this.speedController.targetValue, 30.0)
         this.speedController.targetValue.on("value_changed", (dataValue => {raiseEvent(this.speedController, `Speed set-point changed to ${dataValue.value.value}rpm`)}))
@@ -185,6 +197,7 @@ export abstract class ViscometerUnitImpl {
         stateMachine.stop?.bindMethod(this.stopTemperatureController.bind(this))
         this.temperatureControllerState = promoteToFiniteStateMachine(stateMachine)
         this.temperatureControllerState.setState(LADSFunctionalState.Stopped)
+        setBooleanValue(controller.isEnabled, true)
         setNumericValue(controller.currentValue, 25.0)
         controller.currentValue.historizing = true
         controller.addressSpace.installHistoricalDataNode(controller.currentValue)
@@ -241,6 +254,7 @@ export abstract class ViscometerUnitImpl {
         const names = ViscometerSpindles.map(spindle => new LocalizedText({text: spindle.name}) )
         const codes = ViscometerSpindles.map(spindle => new LocalizedText({text: (spindle.code < 10)?`0${spindle.code}`:`${spindle.code}`}))
         const spindle = this.functionalUnit.functionSet.spindle
+        setBooleanValue(spindle.isEnabled, true)
         setStringArrayValue(spindle.targetValue.enumStrings, names)
         setStringArrayValue(spindle.currentValue.enumStrings, codes)
         const index = ViscometerSpindles.findIndex(spindle => (spindle.name == "SC4-31"))
@@ -256,6 +270,29 @@ export abstract class ViscometerUnitImpl {
         raiseEvent(this.functionalUnit, `Spindle changed to type ${this.spindle.name} w/ code ${this.spindle.code}`)
     }
     
+    private async autoStartProgram() {
+        // Wait for program templates to be loaded
+        if (this.programTemplates.length === 0) {
+            console.log("[Viscometer] No program templates loaded yet, retrying in 2s...")
+            setTimeout(() => this.autoStartProgram(), 2000)
+            return
+        }
+        const template = this.programTemplates[0]
+        const templateName = template.browseName.name || "Analytical Method A (30rpm)"
+        console.log(`[Viscometer] Auto-starting program: ${templateName}`)
+
+        const inputArguments: VariantLike[] = [
+            new Variant({ dataType: DataType.String, value: templateName }),
+            new Variant({ dataType: DataType.Null, value: null }),
+            new Variant({ dataType: DataType.String, value: "" }),
+            new Variant({ dataType: DataType.String, value: "" }),
+            new Variant({ dataType: DataType.Null, value: null }),
+        ]
+        const context = SessionContext.defaultContext
+        const result = await this.startProgram(inputArguments, context)
+        console.log(`[Viscometer] Auto-start result:`, result.statusCode?.toString())
+    }
+
     //---------------------------------------------------------------
     // program manager implementation
     //---------------------------------------------------------------
@@ -410,8 +447,8 @@ export abstract class ViscometerUnitImpl {
             samples.push({containerId: "4711", sampleId: "08150001", position: "1", customData: ""})
         }
         
-        // set context information provided by input-arguments
-        setSessionInformation(result, context)
+        // set context information provided by input-arguments (skip if no real session, e.g. auto-start)
+        try { setSessionInformation(result, context) } catch { /* no session context available */ }
         setStringValue(getDescriptionVariable(result), `Run based on template ${programTemplateId}, started ${startedTimestamp.toLocaleDateString()}.`)
         result.properties?.setValueFromSource(inputArguments[1])
         result.supervisoryJobId?.setValueFromSource(inputArguments[2])

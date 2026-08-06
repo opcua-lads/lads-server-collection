@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { pHSensorRecorder } from "@asm"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement } from "@utils"
+import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement, setBooleanValue } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, SessionContext, CallMethodResultOptions, Variant } from "node-opcua"
 import { join } from "path"
 import { pHMeterDeviceImpl } from "./ph-meter-device"
@@ -100,6 +100,10 @@ export abstract class pHMeterUnitImpl {
         this.temperatureSensor = functionSet.getComponentByName("TemperatureSensor") as LADSAnalogScalarSensorFunction
         this.temperatureSensor.sensorValue.historizing = true
         addressSpace.installHistoricalDataNode(this.temperatureSensor.sensorValue)
+
+        // Enable all functions (LADS default is false)
+        setBooleanValue(this.pHSensor.isEnabled, true)
+        setBooleanValue(this.temperatureSensor.isEnabled, true)
 
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.pH_measurement)
         AFODictionary.addSensorFunctionReferences(this.pHSensor, AFODictionaryIds.pH_measurement, AFODictionaryIds.pH)

@@ -55,9 +55,12 @@ export async function waitForCondition(
 export class SimulatedBalance extends Balance {
     getRawWeight: () => number
     status = BalanceStatus.Offline
-    rawWeight = 0
+    // Initialize to 50g to match filteredRawWeight initial value (prevents 0 on first reading)
+    rawWeight = 50.0
     zeroWeight = 0
-    tareWeight = 0
+    tareWeight = 10  // Non-zero = TareMode.Manual
+    // Direct control of stability for simulation
+    simulatedStable = true
 
     constructor(getRawWeight: () => number) {
         super()
@@ -84,13 +87,19 @@ export class SimulatedBalance extends Balance {
     get netWeight(): number { return this.grossWeight - this.tareWeight }
 
     async getCurrentReading(): Promise<BalanceReading> {
+        // Get current weight from simulator's filtered value
         const rawValue = this.getRawWeight()
-        const stable = Math.abs(this.rawWeight - rawValue) < 0.01
-        const tareMode = (Math.abs(this.tareWeight) < 0.001) ? BalanceTareMode.None : BalanceTareMode.Manual
         this.rawWeight = rawValue
-        const unit = "g"
-        const weight = this.netWeight
-        return { weight, unit, stable, tareMode: tareMode };
+
+        // Compute weight directly (more robust than using getters)
+        const gross = rawValue - this.zeroWeight
+        const weight = gross - this.tareWeight
+
+        // Use directly controlled stability flag
+        const stable = this.simulatedStable
+        const tareMode = (Math.abs(this.tareWeight) < 0.001) ? BalanceTareMode.None : BalanceTareMode.Manual
+
+        return { weight, unit: "g", stable, tareMode };
     }
 
     async setTare(): Promise<void> {
