@@ -1,0 +1,12 @@
+{
+    "port": 4843,
+    "serialNumber": 4711,
+    "devices": [
+        {
+            "baseUrl": "http://192.168.1.21",
+            "name": "My Memmert Essentim",
+            "recorderInterval": 5,
+            "hierachicalLocation": "DE/Munich/Schragenhofstr_35/A/Office"
+        }
+    ]
+}

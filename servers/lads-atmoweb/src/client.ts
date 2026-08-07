@@ -160,7 +160,7 @@ export class AtmoWebClient extends EventEmitter {
         this.writeQueue.length = 0;
 
         try {
-            // console.log(`Fetch data from ${this.opts.baseURL} "${params}"`)
+            console.log(`Fetch data from ${this.opts.baseURL} "${params}"`)
             const data = await this.fetchJSON("/atmoweb?" + params.toString());
             if (data) {
                 this.emit(ClientEvent.data, data);
@@ -191,12 +191,21 @@ export class AtmoWebClient extends EventEmitter {
 
     /* ------------------------------------------------------------------ */
     private async fetchJSON(path: string): Promise<any> {
+
+        async function parseResponse(response: Response): Promise<any> {
+            const text = (await response.text()).trim()
+            const isJsonObject = text.startsWith("{") && text.endsWith("}")
+            if (isJsonObject) {
+                return JSON.parse(text)
+            }
+            // Real server: missing braces + trailing comma
+            return JSON.parse(`{${text.replace(/,\s*$/, "")}}`)
+        }
+
         try {
             const res = await fetch(this.opts.baseURL + path, { signal: AbortSignal.timeout(5000) });
             if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
-            const text = await res.text()
-            const fixed = `{${text.replace(/,\s*$/, "")}}`;
-            const data = JSON.parse(fixed)
+            const data = parseResponse(res)
             return data
 
         } catch (err) {

@@ -32,6 +32,8 @@ export const IncludeAFO = false
 // config
 //---------------------------------------------------------------
 export interface AtmoWebConfig {
+    port?: number
+    serialNumber?: number
     devices: AtmoWebDeviceConfig[]
 }
 
@@ -58,16 +60,15 @@ function isAtmoWebDeviceConfig(obj: any): obj is AtmoWebDeviceConfig {
 }
 
 const DefaultConfig: AtmoWebConfig = {
-      devices: [
-        { baseUrl: "http://192.168.1.21", name: "My Memmert Essentim", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
-      ]
-/*    devices: [
+    port: 4843,
+    serialNumber: 4711,
+    devices: [
         { baseUrl: "http://localhost:8081", name: "My Memmert UN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
         { baseUrl: "http://localhost:8082", name: "My Memmert ICO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
         { baseUrl: "http://localhost:8083", name: "My Memmert IN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
         { baseUrl: "http://localhost:8084", name: "My Memmert VO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
     ],
-    */
+
 }
 
 async function loadConfig(): Promise<AtmoWebConfig> {
@@ -76,7 +77,8 @@ async function loadConfig(): Promise<AtmoWebConfig> {
     try {
         const content = await readFile(path, 'utf-8')
         const parsed = JSON.parse(content)
-        return isAtmoWebConfig(parsed) ? parsed as AtmoWebConfig : DefaultConfig
+        return parsed
+        //return isAtmoWebConfig(parsed) ? parsed as AtmoWebConfig : DefaultConfig
     } catch (err) {
         console.warn(`Failed to load configuration file: ${path}`)
         console.log(`Running in simulation mode`)
@@ -94,8 +96,10 @@ export class AtmoWebServerImpl {
     deviceSet: UAObject
     deviceImplementations: AtmoWebDeviceImpl[] = []
 
-    constructor(port: number) {
-        const uri = "LADS-AtmoWEB-Server"
+    constructor(config: AtmoWebConfig) {
+        const manufacturerUri = "aixengineers.de"
+        const uri = `${manufacturerUri}/LADS-AtmoWEB-Server`
+        const applicationUri = `${uri}/${config.serialNumber ?? 4711}`
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
         // provide paths for the nodeset files
@@ -113,14 +117,15 @@ export class AtmoWebServerImpl {
         this.server = createServer({
             applicationName: "LADS AtmoWEB Gateway",
             applicationDirectory: __dirname,
-            port,
-            uri,
+            port: config.port ?? 4843,
+            uri: uri,
+            applicationUri: applicationUri,
             nodeset_filenames
         })
           
     }
 
-    async start() {
+    async start(config: AtmoWebConfig) {
         // wait until server initialized
         await this.server.initialize()
 
@@ -130,7 +135,6 @@ export class AtmoWebServerImpl {
         this.nameSpaceApp = addressSpace.getNamespace('http://aixengineers.de/AtmoWeb/')
         this.deviceSet = addressSpace.findNode(coerceNodeId(DIObjectIds.deviceSet, this.nameSpaceDI.index)) as UAObject
 
-        const config = await loadConfig()
         config.devices.forEach(deviceConfig => {
             const device = new AtmoWebDeviceImpl(this, deviceConfig)
             this.deviceImplementations.push(device)
@@ -148,8 +152,9 @@ export class AtmoWebServerImpl {
 // create and start server including a list of viscometers
 //---------------------------------------------------------------
 export async function main() {
-    const server = new AtmoWebServerImpl(4843)
-    await server.start()
+    const config = await loadConfig()
+    const server = new AtmoWebServerImpl(config)
+    await server.start(config)
 }
 
 main()
