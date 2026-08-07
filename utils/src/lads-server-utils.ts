@@ -18,6 +18,7 @@ export interface CreateServerOptions {
     manufacturerName?: string
     applicationName: string
     applicationDirectory: string
+    applicationUri?: string
     softwareVersion?: string
     uri: string
     certificateSupport?: boolean
@@ -40,7 +41,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
             applicationName: options.applicationName,
             applicationType: ApplicationType.Server,
             productUri: options.uri,
-            applicationUri: options.uri,
+            applicationUri: options.applicationUri ?? options.uri,
 
         },
         // nodesets used by the server

@@ -66,7 +66,7 @@ export function getItem<T>(item: T | null, propertyName: string): T {
 // ----------------------------------------------------------------------------
 // Variable setters
 // ----------------------------------------------------------------------------
-export const NumericDataTypes = new Set<number>([DataType.Int16, DataType.Int32, DataType.Int64, DataType.UInt16, DataType.UInt32, DataType.UInt64, DataType.Byte, DataType.Float, DataType.Double])
+export const NumericDataTypes = new Set<number>([DataType.Byte, DataType.SByte, DataType.Int16, DataType.Int32, DataType.Int64, DataType.UInt16, DataType.UInt32, DataType.UInt64, DataType.Byte, DataType.Float, DataType.Double])
 
 export function setBooleanValue(variable: UAVariable, value: boolean, statusCode = StatusCodes.Good) {    
     if (!variable) return
