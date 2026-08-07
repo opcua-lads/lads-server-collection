@@ -194,7 +194,11 @@ export class AtmoWebClient extends EventEmitter {
         try {
             const res = await fetch(this.opts.baseURL + path, { signal: AbortSignal.timeout(5000) });
             if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
-            return await res.json();
+            const text = await res.text()
+            const fixed = `{${text.replace(/,\s*$/, "")}}`;
+            const data = JSON.parse(fixed)
+            return data
+
         } catch (err) {
             this.emit(ClientEvent.error, err);
         }

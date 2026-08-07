@@ -58,12 +58,16 @@ function isAtmoWebDeviceConfig(obj: any): obj is AtmoWebDeviceConfig {
 }
 
 const DefaultConfig: AtmoWebConfig = {
-    devices: [
+      devices: [
+        { baseUrl: "http://192.168.1.21", name: "My Memmert Essentim", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
+      ]
+/*    devices: [
         { baseUrl: "http://localhost:8081", name: "My Memmert UN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
         { baseUrl: "http://localhost:8082", name: "My Memmert ICO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
         { baseUrl: "http://localhost:8083", name: "My Memmert IN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
         { baseUrl: "http://localhost:8084", name: "My Memmert VO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
     ],
+    */
 }
 
 async function loadConfig(): Promise<AtmoWebConfig> {
