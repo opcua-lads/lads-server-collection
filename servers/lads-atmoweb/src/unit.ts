@@ -20,9 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import EventEmitter from "events"
-import { EUInformation, promoteToStateMachine, Range, standardUnits, UAObject, UAStateMachineEx } from "node-opcua"
+import { EUInformation, ISessionContext, promoteToStateMachine, Range, standardUnits, UAObject, UAStateMachineEx } from "node-opcua"
 import { LADSFunctionalState, LADSFunctionalUnit, LADSMultiStateDiscreteSensorFunction, LADSRunnnigState } from "@interfaces"
-import { EventSeverity, getNumericValue, LADSFiniteStateMachineHelper, raiseEvent, setNumericValue, touchNodes } from "@utils"
+import { EventSeverity, getNumericValue, LADSFiniteStateMachineHelper, LockImpl, raiseEvent, setNumericValue, touchNodes } from "@utils"
 import { AFODictionaryIds } from "@afo"
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server"
 import { AtmoWebDeviceImpl } from "./device"
@@ -36,6 +36,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
     deviceConfig: AtmoWebDeviceConfig
     client: AtmoWebClient
     unit: LADSFunctionalUnit
+    lock: LockImpl
     operationMode: LADSMultiStateDiscreteSensorFunction
     functionalUnitState: UAStateMachineEx
     runningStateMachine: UAStateMachineEx
@@ -53,6 +54,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
         this.unit = unitType.instantiate({
             componentOf: functionalUnitSet,
             browseName: "AtmoWebUnit",
+            optionals: ["Lock"]
         }) as LADSFunctionalUnit
         this.functionalUnitState = promoteToStateMachine(this.unit.functionalUnitState)
         this.functionalUnitState.setState(LADSFunctionalState.Running)
@@ -62,6 +64,9 @@ export class AtmoWebUnitImpl extends EventEmitter {
             const runningStateMachineHelper = new LADSFiniteStateMachineHelper(this.runningStateMachine, functionalUnitStateHelper, LADSFunctionalState.Running)
             this.runningStateMachine.setState(LADSRunnnigState.Idle)
         }
+        
+        // lock object
+        this.lock = new LockImpl(this.unit.lock)
 
         // connect to client
         this.client = deviceImpl.client
@@ -239,5 +244,6 @@ export class AtmoWebUnitImpl extends EventEmitter {
         }
     }
 
+    isAccessibleBy(sessionContext: ISessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
 
 }
