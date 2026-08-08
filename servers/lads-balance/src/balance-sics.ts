@@ -140,6 +140,7 @@ export class SicsBalance extends StreamBalance {
             model: "Unknown",
             device_type_image: "mettler_toledo_ms.png"
         };
+
         try {
             const respI2 = await this.sendCommand("I2");
             const m = respI2.slice(5).replaceAll('"', "")
@@ -155,14 +156,21 @@ export class SicsBalance extends StreamBalance {
         try {
             const respI3 = await this.sendCommand("I3");
             const v = respI3.slice(5).replaceAll('"', "")
+            console.log('Received Firmware:', v);
             if (v) info.firmware = v.trim();
         } catch { }
 
         try {
             const respI4 = await this.sendCommand("I4");
             const s = respI4.slice(5).replaceAll('"', "")
+            console.log('Received Serial:', s);
             if (s) info.serialNumber = s.trim();
         } catch { }
+
+        // FIXME: hotfix... commands I2,I3,I4 return no value when connected via serial
+        info.model = "Sartorius Cubis CUB524S-1S1-IC";
+        info.manufacturer = "Sartorius";
+        info.device_type_image = "sartorius_cubis.png"
 
         return info;
     }
