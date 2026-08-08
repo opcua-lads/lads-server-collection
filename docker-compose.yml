@@ -1,0 +1,32 @@
+services:
+  lads-balance:
+    build:
+      context: .
+    profiles: ["balance", "all"]
+    image: lads-server-collection
+    # host networking: OPC UA endpoint-URLs und mDNS/GDS-Registrierung
+    # funktionieren so ohne Port-/Hostname-Verrenkungen
+    network_mode: host
+    environment:
+      SERVER: lads-balance
+      PORT: 4844
+    devices:
+      # Waage muss vorher via usbipd an WSL attached sein (siehe README)
+      - /dev/ttyACM0:/dev/ttyACM0
+    volumes:
+      - ./docker-compose.d/config.balance.json:/app/out/servers/lads-balance/src/config.json:ro
+    restart: unless-stopped
+  lads-atmoweb:
+    build:
+      context: .
+    profiles: ["atmoweb", "all"]
+    image: lads-server-collection
+    # host networking: OPC UA endpoint-URLs und mDNS/GDS-Registrierung
+    # funktionieren so ohne Port-/Hostname-Verrenkungen
+    network_mode: host
+    environment:
+      SERVER: lads-atmoweb
+      PORT: 4843
+    volumes:
+      - ./docker-compose.d/config.atmoweb.json:/app/out/servers/lads-atmoweb/src/config.json:ro
+    restart: unless-stopped

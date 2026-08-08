@@ -1,0 +1,12 @@
+{
+    "includeAfo": false,
+    "port": 4844,
+    "devices": [
+        {
+            "serialPort": "/dev/ttyACM0",
+            "protocol": "SICS",
+            "name": "Sartorius Cubis CUB524S-1S1-IC",
+            "enabled": true
+        }
+    ]
+}
