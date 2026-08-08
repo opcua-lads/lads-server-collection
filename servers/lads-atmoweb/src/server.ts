@@ -105,7 +105,7 @@ export class AtmoWebServerImpl {
         // provide paths for the nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
-        const nodeset_di = join(nodeset_path, 'Opc.Ua.DI.NodeSet2.xml')
+        const nodeset_di = join(nodeset_path, 'Opc.Ua.Di.NodeSet2.xml')
         const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
         const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
@@ -122,7 +122,7 @@ export class AtmoWebServerImpl {
             applicationUri: applicationUri,
             nodeset_filenames
         })
-          
+
     }
 
     async start(config: AtmoWebConfig) {
