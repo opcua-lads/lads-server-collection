@@ -49,6 +49,22 @@ export function getStringValue(variable: UAVariable, defaultValue = ""): string 
     }
 }
 
+export function getStringArrayValue(variable: UAVariable, defaultValue: string[] =[]): string[] {
+    if (!variable) return defaultValue
+    const value: any[] = variable.readValue().value.value
+    const dataType = variable.dataTypeObj.basicDataType
+    switch (dataType) {
+        case DataType.String:
+            return value;
+        case DataType.LocalizedText:
+            return value.map(element => (<LocalizedText>element).text)
+        case DataType.QualifiedName:
+            return value.map(element => (<QualifiedName>element).name)
+        default:
+            return defaultValue
+    }
+}
+
 export function getDateTimeValue(variable: UAVariable): DateTime {
     if (!variable) return undefined
     return variable.readValue().value.value

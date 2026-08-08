@@ -116,6 +116,13 @@ export class AtmoWebClient extends EventEmitter {
 
     /* ------------------------------------------------------------------ */
     /* ───────── internal: connect / reconnect handling ───────────────── */
+    private enterState(state: ClientState) {
+        if (this.state != state) {
+            this.state = state;
+            this.emit(ClientEvent.state, state);
+        }
+    }
+
     private async connect(): Promise<void> {
         if (this.state !== ClientState.Disconnected) return;
         this.state = ClientState.Connecting;
@@ -134,8 +141,7 @@ export class AtmoWebClient extends EventEmitter {
             this.startLoops();
         } catch (err) {
             this.emit(ClientEvent.error, err);
-            this.state = ClientState.Disconnected;
-            this.emit(ClientEvent.state, this.state);
+            this.enterState(ClientState.Disconnected)
             setTimeout(() => this.connect(), this.opts.retryDelay);
         }
     }
@@ -148,7 +154,7 @@ export class AtmoWebClient extends EventEmitter {
 
     /* -- variable polling & writing ------------------------------------ */
     private async pollVariables(): Promise<void> {
-        if (this.state !== ClientState.Connected || (!this.variables.length && !this.writeQueue.length)) return;
+        if (!this.variables.length && !this.writeQueue.length) return;
 
         const params = new URLSearchParams();
 
@@ -165,8 +171,10 @@ export class AtmoWebClient extends EventEmitter {
             if (data) {
                 this.emit(ClientEvent.data, data);
             }
+            this.enterState(ClientState.Connected)
         } catch (err) {
             this.emit(ClientEvent.error, err);
+            this.enterState(ClientState.Disconnected)
         }
     }
 
@@ -209,7 +217,8 @@ export class AtmoWebClient extends EventEmitter {
             return data
 
         } catch (err) {
-            this.emit(ClientEvent.error, err);
+            throw(err)
+            //this.emit(ClientEvent.error, err);
         }
     }
 
@@ -219,7 +228,8 @@ export class AtmoWebClient extends EventEmitter {
             if (!res.ok) throw new Error(`HTTP ${res.status} – ${path}`);
             return await res.text();
         } catch (err) {
-            this.emit(ClientEvent.error, err);
+            throw(err)
+            //this.emit(ClientEvent.error, err);
         }
     }
 }

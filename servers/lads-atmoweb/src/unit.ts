@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import EventEmitter from "events"
 import { EUInformation, promoteToStateMachine, Range, standardUnits, UAObject, UAStateMachineEx } from "node-opcua"
-import { LADSFunctionalState, LADSFunctionalUnit, LADSRunnnigState } from "@interfaces"
-import { LADSFiniteStateMachineHelper, raiseEvent, touchNodes } from "@utils"
+import { LADSFunctionalState, LADSFunctionalUnit, LADSMultiStateDiscreteSensorFunction, LADSRunnnigState } from "@interfaces"
+import { EventSeverity, getNumericValue, LADSFiniteStateMachineHelper, raiseEvent, setNumericValue, touchNodes } from "@utils"
 import { AFODictionaryIds } from "@afo"
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server"
 import { AtmoWebDeviceImpl } from "./device"
 import { AtmoWebClient, ClientEvent, ClientState } from "./client"
-import { AnalogControlFunctionConfig, AnalogControlFunctionImpl, AnalogSensorFunctionImpl, CoverFunctionConfig, CoverFunctionImpl, FunctionImpl, TwoStateDiscreteControlFunctionConfig, TwoStateDiscreteControlFunctionImpl, VariableBinding } from "./functions"
+import { AnalogControlFunctionConfig, AnalogControlFunctionImpl, AnalogSensorFunctionImpl, CoverFunctionConfig, CoverFunctionImpl, FunctionImpl, OperationMode, OperationModeVariableBinding, TwoStateDiscreteControlFunctionConfig, TwoStateDiscreteControlFunctionImpl, VariableBinding } from "./functions"
 import { AtmoWebProgramManagerImpl } from "./program-manager"
 
 interface ValueRange { min: number, max: number }
@@ -36,6 +36,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
     deviceConfig: AtmoWebDeviceConfig
     client: AtmoWebClient
     unit: LADSFunctionalUnit
+    operationMode: LADSMultiStateDiscreteSensorFunction
     functionalUnitState: UAStateMachineEx
     runningStateMachine: UAStateMachineEx
     functions: FunctionImpl[] = []
@@ -68,6 +69,13 @@ export class AtmoWebUnitImpl extends EventEmitter {
         this.client.on(ClientEvent.state, this.stateHandler.bind(this))
         this.client.on(ClientEvent.config, this.configHandler.bind(this))
         this.client.on(ClientEvent.log, this.logHandler.bind(this))
+
+        // hardwire operation-mode
+        const functionSet = this.unit.functionSet as UAObject
+        this.operationMode = functionSet.getChildByName("OperationMode") as LADSMultiStateDiscreteSensorFunction
+        if (this.operationMode) {
+            this.variableBindings.push(new OperationModeVariableBinding(this.client, this.operationMode.sensorValue, "CurOp"))
+        }
     }
 
     logHandler(messages: string[]) {
@@ -83,6 +91,15 @@ export class AtmoWebUnitImpl extends EventEmitter {
 
     stateHandler(state: ClientState) {
         //console.log(state)
+        if (state === ClientState.Disconnected) {
+            const variable = this.operationMode.sensorValue
+            if (getNumericValue(variable) != OperationMode.Offline) {
+                setNumericValue(variable, OperationMode.Offline)
+            }
+            raiseEvent(this.unit, "Unit disconnected - entering offline.", EventSeverity.Warning)
+        } else if (state === ClientState.Connected) {
+            raiseEvent(this.unit, "Unit connected - entering online.", EventSeverity.Info)
+        }
     }
 
     createAnalogControlFunction(data: any, parent: UAObject, name: string, euInformation: EUInformation, controllerDictionaryId: string, dictionaryIds: string[], id: string, currentValueId?: string): AnalogControlFunctionImpl {

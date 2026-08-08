@@ -19,12 +19,14 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { AccessLevelFlag, CallMethodResultOptions, DataType, DataValue, EUInformation, ISessionContext, Namespace, promoteToStateMachine, Range, StatusCodes, UAObject, UAStateMachineEx, UATwoStateDiscrete, UAVariable, VariantLike } from "node-opcua"
+import { AccessLevelFlag, CallMethodResultOptions, DataType, DataValue, EUInformation, ISessionContext, Namespace, OPCUABaseServer, promoteToStateMachine, Range, StatusCodes, UAMultiStateDiscrete, UAObject, UAStateMachineEx, UATwoStateDiscrete, UAVariable, VariantLike } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSFunctionalState, LADSTwoStateDiscreteControlFunction } from "@interfaces"
-import { setNumericValue, getLADSObjectType, setBooleanValue, getBooleanValue, raiseEvent, initializeAnalogUnitRange, initializeTwoStateDiscrete, AnalogUnitRangeChangedEventReporter, TwoStateDiscreteChangedEventReporter } from "@utils"
+import { setNumericValue, getLADSObjectType, setBooleanValue, getBooleanValue, raiseEvent, initializeAnalogUnitRange, initializeTwoStateDiscrete, AnalogUnitRangeChangedEventReporter, TwoStateDiscreteChangedEventReporter, getStringArrayValue } from "@utils"
 import { AtmoWebClient } from "./client"
 import { AFODictionary } from "@afo"
 import { AutomatedReactorMeasurementOptions, Units } from "@asm"
+
+export enum OperationMode { Offline = 0, Manual, Program, Idle, Timer }
 
 //---------------------------------------------------------------
 // variable binding
@@ -72,6 +74,34 @@ class NumericVariableBinding extends VariableBinding {
 class BooleanVariableBinding extends VariableBinding {
     setValue(value: unknown): void { setBooleanValue(this.variable, Boolean(value)) }
     getValueStr(value: unknown): string { return Boolean(value) ? "1" : "0" }
+}
+
+function getOperationMode(value: string) {
+    switch (value) {
+        case "manual": return OperationMode.Manual
+        case "idle": return OperationMode.Idle
+        case "program": return OperationMode.Program
+        case "timer": return OperationMode.Timer
+        default: return OperationMode.Offline
+    }
+}
+
+export class OperationModeVariableBinding extends VariableBinding {
+    
+    setValue(value: unknown): void {
+        const operationMode= getOperationMode(String(value).trim().toLowerCase())        
+        setNumericValue(this.variable, operationMode)
+    }
+
+    getValueStr(value: unknown): string { 
+        const multiStateVariable = this.variable as UAMultiStateDiscrete<number, DataType.UInt32>
+        const enumStrings = getStringArrayValue(multiStateVariable.enumStrings)
+        try {
+            return enumStrings[Number(value)]
+        } catch (error) {
+            return "Unknown"
+        }
+    }
 }
 
 //---------------------------------------------------------------
