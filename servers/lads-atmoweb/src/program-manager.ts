@@ -103,7 +103,8 @@ export class AtmoWebProgramManagerImpl {
     }
 
     private async startProgramMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        const state = this.runningStateMachine.getCurrentState()
+        if (!this.unitImpl.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
+         const state = this.runningStateMachine.getCurrentState()
         if (!state.includes(LADSRunnnigState.Idle)) {
             return { statusCode: StatusCodes.BadInvalidState }
         }
@@ -122,6 +123,7 @@ export class AtmoWebProgramManagerImpl {
     }
 
     private async stopMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.unitImpl.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         const state = this.runningStateMachine.getCurrentState()
         if (!state.includes(LADSRunnnigState.Execute)) {
             return { statusCode: StatusCodes.BadInvalidState }
