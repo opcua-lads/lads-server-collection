@@ -27,7 +27,7 @@ import { AFODictionaryIds } from "@afo"
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server"
 import { AtmoWebDeviceImpl } from "./device"
 import { AtmoWebClient, ClientEvent, ClientState } from "./client"
-import { AnalogControlFunctionConfig, AnalogControlFunctionImpl, AnalogSensorFunctionImpl, CoverFunctionConfig, CoverFunctionImpl, FunctionImpl, OperationMode, OperationModeVariableBinding, TwoStateDiscreteControlFunctionConfig, TwoStateDiscreteControlFunctionImpl, VariableBinding } from "./functions"
+import { AnalogControlFunctionConfig, AnalogControlFunctionImpl, AnalogSensorFunctionImpl, CoverFunctionConfig, CoverFunctionImpl, FunctionImpl, OperationMode, OperationModeVariableBinding, restrictWriteAccess, TwoStateDiscreteControlFunctionConfig, TwoStateDiscreteControlFunctionImpl, VariableBinding } from "./functions"
 import { AtmoWebProgramManagerImpl } from "./program-manager"
 
 interface ValueRange { min: number, max: number }
@@ -136,7 +136,9 @@ export class AtmoWebUnitImpl extends EventEmitter {
             alarmHi: Number(data[alHiKey]),
             alarmLo: Number(data[alLoKey]),
         }
-        return new AnalogControlFunctionImpl(parent, config)
+        const functionImpl = new AnalogControlFunctionImpl(parent, config)
+        restrictWriteAccess(functionImpl.controlFunction.targetValue, this.isAccessibleBy.bind(this))
+        return functionImpl
     }
 
     createAnalogSensorFunction(data: any, parent: UAObject, name: string, euInformation: EUInformation, controllerDictionaryId: string, dictionaryIds: string[], id: string, sensorValueRange?: Range) {
@@ -160,7 +162,9 @@ export class AtmoWebUnitImpl extends EventEmitter {
             trueState: trueState,
             value: Boolean(data[id])
         }
-        return new TwoStateDiscreteControlFunctionImpl(parent, config)
+        const functionImpl = new TwoStateDiscreteControlFunctionImpl(parent, config)
+        restrictWriteAccess(functionImpl.controlFunction.targetValue, this.isAccessibleBy.bind(this))
+        return functionImpl
     }
 
     createCoverFunction(data: any, parent: UAObject, name: string): CoverFunctionImpl {
@@ -244,6 +248,9 @@ export class AtmoWebUnitImpl extends EventEmitter {
         }
     }
 
-    isAccessibleBy(sessionContext: ISessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
+    isAccessibleBy(sessionContext: ISessionContext) : boolean { 
+        if (!this.lock) return true
+        return this.lock.isAccessibleBy(sessionContext)
+    }
 
 }
