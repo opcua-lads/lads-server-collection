@@ -19,12 +19,13 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { AccessLevelFlag, CallMethodResultOptions, DataType, DataValue, EUInformation, ISessionContext, Namespace, OPCUABaseServer, promoteToStateMachine, Range, StatusCodes, UAMultiStateDiscrete, UAObject, UAStateMachineEx, UATwoStateDiscrete, UAVariable, VariantLike } from "node-opcua"
+import { AccessLevelFlag, CallMethodResultOptions, DataType, DataValue, EUInformation, ISessionContext, Namespace, OPCUABaseServer, promoteToStateMachine, Range, StatusCodes, UAMultiStateDiscrete, UAObject, UAStateMachineEx, UATwoStateDiscrete, UAVariable, UAVariableType, VariantLike } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSFunctionalState, LADSTwoStateDiscreteControlFunction } from "@interfaces"
 import { setNumericValue, getLADSObjectType, setBooleanValue, getBooleanValue, raiseEvent, initializeAnalogUnitRange, initializeTwoStateDiscrete, AnalogUnitRangeChangedEventReporter, TwoStateDiscreteChangedEventReporter, getStringArrayValue } from "@utils"
 import { AtmoWebClient } from "./client"
 import { AFODictionary } from "@afo"
 import { AutomatedReactorMeasurementOptions, Units } from "@asm"
+import { BlobOptions } from "node:buffer"
 
 export enum OperationMode { Offline = 0, Manual, Program, Idle, Timer }
 
@@ -233,6 +234,24 @@ export class AnalogSensorFunctionImpl extends FunctionImpl {
 
     measurementOptions(): AutomatedReactorMeasurementOptions[] { return [createMeasurementOptions(this.sensorFunction.sensorValue, this.config)]}
 
+}
+
+class WriteVariableWrapper {
+    variable: UAVariable
+    isAccessible: (context: ISessionContext) => boolean
+    originalIsWritable: (context: ISessionContext) => boolean    
+
+    constructor(variable: UAVariable, isAccessible: (context: ISessionContext) => boolean) {
+        this.variable = variable
+        this.isAccessible = isAccessible
+        this.originalIsWritable = variable.isWritable.bind(variable)
+        variable.isWritable = this.isWritable.bind(this)
+    }
+
+    private isWritable(context: ISessionContext): boolean {
+        if (!this.originalIsWritable(context)) return false
+        return this.isAccessible(context)
+    }    
 }
 
 export class TwoStateDiscreteControlFunctionImpl extends FunctionImpl {
