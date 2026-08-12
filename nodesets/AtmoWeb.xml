@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2026-08-08T08:05:04.100Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-08-12T15:23:33.021Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -40,7 +40,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="6f824d18e0c8a54aa0f7c14ecfe3afd1"/>
+            <si:GeneratorExtension Hash="557b9b484acadcb1ac8346fac9c662df"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___aixengineers_de_AtmoWeb_" NodeId="ns=5;i=5000" BrowseName="5:http://aixengineers.de/AtmoWeb/" ParentNodeId="i=11715">
@@ -132,6 +132,8 @@
             <Reference ReferenceType="HasComponent">ns=5;i=5008</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6022</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6023</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6052</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6054</Reference>
         </References>
     </UAObjectType>
     <UAObject NodeId="ns=5;i=5001" BrowseName="3:MachineryItemState" ParentNodeId="ns=5;i=1000">
@@ -696,5 +698,21 @@
         <Value>
             <uax:UInt32>0</uax:UInt32>
         </Value>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6052" BrowseName="1:ManufacturerUri" ParentNodeId="ns=5;i=1000">
+        <DisplayName>ManufacturerUri</DisplayName>
+        <Description>ManufacturerUri provides a unique identifier for this company. This identifier should be a fully qualified domain name; however, it may be a GUID or similar construct that ensures global uniqueness.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=6054" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=1000">
+        <DisplayName>ProductInstanceUri</DisplayName>
+        <Description>ProductInstanceUri is a globally unique resource identifier provided by the manufacturer. This is often stamped on the outside of a physical component and may be used for traceability and warranty purposes.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
     </UAVariable>
 </UANodeSet>

@@ -38,6 +38,7 @@ export interface AtmoWebConfig {
 }
 
 export interface AtmoWebDeviceConfig {
+    enabled?: boolean
     baseUrl: string
     name: string
     recorderInterval?: number
@@ -136,8 +137,10 @@ export class AtmoWebServerImpl {
         this.deviceSet = addressSpace.findNode(coerceNodeId(DIObjectIds.deviceSet, this.nameSpaceDI.index)) as UAObject
 
         config.devices.forEach(deviceConfig => {
-            const device = new AtmoWebDeviceImpl(this, deviceConfig)
-            this.deviceImplementations.push(device)
+            if (deviceConfig.enabled ?? true) {
+                const device = new AtmoWebDeviceImpl(this, deviceConfig)
+                this.deviceImplementations.push(device)
+            }
         })
 
         // finalize start

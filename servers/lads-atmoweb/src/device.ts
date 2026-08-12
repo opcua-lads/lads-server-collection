@@ -42,6 +42,7 @@ export class AtmoWebDeviceImpl {
         this.device = deviceType.instantiate({
             componentOf: deviceSet,
             browseName: config.name,
+            optionals: ["ManufacturerUri", "ProductInstanceUri"]
         }) as LADSDevice
 
         // create client
@@ -60,13 +61,18 @@ export class AtmoWebDeviceImpl {
                 serialNumber: data["SN"],
                 softwareRevision: data["SWRev"],
                 deviceRevision: "1.0",
-                assetId: "0815-4711",
+                assetId: "0815-4711",           
                 componentName: `My Memmert ${data["DevType"]} incubator`,
                 location: defaultLocation,
             }
             initComponent(device, deviceOptions)
             setStringValue(device.componentName, device.getDisplayName())
             setStringValue(device.hierarchicalLocation, config.hierachicalLocation ?? "")
+            const manufacturerUri = "memmert.com"
+            const productInstanceUri = `${manufacturerUri}/${deviceOptions.model}/${deviceOptions.serialNumber}`
+            setStringValue(device.manufacturerUri, manufacturerUri)
+            setStringValue(device.productInstanceUri, productInstanceUri)
+
 
             // device image
             function imageFile(model: string): string {
