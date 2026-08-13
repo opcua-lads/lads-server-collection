@@ -48,6 +48,10 @@ export interface BalanceDeviceConfig {
     stopBits?: 1 | 1.5 | 2
     protocol: string
     name: string
+    manufacturer?: string
+    model?: string
+    serialNumber?: string
+    deviceTypeImage?: string
     enabled?: boolean
 }
 
@@ -71,7 +75,14 @@ const DefaultConfig: BalanceConfig = {
     port: 4844,
     includeAfo: true,
     devices: [
-        { serialPort: "", protocol: BalanceProtocols.Simulator, name: "My Simulated Balance" },
+        { 
+            serialPort: "", 
+            protocol: BalanceProtocols.Simulator, 
+            name: "My Simulated Balance",
+            manufacturer: "AixEngineers",
+            model: "Balance 2030",
+            serialNumber: "08154711"
+        },
         //{ serialPort: "/dev/cu.PL2303G-USBtoUART210", protocol: BalanceProtocols.SBI, name: "My Sartorius Balance" },
         { serialPort: "/dev/tty.usbmodem00294063041", protocol: BalanceProtocols.SBI, name: "My Sartorius Balance" },
     ]

@@ -138,8 +138,8 @@ export class SicsBalance extends StreamBalance {
         const info: DeviceInfo = {
             manufacturer: "Mettler Toledo",
             model: "Unknown",
-            device_type_image: "mettler_toledo_ms.png"
-        };
+            deviceTypeImage: "mettler_toledo_ms.png"
+        }
 
         try {
             const respI2 = await this.sendCommand("I2");
@@ -148,29 +148,30 @@ export class SicsBalance extends StreamBalance {
                 info.model = m.trim()
                 if (info.model.startsWith("CUB")) {
                     info.manufacturer = "Sartorius"
-                    info.device_type_image = "sartorius_cubis.png"
+                    info.deviceTypeImage = "sartorius_cubis.png"
                 }
             }
-        } catch { }
+        } catch { 
+            info.manufacturer = undefined
+            info.model = undefined
+            info.deviceTypeImage = undefined
+        }
 
         try {
             const respI3 = await this.sendCommand("I3");
             const v = respI3.slice(5).replaceAll('"', "")
             console.log('Received Firmware:', v);
             if (v) info.firmware = v.trim();
-        } catch { }
+        } catch {  }
 
         try {
             const respI4 = await this.sendCommand("I4");
             const s = respI4.slice(5).replaceAll('"', "")
             console.log('Received Serial:', s);
             if (s) info.serialNumber = s.trim();
-        } catch { }
-
-        // FIXME: hotfix... commands I2,I3,I4 return no value when connected via serial
-        info.model = "Sartorius Cubis CUB524S-1S1-IC";
-        info.manufacturer = "Sartorius";
-        info.device_type_image = "sartorius_cubis.png"
+        } catch { 
+            info.serialNumber = undefined
+        }
 
         return info;
     }

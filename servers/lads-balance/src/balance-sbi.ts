@@ -116,7 +116,7 @@ export class SbiBalance extends StreamBalance {
         const info: DeviceInfo = { 
             manufacturer: "Sartorius", 
             model: "Unknown", 
-            device_type_image: "sartorius_quintix.png"
+            deviceTypeImage: "sartorius_quintix.png"
         };
 
         try {

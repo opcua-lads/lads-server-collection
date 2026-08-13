@@ -93,17 +93,17 @@ export class BalanceDeviceImpl {
 
     setDeviceInfo(deviceInfo: DeviceInfo) {
         // device type image - if any
-        const imageFile = deviceInfo.device_type_image ?? "default.png"
+        const imageFile = deviceInfo.deviceTypeImage ?? this.config.deviceTypeImage ?? "default.png"
         const imagesDir = join(__dirname, "resources", "images")
         DeviceTypeImage.create({parent: this.device, imagesDir, imageFiles: [imageFile] })
         
         // initialize nameplates
         const deviceOptions: LADSComponentOptions = {
-            manufacturer: deviceInfo.manufacturer,
-            model: deviceInfo.model,
-            serialNumber: deviceInfo.serialNumber || "Unknown",
-            softwareRevision: deviceInfo.firmware || "",
-            deviceRevision: deviceInfo.hardware|| "",
+            manufacturer: deviceInfo.manufacturer ?? this.config.manufacturer ?? "AixEngineers",
+            model: deviceInfo.model ?? this.config.model ?? "Super Balance 2030",
+            serialNumber: deviceInfo.serialNumber ?? this.config.serialNumber ?? "Unknown",
+            softwareRevision: deviceInfo.firmware ?? "",
+            deviceRevision: deviceInfo.hardware ?? "",
             assetId: "0815-4711",
             componentName: "My Balance",
             location: defaultLocation,

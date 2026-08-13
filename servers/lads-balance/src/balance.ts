@@ -73,7 +73,7 @@ export interface DeviceInfo {
     serialNumber?: string
     firmware?: string
     hardware?: string
-    device_type_image?: string
+    deviceTypeImage?: string
 }
 
 /**
