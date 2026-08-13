@@ -19,7 +19,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { ApplicationType, coerceNodeId, INamespace, OPCUAServer, UAObject } from "node-opcua"
+import { coerceNodeId, INamespace, OPCUAServer, UAObject } from "node-opcua"
 import { join } from "path"
 import { createServer, DIObjectIds } from "@utils"
 import { AtmoWebDeviceImpl } from "./device"
