@@ -1,0 +1,7 @@
+node_modules
+out
+.env
+.git
+.npmrc
+Dockerfile
+docker-compose.yml
