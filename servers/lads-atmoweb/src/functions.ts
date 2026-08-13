@@ -152,10 +152,12 @@ export interface CoverFunctionConfig extends BaseFunctionConfig {
 //---------------------------------------------------------------
 // function implementation
 //---------------------------------------------------------------
+export type AccessPredicate = (context: ISessionContext) => boolean;
 export function restrictWriteAccess(
     variable: UAVariable,
-    isAccessible: (context: ISessionContext) => boolean
+    isAccessible: AccessPredicate
 ): void {
+    if (!isAccessible) return
     const original = variable.isUserWritable;
 
     variable.isUserWritable = function (context): boolean {
@@ -187,7 +189,7 @@ export class AnalogControlFunctionImpl extends FunctionImpl {
     controlFunction: LADSAnalogControlFunction
     controlFunctionState: UAStateMachineEx
 
-    constructor(parent: UAObject, config: AnalogControlFunctionConfig) {
+    constructor(parent: UAObject, config: AnalogControlFunctionConfig, isAccessible: AccessPredicate) {
         super()
         this.config = config
         const objectType = getLADSObjectType(parent.addressSpace, "AnalogControlFunctionType")
@@ -202,6 +204,7 @@ export class AnalogControlFunctionImpl extends FunctionImpl {
         this.controlFunctionState = promoteToStateMachine(this.controlFunction.controlFunctionState)
         this.controlFunctionState.setState(LADSFunctionalState.Running)
         AnalogUnitRangeChangedEventReporter.install(this.controlFunction, this.controlFunction.targetValue)
+        restrictWriteAccess(this.controlFunction.targetValue, isAccessible)
         AFODictionary.addControlFunctionReferences(this.controlFunction, config.functionDictionaryId, ...config.dictionaryIds)
     }
 
@@ -254,7 +257,7 @@ export class TwoStateDiscreteControlFunctionImpl extends FunctionImpl {
     controlFunction: LADSTwoStateDiscreteControlFunction
     controlFunctionState: UAStateMachineEx
 
-    constructor(parent: UAObject, config: TwoStateDiscreteControlFunctionConfig) {
+    constructor(parent: UAObject, config: TwoStateDiscreteControlFunctionConfig, isAccessible: AccessPredicate) {
         super()
         this.config = config
         const objectType = getLADSObjectType(parent.addressSpace, "TwoStateDiscreteControlFunctionType")
@@ -269,6 +272,7 @@ export class TwoStateDiscreteControlFunctionImpl extends FunctionImpl {
         initializeTwoStateDiscrete(this.controlFunction.currentValue, config.value, config.falseState, config.trueState)
         this.controlFunctionState = promoteToStateMachine(this.controlFunction.controlFunctionState)
         this.controlFunctionState.setState(LADSFunctionalState.Running)
+        restrictWriteAccess(this.controlFunction.targetValue, isAccessible)
         TwoStateDiscreteChangedEventReporter.install(this.controlFunction, this.controlFunction.currentValue)
         AFODictionary.addControlFunctionReferences(this.controlFunction, config.functionDictionaryId, ...config.dictionaryIds)
     }
@@ -289,10 +293,12 @@ export class CoverFunctionImpl extends FunctionImpl {
     coverState: UAStateMachineEx
     openedVariable: UATwoStateDiscrete<boolean>
     lockedVariable: UATwoStateDiscrete<boolean>
+    isAccessible: AccessPredicate
 
-    constructor(parent: UAObject, config: CoverFunctionConfig) {
+    constructor(parent: UAObject, config: CoverFunctionConfig, isAccessible: AccessPredicate) {
         super()
         this.config = config
+        this.isAccessible = isAccessible
         const optionals = ["CoverState.Close", "CoverState.Open"]
         if (config.lockedId) {
             optionals.push("CoverState.Lock", "CoverState.Unlock")
@@ -347,17 +353,20 @@ export class CoverFunctionImpl extends FunctionImpl {
         stateMachine.unlock?.bindMethod(this.closeOrUnlockMethod.bind(this))
     }
 
-    private async openMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        this.setCoverStateVariables(true, false)
+    private handleMethod(context: ISessionContext, opened: boolean, locked: boolean): CallMethodResultOptions {
+        if (!this.isAccessible(context)) return  { statusCode: StatusCodes.BadUserAccessDenied }
+        this.setCoverStateVariables(opened, locked)
         return { statusCode: StatusCodes.Good }
+    }
+
+    private async openMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        return this.handleMethod(context, true, false)
     }
     private async closeOrUnlockMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        this.setCoverStateVariables(false, false)
-        return { statusCode: StatusCodes.Good }
+        return this.handleMethod(context, false, false)
     }
     private async lockMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        this.setCoverStateVariables(false, true)
-        return { statusCode: StatusCodes.Good }
+        return this.handleMethod(context, false, true)
     }
 
     private setCoverStateVariables(openedValue: boolean, lockedValue: boolean) {

@@ -27,7 +27,7 @@ import { AFODictionaryIds } from "@afo"
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server"
 import { AtmoWebDeviceImpl } from "./device"
 import { AtmoWebClient, ClientEvent, ClientState } from "./client"
-import { AnalogControlFunctionConfig, AnalogControlFunctionImpl, AnalogSensorFunctionImpl, CoverFunctionConfig, CoverFunctionImpl, FunctionImpl, OperationMode, OperationModeVariableBinding, restrictWriteAccess, TwoStateDiscreteControlFunctionConfig, TwoStateDiscreteControlFunctionImpl, VariableBinding } from "./functions"
+import { AccessPredicate, AnalogControlFunctionConfig, AnalogControlFunctionImpl, AnalogSensorFunctionImpl, CoverFunctionConfig, CoverFunctionImpl, FunctionImpl, OperationMode, OperationModeVariableBinding, restrictWriteAccess, TwoStateDiscreteControlFunctionConfig, TwoStateDiscreteControlFunctionImpl, VariableBinding } from "./functions"
 import { AtmoWebProgramManagerImpl } from "./program-manager"
 
 interface ValueRange { min: number, max: number }
@@ -43,6 +43,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
     functions: FunctionImpl[] = []
     variableBindings: VariableBinding[] = []
     programManager: AtmoWebProgramManagerImpl
+    isAccessable: AccessPredicate = undefined
 
     constructor(server: AtmoWebServerImpl, deviceImpl: AtmoWebDeviceImpl, deviceConfig: AtmoWebDeviceConfig) {
         super()
@@ -67,6 +68,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
         
         // lock object
         this.lock = new LockImpl(this.unit.lock)
+        this.isAccessable = this.isAccessibleBy.bind(this)
 
         // connect to client
         this.client = deviceImpl.client
@@ -136,8 +138,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
             alarmHi: Number(data[alHiKey]),
             alarmLo: Number(data[alLoKey]),
         }
-        const functionImpl = new AnalogControlFunctionImpl(parent, config)
-        restrictWriteAccess(functionImpl.controlFunction.targetValue, this.isAccessibleBy.bind(this))
+        const functionImpl = new AnalogControlFunctionImpl(parent, config, this.isAccessable)
         return functionImpl
     }
 
@@ -162,7 +163,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
             trueState: trueState,
             value: Boolean(data[id])
         }
-        const functionImpl = new TwoStateDiscreteControlFunctionImpl(parent, config)
+        const functionImpl = new TwoStateDiscreteControlFunctionImpl(parent, config, this.isAccessable)
         restrictWriteAccess(functionImpl.controlFunction.targetValue, this.isAccessibleBy.bind(this))
         return functionImpl
     }
@@ -178,7 +179,7 @@ export class AtmoWebUnitImpl extends EventEmitter {
             config.lockedId = "DoorLock"
             config.locked = Boolean(data["DoorLock"])
         }
-        return new CoverFunctionImpl(parent, config)
+        return new CoverFunctionImpl(parent, config, this.isAccessable)
     }
 
     isInstalled(data: any, id: string): boolean { return !isNaN(data[id]) }
