@@ -11,7 +11,7 @@
 
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSFunctionalState } from "@interfaces"
-import { installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent } from "@utils"
+import { getNumericValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
 import { FreezerFunctionalUnit } from "./interfaces"
 
 export class FreezerUnitImpl {
@@ -39,8 +39,10 @@ export class FreezerUnitImpl {
         this.temperatureControllerStateMachine.setState(LADSFunctionalState.Running)
         this.temperatureController.targetValue.on("value_changed", dataValue => {
             const value = Number(dataValue.value.value)
+            this.adjustAlarmLimits(value)
             raiseEvent(this.temperatureController, `Target value changed to ${value}°C`)
         })
+        this.adjustAlarmLimits(getNumericValue(this.temperatureController.targetValue))
 
         // door state machine and methods
         this.door = functionSet.door
@@ -56,10 +58,19 @@ export class FreezerUnitImpl {
         
         // lock
         this.lock = new LockImpl(this.functionalUnit.lock)
-        
+
         // run unit
         const dT = 500
         setInterval(() => { this.evaluate(dT) }, dT) 
+    }
+
+    private adjustAlarmLimits(targetValue: number) {
+        const alarmMonitor = this.temperatureSensor.alarmMonitor
+        if (!alarmMonitor) return
+        setNumericValue(alarmMonitor.highHighLimit, targetValue + 20 )
+        setNumericValue(alarmMonitor.highLimit, targetValue + 10 )
+        setNumericValue(alarmMonitor.lowLimit, targetValue - 10 )
+        setNumericValue(alarmMonitor.lowLowLimit, targetValue - 20 )
     }
 
     private async open(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
