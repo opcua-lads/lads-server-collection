@@ -9,40 +9,58 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//---------------------------------------------------------------
-// interfaces
-
-import { ApplicationType, assert, CallMethodResultOptions, coerceNodeId, DataType, ISessionContext, OPCUAServer, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
-import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSDevice, LADSFunctionalState, LADSFunctionalUnit } from "@interfaces"
+import { assert, coerceNodeId, OPCUAServer, UAObject } from "node-opcua"
 import { join } from "path"
-import { defaultLocation, DIObjectIds, getChildObjects, getStringValue, initComponent, LADSComponentOptions, promoteToFiniteStateMachine } from "@utils"
+import { createServer, defaultLocation, DIObjectIds, getChildObjects, LADSComponentOptions } from "@utils"
+import { FreezerDevice } from "./interfaces"
+import { FreezerDeviceImpl } from "./device"
 
 //---------------------------------------------------------------
-interface FreezerFunctionSet extends UAObject {
-    temperatureSensor: LADSAnalogScalarSensorFunction
-    temperatureController: LADSAnalogControlFunction
-    door: LADSCoverFunction
+export interface FreezerConfig extends LADSComponentOptions {
+    deviceTypeImage?: string
+    hierarchicalLocation?: string
 }
 
-interface FreezerFunctionalUnit extends Omit<LADSFunctionalUnit, "functionSet"> {
-    functionSet: FreezerFunctionSet
+export const DefaultHierarchicalLocation = "DE/Munich/Schragenhofstr_35/A/Office"
+
+const LiebherrFreezer: FreezerConfig = {
+    manufacturer: "Liebherr",
+    manufacturerUri: "liebherr.com",
+    model: "SUFsg 3501 Mediline",
+    serialNumber: "4711",
+    softwareRevision: "1.0",
+    deviceRevision: "1.0",
+    assetId: "0815-4711",
+    componentName: "My Liebherr Freezer",
+    location: defaultLocation,
+    deviceTypeImage: "liebherr-susfg.png",
 }
 
-interface FreezerFunctionalUnitSet extends UAObject {
-    freezerUnit: FreezerFunctionalUnit
-}
-interface FreezerDevice extends Omit<LADSDevice, "functionalUnitSet"> {
-    functionalUnitSet: FreezerFunctionalUnitSet
+const EppendorfFreezer: FreezerConfig = {
+    manufacturer: "Eppendorf",
+    manufacturerUri: "eppendorf.com",
+    model: "F740hi",
+    serialNumber: "4711",
+    softwareRevision: "1.0",
+    deviceRevision: "1.0",
+    assetId: "0815-4711",
+    componentName: "My Eppendorf Freezer",
+    location: defaultLocation,
+    deviceTypeImage: "eppendorf-f740hi.png",
 }
 
 //---------------------------------------------------------------
-// server implmentation
+// server implementation
 //---------------------------------------------------------------
 class FreezerServerImpl {
     server: OPCUAServer
     devices: FreezerDeviceImpl[] = []
 
     constructor(port: number) {
+        const manufacturerUri = "aixengineers.de"
+        const uri = `${manufacturerUri}/LADS-Freezer-Server`
+        const applicationUri = `${uri}/4711`
+
         // provide paths for the nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
         const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
@@ -52,39 +70,18 @@ class FreezerServerImpl {
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
         const nodeset_freezer = join(nodeset_path, 'Freezer.xml')
 
-        try {
-            // list of node-set files
-            const node_set_filenames = [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_freezer,]
-
-            // build the server object
-            const uri = "LADS-Freezer-Server"
-            this.server = new OPCUAServer({
-                port: port,
-                // basic information about the server
-                buildInfo: {
-                    manufacturerName: "AixEngineers",
-                    productName: uri,
-                    productUri: uri,
-                    softwareVersion: "1.0.0",
-                },
-                serverInfo: {
-                    applicationName: "LADS Freezer",
-                    applicationType: ApplicationType.Server,
-                    productUri: uri,
-                    applicationUri: uri,
-
-                },
-                // nodesets used by the server
-                nodeset_filename: node_set_filenames,
-            })
-
-        }
-        catch (err) {
-            console.log(err)
-        }
+        const nodeset_filenames = [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_freezer,]
+        this.server = createServer({
+            applicationName: "LADS Freezer",
+            applicationDirectory: __dirname,
+            port: port,
+            uri: uri,
+            applicationUri: applicationUri,
+            nodeset_filenames
+        })
     }
 
-    async start() {
+    async start(config: FreezerConfig) {
 
         // get objects
         await this.server.initialize()
@@ -99,7 +96,8 @@ class FreezerServerImpl {
         const devices = getChildObjects(deviceSet)
         devices.forEach(device => {
             if (device.typeDefinitionObj === freezerDeviceType) {
-                const deviceImpl = new FreezerDeviceImpl(device as FreezerDevice)
+                const freezerDevice = device as FreezerDevice
+                const deviceImpl = new FreezerDeviceImpl(freezerDevice, config)
                 this.devices.push(deviceImpl)
             }
         })
@@ -112,111 +110,9 @@ class FreezerServerImpl {
     }
 }
 
-class FreezerDeviceImpl {
-    device: FreezerDevice
-    freezerUnit: FreezerUnitImpl
-
-    constructor(device: FreezerDevice) {
-        this.device = device
-        // initialize nameplates
-        const deviceOptions: LADSComponentOptions = {
-            manufacturer: getStringValue(device.manufacturer, "Liebherr"),
-            model: getStringValue(device.model, "SUFsg 3501 Mediline"),
-            serialNumber: getStringValue(device.serialNumber, "4711"),
-            softwareRevision: "1.0",
-            deviceRevision: "1.0",
-            assetId: "0815-4711",
-            componentName: "My Freezer",
-            location: defaultLocation,
-        }
-        initComponent(device, deviceOptions)
-        this.freezerUnit = new FreezerUnitImpl(device.functionalUnitSet.freezerUnit)
-        const dT = 500
-        setInterval(() => { this.freezerUnit.evaluate(dT) }, dT)
-    }
-}
-
-class FreezerUnitImpl {
-    functionalUnit: FreezerFunctionalUnit
-    temperatureSensor: LADSAnalogScalarSensorFunction
-    temperatureController: LADSAnalogControlFunction
-    temperatureControllerStateMachine: UAStateMachineEx
-    door: LADSCoverFunction
-    doorStateMachine: UAStateMachineEx
-    functionalUnitStateMachine: UAStateMachineEx
-    compressorRunning: boolean = false
-
-    constructor(functionalUnit: FreezerFunctionalUnit) {
-        this.functionalUnit = functionalUnit
-        this.functionalUnitStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState)
-        this.functionalUnitStateMachine.setState(LADSFunctionalState.Running)
-
-        const functionSet = functionalUnit.functionSet
-
-        // temperature sensor and controller
-        this.temperatureSensor = functionSet.temperatureSensor
-        this.temperatureController = functionSet.temperatureController
-        this.temperatureControllerStateMachine = promoteToFiniteStateMachine(this.temperatureController.controlFunctionState)
-        this.temperatureControllerStateMachine.setState(LADSFunctionalState.Running)
-
-        // door state machine and methods
-        this.door = functionSet.door
-        const stateMachine = this.door.coverState
-        this.doorStateMachine = promoteToFiniteStateMachine(stateMachine)
-        this.doorStateMachine.setState(LADSCoverState.Closed)
-        stateMachine.open.bindMethod(this.open.bind(this))
-        stateMachine.close.bindMethod(this.close.bind(this))
-
-        // history
-        const sensorValue = this.temperatureSensor.sensorValue
-        sensorValue.historizing = true
-        functionalUnit.addressSpace.installHistoricalDataNode(sensorValue)
-    }
-
-    private async open(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        this.doorStateMachine.setState(LADSCoverState.Opened)
-        return { statusCode: StatusCodes.Good }
-    }
-
-    private async close(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        this.doorStateMachine.setState(LADSCoverState.Closed)
-        return { statusCode: StatusCodes.Good }
-    }
-
-    evaluate(dT: number) {
-        const tAmbient = 25.0 // °C
-        const gDoorClosed = 2 // W/K
-        const gDoorOpen = 50 // W/K
-        const heatCapacity = 5000 // J/K
-        const tpv = this.temperatureSensor.sensorValue.readValue().value.value
-        const tsp = this.temperatureController.targetValue.readValue().value.value
-        const doorIsOpen = this.doorStateMachine.getCurrentState()?.includes(LADSCoverState.Opened)
-
-        // heat tranfer model
-        const dtAmbient = tAmbient - tpv
-        const gAmbient = doorIsOpen ? gDoorOpen : gDoorClosed
-        const qCompressor = this.compressorRunning ? -1000 : 0 // Watt
-        const qAmbient = dtAmbient * gAmbient
-        const t = tpv + (qCompressor + qAmbient) / heatCapacity * 0.001 * dT
-        this.temperatureSensor.sensorValue.setValueFromSource({ dataType: DataType.Double, value: t })
-        this.temperatureController.currentValue.setValueFromSource({ dataType: DataType.Double, value: t })
-
-        // 2-poi-t compressor controller
-        if (this.compressorRunning) {
-            if (tpv <= tsp) {
-                this.compressorRunning = false
-            }
-        } else {
-            if ((tpv - tsp) > 5) {
-                this.compressorRunning = true
-            }
-        }
-    }
-}
-
 export async function main() {
     const server = new FreezerServerImpl(4842)
-    await server.start()
+    await server.start(EppendorfFreezer)
 }
 
 main()
