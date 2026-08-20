@@ -426,6 +426,7 @@ export interface LADSComponentOptions {
 
 export function initComponent(component: UAComponent, options: LADSComponentOptions) {
     if (!component) return
+    const productInstanceUri = options.productInstanceUri ?? `${options.manufacturerUri ?? "aixengineers.de"}/${options.model ?? "unknown"}/${options.serialNumber, "4711"}`
     options.manufacturer ? setStringValue(component.manufacturer, options.manufacturer) : 0
     options.manufacturerUri ? setStringValue(component.manufacturerUri, options.manufacturerUri) : 0
     options.model ? setStringValue(component.model, options.model) : 0
@@ -435,7 +436,7 @@ export function initComponent(component: UAComponent, options: LADSComponentOpti
     options.deviceManual ? setStringValue(component.deviceManual, options.deviceManual) : 0
     options.deviceClass ? setStringValue(component.deviceClass, options.deviceClass) : 0
     options.serialNumber ? setStringValue(component.serialNumber, options.serialNumber) : 0
-    options.productInstanceUri ? setStringValue(component.productInstanceUri, options.productInstanceUri) : 0
+    productInstanceUri ? setStringValue(component.productInstanceUri, productInstanceUri) : 0
     options.revisionCounter ? setStringValue(component.revisionCounter, options.revisionCounter) : 0
     options.assetId ? setStringValue(component.assetId, options.assetId) : 0
     options.componentName ? setStringValue(component.componentName, options.componentName) : 0
