@@ -304,7 +304,7 @@ export function getLADSFunctions(parent: LADSFunctionalUnit | LADSFunction, recu
                 }
                 functions.push(ladsFunction)
                 if (recursive) {
-                    const childFunctions = getLADSFunctions(ladsFunction, true)
+                    const childFunctions = getLADSFunctions(ladsFunction, true, addHasNotifierReferences)
                     functions.concat(childFunctions)
                 }
             }

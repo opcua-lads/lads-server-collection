@@ -14,7 +14,7 @@ import { LADSAnalogScalarSensorFunction_Base } from "@interfaces"
 import EventEmitter from "events";
 import {
     UAAnalogUnitRange, DataType, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds,
-    InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, SessionContext, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessLevelFlag, UAVariable, QualifiedName,
+    InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessLevelFlag, UAVariable, QualifiedName,
     UAVariableT, UAExclusiveDeviationAlarmEx, UAExclusiveLimitAlarmEx, DataValue,
     UAProperty,
     EUInformation,
@@ -27,22 +27,20 @@ import {
     UAConditionVariable,
     UAExclusiveLimitAlarm_Base,
     UAExclusiveLimitStateMachine,
-    UAExclusiveLimitAlarm
-} from "node-opcua";
+    ISessionContext} from "node-opcua";
 import { getLADSNamespace, installVariableHistory, promoteToFiniteStateMachine } from "./lads-utils";
 import { getEUInformation, getNumericValue, setNumericValue, setStringArrayValue } from "./lads-variable-utils";
 import { raiseEvent } from "./lads-event-utils";
-import { get } from "http";
 
 //---------------------------------------------------------------
 // generic definitions
 //---------------------------------------------------------------
 export interface AlarmMonitorOptions {
     logLimitChanges?: boolean
-    highHighLimit: number;
-    highLimit: number;
-    lowLimit: number;
-    lowLowLimit: number;
+    highHighLimit?: number;
+    highLimit?: number;
+    lowLimit?: number;
+    lowLowLimit?: number;
 }
 
 export enum EventSeverity {
@@ -89,8 +87,14 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         const addressSpace = parentFunction.addressSpace
         const namespace = getLADSNamespace(addressSpace) as Namespace
         const functionSet = parentFunction.parent
-        const hasEventSource = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasEventSource))
-        functionSet.addReference({ referenceType: hasEventSource, nodeId: parentFunction })
+        try  {
+            const hasEventSource = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasEventSource))
+            functionSet.addReference({ referenceType: hasEventSource, nodeId: parentFunction })
+            const hasNotifier = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasNotifier))
+            functionSet.addReference({ referenceType: hasNotifier, nodeId: parentFunction })
+        }
+        catch {
+        }
         const name = "AlarmMonitor"
         this.options = {
             browseName: new QualifiedName({ name: "AlarmMonitor", namespaceIndex: namespace.index }),
@@ -256,30 +260,50 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         }
         this.lastInputDataValue = dataValue
     }
+
+    protected setAlarmMonitorOptions(alarmMonitor: UAExclusiveLimitAlarmEx | UAExclusiveDeviationAlarmEx) {
+        if (!alarmMonitor) return undefined
+        const am = alarmMonitor
+        const opts = this.options
+        setNumericValue(am.highHighLimit, opts.highHighLimit)
+        setNumericValue(am.highLimit, opts.highLimit)
+        setNumericValue(am.lowLimit, opts.lowLimit)
+        setNumericValue(am.lowLowLimit, opts.lowLowLimit)
+        return alarmMonitor
+    }
 }
 
 export class ExclusiveLimitAlarmImpl extends LimitAlarmImpl {
     constructor(sensorFunction: LADSAnalogScalarSensorFunction | LADSAnalogArraySensorFunction, alarmMonitorOptions: AlarmMonitorOptions) {
+        if (!sensorFunction) return
         if (!alarmMonitorOptions) return
         super(sensorFunction, alarmMonitorOptions, sensorFunction.sensorValue)
-        const addressSpace = sensorFunction.addressSpace
-        const namespace = getLADSNamespace(addressSpace) as Namespace
-        const alarmType = addressSpace.findEventType(makeNodeId(ObjectTypeIds.ExclusiveLimitAlarmType))
-        this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, this.options) as UAExclusiveDeviationAlarmEx
+        if (sensorFunction.alarmMonitor) {
+            this.alarmMonitor = this.setAlarmMonitorOptions(sensorFunction.alarmMonitor as UAExclusiveLimitAlarmEx)
+        } else {
+            const addressSpace = sensorFunction.addressSpace
+            const namespace = getLADSNamespace(addressSpace) as Namespace
+            const alarmType = addressSpace.findEventType(makeNodeId(ObjectTypeIds.ExclusiveLimitAlarmType))
+            this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, this.options)
+        }
         this.postInitialize(alarmMonitorOptions)
     }
 }
 
 export class ExclusiveDeviationAlarmImpl extends LimitAlarmImpl {
 
-    constructor(parent: AnalogControlFunctionImpl, alarmMonitorOptions: AlarmMonitorOptions) {
+    constructor(controlFunction: LADSAnalogControlFunction, alarmMonitorOptions: AlarmMonitorOptions) {
+        if (!controlFunction) return
         if (!alarmMonitorOptions) return
-        const controlFunction = parent.controlFunction as LADSAnalogControlFunction
         super(controlFunction, alarmMonitorOptions, controlFunction.currentValue, controlFunction.targetValue)
-        const addressSpace = controlFunction.addressSpace
-        const namespace = getLADSNamespace(addressSpace) as Namespace
-        this.alarmMonitor = namespace.instantiateExclusiveDeviationAlarm(this.options)
-        this.postInitialize(alarmMonitorOptions)
+        if (controlFunction.alarmMonitor) {
+            this.alarmMonitor = this.setAlarmMonitorOptions(controlFunction.alarmMonitor as UAExclusiveDeviationAlarmEx)
+        } else {
+            const addressSpace = controlFunction.addressSpace
+            const namespace = getLADSNamespace(addressSpace) as Namespace
+            this.alarmMonitor = namespace.instantiateExclusiveDeviationAlarm(this.options)
+            this.postInitialize(alarmMonitorOptions)
+        }
     }
 }
 
@@ -347,7 +371,7 @@ export abstract class ControlFunctionImpl extends EventEmitter<ControlFunctionEv
     protected get isStopping(): boolean { return this.stateMachine.currentStateNode == ControlFunctionImpl.stopping }
     protected get isRunning(): boolean { return this.stateMachine.currentStateNode == ControlFunctionImpl.running }
 
-    private async handleStart(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async handleStart(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (this.isRunning)
             return { statusCode: StatusCodes.BadInvalidState }
         this.enterStart()
@@ -360,7 +384,7 @@ export abstract class ControlFunctionImpl extends EventEmitter<ControlFunctionEv
     }
     protected async onStart() { }
 
-    private async handleStop(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async handleStop(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isRunning)
             return { statusCode: StatusCodes.BadInvalidState }
         this.enterStop()
@@ -403,14 +427,14 @@ export class AnalogControlFunctionImpl extends ControlFunctionImpl {
         super(controlFunction)
         controlFunction.controlFunctionState.startWithTargetValue?.bindMethod(this.handleStartWithTargetValue.bind(this))
         if (alarmMonitorOptions)
-            this.alarmMonitor = new ExclusiveDeviationAlarmImpl(this, alarmMonitorOptions)
+            this.alarmMonitor = new ExclusiveDeviationAlarmImpl(controlFunction, alarmMonitorOptions)
     }
 
     get targetValue(): UAAnalogUnitRange<number, DataType.Double> { return (this.controlFunction as LADSAnalogControlFunction).targetValue }
     get currentValue(): UAAnalogUnitRange<number, DataType.Double> { return (this.controlFunction as LADSAnalogControlFunction).currentValue }
     get engineeringUnits(): EUInformation { return getEUInformation(this.currentValue) }
 
-    private async handleStartWithTargetValue(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async handleStartWithTargetValue(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (this.isRunning)
             return { statusCode: StatusCodes.BadInvalidState }
         if (inputArguments.length > 0)
@@ -428,7 +452,7 @@ export class AnalogControlFunctionWithTotalizerImpl extends AnalogControlFunctio
         controlFunction.resetTotalizer?.bindMethod(this.handleResetTotalizer.bind(this))
     }
 
-    private async handleResetTotalizer(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async handleResetTotalizer(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         const value = inputArguments.length > 0 ? Number(inputArguments[0]) : 0
         setNumericValue(this.totalizedValue, value)
         return { statusCode: StatusCodes.Good }
