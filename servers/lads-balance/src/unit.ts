@@ -540,31 +540,31 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         })
         AFODictionary.addReferences(sampleWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.sample_weight)
         if (gross) {
-            const grossWeightResult = variableSet.namespace.addVariable({
+            const endPoint = variableSet.namespace.addVariable({
                 componentOf: variableSet,
                 browseName: "Gross Weight",
                 dataType: DataType.Double,
                 value: { dataType: DataType.Double, value: gross }
             })
-            AFODictionary.addReferences(grossWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.gross_weight)
+            AFODictionary.addReferences(endPoint, AFODictionaryIds.weighing_result, AFODictionaryIds.gross_weight)
         }
         if (net) {
-            const tareWeightResult = variableSet.namespace.addVariable({
+            const endPoint = variableSet.namespace.addVariable({
                 componentOf: variableSet,
                 browseName: "Net Weight",
                 dataType: DataType.Double,
                 value: { dataType: DataType.Double, value: net }
             })
-            AFODictionary.addReferences(tareWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.tare_weight)
+            AFODictionary.addReferences(endPoint, AFODictionaryIds.weighing_result, AFODictionaryIds.sample_weight)
         }
         if (tare) {
-            const tareWeightResult = variableSet.namespace.addVariable({
+            const endPoint = variableSet.namespace.addVariable({
                 componentOf: variableSet,
                 browseName: "Tare Weight",
                 dataType: DataType.Double,
                 value: { dataType: DataType.Double, value: tare }
             })
-            AFODictionary.addReferences(tareWeightResult, AFODictionaryIds.weighing_result, AFODictionaryIds.tare_weight)
+            AFODictionary.addReferences(endPoint, AFODictionaryIds.weighing_result, AFODictionaryIds.tare_weight)
         }
     }
 
