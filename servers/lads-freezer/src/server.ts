@@ -9,7 +9,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { assert, coerceNodeId, OPCUAServer, UAObject } from "node-opcua"
+import { assert, coerceNodeId, nodesets, OPCUAServer, UAObject } from "node-opcua"
 import { join } from "path"
 import { createServer, defaultLocation, DIObjectIds, getChildObjects, LADSComponentOptions } from "@utils"
 import { FreezerDevice } from "./interfaces"
@@ -63,9 +63,9 @@ class FreezerServerImpl {
 
         // provide paths for the nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
-        const nodeset_standard = join(nodeset_path, 'Opc.Ua.NodeSet2.xml')
-        const nodeset_di = join(nodeset_path, 'Opc.Ua.Di.NodeSet2.xml')
-        const nodeset_amb = join(nodeset_path, 'Opc.Ua.AMB.NodeSet2.xml')
+        const nodeset_standard = nodesets.standard
+        const nodeset_di = nodesets.di
+        const nodeset_amb = nodesets.amb
         const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
         const nodeset_freezer = join(nodeset_path, 'Freezer.xml')

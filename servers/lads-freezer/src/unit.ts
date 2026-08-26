@@ -11,16 +11,19 @@
 
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSFunctionalState } from "@interfaces"
-import { getNumericValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
-import { FreezerFunctionalUnit } from "./interfaces"
+import { ExclusiveDeviationAlarmImpl, ExclusiveLimitAlarmImpl, getNumericValue, getStringValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
+import { FreezerDoorFunction, FreezerFunctionalUnit, FreezerFunctionSet } from "./interfaces"
 
 export class FreezerUnitImpl {
     functionalUnit: FreezerFunctionalUnit
     temperatureSensor: LADSAnalogScalarSensorFunction
     temperatureController: LADSAnalogControlFunction
     temperatureControllerStateMachine: UAStateMachineEx
-    door: LADSCoverFunction
+    temperatureControllerAlarm: ExclusiveDeviationAlarmImpl
+    door: FreezerDoorFunction
     doorStateMachine: UAStateMachineEx
+    doorTimer: LADSAnalogScalarSensorFunction
+    doorTimerAlarm: ExclusiveLimitAlarmImpl
     functionalUnitStateMachine: UAStateMachineEx
     lock: LockImpl
     compressorRunning: boolean = false
@@ -33,16 +36,22 @@ export class FreezerUnitImpl {
         const functionSet = functionalUnit.functionSet
 
         // temperature sensor and controller
-        this.temperatureSensor = functionSet.temperatureSensor
         this.temperatureController = functionSet.temperatureController
         this.temperatureControllerStateMachine = promoteToFiniteStateMachine(this.temperatureController.controlFunctionState)
         this.temperatureControllerStateMachine.setState(LADSFunctionalState.Running)
+        this.temperatureControllerAlarm = new ExclusiveDeviationAlarmImpl(this.temperatureController, {
+            logLimitChanges: true,
+            highHighLimit: 20,
+            highLimit: 10,
+            lowLimit: -10,
+            lowLowLimit: -20,
+        })
         this.temperatureController.targetValue.on("value_changed", dataValue => {
             const value = Number(dataValue.value.value)
             this.adjustAlarmLimits(value)
             raiseEvent(this.temperatureController, `Target value changed to ${value}°C`)
         })
-        this.adjustAlarmLimits(getNumericValue(this.temperatureController.targetValue))
+        installVariableHistory(this.temperatureController.currentValue)
 
         // door state machine and methods
         this.door = functionSet.door
@@ -51,10 +60,19 @@ export class FreezerUnitImpl {
         this.doorStateMachine.setState(LADSCoverState.Closed)
         stateMachine.open.bindMethod(this.open.bind(this))
         stateMachine.close.bindMethod(this.close.bind(this))
+        this.doorTimer = this.door.functionSet.timer
+        this.doorTimerAlarm = new ExclusiveLimitAlarmImpl(this.doorTimer, {
+            logLimitChanges: true,
+            highHighLimit: 20000,
+            highLimit: 10000,
+        })
+        
 
-        // history
-        installVariableHistory(this.temperatureController.currentValue)
-        installVariableHistory(this.temperatureSensor.sensorValue)
+        // optional temperature sensor
+        this.temperatureSensor = functionSet.temperatureSensor
+        if (this.temperatureSensor) {
+            installVariableHistory(this.temperatureSensor.sensorValue)
+        }
         
         // lock
         this.lock = new LockImpl(this.functionalUnit.lock)
@@ -90,9 +108,12 @@ export class FreezerUnitImpl {
         const gDoorClosed = 2 // W/K
         const gDoorOpen = 50 // W/K
         const heatCapacity = 5000 // J/K
-        const tpv = this.temperatureSensor.sensorValue.readValue().value.value
+        const tpv = this.temperatureController.currentValue.readValue().value.value
         const tsp = this.temperatureController.targetValue.readValue().value.value
         const doorIsOpen = this.doorStateMachine.getCurrentState()?.includes(LADSCoverState.Opened)
+        const timerVariable = this.door.functionSet?.timer?.sensorValue
+        const topen = doorIsOpen ? getNumericValue(timerVariable) + dT : 0.0
+        setNumericValue(timerVariable, topen)
 
         // heat tranfer model
         const dtAmbient = tAmbient - tpv
@@ -100,7 +121,7 @@ export class FreezerUnitImpl {
         const qCompressor = this.compressorRunning ? -1000 : 0 // Watt
         const qAmbient = dtAmbient * gAmbient
         const t = tpv + (qCompressor + qAmbient) / heatCapacity * 0.001 * dT
-        this.temperatureSensor.sensorValue.setValueFromSource({ dataType: DataType.Double, value: t })
+        this.temperatureSensor?.sensorValue.setValueFromSource({ dataType: DataType.Double, value: t })
         this.temperatureController.currentValue.setValueFromSource({ dataType: DataType.Double, value: t })
 
         // 2-point compressor controller

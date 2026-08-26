@@ -18,7 +18,13 @@ import { UAObject } from "node-opcua"
 export interface FreezerFunctionSet extends UAObject {
     temperatureSensor: LADSAnalogScalarSensorFunction
     temperatureController: LADSAnalogControlFunction
-    door: LADSCoverFunction
+    door: FreezerDoorFunction
+}
+
+export interface FreezerDoorFunction extends LADSCoverFunction {
+    functionSet?: {
+        timer: LADSAnalogScalarSensorFunction
+    }
 }
 
 export interface FreezerFunctionalUnit extends Omit<LADSFunctionalUnit, "functionSet"> {
