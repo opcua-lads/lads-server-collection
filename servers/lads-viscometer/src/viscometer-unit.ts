@@ -19,17 +19,15 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, LocalizedText, ServerSession, SessionContext, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
+import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, ISessionContext, LocalizedText, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
 import { ViscometerFunctionalUnit } from "./viscometer-interfaces"
 import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./viscometer-device"
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, touchNodes, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
-import { verify } from "crypto"
-import { version } from "os"
 
 //---------------------------------------------------------------
 // functional unit implementation
@@ -148,11 +146,11 @@ export abstract class ViscometerUnitImpl {
         this.speedController.targetValue.on("value_changed", (dataValue => {raiseEvent(this.speedController, `Speed set-point changed to ${dataValue.value.value}rpm`)}))
     }
 
-    private async startSpeedController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startSpeedController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return { statusCode: this.startController(this.speedController, this.speedControllerState, true) }
     }
 
-    private async stopSpeedController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stopSpeedController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return { statusCode: this.stopController(this.speedController, this.speedControllerState, true) }
     }
 
@@ -192,11 +190,11 @@ export abstract class ViscometerUnitImpl {
         controller.targetValue.on("value_changed", (dataValue => {raiseEvent(this.temperatureController, `Temperature set-point changed to ${dataValue.value.value}°C`)}))
     }
 
-    private async startTemperatureController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startTemperatureController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return { statusCode: this.startController(this.temperatureController, this.temperatureControllerState, true) }
     }
 
-    private async stopTemperatureController(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stopTemperatureController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return { statusCode: this.stopController(this.temperatureController, this.temperatureControllerState, true) }
     }
 
@@ -277,6 +275,7 @@ export abstract class ViscometerUnitImpl {
         const programTemplateType = getLADSObjectType(this.parent.addressSpace, "ProgramTemplateType")
         const programTemplateSetNode = <UAObject>this.functionalUnit.programManager?.programTemplateSet
         if (!programTemplateSetNode) return
+        initNodeVersion(programTemplateSetNode)
         const loadedViscometerPrograms = await loadViscometerProgramsFromDirectory(join(DataDirectory, "programs"))
         this.viscometerPrograms = loadedViscometerPrograms.length > 0?loadedViscometerPrograms:DefaultViscometerPrograms
         const programTemplateNames: string[] = this.viscometerPrograms.map(value => {return value.name})
@@ -301,7 +300,7 @@ export abstract class ViscometerUnitImpl {
         })
     }
 
-    private async startProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         // validate current state
         const currentState = this.functionalUnitState.getCurrentState();
         if (!(currentState && (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted)))) {
@@ -333,11 +332,11 @@ export abstract class ViscometerUnitImpl {
         return programTemplate
     }
 
-    private async stopProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async stopProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return this.stopOrAbortProgram(LADSFunctionalState.Stopping, LADSFunctionalState.Stopped)
     }
 
-    private async abortProgram(inputArguments: VariantLike[], context: SessionContext): Promise<CallMethodResultOptions> {
+    private async abortProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         return this.stopOrAbortProgram(LADSFunctionalState.Aborting, LADSFunctionalState.Aborted)
     }
 
@@ -350,16 +349,11 @@ export abstract class ViscometerUnitImpl {
         return { statusCode: StatusCodes.Good }
     }
 
-    private async runProgram(deviceProgramRunId: string, startedTimestamp: Date, inputArguments: VariantLike[], context: SessionContext) {
+    private async runProgram(deviceProgramRunId: string, startedTimestamp: Date, inputArguments: VariantLike[], context: ISessionContext) {
         // dynamically create an new result object in the result set and update node-version attribute
         const resultType = getLADSObjectType(this.parent.addressSpace, "ResultType")
         const resultSetNode = <UAObject>this.functionalUnit.programManager.resultSet
-        const result = <LADSResult><unknown>resultType.instantiate({ 
-            componentOf: resultSetNode,
-            browseName: deviceProgramRunId, 
-            optionals: ["NodeVersion", "VariableSet.NodeVersion", "FileSet.NodeVersion"] 
-        })
-        touchNodes(resultSetNode)
+        const result = createResult(resultSetNode, deviceProgramRunId)
 
         // get program template-id
         const activeProgram = this.activeProgram
@@ -488,7 +482,6 @@ export abstract class ViscometerUnitImpl {
             const endPointVariables = endPointRecord.createResultVariables(step.name, result.variableSet)
             AFODictionary.addReferences(endPointVariables, AFODictionaryIds.recording)
             rheometryRecorder.createRecord()
-            touchNodes(result, result.variableSet)
         
             // check if run was stopped or aborted from remote
             const currentState  = this.functionalUnitState.getCurrentState()
@@ -520,8 +513,5 @@ export abstract class ViscometerUnitImpl {
             accessLevel: AccessLevelFlag.CurrentRead
         })
         AFODictionary.addReferences(jsonModel, AFODictionaryIds.ASM_file, AFODictionaryIds.rheometry_aggregate_document)
-        
-        // update node version of resultset
-        touchNodes(result, result.fileSet, result.variableSet)
     }
 }

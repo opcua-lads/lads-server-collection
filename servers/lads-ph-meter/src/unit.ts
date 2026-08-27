@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { pHSensorRecorder } from "@asm"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement, AnalogScalarSensorFunctionImpl, AnalogScalarSensorWithCompenstionFunctionImpl } from "@utils"
+import { getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement, AnalogScalarSensorFunctionImpl, AnalogScalarSensorWithCompenstionFunctionImpl, createResult, initNodeVersion } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, CallMethodResultOptions, Variant, ISessionContext } from "node-opcua"
 import { join } from "path"
 import { pHMeterDeviceImpl } from "./device"
@@ -122,7 +122,7 @@ export abstract class pHMeterUnitImpl {
     private initProgramTemplates() {
         const programTemplateSet = this.functionalUnit.programManager.programTemplateSet as UAObject
         const date = new Date(Date.parse("2025-04-01T00:00:00.000Z"))
-        setStringValue(programTemplateSet.getNodeVersion(), "")
+        const nv = initNodeVersion(programTemplateSet)
         this.programTemplatesElements.push(addProgramTemplate(programTemplateSet, {
             identifier: ProgramTemplateIds.Measure,
             description: "pH-Measurement",
@@ -149,12 +149,6 @@ export abstract class pHMeterUnitImpl {
                 referenceIds: [AFODictionaryIds.calibration, AFODictionaryIds.pH, AFODictionaryIds.pH_calibration_slope]
             }))
         }
-        touchNodes(programTemplateSet)
-    }
-
-    private touchResult() {
-        const result = this.currentRunOptions.result
-        touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result.fileSet, result.variableSet)
     }
 
     private isAccessibleBy(sessionContext: ISessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
@@ -201,14 +195,9 @@ export abstract class pHMeterUnitImpl {
         }
 
         // create result
-        const resultType = getLADSObjectType(this.functionalUnit.addressSpace, "ResultType")
         const resultSet = <UAObject>this.functionalUnit.programManager.resultSet
-        options.result = <LADSResult><unknown>resultType.instantiate({
-            componentOf: resultSet,
-            browseName: options.runId,
-            optionals: ["NodeVersion", "FileSet.NodeVersion", "VariableSet.NodeVersion"]
-        })
-        const result = options.result
+        const result = createResult(resultSet, options.runId)
+        options.result = result
         AFODictionary.addDefaultResultReferences(result)
         AFODictionary.addReferences(result, ...referenceIds)
         setSessionInformation(result, context)
@@ -220,7 +209,6 @@ export abstract class pHMeterUnitImpl {
         setStringValue(result.deviceProgramRunId, options.runId)
         setDateTimeValue(result.started, options.started)
         copyProgramTemplate(options.programTemplate, result.programTemplate)
-        this.touchResult()
 
         // build ASM recorder
         options.recorder = new pHSensorRecorder({
@@ -368,8 +356,6 @@ export abstract class pHMeterUnitImpl {
                 stateMachine.setState(LADSFunctionalState.Stopped)
                 raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
             }
-            // touch everything
-            this.touchResult()
         }
         this.currentRunOptions = undefined
     }

@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
-import { getLADSObjectType, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode } from "@utils"
-import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, SessionContext, CallMethodResultOptions, Variant, StatusCode, DTKeyValuePair, utils, ISessionContext } from "node-opcua"
+import { getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode, createResult, initNodeVersion } from "@utils"
+import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, CallMethodResultOptions, Variant, StatusCode, ISessionContext } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl, getBalanceNameSpace } from "./device"
 import { BalanceFunctionalUnit, BalanceFunctionalUnitStatemachine, BalanceFunctionSet } from "./interfaces"
@@ -268,7 +268,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
     private initProgramTemplates() {
         const programTemplateSet = this.functionalUnit.programManager.programTemplateSet as UAObject
         // pre-initialize nodeversion to avoid node-opcua stack messages
-        setStringValue(programTemplateSet.getNodeVersion(), "0")
+        const nv = initNodeVersion(programTemplateSet)
         const date = new Date(Date.parse("2025-09-01T00:00:00.000Z"))
         this.programTemplateElements.push(addProgramTemplate(programTemplateSet, {
             identifier: ProgramTemplateIds.RegisterWeight,
@@ -312,12 +312,6 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             modified: date,
             referenceIds: [AFODictionaryIds.calibration, AFODictionaryIds.weighing]
         }))
-        touchNodes(programTemplateSet)
-    }
-
-    private touchResult() {
-        const result = this.currentRunOptions.result
-        touchNodes(this.functionalUnit.programManager.resultSet as UAObject, result, result?.fileSet, result?.variableSet)
     }
 
     private isAccessibleBy(sessionContext: ISessionContext) : boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext): true }
@@ -406,17 +400,11 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         }
 
         // create result
-        const createResult = (programTemplateId === ProgramTemplateIds.RegisterWeight)
-        if (createResult) {
-            const referenceIds: string[] = [AFODictionaryIds.weighing, AFODictionaryIds.weighing_aggregate_document, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result]
-            const resultType = getLADSObjectType(this.functionalUnit.addressSpace, "ResultType")
+        if (programTemplateId === ProgramTemplateIds.RegisterWeight) {
             const resultSet = <UAObject>this.functionalUnit.programManager.resultSet
-            options.result = <LADSResult><unknown>resultType.instantiate({
-                componentOf: resultSet,
-                browseName: options.runId,
-                optionals: ["NodeVersion", "FileSet.NodeVersion", "VariableSet.NodeVersion"]
-            })
-            const result = options.result
+            const result = createResult(resultSet, options.runId)
+            options.result = result
+            const referenceIds: string[] = [AFODictionaryIds.weighing, AFODictionaryIds.weighing_aggregate_document, AFODictionaryIds.weighing_document, AFODictionaryIds.weighing_result]
             AFODictionary.addDefaultResultReferences(result)
             AFODictionary.addReferences(result, ...referenceIds)
 
@@ -429,7 +417,6 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             setStringValue(result.deviceProgramRunId, options.runId)
             setDateTimeValue(result.started, options.started)
             copyProgramTemplate(options.programTemplate, result.programTemplate)
-            this.touchResult()
 
             // build ASM recorder
             // if net-weight is available choose it as source for sample-weight over current-weight
@@ -522,8 +509,6 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 stateMachine.setState(LADSFunctionalState.Stopped)
                 raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
             }
-            // touch everything
-            this.touchResult()
         }
         this.currentRunOptions = undefined
     }

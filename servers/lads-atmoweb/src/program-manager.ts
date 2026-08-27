@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAObject, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSProgramManager, LADSProgramTemplate, LADSResult, LADSRunnnigState } from "@interfaces"
-import { copyProgramTemplate, createDeviceProgramRunId, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, raiseEvent, setDateTimeValue, setNameNodeIdValue, setNumericValue, setSessionInformation, setStringValue, touchNodes, VariableDataRecorder } from "@utils"
+import { copyProgramTemplate, createDeviceProgramRunId, createResult, DataExporter, EventDataRecorder, getDescriptionVariable, getLADSObjectType, initNodeVersion, raiseEvent, 
+    setDateTimeValue, setNameNodeIdValue, setNumericValue, setSessionInformation, setStringValue, VariableDataRecorder } from "@utils"
 import { AtmoWebUnitImpl } from "./unit"
 import { join } from "path"
 import { AFODictionary, AFODictionaryIds } from "@afo"
@@ -70,6 +71,7 @@ export class AtmoWebProgramManagerImpl {
     initProgramTemplates(data: any) {
         const date = new Date("2025-06-01T12:00:00Z")
         const programTemplateSet = this.programManager.programTemplateSet as UAObject
+        initNodeVersion(programTemplateSet)
         const templateNames = [Measure]
         const progs: string[] = data["ProgList"]
         if (progs) { templateNames.push(...progs) }
@@ -89,7 +91,6 @@ export class AtmoWebProgramManagerImpl {
             this.programTemplates.push(programTemplate)
             AFODictionary.addReferences(programTemplate, AFODictionaryIds.measurement_method)
         })
-        touchNodes(programTemplateSet)
     }
 
     private async startMethod(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
@@ -136,11 +137,7 @@ export class AtmoWebProgramManagerImpl {
         this.runningStateMachine.setState(LADSRunnnigState.Starting)
         const options = this.programRunOptions
         // build result
-        const result = getLADSObjectType(this.programManager.addressSpace, "ResultType").instantiate({
-            componentOf: this.programManager.resultSet as UAObject,
-            browseName: options.deviceProgramRunId,
-            optionals: ["NodeVersion", "VariableSet.NodeVersion", "FileSet.NodeVersion"]
-        }) as LADSResult
+        const result = createResult(this.programManager.resultSet as UAObject, options.deviceProgramRunId)
         result.properties.setValueFromSource(options.properties)
         result.supervisoryJobId.setValueFromSource(options.jobId)
         result.supervisoryTaskId.setValueFromSource(options.taskId)
@@ -149,7 +146,6 @@ export class AtmoWebProgramManagerImpl {
         setSessionInformation(result, options.context)
         setDateTimeValue(result.started, new Date())
         copyProgramTemplate(options.programTemplate, result.programTemplate)
-        touchNodes(this.programManager.resultSet as UAObject)
         options.result = result
         AFODictionary.addDefaultResultReferences(result)
         AFODictionary.addReferences(result, AFODictionaryIds.temperature_measurement_result)
@@ -187,7 +183,6 @@ export class AtmoWebProgramManagerImpl {
             const resultsDirectory = join(__dirname, "results")
             const xlsx = await new DataExporter().writeXSLXResultFile(result.fileSet, "XLSX", resultsDirectory, options.deviceProgramRunId, [options.variableRecorder, options.eventRecorder])
             AFODictionary.addReferences(xlsx, AFODictionaryIds.temperature_measurement_result)
-            touchNodes(result, result.fileSet, result.variableSet)
             // generate event
             raiseEvent(this.unitImpl.unit, `Run with id ${options.deviceProgramRunId} stopped.`)
         } else {

@@ -66,7 +66,7 @@ import {
     MachineIdentificationType,
     LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
-import { connectWritableVariables, getNumericValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
+import { connectWritableVariables, getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -85,20 +85,41 @@ export function installVariableHistory(variable: UAVariable) {
 
 export function noise(amplitude: number) { return amplitude * (Math.random() - 0.5) }
 
-const EventNotifierFlagSubscribeToEvents = 1
-let BaseModelChangedEventType: UAEventType = undefined
+export function initNodeVersion(node: UAObject): UAProperty<string, DataType.String> {
+    if (!node) {
+        console.debug("initNodeVersion() parent missing ")
+        return undefined
+    }
+    const nv = node.getNodeVersion()
+    if (!nv) {
+        console.debug(`initNodeVersion(${node.getDisplayName()}) ${node.nodeId} NodeVersion missing `)
+        return undefined                
+    } 
+    if (getStringValue(nv) == "NaN") {
+        console.debug(`initNodeVersion(${node.getDisplayName()}) ${node.nodeId} NodeVersion initialized `)
+        setStringValue(nv, "0")
+    }
+    return nv
+}
+
 export function touchNodes(...nodes: UAObject[]) {
+    if (nodes.length == 0 ) return
+    // we should leave updating NodeVerision and emitting ModelChanged events to node opcua 
+    const n = nodes[0]
+    console.debug("touchNodes method depreceated!", n.browseName, )
     const timestamp = new Date().toISOString()
+    const addressSpace = n.addressSpace
+    const server = addressSpace.rootFolder.objects.server
+    const baseModelChangedEventType = addressSpace.findEventType(coerceNodeId(ObjectTypeIds.BaseModelChangeEventType))
     nodes.forEach(node => {
         try {
-            if (!BaseModelChangedEventType) {
-                BaseModelChangedEventType = node.addressSpace.findEventType(coerceNodeId(ObjectTypeIds.BaseModelChangeEventType))
+            const nodeVersion = node.getNodeVersion()
+            if (!nodeVersion) {
+                console.debug(`Missing NodeVersion attribute for ${node.browseName}, ${node.nodeId}`)
+            } else {
+                nodeVersion.setValueFromSource({ dataType: DataType.String, value: timestamp })
+                server.raiseEvent(baseModelChangedEventType, {})
             }
-            if (!node.eventNotifier && EventNotifierFlagSubscribeToEvents) {
-                node.setEventNotifier(EventNotifierFlagSubscribeToEvents)
-            }
-            node.raiseEvent(BaseModelChangedEventType, {})
-            node.getNodeVersion()?.setValueFromSource({ dataType: DataType.String, value: timestamp })
         } catch { }
     })
 }
@@ -299,7 +320,10 @@ export function getLADSFunctions(parent: LADSFunctionalUnit | LADSFunction, recu
                 if (addHasNotifierReferences) {
                     if (!(notifierReferences.includes(ladsFunction))) {
                         ladsFunction.setEventNotifier(notifierFlags)
-                        functionSet.addReference({ referenceType: hasNotifierType, nodeId: ladsFunction })
+                        try {
+                            functionSet.addReference({ referenceType: hasNotifierType, nodeId: ladsFunction })
+                        }
+                        catch {}
                     }
                 }
                 functions.push(ladsFunction)
@@ -387,6 +411,20 @@ export function createDeviceProgramRunId(programTemplateId: string): string {
 //---------------------------------------------------------------
 // LADS result support
 //---------------------------------------------------------------
+export function createResult(resultSet: UAObject, name: string): LADSResult {
+    if (!resultSet) return undefined
+    const resultType = getLADSObjectType(resultSet.addressSpace, "ResultType")
+    initNodeVersion(resultSet)
+    const result = <LADSResult><unknown>resultType.instantiate({
+        componentOf: resultSet,
+        browseName: name,
+        optionals: ["FileSet.NodeVersion", "VariableSet.NodeVersion"]
+    })
+    initNodeVersion(result.fileSet)
+    initNodeVersion(result.variableSet)
+    return result
+}
+
 export function setSessionInformation(result: LADSResult, context: ISessionContext) {
     // analyze session context
     const session = context.session as ServerSession
