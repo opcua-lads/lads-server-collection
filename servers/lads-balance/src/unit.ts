@@ -139,7 +139,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         this.tareWeight = functionSet.currentWeight.functionSet?.tareWeight
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.measurement_device, AFODictionaryIds.weighing_device)
-        AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
+        AFODictionary.addSensorFunctionReferences(this.currentWeight, AFODictionaryIds.weighing, AFODictionaryIds.mass)
         AFODictionary.addSensorFunctionReferences(this.grossWeight, AFODictionaryIds.weighing, AFODictionaryIds.gross_weight)
         AFODictionary.addSensorFunctionReferences(this.netWeight, AFODictionaryIds.weighing, AFODictionaryIds.sample_weight)
         AFODictionary.addSensorFunctionReferences(this.tareWeight, AFODictionaryIds.weighing, AFODictionaryIds.tare_weight)
