@@ -9,7 +9,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSDevice, LADSFunctionalUnit } from "@interfaces"
+import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSControllerParameter, LADSControllerParameterSet, LADSCoverFunction, LADSDevice, LADSFunctionalUnit, LADSMultiModeControlFunction } from "@interfaces"
 import { UAObject } from "node-opcua"
 
 //---------------------------------------------------------------
@@ -18,7 +18,17 @@ import { UAObject } from "node-opcua"
 export interface FreezerFunctionSet extends UAObject {
     temperatureSensor: LADSAnalogScalarSensorFunction
     temperatureController: LADSAnalogControlFunction
+    temperatureControllerX: FreezerTemperatureController
     door: FreezerDoorFunction
+}
+
+export enum FreezerTemperatureControllerMode {Celsius = 0, Fahrenheit}
+
+export interface FreezerTemperatureController extends LADSMultiModeControlFunction {
+    controllerModeSet: {
+        degreesCelsius: LADSControllerParameter
+        degreesFahrenheit: LADSControllerParameter
+    }
 }
 
 export interface FreezerDoorFunction extends LADSCoverFunction {

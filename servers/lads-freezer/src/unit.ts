@@ -10,9 +10,17 @@
  */
 
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAStateMachineEx, VariantLike } from "node-opcua"
-import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverFunction, LADSCoverState, LADSFunctionalState } from "@interfaces"
-import { ExclusiveDeviationAlarmImpl, ExclusiveLimitAlarmImpl, getNumericValue, getStringValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
-import { FreezerDoorFunction, FreezerFunctionalUnit, FreezerFunctionSet } from "./interfaces"
+import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverState, LADSFunctionalState } from "@interfaces"
+import { ExclusiveDeviationAlarmImpl, ExclusiveLimitAlarmImpl, getNumericValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
+import { FreezerDoorFunction, FreezerFunctionalUnit, FreezerTemperatureController } from "./interfaces"
+
+export function celsiusToFahrenheit(celsius: number): number {
+    return (celsius * 9) / 5 + 32;
+}
+
+export function fahrenheitToCelsius(fahrenheit: number): number {
+    return ((fahrenheit - 32) * 5) / 9;
+}
 
 export class FreezerUnitImpl {
     functionalUnit: FreezerFunctionalUnit
@@ -20,6 +28,7 @@ export class FreezerUnitImpl {
     temperatureController: LADSAnalogControlFunction
     temperatureControllerStateMachine: UAStateMachineEx
     temperatureControllerAlarm: ExclusiveDeviationAlarmImpl
+    temperatureControllerX: FreezerTemperatureController
     door: FreezerDoorFunction
     doorStateMachine: UAStateMachineEx
     doorTimer: LADSAnalogScalarSensorFunction
@@ -35,7 +44,9 @@ export class FreezerUnitImpl {
 
         const functionSet = functionalUnit.functionSet
 
-        // temperature sensor and controller
+        // multi mode temperature controller
+        this.temperatureControllerX = functionSet.temperatureControllerX
+        // temperature controller
         this.temperatureController = functionSet.temperatureController
         this.temperatureControllerStateMachine = promoteToFiniteStateMachine(this.temperatureController.controlFunctionState)
         this.temperatureControllerStateMachine.setState(LADSFunctionalState.Running)
@@ -46,11 +57,10 @@ export class FreezerUnitImpl {
             lowLimit: -10,
             lowLowLimit: -20,
         })
-        this.temperatureController.targetValue.on("value_changed", dataValue => {
-            const value = Number(dataValue.value.value)
-            this.adjustAlarmLimits(value)
-            raiseEvent(this.temperatureController, `Target value changed to ${value}°C`)
-        })
+        this.onTargetValueChanged(-60)
+        this.temperatureController.targetValue.on("value_changed", dataValue => { this.onTargetValueChanged(Number(dataValue.value.value)) })
+        this.temperatureController.currentValue.on("value_changed", dataValue => { this.onCurrentValueChanged(Number(dataValue.value.value)) })
+
         installVariableHistory(this.temperatureController.currentValue)
 
         // door state machine and methods
@@ -66,29 +76,41 @@ export class FreezerUnitImpl {
             highHighLimit: 20000,
             highLimit: 10000,
         })
-        
+
 
         // optional temperature sensor
         this.temperatureSensor = functionSet.temperatureSensor
         if (this.temperatureSensor) {
             installVariableHistory(this.temperatureSensor.sensorValue)
         }
-        
+
         // lock
         this.lock = new LockImpl(this.functionalUnit.lock)
 
         // run unit
         const dT = 500
-        setInterval(() => { this.evaluate(dT) }, dT) 
+        setInterval(() => { this.evaluate(dT) }, dT)
+    }
+
+    private onTargetValueChanged(value: number) {
+        this.adjustAlarmLimits(value)
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesCelsius.targetValue, value)
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesFahrenheit.targetValue, celsiusToFahrenheit(value))
+        raiseEvent(this.temperatureController, `Target value changed to ${value}°C`)
+    }
+
+    private onCurrentValueChanged(value: number) {
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesCelsius.currentValue, value)
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesFahrenheit.currentValue, celsiusToFahrenheit(value))
     }
 
     private adjustAlarmLimits(targetValue: number) {
-        const alarmMonitor = this.temperatureSensor.alarmMonitor
+        const alarmMonitor = this.temperatureSensor?.alarmMonitor
         if (!alarmMonitor) return
-        setNumericValue(alarmMonitor.highHighLimit, targetValue + 20 )
-        setNumericValue(alarmMonitor.highLimit, targetValue + 10 )
-        setNumericValue(alarmMonitor.lowLimit, targetValue - 10 )
-        setNumericValue(alarmMonitor.lowLowLimit, targetValue - 20 )
+        setNumericValue(alarmMonitor.highHighLimit, targetValue + 20)
+        setNumericValue(alarmMonitor.highLimit, targetValue + 10)
+        setNumericValue(alarmMonitor.lowLimit, targetValue - 10)
+        setNumericValue(alarmMonitor.lowLowLimit, targetValue - 20)
     }
 
     private async open(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
