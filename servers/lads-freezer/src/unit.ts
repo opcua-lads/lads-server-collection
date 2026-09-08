@@ -94,14 +94,14 @@ export class FreezerUnitImpl {
 
     private onTargetValueChanged(value: number) {
         this.adjustAlarmLimits(value)
-        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesCelsius.targetValue, value)
-        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesFahrenheit.targetValue, celsiusToFahrenheit(value))
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesCelsius?.targetValue, value)
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesFahrenheit?.targetValue, celsiusToFahrenheit(value))
         raiseEvent(this.temperatureController, `Target value changed to ${value}°C`)
     }
 
     private onCurrentValueChanged(value: number) {
-        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesCelsius.currentValue, value)
-        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesFahrenheit.currentValue, celsiusToFahrenheit(value))
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesCelsius?.currentValue, value)
+        setNumericValue(this.temperatureControllerX.controllerModeSet.degreesFahrenheit?.currentValue, celsiusToFahrenheit(value))
     }
 
     private adjustAlarmLimits(targetValue: number) {

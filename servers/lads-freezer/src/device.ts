@@ -14,10 +14,12 @@ import { FreezerDevice } from "./interfaces"
 import { FreezerUnitImpl } from "./unit"
 import { DefaultHierarchicalLocation, FreezerConfig } from "./server"
 import { join } from "path"
+import { StorageImpl } from "./storage"
 
 export class FreezerDeviceImpl {
     device: FreezerDevice
     freezerUnit: FreezerUnitImpl
+    storage: StorageImpl
 
     constructor(device: FreezerDevice, config: FreezerConfig) {
         this.device = device
@@ -39,6 +41,9 @@ export class FreezerDeviceImpl {
 
         // create unit
         this.freezerUnit = new FreezerUnitImpl(device.functionalUnitSet.freezerUnit)
+
+        // cerate storage
+        this.storage = new StorageImpl(this)
 
     }
 }

@@ -10,7 +10,7 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString, UATwoStateVariable, DataValue } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString, UATwoStateVariable, DataValue, Variant, IAddressSpace } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
 
@@ -175,9 +175,12 @@ export function setPropertiesValue(variable: UAVariable, properties: LADSPropert
     variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructPropertiesExtensionObject(variable.addressSpace, properties), arrayType: VariantArrayType.Array })
 }
 
+export function createSamplesValue(addressSpace: IAddressSpace, samples: LADSSampleInfo[]): Variant {
+    return new Variant({ dataType: DataType.ExtensionObject, value: constructSamplesExtensionObject(addressSpace, samples), arrayType: VariantArrayType.Array })
+}
 export function setSamplesValue(variable: UAVariable, samples: LADSSampleInfo[]) {
     if (!variable) return
-    variable.setValueFromSource({ dataType: DataType.ExtensionObject, value: constructSamplesExtensionObject(variable.addressSpace, samples), arrayType: VariantArrayType.Array })
+    variable.setValueFromSource(createSamplesValue(variable.addressSpace, samples))
 }
 
 export function setNameNodeIdValue(variable: UAVariable, name: string, nodeId: NodeId) {
