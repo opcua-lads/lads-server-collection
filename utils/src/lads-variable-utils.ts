@@ -10,7 +10,7 @@
  */
 
 import assert from "assert"
-import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString, UATwoStateVariable, DataValue, Variant, IAddressSpace } from "node-opcua"
+import { UAVariable, StatusCodes, DataType, StatusCode, LocalizedText, QualifiedName, Range, UAObject, coerceNodeId, UABaseDataVariable, UAMultiStateDiscrete, VariableTypeIds, VariantArrayType, ConstantStatusCode, NodeId,  EUInformation, UABaseAnalog, UAAnalogUnitRange, UATwoStateDiscrete, DateTime, ByteString, UATwoStateVariable, DataValue, Variant, IAddressSpace, UAAnalogItem, Namespace } from "node-opcua"
 import { LADSProperty, LADSSampleInfo } from "@interfaces"
 import { constructNameNodeIdExtensionObject, constructPropertiesExtensionObject, constructSamplesExtensionObject } from "./lads-utils"
 
@@ -330,6 +330,20 @@ export function addDoubleVariable(parent: UAObject, name: string, value = 0): UA
     })
 }
 
+export function addAnalogUnitRangeBasedOn(parent: UAObject, name: string, template: UAAnalogItem<number, DataType.Double>): UAAnalogItem<number, DataType.Double> {
+    if (!parent) return undefined
+    const namespace = parent.namespace as Namespace
+    const analogItem = namespace.addAnalogDataItem({
+        componentOf: parent,
+        browseName: name,
+        engineeringUnits: template.engineeringUnits?.readValue().value.value,
+        engineeringUnitsRange: template.euRange?.readValue().value.value,
+        //instrumentRange: template.instrumentRange?.readValue().value.value,
+        value: template.readValue().value
+    })
+    return analogItem as UAAnalogItem<number, DataType.Double>
+}
+
 export function addStatusCodeVariable(parent: UAObject, name: string, value = StatusCodes.Good): UABaseDataVariable<ConstantStatusCode, DataType.StatusCode> {
     if (!parent) return undefined
     const namespace = parent.namespace
@@ -341,3 +355,26 @@ export function addStatusCodeVariable(parent: UAObject, name: string, value = St
     })
 }
 
+export function addSampleInfoVariable(parent: UAObject, name: string, value: LADSSampleInfo): UABaseDataVariable<number, DataType.ExtensionObject> {
+    if (!parent) return undefined
+    const namespace = parent.namespace
+    const extensionObject = constructSamplesExtensionObject(namespace.addressSpace, [value])
+    return <UABaseDataVariable<number, DataType.ExtensionObject>>namespace.addVariable({
+        browseName: name,
+        componentOf: parent,
+        dataType: DataType.ExtensionObject,
+        value: new Variant({ dataType: DataType.ExtensionObject, value: extensionObject[0] })
+    })
+}
+
+export function addSampleInfosVariable(parent: UAObject, name: string, value: LADSSampleInfo[]): UABaseDataVariable<number, DataType.ExtensionObject> {
+    if (!parent) return undefined
+    const namespace = parent.namespace
+    const extensionObject = constructSamplesExtensionObject(namespace.addressSpace, value)
+    return <UABaseDataVariable<number, DataType.ExtensionObject>>namespace.addVariable({
+        browseName: name,
+        componentOf: parent,
+        dataType: DataType.ExtensionObject,
+        value: new Variant({ dataType: DataType.ExtensionObject, value: extensionObject, arrayType: VariantArrayType.Array })
+    })
+}

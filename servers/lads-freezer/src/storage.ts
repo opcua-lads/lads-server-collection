@@ -1,8 +1,8 @@
-import { LADSCoverFunction, LADSProgramManager, LADSProgramTemplate, LADSProperty, LADSResult, LADSSampleInfo } from "@interfaces"
+import { LADSAnalogControlFunction, LADSCoverFunction, LADSProgramManager, LADSProperty, LADSResult, LADSSampleInfo } from "@interfaces"
 import { FreezerDeviceImpl } from "./device"
 import { UAComponent } from "node-opcua-nodeset-di"
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAObject, UAProperty, UAVariable, Variant, VariantLike, VariantOptions } from "node-opcua"
-import { addProgramTemplate, copyProgramTemplate, createDeviceProgramRunId, createResult, createSamplesValue, initComponent, ProgramTemplateElement, raiseEvent, setDateTimeValue, setNumericValue, setPropertiesValue, setSamplesValue, setStringValue, sleepMilliSeconds } from "@utils"
+import { addAnalogUnitRangeBasedOn, addProgramTemplate, addSampleInfoVariable, addStringVariable, copyProgramTemplate, createDeviceProgramRunId, createResult, createSamplesValue, EventSeverity, getDescriptionVariable, getStringValue, ProgramTemplateElement, raiseEvent, setDateTimeValue, setNumericValue, setPropertiesValue, setSamplesValue, setSessionInformation, setStringValue, sleepMilliSeconds } from "@utils"
 
 
 interface Compartment extends UAComponent {
@@ -14,6 +14,7 @@ function pad(n: number, m: number): string {
 }
 
 export function toSampleInfos(variant: VariantOptions): LADSSampleInfo[] {
+    if (variant.value == null) return []
     const sampleInfos: LADSSampleInfo[] = (variant.value as any[]).map(sample => ({
         containerId: sample.containerId,
         sampleId: sample.sampleId,
@@ -33,8 +34,43 @@ export function getSampleInfos(variable: UAVariable, defaultValue: LADSSampleInf
     }
 }
 
+export function toProperties(variant: VariantOptions): LADSProperty[] {
+    if (variant.value == null) return []
+    const properties: LADSProperty[] = (variant.value as any[]).map(property => ({
+        key: property.key,
+        value: property.value,
+    }))
+    return properties
+}
 
-enum StorageActions {Unknown, CheckIn, CheckOut}
+
+export function getProperties(variable: UAVariable, defaultValue: LADSProperty[] = []): LADSProperty[] {
+    if (!variable) return defaultValue
+    try {
+        return toProperties(variable.readValue().value)
+    }
+    catch {
+        return defaultValue
+    }
+}
+
+export function findProperty(propertyKey: string, properties: LADSProperty[]) : LADSProperty | undefined {
+    if (!properties) return undefined
+    const key = propertyKey.trim().toLowerCase()
+    const property = properties.find(property => property.key.trim().toLowerCase() == key)
+    return property
+}
+
+
+
+enum StorageAction {Unknown, CheckIn, CheckOut}
+
+interface StorageEvent {
+    action: StorageAction
+    compartmentName: string
+    sampleInfo: LADSSampleInfo
+}
+type StorageEvents = StorageEvent[]
 
 export class StorageImpl {
     deviceImpl: FreezerDeviceImpl
@@ -91,6 +127,7 @@ class ProgramManagerImpl {
     storage: StorageImpl
     programTemplateElements: ProgramTemplateElement[] = []
     door: LADSCoverFunction
+    temperatureController: LADSAnalogControlFunction
     programManager: LADSProgramManager
     isRunning: boolean = false
     started = 0
@@ -121,7 +158,9 @@ class ProgramManagerImpl {
             modified: date,
             author: author
         }))
-        this.door = functionalUnit.functionSet.door
+        const functionSet = functionalUnit.functionSet
+        this.door = functionSet.door
+        this.temperatureController = functionSet.temperatureController
         const stateMachine = functionalUnit.functionalUnitState
         stateMachine.startProgram?.bindMethod(this.startProgram.bind(this))
         //stateMachine.stop?.bindMethod()
@@ -136,7 +175,7 @@ class ProgramManagerImpl {
                 }
             }
         }
-        return undefined
+        return [undefined, undefined]
     }
 
     private findSamples(sampleInfos: LADSSampleInfo[]): LADSSampleInfo[] {
@@ -145,11 +184,47 @@ class ProgramManagerImpl {
             const [found, _] = this.findSample(sampleInfo.sampleId)
             if (found) foundSamples.push(found)
         })
-        return foundSamples
+        return foundSamples  
     }
 
-    private checkOut(sampleInfos: LADSSampleInfo[]) {
-        const checkedOutSamples: LADSSampleInfo[] = []
+    private findCompartment(compartmentName: string): Compartment | undefined {
+        const name = compartmentName.trim().toLowerCase()
+        for (const compartment of this.storage.compartments) {
+            if (compartment.getDisplayName().trim().toLowerCase() == name) {
+                return compartment
+            }
+        }
+        return undefined
+    }
+
+    private checkIn(compartment: Compartment, sampleInfos : LADSSampleInfo[]) {
+        const events: StorageEvents = []
+        if (!compartment) return events
+        const compartmentName = compartment.getDisplayName()
+        const samples = getSampleInfos(compartment.samples)
+        const samplesLength = samples.length
+        for (const sampleInfo of sampleInfos) {
+            const [sample, compartment] = this.findSample(sampleInfo.sampleId)
+            if (sample) {
+                raiseEvent(this.storage.cabinet, `Sample with sample-id ${sample.sampleId} alreaday stored in comartmemt ${compartmentName}.`, EventSeverity.Warning)
+            } else {
+                samples.push(sampleInfo)
+                raiseEvent(this.storage.cabinet, `Stored sample with sample-id ${sampleInfo.sampleId} in compartment ${compartmentName}.`)
+                events.push({
+                    action: StorageAction.CheckIn,
+                    compartmentName: compartmentName,
+                    sampleInfo: sampleInfo,
+                })
+            }
+        }
+        if (samples.length > samplesLength) {
+            setSamplesValue(compartment.samples, samples)
+        }
+        return events
+    }
+
+    private checkOut(sampleInfos: LADSSampleInfo[]): StorageEvents {
+        const events: StorageEvents = []
         for (const sampleInfo of sampleInfos) {
             const [sample, compartment] = this.findSample(sampleInfo.sampleId)
             if (compartment) {
@@ -157,27 +232,34 @@ class ProgramManagerImpl {
                 const remainingSamples = samples.filter(sample => sample.sampleId != sampleInfo.sampleId)
                 setSamplesValue(compartment.samples, remainingSamples)
                 raiseEvent(this.storage.cabinet, `Removed sample with sample-id ${sampleInfo.sampleId} from compartment ${compartment.getDisplayName()}.`)
-                checkedOutSamples.push(sample)
+                events.push({
+                    action: StorageAction.CheckOut,
+                    compartmentName: compartment.getDisplayName(),
+                    sampleInfo: sample,
+                })
             }
         }
+        return events
     }
 
     private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
 
         // if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (this.isRunning) return { statusCode: StatusCodes.BadInvalidState }
-        const programTemplateId: string = inputArguments[0].value
-        const properties = Array(inputArguments[1].value) as LADSProperty[]
+        const programTemplateId = String(inputArguments[0].value)
+        const properties = toProperties(inputArguments[1])
         const jobId = String(inputArguments[2].value)
         const taskId = String(inputArguments[3].value)
         const samples = toSampleInfos(inputArguments[4])
         const programTemplate = this.programTemplateElements.find(value => value.identifier.toLowerCase().includes(programTemplateId.toLowerCase()))
-        const action = programTemplate == undefined ? StorageActions.Unknown : programTemplate.identifier == "Check-in" ? StorageActions.CheckIn : StorageActions.CheckOut
+        const action = programTemplate == undefined ? StorageAction.Unknown : programTemplate.identifier == "Check-in" ? StorageAction.CheckIn : StorageAction.CheckOut
         const foundSamples = this.findSamples(samples)
-        const hasSamples = action == StorageActions.CheckIn ? (samples.length > 0) && (foundSamples.length == 0) : StorageActions.CheckOut ? (foundSamples.length > 0) : false
+        const compartmemtProperty = findProperty("Compartment", properties)
+        const compartment = this.findCompartment(compartmemtProperty?.value)
+        const hasSamples = action == StorageAction.CheckIn ? (samples.length > 0) && (foundSamples.length == 0) : StorageAction.CheckOut ? (foundSamples.length > 0) && compartment : false
         if (programTemplate && hasSamples) {
             const runId = createDeviceProgramRunId(programTemplateId)
-            this.runProgram(runId, programTemplate.programTemplate, action, properties, jobId, taskId, samples, context)
+            this.runProgram(runId, programTemplate, action, compartment, properties, jobId, taskId, samples, context)
             return {
                 outputArguments: [new Variant({ dataType: DataType.String, value: runId })],
                 statusCode: StatusCodes.Good
@@ -187,7 +269,7 @@ class ProgramManagerImpl {
         }
     }
 
-    private async runProgram(runId: string, programTemplate: LADSProgramTemplate, action: StorageActions, properties: LADSProperty[], jobId: string, taskId: string , samples: LADSSampleInfo[], context: ISessionContext) {
+    private async runProgram(runId: string, programTemplateElement: ProgramTemplateElement, action: StorageAction, compartment: Compartment, properties: LADSProperty[], jobId: string, taskId: string , samples: LADSSampleInfo[], context: ISessionContext) {
         const runTime = 10000
         const startedMilliseconds = Date.now()
         const activeProgram = this.programManager.activeProgram
@@ -205,27 +287,47 @@ class ProgramManagerImpl {
         }
         
         const result = createResult(this.programManager.resultSet as UAObject, runId)
+        const programTemplate = programTemplateElement.programTemplate
         copyProgramTemplate(programTemplate, result.programTemplate)
-        //setPropertiesValue(result.properties, properties)
+        setStringValue(getDescriptionVariable(result), getStringValue(getDescriptionVariable(programTemplate)))
+        setPropertiesValue(result.properties, properties)
         setStringValue(result.supervisoryJobId, jobId)
         setStringValue(result.supervisoryTaskId, taskId)
         setSamplesValue(result.samples, samples)
         setStringValue(result.deviceProgramRunId, runId)
         setDateTimeValue(result.started, new Date())
+        setSessionInformation(result, context)
         
         // open door
         await this.door.coverState.open.execute(this.door, [], context)
         // wait
         await updateAndSleepUntil(0.5 * runTime)
-        // handle samples 
-        if (action === StorageActions.CheckOut) {
-            const checkedOutSamples = this.checkOut(samples)
+        // handle samples
+        const events: StorageEvents = action == StorageAction.CheckOut ? this.checkOut(samples) : action == StorageAction.CheckIn ? this.checkIn(compartment, samples) : []
+        this.documentEvents(result, programTemplateElement.identifier, action, events)
+        if (events.length > 0) {
+            addAnalogUnitRangeBasedOn(result.variableSet, "Temperature", this.temperatureController.currentValue)
         }
         // wait
         await updateAndSleepUntil(runTime)
         // close door
         await this.door.coverState.close.execute(this.door, [], context)
         setDateTimeValue(result.stopped, new Date())
+    }
+
+    private documentEvents(result: LADSResult, identifier: string, action: StorageAction, events: StorageEvents) {
+        const variableSet = result.variableSet
+        const namespace = variableSet.namespace
+        events.filter(storageEvent => storageEvent.action == action).forEach((filteredEvent, index) => {
+            const name = `${identifier} #${index + 1}`
+            const event = namespace.addObject({
+                componentOf: variableSet,
+                browseName: name.replaceAll(" ", ""),
+                displayName: name
+            })
+            addStringVariable(event, "Compartment", filteredEvent.compartmentName)
+            addSampleInfoVariable(event, "Sample", filteredEvent.sampleInfo)
+        })
 
     }
 
