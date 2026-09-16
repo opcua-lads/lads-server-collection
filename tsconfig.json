@@ -9,16 +9,15 @@
         "moduleResolution": "nodenext",
         "strictNullChecks": false,
         "sourceMap": true,
-        "baseUrl": ".",
         "paths": {
-            "@utils": ["utils/src"],
-            "@utils/*": ["utils/src/*"],
-            "@interfaces": ["interfaces/src"],
-            "@interfaces/*": ["interfaces/src/*"],
-            "@afo": ["lib/afo/src"],
-            "@afo/*": ["lib/afo/src/*"],
-            "@asm": ["lib/asm/src"],
-            "@asm/*": ["lib/asm/src/*"]
+            "@utils": ["./utils/src"],
+            "@utils/*": ["./utils/src/*"],
+            "@interfaces": ["./interfaces/src"],
+            "@interfaces/*": ["./interfaces/src/*"],
+            "@afo": ["./lib/afo/src"],
+            "@afo/*": ["./lib/afo/src/*"],
+            "@asm": ["./lib/asm/src"],
+            "@asm/*": ["./lib/asm/src/*"]
         }
     },
 }
