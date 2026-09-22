@@ -15,6 +15,7 @@ import { FreezerUnitImpl } from "./unit"
 import { DefaultHierarchicalLocation, FreezerConfig } from "./server"
 import { join } from "path"
 import { StorageImpl } from "./storage"
+import { AFODictionary, AFODictionaryIds } from "@afo"
 
 export class FreezerDeviceImpl {
     device: FreezerDevice
@@ -45,6 +46,9 @@ export class FreezerDeviceImpl {
         // cerate storage
         this.storage = new StorageImpl(this)
 
+         // set AFO dictionary entries
+         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references
+         AFODictionary.addReferences(device, AFODictionaryIds.cooling_device)
     }
 }
 

@@ -5,7 +5,7 @@
         {
             "serialPort": "",
             "protocol": "Simulator",
-            "name": "My Simulated Balance",
+            "name": "My Sartorius Cubis II Balance",
             "enabled": false
         },
         {

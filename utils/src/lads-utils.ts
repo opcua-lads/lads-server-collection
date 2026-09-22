@@ -67,6 +67,7 @@ import {
     LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
 import { connectWritableVariables, getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
+import { AFODictionary } from "@afo"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -397,6 +398,8 @@ export function addProgramTemplate(programTemplateSet: UAObject, options: Progra
     setStringValue(programTemplate.deviceTemplateId, options.identifier)
     setDateTimeValue(programTemplate.created, options.created)
     setDateTimeValue(programTemplate.modified, options.modified)
+    setStringValue(programTemplate.version, options.version ?? "unknown")
+    AFODictionary.addReferences(programTemplate, ...options.referenceIds)
     return { identifier: options.identifier, programTemplate: programTemplate }
 }
 

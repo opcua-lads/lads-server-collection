@@ -12,16 +12,18 @@
 //---------------------------------------------------------------
 // LADS Allotrope Foundation Ontologies (AFO) support
 //---------------------------------------------------------------
-import { BaseNode, coerceNodeId, INamespace, ReferenceTypeIds, UAObject, UAObjectType, UAReferenceType, UAStateMachine } from "node-opcua";
+import { BaseNode, coerceNodeId, INamespace, ReferenceTypeIds, UAExclusiveDeviationAlarm, UAExclusiveLevelAlarm, UAExclusiveLimitAlarm, UALimitAlarm, UAObject, UAObjectType, UAReferenceType, UAStateMachine } from "node-opcua";
 import { UAComponent } from "node-opcua-nodeset-di";
 import { AFODictionaryIds } from "@afo";
 import {
     LADSActiveProgram, LADSAnalogArraySensorFunction, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction,
+    LADSAnalogSensorFunction,
     LADSComponent, LADSDevice, LADSFunction, LADSFunctionalUnit, LADSMultiStateDiscreteControlFunction, LADSMultiStateDiscreteSensorFunction,
     LADSProgramManager, LADSProgramTemplate, LADSResult, LADSResultFile,
     LADSTwoStateDiscreteControlFunction, LADSTwoStateDiscreteSensorFunction, MachineIdentificationType
 } from "@interfaces";
-import { getChildObjects, getDescriptionVariable } from "@utils";
+import { ExclusiveDeviationAlarmImpl, getChildObjects, getDescriptionVariable } from "@utils";
+import { AnalogSensorFunctionImpl } from "../../../servers/lads-atmoweb/src/functions";
 
 type LADSSensorFunction = LADSAnalogScalarSensorFunction | LADSAnalogArraySensorFunction | LADSTwoStateDiscreteSensorFunction | LADSMultiStateDiscreteSensorFunction
 type LADSControlFunction = LADSAnalogControlFunction | LADSTwoStateDiscreteControlFunction | LADSMultiStateDiscreteControlFunction
@@ -87,11 +89,15 @@ export class AFODictionary {
         })
     }
 
-    private static addDefaultFunctionalUnitRefences(functionalUnit: LADSFunctionalUnit) {
-        const functions = getChildObjects(functionalUnit.functionSet as UAObject) as LADSFunction[]
+    private static addDefaultFunctionSetReferences(functionSet: UAObject) {
+        const functions = getChildObjects(functionSet) as LADSFunction[]
         functions.forEach(abstractFunction => this.addDefaultFunctionReferences(abstractFunction))
+    }
+
+    private static addDefaultFunctionalUnitReferences(functionalUnit: LADSFunctionalUnit) {
         this.addDefaultStatemachineReferences(functionalUnit.functionalUnitState)
         this.addDefaultProgramManagerReferences(functionalUnit.programManager)
+        this.addDefaultFunctionSetReferences(functionalUnit.functionSet as UAObject)
     }
 
     private static addDefaultStatemachineReferences(stateMachine: UAStateMachine) {
@@ -108,11 +114,13 @@ export class AFODictionary {
         } else if (objectType.isSubtypeOf(this.baseControlFunctionType)) {
             this.addDefaultControlFunctionReferences(abstractFunction as LADSControlFunction)
         }
+        this.addDefaultFunctionSetReferences(abstractFunction.functionSet as UAObject)
     }
 
     private static addDefaultSensorFunctionReferences(sensorFunction: LADSSensorFunction) {
         if (!sensorFunction) return
         this.addReferences(sensorFunction, AFODictionaryIds.sensor, AFODictionaryIds.measurement_function)
+        this.addDefaultAlarmMonitorReferences((sensorFunction as LADSAnalogSensorFunction)?.alarmMonitor)
     }
 
     private static addDefaultControlFunctionReferences(controlFunction: LADSControlFunction) {
@@ -120,7 +128,19 @@ export class AFODictionary {
         this.addReferences(controlFunction, AFODictionaryIds.controller)
         this.addDefaultStatemachineReferences(controlFunction.controlFunctionState)
         this.addReferences(controlFunction.targetValue, AFODictionaryIds.control_setting)
-        this.addReferences(controlFunction.currentValue, AFODictionaryIds.current_setting)
+        //this.addReferences(controlFunction.currentValue, AFODictionaryIds.current_setting) // sematically wrong
+        this.addDefaultAlarmMonitorReferences(controlFunction.alarmMonitor)
+    }
+
+    private static addDefaultAlarmMonitorReferences(alarmMonitor: UAExclusiveLimitAlarm) {
+        if (!alarmMonitor) return
+        AFODictionary.addReferences(alarmMonitor, AFODictionaryIds.monitoring, AFODictionaryIds.notification_configuration)
+        AFODictionary.addReferences(alarmMonitor.activeState, AFODictionaryIds.state_condition)
+        AFODictionary.addReferences(alarmMonitor.limitState, AFODictionaryIds.state_condition, AFODictionaryIds.classification_datum)
+        AFODictionary.addReferences(alarmMonitor.highHighLimit, AFODictionaryIds.alert_setting)
+        AFODictionary.addReferences(alarmMonitor.highLimit, AFODictionaryIds.alert_setting)
+        AFODictionary.addReferences(alarmMonitor.lowLimit, AFODictionaryIds.alert_setting)
+        AFODictionary.addReferences(alarmMonitor.lowLowLimit, AFODictionaryIds.alert_setting)
     }
 
     static addSensorFunctionReferences(sensorFunction: LADSSensorFunction, sensorId: string, ...id: string[]) {
@@ -214,7 +234,7 @@ export class AFODictionary {
         this.addDefaultComponentReferences(device)
         this.addReferences(device.deviceState, AFODictionaryIds.process_state)
         const functionalUnits = getChildObjects(device.functionalUnitSet as UAObject) as LADSFunctionalUnit[]
-        functionalUnits.forEach(functionalUnit => this.addDefaultFunctionalUnitRefences(functionalUnit))
+        functionalUnits.forEach(functionalUnit => this.addDefaultFunctionalUnitReferences(functionalUnit))
     }
 
 

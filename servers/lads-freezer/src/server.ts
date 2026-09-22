@@ -22,6 +22,7 @@ export interface FreezerConfig extends LADSComponentOptions {
 }
 
 export const DefaultHierarchicalLocation = "DE/Munich/Schragenhofstr_35/A/Office"
+export const IncludeAFO = true
 
 const LiebherrFreezer: FreezerConfig = {
     manufacturer: "Liebherr",
@@ -69,8 +70,9 @@ class FreezerServerImpl {
         const nodeset_machinery = join(nodeset_path, 'Opc.Ua.Machinery.NodeSet2.xml')
         const nodeset_lads = join(nodeset_path, 'Opc.Ua.LADS.NodeSet2.xml')
         const nodeset_freezer = join(nodeset_path, 'Freezer.xml')
+        const nodeset_afo = join(nodeset_path, 'AFO_Dictionary.NodeSet2.xml')
 
-        const nodeset_filenames = [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_freezer,]
+        const nodeset_filenames = [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_freezer, ...(IncludeAFO ? [nodeset_afo] : [])]
         this.server = createServer({
             applicationName: "LADS Freezer",
             applicationDirectory: __dirname,

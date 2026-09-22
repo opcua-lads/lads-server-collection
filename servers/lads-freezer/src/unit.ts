@@ -13,6 +13,7 @@ import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAStat
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverState, LADSFunctionalState } from "@interfaces"
 import { ExclusiveDeviationAlarmImpl, ExclusiveLimitAlarmImpl, getNumericValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
 import { FreezerDoorFunction, FreezerFunctionalUnit, FreezerTemperatureController } from "./interfaces"
+import { AFODictionary, AFODictionaryIds } from "@afo";
 
 export function celsiusToFahrenheit(celsius: number): number {
     return (celsius * 9) / 5 + 32;
@@ -87,6 +88,22 @@ export class FreezerUnitImpl {
         // lock
         this.lock = new LockImpl(this.functionalUnit.lock)
 
+        // add AFO
+        AFODictionary.addReferences(functionalUnit, AFODictionaryIds.cooling_device)
+        AFODictionary.addControlFunctionReferences(this.temperatureController, AFODictionaryIds.temperature_control, AFODictionaryIds.temperature_controller)
+        AFODictionary.addReferences(this.temperatureController.targetValue, AFODictionaryIds.temperature_setting)
+        AFODictionary.addReferences(this.temperatureController.currentValue, AFODictionaryIds.compartment_temperature)
+
+        AFODictionary.addReferences(this.temperatureControllerAlarm.lowLowLimit, AFODictionaryIds.minimum_operating_temperature)
+        AFODictionary.addReferences(this.temperatureControllerAlarm.lowLimit, AFODictionaryIds.minimum_operating_temperature)
+        AFODictionary.addReferences(this.temperatureControllerAlarm.highLimit, AFODictionaryIds.maximum_operating_temperature)
+        AFODictionary.addReferences(this.temperatureControllerAlarm.highHighLimit, AFODictionaryIds.maximum_operating_temperature)
+
+        AFODictionary.addReferences(this.doorTimer, AFODictionaryIds.time_measurement, AFODictionaryIds.duration)
+        AFODictionary.addReferences(this.doorTimer.sensorValue, AFODictionaryIds.time_measurement, AFODictionaryIds.duration)
+        AFODictionary.addReferences(this.doorTimerAlarm.highLimit, AFODictionaryIds.duration_setting)
+        AFODictionary.addReferences(this.doorTimerAlarm.highHighLimit, AFODictionaryIds.duration_setting)
+        
         // run unit
         const dT = 500
         setInterval(() => { this.evaluate(dT) }, dT)
