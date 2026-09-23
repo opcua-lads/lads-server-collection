@@ -23,8 +23,8 @@ import { join } from 'path'
 import assert from "assert"
 import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, } from "node-opcua"
 import { DIObjectIds, setStringValue, } from "@utils"
-import { ViscometerDevice } from './viscometer-interfaces'
-import { ViscometerDeviceImpl } from './viscometer-device'
+import { ViscometerDevice } from './interfaces'
+import { ViscometerDeviceImpl } from './device'
 
 //---------------------------------------------------------------
 // Allotrope Foundation Ontology

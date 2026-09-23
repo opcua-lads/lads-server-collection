@@ -20,14 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, ISessionContext, LocalizedText, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
-import { ViscometerFunctionalUnit } from "./viscometer-interfaces"
-import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./viscometer-device"
+import { ViscometerFunctionalUnit } from "./interfaces"
+import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./device"
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
 import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult } from "@utils"
 import { join } from "path"
-import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./viscometer-programs"
+import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./programs"
 
 //---------------------------------------------------------------
 // functional unit implementation
@@ -359,9 +359,11 @@ export abstract class ViscometerUnitImpl {
         const activeProgram = this.activeProgram
         const programTemplateId: string = inputArguments[0].value
         const programTemplate = this.findProgramTemplate(programTemplateId)
-        if (programTemplate) {
-            setNameNodeIdValue(activeProgram?.currentProgramTemplate, programTemplateId, programTemplate.nodeId)
+        if (!programTemplate) {
+            console.debug("Unable to find program template", programTemplateId)
+            return
         }
+        setNameNodeIdValue(activeProgram?.currentProgramTemplate, programTemplateId, programTemplate.nodeId)
         const program: ViscometerProgram = programTemplate?this.viscometerPrograms.find((program) => (programTemplate.browseName.name.includes(program.name))):this.viscometerPrograms[0]
 
         // scan supported properties

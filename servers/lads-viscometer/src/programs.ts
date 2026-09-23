@@ -109,7 +109,7 @@ const date = new Date(Date.parse("2025-05-01T10:00:00Z"))
 const version = "1.0"
 export const DefaultViscometerPrograms: ViscometerProgram[] = [
     {
-        name: "Analytical Method A (30rpm)",
+        name: "Analytical Method A [30rpm]",
         author: "AixEngineers",
         created: date,
         modified: date,
@@ -125,7 +125,7 @@ export const DefaultViscometerPrograms: ViscometerProgram[] = [
         ]
     },
     {
-        name: "Analytical Method B (50rpm)",
+        name: "Analytical Method B [50rpm]",
         author: "AixEngineers",
         created: date,
         modified: date,
@@ -141,7 +141,7 @@ export const DefaultViscometerPrograms: ViscometerProgram[] = [
         ]
     },
     {
-        name: "Analytical Method C (short)",
+        name: "Analytical Method C [short]",
         author: "AixEngineers",
         created: date,
         modified: date,

@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { AccessLevelFlag, DataType, StatusCodes, UAVariable } from "node-opcua";
 import { getNumericValue, setNumericValue } from "@utils";
-import { ViscometerUnitImpl } from "./viscometer-unit";
-import { ViscometerDeviceImpl } from "./viscometer-device";
-import { ViscometerFunctionalUnit } from "./viscometer-interfaces";
+import { ViscometerUnitImpl } from "./unit";
+import { ViscometerDeviceImpl } from "./device";
+import { ViscometerFunctionalUnit } from "./interfaces";
 
 export class ViscometerUnitSimulatorImpl extends ViscometerUnitImpl { 
     // simulation
@@ -72,7 +72,9 @@ export class ViscometerUnitSimulatorImpl extends ViscometerUnitImpl {
         // input values
         const tpv = getNumericValue(this.temperatureController.currentValue)
         const npv = getNumericValue(this.speedController.currentValue)
-        const shearRate = getNumericValue(this.shearRate.sensorValue)
+        //const shearRate = getNumericValue(this.shearRate.sensorValue)
+        const shearRate = this.spindle.src * npv
+        setNumericValue(this.shearRate.sensorValue, shearRate)
         setNumericValue(this.temperature.sensorValue, tpv)
 
         // simulated viscosity
