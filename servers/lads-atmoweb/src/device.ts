@@ -23,7 +23,7 @@ import { LADSDevice } from "@interfaces";
 import { AtmoWebDeviceConfig, AtmoWebServerImpl } from "./server";
 import { AtmoWebUnitImpl } from "./unit";
 import { AtmoWebClient } from "./client";
-import { defaultLocation, DeviceTypeImage, getStringValue, initComponent, LADSComponentOptions, LADSDeviceHelper, setStringArrayValue, setStringValue } from "@utils";
+import { DefaultLocation, DeviceTypeImage, getStringValue, initComponent, LADSComponentOptions, LADSDeviceHelper, setStringArrayValue, setStringValue } from "@utils";
 import { AFODictionary, AFODictionaryIds } from "@afo";
 import { join } from "path";
 
@@ -63,7 +63,7 @@ export class AtmoWebDeviceImpl {
                 deviceRevision: "1.0",
                 assetId: "0815-4711",           
                 componentName: `My Memmert ${data["DevType"]} incubator`,
-                location: defaultLocation,
+                location: DefaultLocation,
             }
             initComponent(device, deviceOptions)
             setStringValue(device.componentName, device.getDisplayName())

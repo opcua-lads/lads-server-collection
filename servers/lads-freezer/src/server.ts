@@ -11,7 +11,7 @@
 
 import { assert, coerceNodeId, nodesets, OPCUAServer, UAObject } from "node-opcua"
 import { join } from "path"
-import { createServer, defaultLocation, DIObjectIds, getChildObjects, LADSComponentOptions } from "@utils"
+import { createServer, DefaultLocation, DIObjectIds, getChildObjects, LADSComponentOptions } from "@utils"
 import { FreezerDevice } from "./interfaces"
 import { FreezerDeviceImpl } from "./device"
 
@@ -21,7 +21,6 @@ export interface FreezerConfig extends LADSComponentOptions {
     hierarchicalLocation?: string
 }
 
-export const DefaultHierarchicalLocation = "DE/Munich/Schragenhofstr_35/A/Office"
 export const IncludeAFO = true
 
 const LiebherrFreezer: FreezerConfig = {
@@ -33,7 +32,7 @@ const LiebherrFreezer: FreezerConfig = {
     deviceRevision: "1.0",
     assetId: "0815-4711",
     componentName: "My Liebherr Freezer",
-    location: defaultLocation,
+    location: DefaultLocation,
     deviceTypeImage: "liebherr-susfg.png",
 }
 
@@ -46,7 +45,7 @@ const EppendorfFreezer: FreezerConfig = {
     deviceRevision: "1.0",
     assetId: "0815-4711",
     componentName: "My Eppendorf Freezer",
-    location: defaultLocation,
+    location: DefaultLocation,
     deviceTypeImage: "eppendorf-f740hi.png",
 }
 

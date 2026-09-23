@@ -9,10 +9,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DeviceTypeImage, initComponent, LADSDeviceHelper, setStringValue } from "@utils"
+import { DefaultHierarchicalLocation, DeviceTypeImage, initComponent, LADSDeviceHelper, setStringValue } from "@utils"
 import { FreezerDevice } from "./interfaces"
 import { FreezerUnitImpl } from "./unit"
-import { DefaultHierarchicalLocation, FreezerConfig } from "./server"
+import { FreezerConfig } from "./server"
 import { join } from "path"
 import { StorageImpl } from "./storage"
 import { AFODictionary, AFODictionaryIds } from "@afo"

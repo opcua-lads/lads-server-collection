@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent, getStringValue, setStringValue, setDateTimeValue, getChildObjects } from "@utils"
+import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent, getStringValue, setStringValue, setDateTimeValue, getChildObjects } from "@utils"
 import { MWDevice, MWFunctionalUnit, MWFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, MWServerImpl,  } from "./server"
 import { IAddressSpace, INamespace, LocalizedText } from "node-opcua"
@@ -141,7 +141,7 @@ export class MWDeviceImpl {
             deviceRevision: "1.0",
             assetId: `0815-${config.serialNumber}}`,
             componentName: config.name,
-            location: defaultLocation,
+            location: DefaultLocation,
         }
         initComponent(this.device, deviceOptions)
         this.adjustIdentification(this.device, new Date())

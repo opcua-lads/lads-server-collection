@@ -361,11 +361,12 @@ export function getLADSSupportedProperties(functionalUnit: LADSFunctionalUnit): 
 // LADS ProgramTemplate support
 //---------------------------------------------------------------
 export function getDescriptionVariable(node: LADSResult | LADSProgramTemplate): UAProperty<LocalizedText, DataType.LocalizedText> {
+    if (!node) return undefined
     return <UAProperty<LocalizedText, DataType.LocalizedText>>(node.getChildByName("Description"))
 }
 
 export function copyProgramTemplate(source: LADSProgramTemplate, target: LADSProgramTemplate) {
-    getDescriptionVariable(target).setValueFromSource(getDescriptionVariable(source).readValue().value)
+    getDescriptionVariable(target)?.setValueFromSource(getDescriptionVariable(source)?.readValue().value)
     target.author.setValueFromSource(source.author.readValue().value)
     target.created.setValueFromSource(source.created.readValue().value)
     target.modified.setValueFromSource(source.modified.readValue().value)
@@ -444,7 +445,8 @@ export function setSessionInformation(result: LADSResult, context: ISessionConte
 //---------------------------------------------------------------
 // LADS nameplate support
 //---------------------------------------------------------------
-export const defaultLocation = "N 51.257315 E 6.740885"
+export const DefaultLocation = "N 51.257315 E 6.740885"
+export const DefaultHierarchicalLocation = "DE/Munich/Schragenhofstr_35/A/Office"
 
 export interface LADSComponentOptions {
     manufacturer?: string

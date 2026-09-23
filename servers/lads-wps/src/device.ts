@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue, LADSMaintenanceTaskResult, raiseEvent } from "@utils"
+import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue, LADSMaintenanceTaskResult, raiseEvent } from "@utils"
 import { WpsDevice, WpsFunctionalUnit, WpsFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, WpsServerImpl } from "./server"
 import { IAddressSpace, INamespace, LocalizedText, makeNodeId, n, ObjectTypeIds, UAObject } from "node-opcua"
@@ -135,7 +135,7 @@ export class WpsDeviceImpl {
             deviceRevision: "1.0",
             assetId: "0815-4711",
             componentName: config.name,
-            location: defaultLocation,
+            location: DefaultLocation,
         }
         initComponent(this.device, deviceOptions)
 

@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, defaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, DeviceTypeImage, getStringValue, setStringValue } from "@utils"
+import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, DeviceTypeImage, getStringValue, setStringValue } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols, BalanceServerImpl } from "./server"
 import { IAddressSpace, INamespace } from "node-opcua"
@@ -106,7 +106,7 @@ export class BalanceDeviceImpl {
             deviceRevision: deviceInfo.hardware ?? "",
             assetId: "0815-4711",
             componentName: "My Balance",
-            location: defaultLocation,
+            location: DefaultLocation,
         }
         initComponent(this.device, deviceOptions)
         
