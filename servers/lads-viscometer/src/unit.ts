@@ -25,7 +25,7 @@ import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameter
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult, createDeviceProgramRunId } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./programs"
 
@@ -312,11 +312,7 @@ export abstract class ViscometerUnitImpl {
         const programTemplate = template?template:this.programTemplates[0]
         const programTemplateId = programTemplate.browseName.name
         const startedTimestamp = new Date()
-        const iso = startedTimestamp.toISOString()
-        const date = iso.slice(0, 10).replace(/-/g, "")
-        const time = iso.slice(11, 19).replace(/:/g, "")
-        const deviceProgramRunId = `${date}-${time}-${programTemplateId.replace(/[ (),°]/g,"")}`
-
+        const deviceProgramRunId = createDeviceProgramRunId(programTemplateId)
         // initiate program run (async)
         this.runProgram(deviceProgramRunId, startedTimestamp, inputArguments, context)
 

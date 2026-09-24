@@ -408,10 +408,12 @@ export function createDeviceProgramRunId(programTemplateId: string): string {
     const iso = new Date().toISOString()
     const date = iso.slice(0, 10).replace(/-/g, "")
     const time = iso.slice(11, 19).replace(/:/g, "")
-    const deviceProgramRunId = `${date}-${time}-${programTemplateId.replace(/[ (),°]/g, "")}`
-    return deviceProgramRunId
-}
+    const deviceProgramRunId = programTemplateId
+        .normalize("NFKD")
+        .replace(/[^a-zA-Z0-9_-]/g, "")
 
+    return `${date}-${time}-${deviceProgramRunId}`
+}
 //---------------------------------------------------------------
 // LADS result support
 //---------------------------------------------------------------
