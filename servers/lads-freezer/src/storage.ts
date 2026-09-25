@@ -1,7 +1,7 @@
-import { LADSAnalogControlFunction, LADSCoverFunction, LADSProgramManager, LADSProperty, LADSResult, LADSSampleInfo } from "@interfaces"
+import { LADSAnalogControlFunction, LADSCoverFunction, LADSProgramManager, LADSProperty, LADSResult, LADSRunnnigState, LADSSampleInfo } from "@interfaces"
 import { FreezerDeviceImpl } from "./device"
 import { UAComponent } from "node-opcua-nodeset-di"
-import { CallMethodResultOptions, coerceNodeId, DataType, ISessionContext, readUAAnalogItem, ReferenceTypeIds, StatusCodes, UAAnalogItemEx, UAAnalogUnit, UAAnalogUnitRange, UAObject, UAProperty, UAVariable, Variant, VariantLike, VariantOptions } from "node-opcua"
+import { CallMethodResultOptions, coerceNodeId, DataType, ISessionContext, readUAAnalogItem, ReferenceTypeIds, StatusCodes, UAAnalogItemEx, UAAnalogUnit, UAAnalogUnitRange, UAObject, UAProperty, UAStateMachineEx, UAVariable, Variant, VariantLike, VariantOptions } from "node-opcua"
 import { addAnalogUnitRangeBasedOn, addProgramTemplate, addSampleInfoVariable, addStringVariable, copyProgramTemplate, createDeviceProgramRunId, createResult, createSamplesValue, EventSeverity, getDescriptionVariable, getEUInformation, getNumericValue, getStringValue, ProgramTemplateElement, raiseEvent, setDateTimeValue, setNumericValue, setPropertiesValue, setSamplesValue, setSessionInformation, setStringValue, sleepMilliSeconds } from "@utils"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 
@@ -181,6 +181,7 @@ class ProgramManagerImpl {
     door: LADSCoverFunction
     temperatureController: LADSAnalogControlFunction
     programManager: LADSProgramManager
+    runningStateMachine: UAStateMachineEx
     isRunning: boolean = false
     started = 0
 
@@ -189,6 +190,7 @@ class ProgramManagerImpl {
         const unit = storage.deviceImpl.freezerUnit
         const functionalUnit = unit.functionalUnit
         this.programManager = functionalUnit.programManager
+        this.runningStateMachine = unit.runningStateMachine
         if (!this.programManager) {
             console.debug("Storage requires ProgramManager")
             return
@@ -362,6 +364,7 @@ class ProgramManagerImpl {
         const runTime = action == StorageAction.ReportInventory ? 500 : 10000
         const startedMilliseconds = Date.now()
         const activeProgram = this.programManager.activeProgram
+        this.runningStateMachine.setState(LADSRunnnigState.Starting)
         setNumericValue(activeProgram.currentRuntime, 0)
         setNumericValue(activeProgram.estimatedRuntime, runTime)
         setStringValue(activeProgram.deviceProgramRunId, runId)
@@ -389,12 +392,13 @@ class ProgramManagerImpl {
         AFODictionary.addDefaultResultReferences(result)
         AFODictionary.addReferences(result, ...dictionaryIds(action))
         
-        // open door
+        this.runningStateMachine.setState(LADSRunnnigState.Execute)
         const identifier = programTemplateElement.identifier
         if (action == StorageAction.ReportInventory) {
             this.documentInventory(result, identifier)
             await updateAndSleepUntil(runTime)
         } else {
+            // open door
             await this.door.coverState.open.execute(this.door, [], context)
             // wait
             await updateAndSleepUntil(0.5 * runTime)
@@ -406,7 +410,10 @@ class ProgramManagerImpl {
             // close door
             await this.door.coverState.close.execute(this.door, [], context)
         }
+        this.runningStateMachine.setState(LADSRunnnigState.Completing)
+        this.runningStateMachine.setState(LADSRunnnigState.Complete)
         setDateTimeValue(result.stopped, new Date())
+        this.runningStateMachine.setState(LADSRunnnigState.Idle)
     }
 
     private documentEvents(result: LADSResult, identifier: string, action: StorageAction, events: StorageEvents) {

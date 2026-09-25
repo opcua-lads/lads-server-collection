@@ -10,7 +10,7 @@
  */
 
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAStateMachineEx, VariantLike } from "node-opcua"
-import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverState, LADSFunctionalState } from "@interfaces"
+import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverState, LADSFunctionalState, LADSRunnnigState } from "@interfaces"
 import { ExclusiveDeviationAlarmImpl, ExclusiveLimitAlarmImpl, getNumericValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
 import { FreezerDoorFunction, FreezerFunctionalUnit, FreezerTemperatureController } from "./interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo";
@@ -35,6 +35,7 @@ export class FreezerUnitImpl {
     doorTimer: LADSAnalogScalarSensorFunction
     doorTimerAlarm: ExclusiveLimitAlarmImpl
     functionalUnitStateMachine: UAStateMachineEx
+    runningStateMachine: UAStateMachineEx
     lock: LockImpl
     compressorRunning: boolean = false
 
@@ -42,6 +43,8 @@ export class FreezerUnitImpl {
         this.functionalUnit = functionalUnit
         this.functionalUnitStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState)
         this.functionalUnitStateMachine.setState(LADSFunctionalState.Running)
+        this.runningStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState.runningStateMachine)
+        this.runningStateMachine.setState(LADSRunnnigState.Idle)
 
         const functionSet = functionalUnit.functionSet
 
