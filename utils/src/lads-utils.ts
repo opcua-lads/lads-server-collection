@@ -832,10 +832,10 @@ export class LADSDeviceHelper {
                 const buildingBlocksFolder = component.namespace.addObject({
                     organizedBy: component,
                     typeDefinition: folderType,
+                    description: "Folder as entry point to access machinery building blocks",
                     browseName: new QualifiedName({
                         namespaceIndex: getMachineryNamespace(addressSpace).index,
                         name: "MachineryBuildingBlocks"
-
                     })
                 })
                 const hasAddInType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.HasAddIn))
