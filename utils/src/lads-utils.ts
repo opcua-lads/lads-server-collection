@@ -40,12 +40,12 @@ import {
     UAVariable,
     UAAliasNameCategory,
     UAProperty,
-    UAEventType,
     UADataType,
     ServerSession,
     StatusCode,
     ISessionContext,
-    DataValue} from "node-opcua"
+    DataValue,
+    QualifiedName} from "node-opcua"
 import {
     LADSDevice,
     LADSDeviceState,
@@ -66,7 +66,7 @@ import {
     MachineIdentificationType,
     LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
-import { connectWritableVariables, getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
+import { getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
 import { AFODictionary } from "@afo"
 
 export enum DIObjectIds {
@@ -760,12 +760,8 @@ export class LADSDeviceHelper {
             LADSDeviceHelper.eventType = eventType
         }
 
-        // provide link to device in machines folder
-        const organizesType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.Organizes))
-        assert(organizesType)
-        const machineryNamespaceIndex = getMachineryNamespace(addressSpace).index
-        const machinesFolder = addressSpace.findNode(coerceNodeId(1001, machineryNamespaceIndex))
-        machinesFolder?.addReference({ referenceType: organizesType, nodeId: device.nodeId })
+        // provide machinery compatibility
+        this.buildMachineryStructure(device)
 
         // eventually adjust isEnabled of functions
         if (options.adjustFunctionIsEnabled ?? true) 
@@ -798,6 +794,66 @@ export class LADSDeviceHelper {
 
         // initialize device
         this.enterDeviceInitialzation()
+    }
+
+    buildMachineryStructure(device: LADSDevice) {
+        const addressSpace = device.addressSpace
+        const organizesType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.Organizes))
+        assert(organizesType)
+        const machineryNamespaceIndex = getMachineryNamespace(addressSpace).index
+        const machinesFolder = addressSpace.findNode(coerceNodeId(1001, machineryNamespaceIndex))
+        machinesFolder?.addReference({ referenceType: organizesType, nodeId: device.nodeId })
+
+        // create MachineryBuildingBlocks
+        this.createMachineryBuildingBlocks(device)
+    }
+
+    createMachineryBuildingBlocks(component: LADSDevice | LADSComponent) {
+        const buildingBlocks: UAObject[] = []
+
+        function addBuildingBlock(buildingBlock: UAObject | undefined) {
+            if (!buildingBlock) return
+            buildingBlocks.push(buildingBlock)
+        }
+
+        // collect potential machinery building blocks
+        addBuildingBlock(component.identification)
+        addBuildingBlock(component.operationCounters)
+        addBuildingBlock(component.lifetimeCounters)
+        const device = component as LADSDevice
+        addBuildingBlock(device.machineryItemState)
+        addBuildingBlock(device.machineryOperationMode)
+
+        // eventually create building blocks folder
+        if (buildingBlocks.length > 0) {
+            try {
+                const addressSpace = component.addressSpace
+                const folderType = addressSpace.findObjectType(coerceNodeId(ObjectTypeIds.FolderType))
+                const buildingBlocksFolder = component.namespace.addObject({
+                    organizedBy: component,
+                    typeDefinition: folderType,
+                    browseName: new QualifiedName({
+                        namespaceIndex: getMachineryNamespace(addressSpace).index,
+                        name: "MachineryBuildingBlocks"
+
+                    })
+                })
+                const hasAddInType = addressSpace.findReferenceType(coerceNodeId(ReferenceTypeIds.HasAddIn))
+                assert(hasAddInType)
+                buildingBlocks.forEach(buildingBlock => buildingBlocksFolder.addReference({
+                    referenceType: hasAddInType,
+                    nodeId: buildingBlock.nodeId
+                }))
+            }
+            catch(error) {
+                // folder already exists
+                console.debug(error)
+            }
+        }
+
+        // iterate
+        const components = getChildObjects(component.components)
+        components.forEach(component => this.createMachineryBuildingBlocks(component))
     }
 
     raiseEvent(message: string) {

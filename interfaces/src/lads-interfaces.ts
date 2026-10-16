@@ -66,6 +66,7 @@ export interface LADSDevice extends UADevice {
     identification?: MachineIdentificationType
     components?: UAObject
     functionalUnitSet: LADSFunctionalUnitSet | UAObject
+    lifetimeCounters?: UAObject
     operationCounters?: OperationCounters
     lock?: UALockingServices
 }
