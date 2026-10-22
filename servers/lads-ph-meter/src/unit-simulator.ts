@@ -135,7 +135,7 @@ export class pHMeterSimulatorUnitImpl extends pHMeterUnitImpl {
         ]
         const options = this.currentRunOptions
         const pHPropertyKey = options.programTemplateId === ProgramTemplateIds.Measure ? "ph" : "buffer"
-        const pHProperty = options.properties?.find(property => property.key.toLowerCase().includes(pHPropertyKey))
+        const pHProperty = options.properties?.find(property => property?.key?.toLowerCase().includes(pHPropertyKey))
         options.referenceValue = pHProperty ? Number(pHProperty.value) : pHValues.find(value => value.id === options.programTemplateId).value
         setNumericValue(this.simpHPV, options.referenceValue)
 
