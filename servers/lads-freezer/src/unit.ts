@@ -11,7 +11,7 @@
 
 import { CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAStateMachineEx, VariantLike } from "node-opcua"
 import { LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSCoverState, LADSFunctionalState, LADSRunnnigState } from "@interfaces"
-import { ExclusiveDeviationAlarmImpl, ExclusiveLimitAlarmImpl, getNumericValue, installVariableHistory, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
+import { ExclusiveDeviationAlarmImpl, ExclusiveLimitAlarmImpl, getNumericValue, installVariableHistory, LADSFiniteStateMachineHelper, LockImpl, promoteToFiniteStateMachine, raiseEvent, setNumericValue } from "@utils"
 import { FreezerDoorFunction, FreezerFunctionalUnit, FreezerTemperatureController } from "./interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo";
 
@@ -41,9 +41,12 @@ export class FreezerUnitImpl {
 
     constructor(functionalUnit: FreezerFunctionalUnit) {
         this.functionalUnit = functionalUnit
-        this.functionalUnitStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState)
+
+        const functionalUnitStateHelper = new LADSFiniteStateMachineHelper(functionalUnit.functionalUnitState)
+        const runningStateMachineHelper = new LADSFiniteStateMachineHelper(functionalUnit.functionalUnitState.runningStateMachine, functionalUnitStateHelper, LADSFunctionalState.Running)
+        this.functionalUnitStateMachine = functionalUnitStateHelper.stateMachine
+        this.runningStateMachine = runningStateMachineHelper.stateMachine
         this.functionalUnitStateMachine.setState(LADSFunctionalState.Running)
-        this.runningStateMachine = promoteToFiniteStateMachine(functionalUnit.functionalUnitState.runningStateMachine)
         this.runningStateMachine.setState(LADSRunnnigState.Idle)
 
         const functionSet = functionalUnit.functionSet
