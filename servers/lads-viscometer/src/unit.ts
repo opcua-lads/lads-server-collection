@@ -25,7 +25,7 @@ import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameter
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult, createDeviceProgramRunId, enterAborted, enterClearing, enterStateChain, EventSeverity } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult, createDeviceProgramRunId, enterAborted, enterClearing, enterStateChain, EventSeverity, LockImpl } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./programs"
 
@@ -47,6 +47,7 @@ export abstract class ViscometerUnitImpl {
     shearStress: LADSAnalogScalarSensorFunction
     shearRate: LADSAnalogScalarSensorFunction
     runActive = false
+    lock: LockImpl
     model: ViscometerModelParameters
     spindle: ViscometerSpindleParameters
     // program manager
@@ -58,6 +59,7 @@ export abstract class ViscometerUnitImpl {
     constructor(parent: ViscometerDeviceImpl, functionalUnit: ViscometerFunctionalUnit) {
         this.parent = parent
         this.functionalUnit = functionalUnit
+        this.lock = new LockImpl(functionalUnit.lock)
         const addressSpace = functionalUnit.addressSpace
         const functionSet = this.functionalUnit.functionSet
 
@@ -305,6 +307,8 @@ export abstract class ViscometerUnitImpl {
     }
 
     private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
+
         // validate current state
         const currentState = this.functionalUnitState.getCurrentState();
         if (this.runActive || !(currentState && currentState.includes(LADSFunctionalState.Stopped))) {
@@ -333,6 +337,8 @@ export abstract class ViscometerUnitImpl {
         return programTemplate
     }
 
+    private isAccessibleBy(sessionContext: ISessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
+
     private isRunning(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
         return !!currentState && currentState.includes(LADSFunctionalState.Running)
@@ -349,6 +355,7 @@ export abstract class ViscometerUnitImpl {
     }
 
     private async stopProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.isRunning()) return { statusCode: StatusCodes.BadInvalidState }
         const stateMachine = this.functionalUnitState
         stateMachine.setState(LADSFunctionalState.Stopping)
@@ -358,6 +365,7 @@ export abstract class ViscometerUnitImpl {
     }
 
     private async abortProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.isRunning()) return { statusCode: StatusCodes.BadInvalidState }
         const stateMachine = this.functionalUnitState
         stateMachine.setState(LADSFunctionalState.Aborting)
@@ -367,6 +375,7 @@ export abstract class ViscometerUnitImpl {
     }
 
     private async clearProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         const currentState = this.functionalUnitState.getCurrentState();
         if (!(currentState && currentState.includes(LADSFunctionalState.Aborted))) return { statusCode: StatusCodes.BadInvalidState }
         enterClearing(this.functionalUnitState, this.functionalUnit, "cleared, now stopped")    // not awaited: Aborted -> Clearing -> Stopped
