@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2026-09-23T08:08:34.318Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-10-23T12:26:09.072Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -50,7 +50,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="ed984ba323e0fbb0816db958ff0788a4"/>
+            <si:GeneratorExtension Hash="6e6091717fb08ae0a31115e008bbc859"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___spectaris_de_Freezer_" NodeId="ns=5;i=5000" BrowseName="5:http://spectaris.de/Freezer/" ParentNodeId="i=11715">
@@ -378,7 +378,7 @@
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1023</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6175</Reference>
-            <Reference ReferenceType="HasComponent">ns=5;i=5012</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=5011</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="i=95" NodeId="ns=5;i=6128" BrowseName="DefaultAccessRestrictions" ParentNodeId="ns=5;i=5000">
@@ -1845,6 +1845,7 @@
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1036</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6034</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7013</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6034" BrowseName="CurrentState" ParentNodeId="ns=5;i=5018">
@@ -2944,7 +2945,7 @@
     <UAMethod NodeId="ns=5;i=7010" BrowseName="4:Stop" ParentNodeId="ns=5;i=5048">
         <DisplayName>Stop</DisplayName>
         <References>
-            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5048</Reference>
+            <Reference ReferenceType="Organizes" IsForward="false">ns=5;i=5048</Reference>
         </References>
     </UAMethod>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6113" BrowseName="CurrentState" ParentNodeId="ns=5;i=5048">
@@ -3185,11 +3186,23 @@
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
         </References>
     </UAVariable>
-    <UAObject NodeId="ns=5;i=5012" BrowseName="5:FreezerUnit" ParentNodeId="ns=5;i=5006">
-        <DisplayName>FreezerUnit</DisplayName>
+    <UAMethod NodeId="ns=5;i=7013" BrowseName="4:ToComplete" ParentNodeId="ns=5;i=5018">
+        <DisplayName>ToComplete</DisplayName>
         <References>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAMethod>
+    <UAMethod NodeId="ns=5;i=7015" BrowseName="4:ToComplete" ParentNodeId="ns=5;i=5037">
+        <DisplayName>ToComplete</DisplayName>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5037</Reference>
+        </References>
+    </UAMethod>
+    <UAObject NodeId="ns=5;i=5011" BrowseName="5:FreezerUnit" ParentNodeId="ns=5;i=5006">
+        <DisplayName>FreezerUnit</DisplayName>
+        <References>
             <Reference ReferenceType="HasTypeDefinition">ns=5;i=1000</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5004</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5027</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5001</Reference>
