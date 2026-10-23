@@ -2,7 +2,7 @@ import { LADSAnalogControlFunction, LADSCoverFunction, LADSProgramManager, LADSP
 import { FreezerDeviceImpl } from "./device"
 import { UAComponent } from "node-opcua-nodeset-di"
 import { CallMethodResultOptions, coerceNodeId, DataType, ISessionContext, readUAAnalogItem, ReferenceTypeIds, StatusCodes, UAAnalogItemEx, UAAnalogUnit, UAAnalogUnitRange, UAObject, UAProperty, UAStateMachineEx, UAVariable, Variant, VariantLike, VariantOptions } from "node-opcua"
-import { addAnalogUnitRangeBasedOn, addProgramTemplate, addSampleInfoVariable, addStringVariable, copyProgramTemplate, createDeviceProgramRunId, createResult, createSamplesValue, EventSeverity, getDescriptionVariable, getEUInformation, getNumericValue, getStringValue, ProgramTemplateElement, raiseEvent, setDateTimeValue, setNumericValue, setPropertiesValue, setSamplesValue, setSessionInformation, setStringValue, sleepMilliSeconds } from "@utils"
+import { addAnalogUnitRangeBasedOn, addProgramTemplate, addSampleInfoVariable, addStringVariable, copyProgramTemplate, createDeviceProgramRunId, createResult, createSamplesValue, EventSeverity, getDescriptionVariable, getEUInformation, getNumericValue, enterStateChain, getStringValue, ProgramTemplateElement, raiseEvent, setDateTimeValue, setNumericValue, setPropertiesValue, setSamplesValue, setSessionInformation, setStringValue, sleepMilliSeconds } from "@utils"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 
 
@@ -183,6 +183,7 @@ class ProgramManagerImpl {
     programManager: LADSProgramManager
     runningStateMachine: UAStateMachineEx
     isRunning: boolean = false
+    cancelRequested: boolean = false
     started = 0
 
     constructor(storage: StorageImpl) {
@@ -230,7 +231,7 @@ class ProgramManagerImpl {
         this.temperatureController = functionSet.temperatureController
         const stateMachine = functionalUnit.functionalUnitState
         stateMachine.startProgram?.bindMethod(this.startProgram.bind(this))
-        //stateMachine.stop?.bindMethod()
+        stateMachine.runningStateMachine?.toComplete?.bindMethod(this.toComplete.bind(this))
     }
 
 
@@ -311,9 +312,17 @@ class ProgramManagerImpl {
         return events
     }
 
+    /** RunningStateMachine.ToComplete: cancel the current run. Execute -> Completing -> Complete -> Resetting -> Idle (run loop). */
+    private async toComplete(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.storage.deviceImpl.freezerUnit.lock.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
+        if (!this.isRunning || this.cancelRequested) return { statusCode: StatusCodes.BadInvalidState }
+        this.cancelRequested = true
+        return { statusCode: StatusCodes.Good }
+    }
+
     private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
 
-        // if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
+        if (!this.storage.deviceImpl.freezerUnit.lock.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         function getAction(element: ProgramTemplateElement): StorageAction {
             if (!element) return StorageAction.Unknown
             const identifier = element.identifier.trim().replaceAll(" ", "").toLowerCase()
@@ -350,7 +359,11 @@ class ProgramManagerImpl {
         const compartment = this.findCompartment(compartmemtProperty?.value)
         if (readyToRun(element, action, samples, samplesFound, compartment)) {
             const runId = createDeviceProgramRunId(programTemplateId)
+            this.isRunning = true
+            this.cancelRequested = false
             this.runProgram(runId, element, action, compartment, properties, jobId, taskId, samples, context)
+                .catch((err: unknown) => raiseEvent(this.storage.deviceImpl.freezerUnit.functionalUnit, `Run failed: ${err}`, EventSeverity.Alarm))
+                .finally(() => { this.isRunning = false })
             return {
                 outputArguments: [new Variant({ dataType: DataType.String, value: runId })],
                 statusCode: StatusCodes.Good
@@ -369,13 +382,14 @@ class ProgramManagerImpl {
         setNumericValue(activeProgram.estimatedRuntime, runTime)
         setStringValue(activeProgram.deviceProgramRunId, runId)
 
-        async function updateAndSleepUntil(runTime: number): Promise<void> {
+        // waits until runTime has elapsed or the run is cancelled via ToComplete (checked every 100 ms)
+        const updateAndSleepUntil = async (runTime: number): Promise<void> => {
             let dt = 0
             do {
-                await sleepMilliSeconds(500)
+                await sleepMilliSeconds(100)
                 dt = Date.now() - startedMilliseconds
                 setNumericValue(activeProgram.currentRuntime, dt)
-            } while(dt < runTime)
+            } while (dt < runTime && !this.cancelRequested)
         }
 
         const result = createResult(this.programManager.resultSet as UAObject, runId)
@@ -394,26 +408,37 @@ class ProgramManagerImpl {
         
         this.runningStateMachine.setState(LADSRunnnigState.Execute)
         const identifier = programTemplateElement.identifier
-        if (action == StorageAction.ReportInventory) {
-            this.documentInventory(result, identifier)
-            await updateAndSleepUntil(runTime)
-        } else {
-            // open door
-            await this.door.coverState.open.execute(this.door, [], context)
-            // wait
-            await updateAndSleepUntil(0.5 * runTime)
-            // handle samples
-            const events: StorageEvents = action == StorageAction.CheckOut ? this.checkOut(samples) : action == StorageAction.CheckIn ? this.checkIn(compartment, samples) : []
-            this.documentTransactions(result, identifier, action, events)
-            // wait
-            await updateAndSleepUntil(runTime)
-            // close door
-            await this.door.coverState.close.execute(this.door, [], context)
+        let doorOpened = false
+        try {
+            if (action == StorageAction.ReportInventory) {
+                this.documentInventory(result, identifier)
+                await updateAndSleepUntil(runTime)
+            } else {
+                // open door
+                await this.door.coverState.open.execute(this.door, [], context)
+                doorOpened = true
+                // wait
+                await updateAndSleepUntil(0.5 * runTime)
+                if (!this.cancelRequested) {
+                    // handle samples (skipped when the run was cancelled before)
+                    const events: StorageEvents = action == StorageAction.CheckOut ? this.checkOut(samples) : action == StorageAction.CheckIn ? this.checkIn(compartment, samples) : []
+                    this.documentTransactions(result, identifier, action, events)
+                    // wait
+                    await updateAndSleepUntil(runTime)
+                }
+            }
+        } finally {
+            // never leave the door open, even when cancelled or failed
+            if (doorOpened) await this.door.coverState.close.execute(this.door, [], context)
+            // Completing -> Complete -> Resetting -> Idle, 100 ms per state; the only event is raised on Complete
+            const cancelled = this.cancelRequested
+            this.runningStateMachine.setState(LADSRunnnigState.Completing)
+            await enterStateChain(this.runningStateMachine, [LADSRunnnigState.Complete])
+            setDateTimeValue(result.stopped, new Date())
+            raiseEvent(this.storage.deviceImpl.freezerUnit.functionalUnit, cancelled ? `Run ${runId} cancelled` : `Run ${runId} completed`, cancelled ? EventSeverity.Warning : EventSeverity.Info)
+            await enterStateChain(this.runningStateMachine, [LADSRunnnigState.Resetting, LADSRunnnigState.Idle])
+            this.cancelRequested = false
         }
-        this.runningStateMachine.setState(LADSRunnnigState.Completing)
-        this.runningStateMachine.setState(LADSRunnnigState.Complete)
-        setDateTimeValue(result.stopped, new Date())
-        this.runningStateMachine.setState(LADSRunnnigState.Idle)
     }
 
     private documentEvents(result: LADSResult, identifier: string, action: StorageAction, events: StorageEvents) {

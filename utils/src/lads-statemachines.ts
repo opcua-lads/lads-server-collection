@@ -2,7 +2,7 @@ import EventEmitter from "events";
 import { LocalizedText, TransitionSelector, UAFiniteStateMachine, UAObject, UAInitialState, UAMethod, UAState, UAStateMachine, UAStateMachine_Base, UAStateMachineEx, UAStateMachineHelper, UAStateVariable, UATransitionEx, UATransitionVariable } from "node-opcua";
 import { promoteToFiniteStateMachine, sleepMilliSeconds } from "./lads-utils";
 import { get } from "http";
-import { LADSFunctionalState, LADSFunctionalStateMachine, LADSFunctionalStateMachine_Base } from "@interfaces";
+import { LADSFunctionalState, LADSFunctionalStateMachine, LADSFunctionalStateMachine_Base, LADSRunnnigState } from "@interfaces";
 import { raiseEvent } from "./lads-event-utils";
 import { EventSeverity } from "./lads-functions";
 
@@ -47,7 +47,7 @@ export class FunctionalStateMachineImpl extends StateMachineImpl implements LADS
 export const FunctionalStateDelayMilliSeconds = 100
 
 /** Enter the given states one after the other, each after a short delay. No events are raised for the transitory states. */
-export async function enterStateChain(stateMachine: UAStateMachineEx, states: LADSFunctionalState[], delayMilliSeconds: number = FunctionalStateDelayMilliSeconds) {
+export async function enterStateChain(stateMachine: UAStateMachineEx, states: (LADSFunctionalState | LADSRunnnigState)[], delayMilliSeconds: number = FunctionalStateDelayMilliSeconds) {
     for (const state of states) {
         await sleepMilliSeconds(delayMilliSeconds)
         stateMachine.setState(state)
