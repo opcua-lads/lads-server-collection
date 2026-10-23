@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2026-09-24T13:19:47.582Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
+<UANodeSet LastModified="2026-10-23T09:01:17.375Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:si="http://www.siemens.com/OPCUA/2017/SimaticNodeSetExtensions" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:s2="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:ua="http://unifiedautomation.com/Configuration/NodeSet.xsd" xmlns:s3="http://opcfoundation.org/UA/Machinery/Types.xsd" xmlns:s4="http://opcfoundation.org/UA/DI/Types.xsd" xmlns:s5="http://yourorganisation.org/helper/Types.xsd">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -42,7 +42,7 @@
             <si:Generator Product="SiOME" Edition="Standard" Version="3.0.3"/>
         </Extension>
         <Extension>
-            <si:GeneratorExtension Hash="b80c59fde73aab4c5ffcb6a143e46012"/>
+            <si:GeneratorExtension Hash="979ed826d41c49b0d6fd59ad7f09ec7f"/>
         </Extension>
     </Extensions>
     <UAObject SymbolicName="http___spectaris_de_Viscometer_" NodeId="ns=5;i=5000" BrowseName="5:http://spectaris.de/Viscometer/" ParentNodeId="i=11715">
@@ -519,6 +519,19 @@
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>0</uax:Low>
+                        <uax:High>1000</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
     </UAVariable>
     <UAVariable DataType="EUInformation" NodeId="ns=5;i=6027" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6023">
         <DisplayName>EngineeringUnits</DisplayName>
@@ -578,6 +591,19 @@
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>0</uax:Low>
+                        <uax:High>1000</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
     </UAVariable>
     <UAObjectType NodeId="ns=5;i=1001" BrowseName="5:ViscometerDeviceType">
         <DisplayName>ViscometerDeviceType</DisplayName>
@@ -893,9 +919,11 @@
             <Reference ReferenceType="HasComponent">ns=5;i=7002</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7003</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7004</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6473</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6472</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6279</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6020</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6037</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6104</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7013</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7014</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5017" BrowseName="4:FunctionSet" ParentNodeId="ns=5;i=5011">
@@ -1117,12 +1145,14 @@
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1043</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6473</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6472</Reference>
-            <Reference ReferenceType="HasComponent">ns=4;i=6279</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7002</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7003</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7004</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6020</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6037</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6104</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7013</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7014</Reference>
         </References>
     </UAObject>
     <UAMethod NodeId="ns=5;i=7002" BrowseName="4:Start" ParentNodeId="ns=5;i=5024">
@@ -1751,4 +1781,48 @@
             <uax:String>0</uax:String>
         </Value>
     </UAVariable>
+    <UAVariable DataType="NodeId" ValueRank="1" NodeId="ns=5;i=6020" ArrayDimensions="1" BrowseName="AvailableStates" ParentNodeId="ns=5;i=5024">
+        <DisplayName>AvailableStates</DisplayName>
+        <Description>Set of states supported by the implementation.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NodeId" ValueRank="1" NodeId="ns=5;i=6037" ArrayDimensions="1" BrowseName="AvailableTransitions" ParentNodeId="ns=5;i=5024">
+        <DisplayName>AvailableTransitions</DisplayName>
+        <Description>Set of transitions supported by the implementation.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6104" BrowseName="CurrentState" ParentNodeId="ns=5;i=5024">
+        <DisplayName>CurrentState</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6280</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6105</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="NodeId" NodeId="ns=5;i=6105" BrowseName="Id" ParentNodeId="ns=5;i=6104">
+        <DisplayName>Id</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAMethod NodeId="ns=5;i=7013" BrowseName="4:Abort" ParentNodeId="ns=5;i=5024">
+        <DisplayName>Abort</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAMethod>
+    <UAMethod NodeId="ns=5;i=7014" BrowseName="4:Clear" ParentNodeId="ns=5;i=5024">
+        <DisplayName>Clear</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAMethod>
 </UANodeSet>
