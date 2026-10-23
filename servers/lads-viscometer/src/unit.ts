@@ -25,7 +25,7 @@ import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameter
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { RheometryRecorderOptions, RheometryRecorder } from "@asm"
-import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult, createDeviceProgramRunId } from "@utils"
+import { raiseEvent, promoteToFiniteStateMachine, getChildObjects, getLADSObjectType, getDescriptionVariable, sleepMilliSeconds, getLADSSupportedProperties, VariableDataRecorder, EventDataRecorder, DataExporter, copyProgramTemplate, setNumericValue, getNumericValue, setStringArrayValue, setStringValue, setDateTimeValue, setNameNodeIdValue, setSessionInformation, initNodeVersion, createResult, createDeviceProgramRunId, enterAborted, enterClearing, enterStateChain, EventSeverity } from "@utils"
 import { join } from "path"
 import { ViscometerProgram, loadViscometerProgramsFromDirectory, DataDirectory, DefaultViscometerPrograms } from "./programs"
 
@@ -46,6 +46,7 @@ export abstract class ViscometerUnitImpl {
     viscosity: LADSAnalogScalarSensorFunction
     shearStress: LADSAnalogScalarSensorFunction
     shearRate: LADSAnalogScalarSensorFunction
+    runActive = false
     model: ViscometerModelParameters
     spindle: ViscometerSpindleParameters
     // program manager
@@ -212,7 +213,7 @@ export abstract class ViscometerUnitImpl {
     // viscometer system
     private startViscometer(): StatusCode {
         const currentState = this.functionalUnitState.getCurrentState();
-        if (!(currentState && (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted)))) {
+        if (!(currentState && currentState.includes(LADSFunctionalState.Stopped))) {
             return StatusCodes.BadInvalidState
         }
         this.functionalUnitState.setState(LADSFunctionalState.Running)
@@ -222,14 +223,16 @@ export abstract class ViscometerUnitImpl {
         return StatusCodes.Good
     }
 
-    private stopViscometer(): StatusCode {  
-        const currentState = this.functionalUnitState.getCurrentState();
-        if (!(currentState && currentState.includes(LADSFunctionalState.Running))) {
-            return StatusCodes.BadInvalidState
-        }
-        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+    private stopControllers() {
         this.stopController(this.speedController, this.speedControllerState, false)
         this.stopController(this.temperatureController, this.temperatureControllerState, false)
+    }
+
+    private stopViscometer(): StatusCode {
+        // controllers are always stopped, also after a remote stop or abort
+        this.stopControllers()
+        if (!this.isRunning()) return StatusCodes.Good    // Stopping/Aborting is completed by the state chains
+        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
         raiseEvent(this.functionalUnit, "Viscometer stopped")
         return StatusCodes.Good
     }
@@ -262,6 +265,7 @@ export abstract class ViscometerUnitImpl {
         stateMachine.startProgram?.bindMethod(this.startProgram.bind(this))
         stateMachine.stop?.bindMethod(this.stopProgram.bind(this))
         stateMachine.abort?.bindMethod(this.abortProgram.bind(this))
+        stateMachine.clear?.bindMethod(this.clearProgram.bind(this))
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
         this.activeProgram = this.functionalUnit.programManager?.activeProgram
@@ -303,7 +307,7 @@ export abstract class ViscometerUnitImpl {
     private async startProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         // validate current state
         const currentState = this.functionalUnitState.getCurrentState();
-        if (!(currentState && (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted)))) {
+        if (this.runActive || !(currentState && currentState.includes(LADSFunctionalState.Stopped))) {
             return { statusCode: StatusCodes.BadInvalidState }
         }
 
@@ -314,7 +318,8 @@ export abstract class ViscometerUnitImpl {
         const startedTimestamp = new Date()
         const deviceProgramRunId = createDeviceProgramRunId(programTemplateId)
         // initiate program run (async)
-        this.runProgram(deviceProgramRunId, startedTimestamp, inputArguments, context)
+        this.runActive = true
+        this.runProgram(deviceProgramRunId, startedTimestamp, inputArguments, context).finally(() => { this.runActive = false })
 
         // return run-Id
         return {
@@ -328,20 +333,43 @@ export abstract class ViscometerUnitImpl {
         return programTemplate
     }
 
+    private isRunning(): boolean {
+        const currentState = this.functionalUnitState.getCurrentState();
+        return !!currentState && currentState.includes(LADSFunctionalState.Running)
+    }
+
+    /** Waits for the given time, but returns early (false) as soon as the unit leaves Running (remote stop or abort). */
+    private async sleepWhileRunning(milliSeconds: number): Promise<boolean> {
+        const end = Date.now() + milliSeconds
+        while (Date.now() < end) {
+            if (!this.isRunning()) return false
+            await sleepMilliSeconds(Math.min(50, end - Date.now()))
+        }
+        return this.isRunning()
+    }
+
     private async stopProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        return this.stopOrAbortProgram(LADSFunctionalState.Stopping, LADSFunctionalState.Stopped)
+        if (!this.isRunning()) return { statusCode: StatusCodes.BadInvalidState }
+        const stateMachine = this.functionalUnitState
+        stateMachine.setState(LADSFunctionalState.Stopping)
+        enterStateChain(stateMachine, [LADSFunctionalState.Stopped])    // not awaited: Stopping -> Stopped
+            .catch(err => raiseEvent(this.functionalUnit, `Stopping failed: ${err}`, EventSeverity.Alarm))
+        return { statusCode: StatusCodes.Good }
     }
 
     private async abortProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        return this.stopOrAbortProgram(LADSFunctionalState.Aborting, LADSFunctionalState.Aborted)
+        if (!this.isRunning()) return { statusCode: StatusCodes.BadInvalidState }
+        const stateMachine = this.functionalUnitState
+        stateMachine.setState(LADSFunctionalState.Aborting)
+        this.stopControllers()
+        enterAborted(stateMachine, this.functionalUnit, "Viscometer aborted")    // not awaited: Aborting -> Aborted
+        return { statusCode: StatusCodes.Good }
     }
 
-    private async stopOrAbortProgram(transitiveState: string, finalState: string) {
-        const stateMachine = this.functionalUnitState
-        const currentState = stateMachine.getCurrentState();
-        if (!(currentState && currentState.includes(LADSFunctionalState.Running))) return { statusCode: StatusCodes.BadInvalidState }
-        stateMachine.setState(transitiveState)
-        sleepMilliSeconds(500).then(() => stateMachine.setState(finalState))
+    private async clearProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        const currentState = this.functionalUnitState.getCurrentState();
+        if (!(currentState && currentState.includes(LADSFunctionalState.Aborted))) return { statusCode: StatusCodes.BadInvalidState }
+        enterClearing(this.functionalUnitState, this.functionalUnit, "Viscometer cleared, now stopped")    // not awaited: Aborted -> Clearing -> Stopped
         return { statusCode: StatusCodes.Good }
     }
 
@@ -472,7 +500,7 @@ export abstract class ViscometerUnitImpl {
                 setNumericValue(activeProgram.currentRuntime, now - tsRuntime)
                 setNumericValue(activeProgram.currentStepRuntime, now - tsStepRuntime)
             }, 200)
-            await sleepMilliSeconds(step.dt)
+            const stepCompleted = await this.sleepWhileRunning(step.dt)
             clearInterval(updateInterval)
 
             // record end-points
@@ -482,10 +510,9 @@ export abstract class ViscometerUnitImpl {
             rheometryRecorder.createRecord()
         
             // check if run was stopped or aborted from remote
-            const currentState  = this.functionalUnitState.getCurrentState()
-            if (currentState && !currentState.includes(LADSFunctionalState.Running)) { 
-                raiseEvent(this.functionalUnit, `Run ${deviceProgramRunId} aborted`)
-                break 
+            if (!stepCompleted) {
+                raiseEvent(this.functionalUnit, `Run ${deviceProgramRunId} interrupted by stop or abort`)
+                break
             }
         }
 
