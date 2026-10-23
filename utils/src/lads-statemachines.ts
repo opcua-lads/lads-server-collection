@@ -1,8 +1,10 @@
 import EventEmitter from "events";
-import { LocalizedText, TransitionSelector, UAFiniteStateMachine, UAInitialState, UAMethod, UAState, UAStateMachine, UAStateMachine_Base, UAStateMachineEx, UAStateMachineHelper, UAStateVariable, UATransitionEx, UATransitionVariable } from "node-opcua";
-import { promoteToFiniteStateMachine } from "./lads-utils";
+import { LocalizedText, TransitionSelector, UAFiniteStateMachine, UAObject, UAInitialState, UAMethod, UAState, UAStateMachine, UAStateMachine_Base, UAStateMachineEx, UAStateMachineHelper, UAStateVariable, UATransitionEx, UATransitionVariable } from "node-opcua";
+import { promoteToFiniteStateMachine, sleepMilliSeconds } from "./lads-utils";
 import { get } from "http";
-import { LADSFunctionalStateMachine, LADSFunctionalStateMachine_Base } from "@interfaces";
+import { LADSFunctionalState, LADSFunctionalStateMachine, LADSFunctionalStateMachine_Base } from "@interfaces";
+import { raiseEvent } from "./lads-event-utils";
+import { EventSeverity } from "./lads-functions";
 
 export class StateMachineImpl extends EventEmitter implements UAStateMachineHelper, UAStateMachine_Base {
     stateMachine: UAStateMachineEx
@@ -34,6 +36,41 @@ export class FunctionalStateMachineImpl extends StateMachineImpl implements LADS
     get start(): UAMethod { return this.functionalStateMachine.start }
     get stop(): UAMethod { return this.functionalStateMachine.stop }
     get abort(): UAMethod { return this.functionalStateMachine.abort }
+    get clear(): UAMethod | undefined { return this.functionalStateMachine.clear }
 }
 
 
+
+//---------------------------------------------------------------
+// FunctionalStateMachine transition chains (simulated device delays)
+//---------------------------------------------------------------
+export const FunctionalStateDelayMilliSeconds = 100
+
+/** Enter the given states one after the other, each after a short delay. No events are raised for the transitory states. */
+export async function enterStateChain(stateMachine: UAStateMachineEx, states: LADSFunctionalState[], delayMilliSeconds: number = FunctionalStateDelayMilliSeconds) {
+    for (const state of states) {
+        await sleepMilliSeconds(delayMilliSeconds)
+        stateMachine.setState(state)
+    }
+}
+
+/** Continue Aborting -> Aborted (Aborting must already be entered by the caller). Raises one final event. */
+export async function enterAborted(stateMachine: UAStateMachineEx, eventSource: UAObject, message: string) {
+    try {
+        await enterStateChain(stateMachine, [LADSFunctionalState.Aborted])
+        raiseEvent(eventSource, message, EventSeverity.Warning)
+    } catch (err) {
+        raiseEvent(eventSource, `Entering Aborted failed: ${err}`, EventSeverity.Alarm)
+    }
+}
+
+/** Aborted -> Clearing -> Stopped. Clearing is entered immediately, Stopped after a short delay. Raises one final event. */
+export async function enterClearing(stateMachine: UAStateMachineEx, eventSource: UAObject, message: string = "Cleared, now stopped.") {
+    try {
+        stateMachine.setState(LADSFunctionalState.Clearing)
+        await enterStateChain(stateMachine, [LADSFunctionalState.Stopped])
+        raiseEvent(eventSource, message, EventSeverity.Info)
+    } catch (err) {
+        raiseEvent(eventSource, `Clearing failed: ${err}`, EventSeverity.Alarm)
+    }
+}
