@@ -9,7 +9,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ApplicationType, OPCUACertificateManager, OPCUAServer, OPCUAServerOptions, RegisterServerMethod } from "node-opcua"
+import { ApplicationType, OPCUACertificateManager, OPCUAServer, OPCUAServerOptions, RegisterServerMethod, setWarningLogger } from "node-opcua"
 import path from "path";
 
 export interface CreateServerOptions {
@@ -26,6 +26,13 @@ export interface CreateServerOptions {
     ldsSupport?: boolean
     increaseCapabilities?: boolean
 }
+
+// node-opcua logs "Cannot find reference to remove" for every instantiated node on deleteNode() (e.g. a deleted Result of an aborted run):
+// type nodes keep no HasTypeDefinition back-references. This is harmless, so it is filtered out; all other warnings are still printed.
+setWarningLogger((context: any, ...args: any[]) => {
+    if (typeof args[0] === "string" && args[0].startsWith("Cannot find reference to remove")) return
+    console.warn(`${new Date().toISOString()} :${context?.filename} :${context?.callerline}`, ...args)
+})
 
 export function createServer(options: CreateServerOptions): OPCUAServer {
     // basic server options
