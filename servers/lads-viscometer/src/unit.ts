@@ -119,7 +119,7 @@ export abstract class ViscometerUnitImpl {
         }
         stateMachine.setState(LADSFunctionalState.Running)
         if (withEvent) {
-            raiseEvent(controller, `${controller.getDisplayName()} started`)
+            raiseEvent(controller, "Started")
         }
 
     }
@@ -131,7 +131,7 @@ export abstract class ViscometerUnitImpl {
         }
         stateMachine.setState(LADSFunctionalState.Stopped)
         if (withEvent) {
-            raiseEvent(controller, `${controller.getDisplayName()} stopped`)
+            raiseEvent(controller, "Stopped")
         }
     }
     
@@ -221,7 +221,7 @@ export abstract class ViscometerUnitImpl {
         this.functionalUnitState.setState(LADSFunctionalState.Running)
         this.startController(this.speedController, this.speedControllerState, false)
         this.startController(this.temperatureController, this.temperatureControllerState, false)
-        raiseEvent(this.functionalUnit, `started with speed set-point ${this.speedController.targetValue.readValue().value.value}rpm`)
+        raiseEvent(this.functionalUnit, `Started with speed set-point ${this.speedController.targetValue.readValue().value.value}rpm`)
         return StatusCodes.Good
     }
 
@@ -235,7 +235,7 @@ export abstract class ViscometerUnitImpl {
         this.stopControllers()
         if (!this.isRunning()) return StatusCodes.Good    // Stopping/Aborting is completed by the state chains
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
-        raiseEvent(this.functionalUnit, "stopped")
+        raiseEvent(this.functionalUnit, "Stopped")
         return StatusCodes.Good
     }
 
@@ -370,7 +370,7 @@ export abstract class ViscometerUnitImpl {
         const stateMachine = this.functionalUnitState
         stateMachine.setState(LADSFunctionalState.Aborting)
         this.stopControllers()
-        enterAborted(stateMachine, this.functionalUnit, "aborted")    // not awaited: Aborting -> Aborted
+        enterAborted(stateMachine, this.functionalUnit, "Aborted")    // not awaited: Aborting -> Aborted
         return { statusCode: StatusCodes.Good }
     }
 
@@ -378,7 +378,7 @@ export abstract class ViscometerUnitImpl {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         const currentState = this.functionalUnitState.getCurrentState();
         if (!(currentState && currentState.includes(LADSFunctionalState.Aborted))) return { statusCode: StatusCodes.BadInvalidState }
-        enterClearing(this.functionalUnitState, this.functionalUnit, "cleared, now stopped")    // not awaited: Aborted -> Clearing -> Stopped
+        enterClearing(this.functionalUnitState, this.functionalUnit, "Cleared, now stopped")    // not awaited: Aborted -> Clearing -> Stopped
         return { statusCode: StatusCodes.Good }
     }
 

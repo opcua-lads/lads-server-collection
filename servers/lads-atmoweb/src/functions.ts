@@ -378,7 +378,7 @@ export class CoverFunctionImpl extends FunctionImpl {
         const state = this.coverState.getCurrentState() ?? "Unknown"
         if (state.includes(newState)) return
         this.coverState.setState(newState)
-        raiseEvent(this.coverFunction, `${this.coverFunction.getDisplayName()} state changed to ${newState}.`)
+        raiseEvent(this.coverFunction, `State changed to ${newState}.`)
     }
 
     onCoverStateVariablesChanged() {

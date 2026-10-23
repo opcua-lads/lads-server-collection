@@ -875,7 +875,7 @@ export class LADSDeviceHelper {
 
     raiseEvent(message: string) {
         if (!this.options.raiseEvents) return
-        this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: `${this.device.getDisplayName()} ${message}` } })
+        this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: message } })
     }
 
     async onGotoOperating(this: LADSDeviceHelper, inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {

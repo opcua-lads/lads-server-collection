@@ -15,13 +15,11 @@ import { getEUInformation, getStringValue } from "./lads-variable-utils"
 //---------------------------------------------------------------
 // generic event raising
 //---------------------------------------------------------------
-/** Raises a BaseEventType event. The display name of the event source is prepended to the message (unless the message already starts with it). */
+/** Raises a BaseEventType event. The event source (SourceName) is provided by the event itself, so the message does not repeat it. */
 export function raiseEvent(node: UAObject, message: string, severity: number = 0) {
     if (!node) return
     const eventType = node.addressSpace.findObjectType("BaseEventType")
-    const name = node.getDisplayName()
-    const text = !name || message.startsWith(name) ? message : `${name} ${message}`
-    node.raiseEvent(eventType, { message: { dataType: DataType.LocalizedText, value: text }, severity: { dataType: DataType.UInt16, value: severity } })
+    node.raiseEvent(eventType, { message: { dataType: DataType.LocalizedText, value: message }, severity: { dataType: DataType.UInt16, value: severity } })
 }
 
 //---------------------------------------------------------------
