@@ -219,7 +219,7 @@ export abstract class ViscometerUnitImpl {
         this.functionalUnitState.setState(LADSFunctionalState.Running)
         this.startController(this.speedController, this.speedControllerState, false)
         this.startController(this.temperatureController, this.temperatureControllerState, false)
-        raiseEvent(this.functionalUnit, `Viscometer started with speed set-point ${this.speedController.targetValue.readValue().value.value}rpm`)
+        raiseEvent(this.functionalUnit, `started with speed set-point ${this.speedController.targetValue.readValue().value.value}rpm`)
         return StatusCodes.Good
     }
 
@@ -233,7 +233,7 @@ export abstract class ViscometerUnitImpl {
         this.stopControllers()
         if (!this.isRunning()) return StatusCodes.Good    // Stopping/Aborting is completed by the state chains
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
-        raiseEvent(this.functionalUnit, "Viscometer stopped")
+        raiseEvent(this.functionalUnit, "stopped")
         return StatusCodes.Good
     }
 
@@ -362,14 +362,14 @@ export abstract class ViscometerUnitImpl {
         const stateMachine = this.functionalUnitState
         stateMachine.setState(LADSFunctionalState.Aborting)
         this.stopControllers()
-        enterAborted(stateMachine, this.functionalUnit, "Viscometer aborted")    // not awaited: Aborting -> Aborted
+        enterAborted(stateMachine, this.functionalUnit, "aborted")    // not awaited: Aborting -> Aborted
         return { statusCode: StatusCodes.Good }
     }
 
     private async clearProgram(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         const currentState = this.functionalUnitState.getCurrentState();
         if (!(currentState && currentState.includes(LADSFunctionalState.Aborted))) return { statusCode: StatusCodes.BadInvalidState }
-        enterClearing(this.functionalUnitState, this.functionalUnit, "Viscometer cleared, now stopped")    // not awaited: Aborted -> Clearing -> Stopped
+        enterClearing(this.functionalUnitState, this.functionalUnit, "cleared, now stopped")    // not awaited: Aborted -> Clearing -> Stopped
         return { statusCode: StatusCodes.Good }
     }
 
