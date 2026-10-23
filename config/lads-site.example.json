@@ -1,0 +1,17 @@
+{
+    "geocode": true,
+    "hierarchicalLocation": "essentim Office",
+    "hierarchicalLocations": [
+        {
+            "label": "essentim Office",
+            "value": "DE/Munich/Schragenhofstr_35/A/Office"
+        },
+        {
+            "label": "AixEngineers Office",
+            "value": "/DE/Aachen/Im_Weingarten_35/Office"
+        }
+    ],
+    "servers": {
+        "lads-viscometer": "essentim Office"
+    }
+}

@@ -10,6 +10,7 @@
  */
 
 import { ApplicationType, OPCUACertificateManager, OPCUAServer, OPCUAServerOptions, RegisterServerMethod, setWarningLogger } from "node-opcua"
+import { refreshSiteLocation } from "./lads-site-config"
 import path from "path";
 
 export interface CreateServerOptions {
@@ -35,6 +36,7 @@ setWarningLogger((context: any, ...args: any[]) => {
 })
 
 export function createServer(options: CreateServerOptions): OPCUAServer {
+    refreshSiteLocation()    // background lookup of the site's GPS location (silent, cached in config/lads-site.json)
     // basic server options
     const serverOptions: OPCUAServerOptions = {
         port: options.port ?? 4850,

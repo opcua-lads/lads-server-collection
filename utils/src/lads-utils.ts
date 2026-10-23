@@ -68,6 +68,8 @@ import {
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
 import { getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
 import { AFODictionary } from "@afo"
+import { Site, NamedHierarchicalLocation } from "./lads-site-config"
+import { GeoLocationUpdater } from "./lads-geolocation"
 
 export enum DIObjectIds {
     deviceSet = 5001
@@ -447,8 +449,15 @@ export function setSessionInformation(result: LADSResult, context: ISessionConte
 //---------------------------------------------------------------
 // LADS nameplate support
 //---------------------------------------------------------------
-export const DefaultLocation = "N 51.257315 E 6.740885"
-export const DefaultHierarchicalLocation = "DE/Munich/Schragenhofstr_35/A/Office"
+// defaults come from the site configuration (config/lads-site.json, see lads-site-config.ts)
+export const DefaultLocation = Site.location
+export const DefaultHierarchicalLocation = Site.hierarchicalLocation
+export const HierarchicalLocations: NamedHierarchicalLocation[] = Site.hierarchicalLocations
+
+/** Value of a predefined hierarchical location by label; the active site location if the label is unknown. */
+export function getHierarchicalLocation(label?: string): string {
+    return HierarchicalLocations.find(location => location.label === label)?.value ?? DefaultHierarchicalLocation
+}
 
 export interface LADSComponentOptions {
     manufacturer?: string
@@ -762,6 +771,14 @@ export class LADSDeviceHelper {
 
         // provide machinery compatibility
         this.buildMachineryStructure(device)
+
+        // devices without an explicit HierarchicalLocation get the one of the site configuration (config/lads-site.json)
+        if (device.hierarchicalLocation && !getStringValue(device.hierarchicalLocation, "")) {
+            setStringValue(device.hierarchicalLocation, DefaultHierarchicalLocation)
+        }
+
+        // eventually look up the geographic location of the hierarchical location in the background (config/lads-site.json)
+        GeoLocationUpdater.install(device)
 
         // eventually adjust isEnabled of functions
         if (options.adjustFunctionIsEnabled ?? true) 
