@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
-import { getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode, createResult, initNodeVersion } from "@utils"
+import { getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode, createResult, initNodeVersion, enterAborted, enterClearing, EventSeverity } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, CallMethodResultOptions, Variant, StatusCode, ISessionContext } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl, getBalanceNameSpace } from "./device"
@@ -122,6 +122,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         stateMachine.startProgram.bindMethod(this.startProgram.bind(this))
         stateMachine.stop.bindMethod(this.stop.bind(this))
         stateMachine.abort.bindMethod(this.abort.bind(this))
+        stateMachine.clear?.bindMethod(this.clear.bind(this))
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
 
@@ -318,7 +319,12 @@ export abstract class BalanceUnitImpl extends EventEmitter {
 
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
-        return (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted))
+        return currentState.includes(LADSFunctionalState.Stopped)
+    }
+
+    private readyToClear(): boolean {
+        const currentState = this.functionalUnitState.getCurrentState();
+        return currentState.includes(LADSFunctionalState.Aborted)
     }
 
     private readyToStop(): boolean {
@@ -470,7 +476,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         if (!options) {
             // if options not defined simply leave
             stateMachine.setState(LADSFunctionalState.Stopped)
-            raiseEvent(this.functionalUnit, `Stopping run.`, 100)
+            raiseEvent(this.functionalUnit, `Stopping run.`, EventSeverity.Info)
         } else {
             // clear timers
             clearInterval(options.runtimeInterval)
@@ -479,8 +485,8 @@ export abstract class BalanceUnitImpl extends EventEmitter {
             if (state === LADSFunctionalState.Aborting) {
                 // delete result and leave
                 result?.namespace.deleteNode(options.result)
-                stateMachine.setState(LADSFunctionalState.Aborted)
-                raiseEvent(this.functionalUnit, `Aborting method ${options.programTemplateId} with identifier ${options.runId}.`, 500)
+                // Aborting -> Aborted after a short delay (event raised once Aborted is reached)
+                enterAborted(stateMachine, this.functionalUnit, `Aborted method ${options.programTemplateId} with identifier ${options.runId}.`)
             } else {
                 if (result) {
                     // set stopped timestamp
@@ -507,7 +513,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
                 }
                 // set state to stopped and leave    
                 stateMachine.setState(LADSFunctionalState.Stopped)
-                raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
+                raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, EventSeverity.Info)
             }
         }
         this.currentRunOptions = undefined
@@ -673,6 +679,13 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Aborting)
+        return { statusCode: StatusCodes.Good }
+    }
+
+    private async clear(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
+        if (!this.readyToClear()) return { statusCode: StatusCodes.BadInvalidState }
+        enterClearing(this.functionalUnitState, this.functionalUnit)    // not awaited: Aborted -> Clearing -> Stopped
         return { statusCode: StatusCodes.Good }
     }
 }
