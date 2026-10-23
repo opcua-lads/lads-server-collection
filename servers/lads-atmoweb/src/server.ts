@@ -42,7 +42,6 @@ export interface AtmoWebDeviceConfig {
     baseUrl: string
     name: string
     recorderInterval?: number
-    hierachicalLocation?: string
 }
 
 // Type guard
@@ -64,10 +63,10 @@ const DefaultConfig: AtmoWebConfig = {
     port: 4843,
     serialNumber: 4711,
     devices: [
-        { baseUrl: "http://localhost:8081", name: "My Memmert UN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
-        { baseUrl: "http://localhost:8082", name: "My Memmert ICO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
-        { baseUrl: "http://localhost:8083", name: "My Memmert IN plus", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
-        { baseUrl: "http://localhost:8084", name: "My Memmert VO", recorderInterval: 5, hierachicalLocation: "DE/Munich/Schragenhofstr_35/A/Office" },
+        { baseUrl: "http://localhost:8081", name: "My Memmert UN plus", recorderInterval: 5 },
+        { baseUrl: "http://localhost:8082", name: "My Memmert ICO", recorderInterval: 5 },
+        { baseUrl: "http://localhost:8083", name: "My Memmert IN plus", recorderInterval: 5 },
+        { baseUrl: "http://localhost:8084", name: "My Memmert VO", recorderInterval: 5 },
     ],
 
 }

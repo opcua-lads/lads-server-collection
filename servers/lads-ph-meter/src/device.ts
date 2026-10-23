@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponent } from "@interfaces"
-import { LADSComponentOptions, getStringValue, DefaultLocation, initComponent, LADSDeviceHelper, DeviceTypeImage } from "@utils"
+import { LADSComponentOptions, getStringValue, DefaultLocation, initComponent, LADSDeviceHelper, DeviceTypeImage, DefaultHierarchicalLocation } from "@utils"
 import { pHMeterDevice, pHMeterFunctionalUnit, pHMeterFunctionalUnitSet } from "./interfaces"
 import { pHMeterSevenEasyUnitImpl } from "./unit-seven-easy"
 import { pHMeterSimulatorUnitImpl } from "./unit-simulator"
@@ -68,6 +68,7 @@ export class pHMeterDeviceImpl {
             assetId: "0815-4711",
             componentName: "My pH-meter",
             location: DefaultLocation,
+            hierarchicalLocation: DefaultHierarchicalLocation,
         }
         initComponent(device, deviceOptions)
         const components = device.getComponentByName("Components")

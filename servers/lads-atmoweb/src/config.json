@@ -5,8 +5,7 @@
         {
             "baseUrl": "http://192.168.1.21",
             "name": "My Memmert Essentim",
-            "recorderInterval": 5,
-            "hierachicalLocation": "DE/Munich/Schragenhofstr_35/A/Office"
+            "recorderInterval": 5
         }
     ]
 }

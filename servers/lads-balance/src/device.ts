@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, DeviceTypeImage, getStringValue, setStringValue } from "@utils"
+import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, DeviceTypeImage, getStringValue, setStringValue, DefaultHierarchicalLocation } from "@utils"
 import { BalanceDevice, BalanceFunctionalUnit, BalanceFunctionalUnitSet } from "./interfaces"
 import { BalanceDeviceConfig, BalanceProtocols, BalanceServerImpl } from "./server"
 import { IAddressSpace, INamespace } from "node-opcua"
@@ -112,7 +112,7 @@ export class BalanceDeviceImpl {
         
         // LCC PoC integration
         setStringValue(this.device.componentName, this.device.getDisplayName())
-        setStringValue(this.device.hierarchicalLocation, "DE/Munich/Schragenhofstr_35/A/Office")
+        setStringValue(this.device.hierarchicalLocation, DefaultHierarchicalLocation)
     }
 
 }

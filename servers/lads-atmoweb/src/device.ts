@@ -67,7 +67,6 @@ export class AtmoWebDeviceImpl {
             }
             initComponent(device, deviceOptions)
             setStringValue(device.componentName, device.getDisplayName())
-            setStringValue(device.hierarchicalLocation, config.hierachicalLocation ?? "")
             const manufacturerUri = "memmert.com"
             const productInstanceUri = `${manufacturerUri}/${deviceOptions.model}/${deviceOptions.serialNumber}`
             setStringValue(device.manufacturerUri, manufacturerUri)
