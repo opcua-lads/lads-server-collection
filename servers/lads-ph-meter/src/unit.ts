@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { pHSensorRecorder } from "@asm"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSActiveProgram, LADSFunctionalState } from "@interfaces"
-import { getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement, AnalogScalarSensorFunctionImpl, AnalogScalarSensorWithCompenstionFunctionImpl, createResult, initNodeVersion } from "@utils"
+import { getDescriptionVariable, promoteToFiniteStateMachine, getNumericValue, setNumericValue, getNumericArrayValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setNumericArrayValue, setPropertiesValue, setSamplesValue, setSessionInformation, addProgramTemplate, ProgramTemplateElement, AnalogScalarSensorFunctionImpl, AnalogScalarSensorWithCompenstionFunctionImpl, createResult, initNodeVersion, enterAborted, enterClearing, EventSeverity } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantArrayType, VariantLike, CallMethodResultOptions, Variant, ISessionContext } from "node-opcua"
 import { join } from "path"
 import { pHMeterDeviceImpl } from "./device"
@@ -88,6 +88,7 @@ export abstract class pHMeterUnitImpl {
         stateMachine.stop.bindMethod(this.stop.bind(this))
         
         stateMachine.abort.bindMethod(this.abort.bind(this))
+        stateMachine.clear?.bindMethod(this.clear.bind(this))
         this.functionalUnitState = promoteToFiniteStateMachine(stateMachine)
         this.functionalUnitState.setState(LADSFunctionalState.Stopped)
 
@@ -155,7 +156,12 @@ export abstract class pHMeterUnitImpl {
 
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
-        return (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted))
+        return currentState.includes(LADSFunctionalState.Stopped)
+    }
+
+    private readyToClear(): boolean {
+        const currentState = this.functionalUnitState.getCurrentState();
+        return currentState.includes(LADSFunctionalState.Aborted)
     }
 
     private readyToStop(): boolean {
@@ -184,7 +190,7 @@ export abstract class pHMeterUnitImpl {
 
     protected enterMeasuring(context: ISessionContext) {
         const options = this.currentRunOptions
-        raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`)
+        raiseEvent(this.functionalUnit, `Starting method ${options.programTemplateId} with identifier ${options.runId}.`, EventSeverity.Info)
 
         // additional references for calibration
         const referenceIds: string[] = [AFODictionaryIds.pH_measurement, AFODictionaryIds.pH_monitoring_aggregate_document]
@@ -247,7 +253,7 @@ export abstract class pHMeterUnitImpl {
         if (!options) {
             // if options not defined simply leave
             stateMachine.setState(LADSFunctionalState.Stopped)
-            raiseEvent(this.functionalUnit, `Stopping run.`, 100)
+            raiseEvent(this.functionalUnit, `Stopping run.`, EventSeverity.Info)
         } else {
             // clear timers
             clearInterval(options.runtimeInterval)
@@ -257,8 +263,8 @@ export abstract class pHMeterUnitImpl {
             if (state === LADSFunctionalState.Aborting) {
                 // delete result and leave
                 options.result.namespace.deleteNode(options.result)
-                stateMachine.setState(LADSFunctionalState.Aborted)
-                raiseEvent(this.functionalUnit, `Aborting method ${options.programTemplateId} with identifier ${options.runId}.`, 500)
+                // Aborting -> Aborted after a short delay (event raised once Aborted is reached)
+                enterAborted(stateMachine, this.functionalUnit, `Aborted method ${options.programTemplateId} with identifier ${options.runId}.`)
             } else {
                 // set stopped timestamp
                 setDateTimeValue(result.stopped, new Date())
@@ -282,14 +288,14 @@ export abstract class pHMeterUnitImpl {
                     if ((-1.0 < offset) && (offset < 1.0)) {
                         calibrationValues[0] = offset
                         setNumericArrayValue(this.pHSensor.calibrationValues, calibrationValues)
-                        raiseEvent(this.functionalUnit, `Performed offset calibration with reference ${options.referenceValue}pH and offset parameter ${offset}pH.`, 200)
+                        raiseEvent(this.functionalUnit, `Performed offset calibration with reference ${options.referenceValue}pH and offset parameter ${offset}pH.`, EventSeverity.Info)
                     }
                 } else if (isSlopeCalibration) {
                     const slope = 100.0 * voltageEndpoint / ((Constants.R * (temperatureEndpoint + Constants.T0) / Constants.F) * Math.log(10) * (7.0 + calibrationValues[0] - options.referenceValue))
                     if ((80.0 < slope) && (slope < 105.0)) {
                         calibrationValues[1] = slope
                         setNumericArrayValue(this.pHSensor.calibrationValues, calibrationValues)
-                        raiseEvent(this.functionalUnit, `Performed slope calibration with reference ${options.referenceValue}pH and slope parameter ${slope}%.`, 200)
+                        raiseEvent(this.functionalUnit, `Performed slope calibration with reference ${options.referenceValue}pH and slope parameter ${slope}%.`, EventSeverity.Info)
                     }
                     referenceIds.push(AFODictionaryIds.pH_calibration_slope)
                 }
@@ -354,7 +360,7 @@ export abstract class pHMeterUnitImpl {
 
                 // set state to stopped and leave    
                 stateMachine.setState(LADSFunctionalState.Stopped)
-                raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, 100)
+                raiseEvent(this.functionalUnit, `Finalized method ${options.programTemplateId} with identifier ${options.runId}.`, EventSeverity.Info)
             }
         }
         this.currentRunOptions = undefined
@@ -430,6 +436,13 @@ export abstract class pHMeterUnitImpl {
         if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
         this.leaveMeasuring(LADSFunctionalState.Aborting)
+        return { statusCode: StatusCodes.Good }
+    }
+
+    private async clear(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return {statusCode: StatusCodes.BadLocked }
+        if (!this.readyToClear()) return { statusCode: StatusCodes.BadInvalidState }
+        enterClearing(this.functionalUnitState, this.functionalUnit)    // not awaited: Aborted -> Clearing -> Stopped
         return { statusCode: StatusCodes.Good }
     }
 }
