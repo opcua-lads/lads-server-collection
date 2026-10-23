@@ -489,7 +489,7 @@ export function initComponent(component: UAComponent, options: LADSComponentOpti
     const lc = component as LADSComponent
     options.location ? setStringValue(mi.location, options.location) : 0
     options.hierarchicalLocation ? setStringValue(lc.hierarchicalLocation, options.hierarchicalLocation) : 0
-    options.operationalLocation ? setStringValue(lc.operationalLocation, options.hierarchicalLocation) : 0
+    options.operationalLocation ? setStringValue(lc.operationalLocation, options.operationalLocation) : 0
     if (component.identification) {
          initComponent(component.identification, options)
     }
