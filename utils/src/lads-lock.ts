@@ -142,7 +142,7 @@ export class LockImpl extends EventEmitter {
     }
 
     private async breakLock(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        if (!this.locked) LockImpl.methodResult({ result: LockResult.NotLocked })
+        if (!this.locked) return LockImpl.methodResult({ result: LockResult.NotLocked })
         this.stopTimer()
         return LockImpl.methodResult({ result: LockResult.OK })
     }

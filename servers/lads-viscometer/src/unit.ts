@@ -315,9 +315,9 @@ export abstract class ViscometerUnitImpl {
             return { statusCode: StatusCodes.BadInvalidState }
         }
 
-        // valdate input arguments
-        const template = this.findProgramTemplate(inputArguments[0].value)
-        const programTemplate = template?template:this.programTemplates[0]
+        // validate input arguments
+        const programTemplate = this.findProgramTemplate(inputArguments[0].value)
+        if (!programTemplate) return { statusCode: StatusCodes.BadInvalidArgument }
         const programTemplateId = programTemplate.browseName.name
         const startedTimestamp = new Date()
         const deviceProgramRunId = createDeviceProgramRunId(programTemplateId)
