@@ -6,7 +6,7 @@
             "serialPort": "",
             "protocol": "Simulator",
             "name": "My Sartorius Cubis II Balance",
-            "enabled": true
+            "enabled": false
         },
         {
             "serialPort": "/dev/tty.usbmodem00294063041",
@@ -24,7 +24,7 @@
             "serialPort": "socket://192.168.0.132:55555",
             "protocol": "SICS",
             "name": "My Sartorius Cubis III Balance",
-            "enabled": false
+            "enabled": true
         }
     ]
 }
