@@ -41,6 +41,8 @@
         <Description>Aber Futura Connect Xtra: one device with Probe, FUTURA and SPECTRA components and two FunctionalUnits</Description>
         <References>
             <Reference ReferenceType="HasSubtype" IsForward="false">ns=4;i=1002</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6199</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6200</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6201</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6202</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6203</Reference>
@@ -53,12 +55,11 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6210</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6211</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6212</Reference>
-            <Reference ReferenceType="HasProperty">ns=5;i=6213</Reference>
-            <Reference ReferenceType="HasProperty">ns=5;i=6214</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5055</Reference>
             <Reference ReferenceType="HasAddIn">ns=5;i=5056</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5057</Reference>
-            <Reference ReferenceType="HasComponent">ns=5;i=6227</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6225</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6226</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5058</Reference>
             <Reference ReferenceType="HasAddIn">ns=5;i=5068</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5072</Reference>
@@ -106,7 +107,6 @@
             <Reference ReferenceType="HasAddIn">ns=5;i=5053</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6191</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6192</Reference>
-            <Reference ReferenceType="HasComponent">ns=5;i=6193</Reference>
         </References>
     </UAObjectType>
     <UAObjectType NodeId="ns=5;i=1005" BrowseName="5:SpectraModuleType" IsAbstract="false">
@@ -115,9 +115,8 @@
         <References>
             <Reference ReferenceType="HasSubtype" IsForward="false">ns=4;i=1024</Reference>
             <Reference ReferenceType="HasAddIn">ns=5;i=5054</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=6197</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=6198</Reference>
-            <Reference ReferenceType="HasComponent">ns=5;i=6199</Reference>
-            <Reference ReferenceType="HasComponent">ns=5;i=6200</Reference>
         </References>
     </UAObjectType>
     <UAObject NodeId="ns=5;i=5001" BrowseName="4:FunctionalUnitState" ParentNodeId="ns=5;i=1001">
@@ -198,7 +197,7 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6003</Reference>
         </References>
         <Value>
-            <uax:UInt32>4</uax:UInt32>
+            <uax:UInt32>0</uax:UInt32>
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=21" NodeId="ns=5;i=6003" BrowseName="EnumStrings" ParentNodeId="ns=5;i=6002" ArrayDimensions="7">
@@ -221,7 +220,7 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6005</Reference>
         </References>
         <Value>
-            <uax:UInt32>4</uax:UInt32>
+            <uax:UInt32>0</uax:UInt32>
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=21" NodeId="ns=5;i=6005" BrowseName="EnumStrings" ParentNodeId="ns=5;i=6004" ArrayDimensions="7">
@@ -2714,7 +2713,7 @@
     </UAObject>
     <UAVariable DataType="i=7" NodeId="ns=5;i=6179" BrowseName="5:AutoclaveCycles" ParentNodeId="ns=5;i=5052">
         <DisplayName>Autoclave Cycles</DisplayName>
-        <Description>Counted CIP and autoclave cycles</Description>
+        <Description>Counted CIP and autoclave cycles (placeholder 100, to be confirmed)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=468</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2746,7 +2745,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=6179</Reference>
         </References>
         <Value>
-            <uax:Double>0</uax:Double>
+            <uax:Double>100</uax:Double>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6182" BrowseName="1:StartValue" ParentNodeId="ns=5;i=6179">
@@ -2762,7 +2761,7 @@
     </UAVariable>
     <UAVariable DataType="i=7" NodeId="ns=5;i=6183" BrowseName="5:LeakageDetections" ParentNodeId="ns=5;i=5052">
         <DisplayName>Leakage Detections</DisplayName>
-        <Description>Leakages detected on the probe</Description>
+        <Description>Leakages detected on the probe (placeholder 100, to be confirmed)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=468</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2794,7 +2793,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=6183</Reference>
         </References>
         <Value>
-            <uax:Double>0</uax:Double>
+            <uax:Double>100</uax:Double>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6186" BrowseName="1:StartValue" ParentNodeId="ns=5;i=6183">
@@ -2865,19 +2864,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=5" NodeId="ns=5;i=6191" BrowseName="5:StatusFlags" ParentNodeId="ns=5;i=1004">
-        <DisplayName>Status Flags</DisplayName>
-        <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=1004</Reference>
-        </References>
-        <Value>
-            <uax:UInt16>0</uax:UInt16>
-        </Value>
-    </UAVariable>
-    <UAVariable DataType="i=1" NodeId="ns=5;i=6192" BrowseName="5:SignalSimulatorConnected" ParentNodeId="ns=5;i=1004">
+    <UAVariable DataType="i=1" NodeId="ns=5;i=6191" BrowseName="5:SignalSimulatorConnected" ParentNodeId="ns=5;i=1004">
         <DisplayName>Signal Simulator Connected</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
@@ -2889,7 +2876,7 @@
             <uax:Boolean>false</uax:Boolean>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6193" BrowseName="5:BootloaderVersion" ParentNodeId="ns=5;i=1004">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6192" BrowseName="5:BootloaderVersion" ParentNodeId="ns=5;i=1004">
         <DisplayName>Bootloader Version</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
@@ -2908,13 +2895,13 @@
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1005</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasAddIn" IsForward="false">ns=5;i=1005</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6193</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6194</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6195</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6196</Reference>
-            <Reference ReferenceType="HasProperty">ns=5;i=6197</Reference>
         </References>
     </UAObject>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6194" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5054">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6193" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5054">
         <DisplayName>Manufacturer</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -2925,7 +2912,7 @@
             <uax:LocalizedText><uax:Text>Aber Instruments</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6195" BrowseName="1:Model" ParentNodeId="ns=5;i=5054">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6194" BrowseName="1:Model" ParentNodeId="ns=5;i=5054">
         <DisplayName>Model</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -2936,7 +2923,7 @@
             <uax:LocalizedText><uax:Text></uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6196" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5054">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6195" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5054">
         <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -2947,7 +2934,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6197" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5054">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6196" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5054">
         <DisplayName>Software Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -2958,19 +2945,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=5" NodeId="ns=5;i=6198" BrowseName="5:StatusFlags" ParentNodeId="ns=5;i=1005">
-        <DisplayName>Status Flags</DisplayName>
-        <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=1005</Reference>
-        </References>
-        <Value>
-            <uax:UInt16>0</uax:UInt16>
-        </Value>
-    </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6199" BrowseName="5:BootloaderVersion" ParentNodeId="ns=5;i=1005">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6197" BrowseName="5:BootloaderVersion" ParentNodeId="ns=5;i=1005">
         <DisplayName>Bootloader Version</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
@@ -2982,7 +2957,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=7" NodeId="ns=5;i=6200" BrowseName="5:FirmwareCheckSum" ParentNodeId="ns=5;i=1005">
+    <UAVariable DataType="i=7" NodeId="ns=5;i=6198" BrowseName="5:FirmwareCheckSum" ParentNodeId="ns=5;i=1005">
         <DisplayName>Firmware Check Sum</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
@@ -2994,7 +2969,7 @@
             <uax:UInt32>0</uax:UInt32>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6201" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6199" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=1000">
         <DisplayName>Manufacturer</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3005,7 +2980,7 @@
             <uax:LocalizedText><uax:Text>Aber Instruments</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6202" BrowseName="1:Model" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6200" BrowseName="1:Model" ParentNodeId="ns=5;i=1000">
         <DisplayName>Model</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3016,7 +2991,7 @@
             <uax:LocalizedText><uax:Text>FUTURA Connect Xtra</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6203" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6201" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=1000">
         <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3027,7 +3002,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6204" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6202" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=1000">
         <DisplayName>Software Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3038,7 +3013,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6205" BrowseName="1:HardwareRevision" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6203" BrowseName="1:HardwareRevision" ParentNodeId="ns=5;i=1000">
         <DisplayName>Hardware Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3049,7 +3024,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6206" BrowseName="1:DeviceRevision" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6204" BrowseName="1:DeviceRevision" ParentNodeId="ns=5;i=1000">
         <DisplayName>Device Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3060,7 +3035,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6207" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6205" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=1000">
         <DisplayName>Product Instance Uri</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3071,7 +3046,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6208" BrowseName="1:AssetId" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6206" BrowseName="1:AssetId" ParentNodeId="ns=5;i=1000">
         <DisplayName>Asset Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3082,7 +3057,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6209" BrowseName="1:ComponentName" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6207" BrowseName="1:ComponentName" ParentNodeId="ns=5;i=1000">
         <DisplayName>Component Name</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3093,7 +3068,7 @@
             <uax:LocalizedText><uax:Text></uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=6" NodeId="ns=5;i=6210" BrowseName="1:RevisionCounter" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=6" NodeId="ns=5;i=6208" BrowseName="1:RevisionCounter" ParentNodeId="ns=5;i=1000">
         <DisplayName>Revision Counter</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3104,7 +3079,7 @@
             <uax:Int32>0</uax:Int32>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6211" BrowseName="1:DeviceManual" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6209" BrowseName="1:DeviceManual" ParentNodeId="ns=5;i=1000">
         <DisplayName>Device Manual</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3115,7 +3090,7 @@
             <uax:String>Aber Instruments manuals 2819-09-00 / 2390-09-08</uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6212" BrowseName="3:Location" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6210" BrowseName="3:Location" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
         <DisplayName>Location</DisplayName>
         <Description>Location of the machine in a scheme specific to the end user (GPS position as text)</Description>
         <References>
@@ -3127,7 +3102,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6213" BrowseName="2:HierarchicalLocation" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6211" BrowseName="2:HierarchicalLocation" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
         <DisplayName>Hierarchical Location</DisplayName>
         <Description>Hierarchical location of the device, e.g. FactoryA/BuildingC/Floor1</Description>
         <References>
@@ -3139,7 +3114,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6214" BrowseName="2:OperationalLocation" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6212" BrowseName="2:OperationalLocation" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
         <DisplayName>Operational Location</DisplayName>
         <Description>Operational location of the device, e.g. Warehouse1/Sheet3</Description>
         <References>
@@ -3167,6 +3142,8 @@
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1012</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasAddIn" IsForward="false">ns=5;i=1000</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6213</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=6214</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6215</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6216</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6217</Reference>
@@ -3177,11 +3154,9 @@
             <Reference ReferenceType="HasProperty">ns=5;i=6222</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6223</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6224</Reference>
-            <Reference ReferenceType="HasProperty">ns=5;i=6225</Reference>
-            <Reference ReferenceType="HasProperty">ns=5;i=6226</Reference>
         </References>
     </UAObject>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6215" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6213" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5056">
         <DisplayName>Manufacturer</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3192,7 +3167,7 @@
             <uax:LocalizedText><uax:Text>Aber Instruments</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6216" BrowseName="1:Model" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6214" BrowseName="1:Model" ParentNodeId="ns=5;i=5056">
         <DisplayName>Model</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3203,7 +3178,7 @@
             <uax:LocalizedText><uax:Text>FUTURA Connect Xtra</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6217" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6215" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5056">
         <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3214,7 +3189,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6218" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6216" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=5056">
         <DisplayName>Product Instance Uri</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3225,7 +3200,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6219" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6217" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5056">
         <DisplayName>Software Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3236,7 +3211,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6220" BrowseName="1:HardwareRevision" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6218" BrowseName="1:HardwareRevision" ParentNodeId="ns=5;i=5056">
         <DisplayName>Hardware Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3247,7 +3222,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6221" BrowseName="1:DeviceRevision" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6219" BrowseName="1:DeviceRevision" ParentNodeId="ns=5;i=5056">
         <DisplayName>Device Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3258,7 +3233,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6222" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6220" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5056">
         <DisplayName>Asset Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3269,7 +3244,7 @@
             <uax:String></uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=6223" BrowseName="1:ComponentName" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=21" NodeId="ns=5;i=6221" BrowseName="1:ComponentName" ParentNodeId="ns=5;i=5056">
         <DisplayName>Component Name</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3280,7 +3255,7 @@
             <uax:LocalizedText><uax:Text></uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6224" BrowseName="1:DeviceManual" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6222" BrowseName="1:DeviceManual" ParentNodeId="ns=5;i=5056">
         <DisplayName>Device Manual</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3291,7 +3266,7 @@
             <uax:String>Aber Instruments manuals 2819-09-00 / 2390-09-08</uax:String>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=6" NodeId="ns=5;i=6225" BrowseName="1:RevisionCounter" ParentNodeId="ns=5;i=5056">
+    <UAVariable DataType="i=6" NodeId="ns=5;i=6223" BrowseName="1:RevisionCounter" ParentNodeId="ns=5;i=5056">
         <DisplayName>Revision Counter</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3302,7 +3277,7 @@
             <uax:Int32>0</uax:Int32>
         </Value>
     </UAVariable>
-    <UAVariable DataType="i=12" NodeId="ns=5;i=6226" BrowseName="3:Location" ParentNodeId="ns=5;i=5056" AccessLevel="3" UserAccessLevel="3">
+    <UAVariable DataType="i=12" NodeId="ns=5;i=6224" BrowseName="3:Location" ParentNodeId="ns=5;i=5056" AccessLevel="3" UserAccessLevel="3">
         <DisplayName>Location</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3321,7 +3296,7 @@
             <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=1000</Reference>
         </References>
     </UAObject>
-    <UAVariable DataType="ns=1;i=6244" NodeId="ns=5;i=6227" BrowseName="1:DeviceHealth" ParentNodeId="ns=5;i=1000">
+    <UAVariable DataType="ns=1;i=6244" NodeId="ns=5;i=6225" BrowseName="1:DeviceHealth" ParentNodeId="ns=5;i=1000">
         <DisplayName>Device Health</DisplayName>
         <Description>NAMUR NE 107: worst DeviceHealth of all active alarms of Probe, Futura and Spectra</Description>
         <References>
@@ -3333,9 +3308,21 @@
             <uax:Int32>0</uax:Int32>
         </Value>
     </UAVariable>
+    <UAVariable DataType="i=5" NodeId="ns=5;i=6226" BrowseName="1:StatusFlags" ParentNodeId="ns=5;i=1000">
+        <DisplayName>Status Flags</DisplayName>
+        <Description>FUTURA Status Flags register: bits 0-4 warnings, 6-7 errors, 9-10 indicators, 12 curve fit error (SPECTRA); the alarms of DeviceHealthAlarms are derived from the bits</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=1000</Reference>
+        </References>
+        <Value>
+            <uax:UInt16>0</uax:UInt16>
+        </Value>
+    </UAVariable>
     <UAObject NodeId="ns=5;i=5058" BrowseName="1:DeviceHealthAlarms" ParentNodeId="ns=5;i=1000">
         <DisplayName>Device Health Alarms</DisplayName>
-        <Description>One alarm per status bit of the Probe, Futura and Spectra; the alarm source is the affected component</Description>
+        <Description>One alarm per status bit of the StatusFlags register; the alarm source is the affected component (Probe, Futura or Spectra)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>

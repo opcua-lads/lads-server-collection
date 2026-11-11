@@ -14,7 +14,7 @@ The commands Zero, ClearZero, CleanPulse and IncrementAutoclaveCount are modelle
     TargetValue = false after about 100 ms, CurrentValue = false after about 1000 ms
 */
 
-import { CallMethodResultOptions, DataValue, ISessionContext, StatusCode, StatusCodes, UAVariable, VariantLike } from "node-opcua"
+import { CallMethodResultOptions, DataType, DataValue, ISessionContext, LocalizedText, StatusCode, StatusCodes, UAVariable, VariantLike } from "node-opcua"
 import { EventSeverity, getBooleanValue, getLADSFunctionalUnits, promoteToFiniteStateMachine, raiseEvent, setBooleanValue } from "@utils"
 import { LADSDevice, LADSFunctionalState, LADSFunctionalUnit, LADSTwoStateDiscreteControlFunction } from "@interfaces"
 
@@ -35,7 +35,11 @@ export class CommandFunction {
     private readonly target: UAVariable
     private readonly current: UAVariable
 
-    constructor(readonly commandFunction: LADSTwoStateDiscreteControlFunction, private readonly onExecute?: () => void) {
+    /** effect of the command on the simulated device; called when the command is initiated (both routes) */
+    onExecute?: () => void
+
+    constructor(readonly commandFunction: LADSTwoStateDiscreteControlFunction, onExecute?: () => void) {
+        this.onExecute = onExecute
         this.target = commandFunction.targetValue as unknown as UAVariable
         this.current = commandFunction.currentValue as unknown as UAVariable
 
@@ -96,8 +100,42 @@ export function installCommands(unit: LADSFunctionalUnit): Map<string, CommandFu
     return byFunction
 }
 
+/**
+ * Measurement mode (MultiStateDiscreteControlFunction "MeasurementMode"):
+ *   - ControlFunctionState always Running
+ *   - TargetValue and CurrentValue start as CellCulture (0)
+ *   - TargetValue written: unchanged -> nothing; otherwise event "Measurement mode changed to <mode>" (Info) and CurrentValue = TargetValue
+ *   - a write always returns Good
+ */
+export function installMeasurementMode(unit: LADSFunctionalUnit) {
+    const node = (unit.functionSet as any).getChildByName("MeasurementMode")
+    if (!node) return
+    const target = node.getChildByName("TargetValue") as UAVariable
+    const current = node.getChildByName("CurrentValue") as UAVariable
+    const state = node.getChildByName("ControlFunctionState")
+    if (state) {
+        promoteToFiniteStateMachine(state).setState(LADSFunctionalState.Running)
+        state.getChildByName("Start")?.bindMethod?.(async (_i: VariantLike[], _c: ISessionContext) => ({ statusCode: StatusCodes.BadInvalidState }))
+        state.getChildByName("Stop")?.bindMethod?.(async (_i: VariantLike[], _c: ISessionContext) => ({ statusCode: StatusCodes.BadInvalidState }))
+    }
+    const modes = ((target.getChildByName("EnumStrings") as UAVariable)?.readValue().value.value as LocalizedText[] | null) ?? []
+    const CELL_CULTURE = 0
+    for (const v of [target, current]) v.setValueFromSource({ dataType: DataType.UInt32, value: CELL_CULTURE })
+
+    ;(target as any)._timestamped_set_func = (dataValue: DataValue, callback: SetCallback) => {
+        const requested = Number(dataValue.value.value)
+        if (requested !== Number(current.readValue().value.value) && requested >= 0 && requested < modes.length) {
+            raiseEvent(node, `Measurement mode changed to ${modes[requested].text}`, EventSeverity.Info)
+            current.setValueFromSource({ dataType: DataType.UInt32, value: requested })
+        }
+        callback(null, StatusCodes.Good, dataValue)
+    }
+}
+
 /** Installs the commands on the FUTURA functional unit of the device. */
-export function installFuturaCommands(device: LADSDevice) {
+export function installFuturaCommands(device: LADSDevice): Map<string, CommandFunction> {
     const unit = getLADSFunctionalUnits(device).find(u => u.browseName.name === "Futura")
-    if (unit) installCommands(unit)
+    if (!unit) return new Map()
+    installMeasurementMode(unit)
+    return installCommands(unit)
 }

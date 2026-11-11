@@ -31,6 +31,17 @@ ZeroNow, ClearZero, CleanPulseNow and IncrementAutoclaveCount are TwoStateDiscre
 - otherwise an Info event "<Function> initiated" is raised, `CurrentValue` becomes true (executing), `TargetValue` returns to false after about 100 ms and `CurrentValue` after about 1000 ms
 - `SlopeCalibration` is not simulated (`BadNotSupported`)
 
+Effects on the simulated device:
+- **Zero**: `BioMassMeasurement.CalibrationValues[0]` = current Capacitance; `ScanCapacitance.CalibrationValues` = current `ScanCapacitance.SensorValue` (the scan is then reported relative to this zero)
+- **ClearZero**: both zeros are reset to 0 (the BioMassMultiplier is kept)
+- **IncrementAutoclaveCount**: `AutoclaveCycles` of the probe is increased by 1
+
+`MeasurementMode` (MultiStateDiscreteControlFunction): `ControlFunctionState` is always Running, `TargetValue` and `CurrentValue` start as CellCulture. Writing a different mode raises an Info event "Measurement mode changed to <mode>" and sets `CurrentValue = TargetValue`; writing the current mode does nothing. The mode does not influence the simulated values.
+
+## Device health and alarms
+
+The `StatusFlags` register (UInt16) sits on the device next to `DeviceHealth`; the alarms of `DeviceHealthAlarms` are derived from its bits (`src/health.ts`), their source is the affected component (Probe, Futura or Spectra), and `DeviceHealth` is the worst active alarm (NAMUR NE 107). The Simulator object has a writable `StatusFlags` to trigger them: bits 0 capacitance, 1 conductivity, 2 temperature out of range, 3 probe leakage, 4 clean leakage, 6 FUTURA memory, 7 probe memory, 9 no probe, 10 signal simulator connected (sets `SignalSimulatorConnected`), 12 curve fit error. Events are raised when an alarm becomes active or inactive and whenever `DeviceHealth` changes. Note: `DeviceHealth = FAILURE` aborts running functional units (behaviour of `LADSDeviceHelper`).
+
 ## Images
 
 All images in `src/resources/images` are exposed below `DeviceTypeImage`.

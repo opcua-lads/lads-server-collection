@@ -214,7 +214,7 @@ start_program = Node('UAMethod', 'StartProgram', state, td=None, nsb=4, nid='ns=
 start_program.extra = ['ns=4;i=6098', 'ns=4;i=6121']
 fu_t.obj('Lock', T['Lock'], nsb=1)
 fs = fu_t.obj('FunctionSet', T['FunctionSet'], nsb=4)
-control_multistate(fs, 'MeasurementMode', MODES, 4, 'Measurement mode (Inst. 1); values as in the register: 0 CellCulture, 1 Bacterial, 2 Microbial, 3 SignalSimulator, 4 Custom, 5 Brewery, 6 Scan')
+control_multistate(fs, 'MeasurementMode', MODES, 0, 'Measurement mode (Inst. 1); values as in the register: 0 CellCulture, 1 Bacterial, 2 Microbial, 3 SignalSimulator, 4 Custom, 5 Brewery, 6 Scan')
 control_twostate(fs, 'ZeroNow', 'Zero command (Inst. 18 = 1)')
 control_twostate(fs, 'ClearZero', 'Clear zero command (Inst. 18 = 2 and 0.0 into Inst. 15)')
 control_twostate(fs, 'CleanPulseNow', 'Clean pulse command (Inst. 17 = 1)')
@@ -268,12 +268,12 @@ comp_common(probe_t, [], False)
 oc = probe_t.obj('OperationCounters', T['OperationCounters'], nsb=1, rt='HasAddIn', desc='Operating time of the probe (register Probe Total Hours; the server multiplies the hours by 3 600 000)')
 oc.prop(PROBE_DURATION, DT['Duration'], '<uax:Double>0</uax:Double>', nsb=1)
 lc = probe_t.obj('LifetimeCounters', T['LifetimeCounters'], nsb=3, rt='HasAddIn')
-for name, d in (('AutoclaveCycles', 'Counted CIP and autoclave cycles (Inst. 27); limit from Inst. 29'), ('LeakageDetections', 'Leakages detected on the probe (Inst. 31); limit from Inst. 33')):
+for name, d in (('AutoclaveCycles', 'Counted CIP and autoclave cycles (Inst. 27); limit from Inst. 29 (placeholder 100, to be confirmed)'), ('LeakageDetections', 'Leakages detected on the probe (Inst. 31); limit from Inst. 33 (placeholder 100, to be confirmed)')):
     v = lc.var(name, DT['UInt32'], v_num('UInt32', 0), td=T['LifetimeVariable'], nsb=5, desc=d)
     v.prop('EngineeringUnits', DT['EUInformation'], v_eu(U_ONE))
-    v.prop('LimitValue', DT['Double'], v_num('Double', 0), nsb=1); v.prop('StartValue', DT['Double'], v_num('Double', 0), nsb=1)
-comp_common(fe_t, [('StatusFlags', 'UInt16', v_num('UInt16', 0)), ('SignalSimulatorConnected', 'Boolean', v_bool(False)), ('BootloaderVersion', 'String', v_str(''))], True)
-comp_common(sm_t, [('StatusFlags', 'UInt16', v_num('UInt16', 0)), ('BootloaderVersion', 'String', v_str('')), ('FirmwareCheckSum', 'UInt32', v_num('UInt32', 0))], True)
+    v.prop('LimitValue', DT['Double'], v_num('Double', 100), nsb=1); v.prop('StartValue', DT['Double'], v_num('Double', 0), nsb=1)
+comp_common(fe_t, [('SignalSimulatorConnected', 'Boolean', v_bool(False)), ('BootloaderVersion', 'String', v_str(''))], True)
+comp_common(sm_t, [('BootloaderVersion', 'String', v_str('')), ('FirmwareCheckSum', 'UInt32', v_num('UInt32', 0))], True)
 
 # device
 for n, dt, v in [('Manufacturer', 'LocalizedText', v_lt('Aber Instruments')), ('Model', 'LocalizedText', v_lt('FUTURA Connect Xtra')),
@@ -293,7 +293,8 @@ add_ident(dev_t, T['MachineIdent'], {'Manufacturer': (DT['LocalizedText'], v_lt(
     'RevisionCounter': (DT['Int32'], v_num('Int32', 0)), 'Location': (DT['String'], v_str(''), 3)})
 dev_t.obj('DeviceState', T['DeviceState'], nsb=4)
 dev_t.var('DeviceHealth', DT['DeviceHealth'], v_num('Int32', 0), nsb=1, desc='NAMUR NE 107: worst DeviceHealth of all active alarms of Probe, Futura and Spectra')
-alarms = dev_t.obj('DeviceHealthAlarms', T['Folder'], nsb=1, desc='One alarm per status bit of the Probe, Futura and Spectra; the alarm source is the affected component')
+dev_t.var('StatusFlags', DT['UInt16'], v_num('UInt16', 0), nsb=1, desc='FUTURA Status Flags register (Inst. 2): bits 0-4 warnings, 6-7 errors, 9-10 indicators, 12 curve fit error (SPECTRA); the alarms of DeviceHealthAlarms are derived from the bits')
+alarms = dev_t.obj('DeviceHealthAlarms', T['Folder'], nsb=1, desc='One alarm per status bit of the StatusFlags register; the alarm source is the affected component (Probe, Futura or Spectra)')
 for n, ty, d in [('ProbeTemperatureOutOfRange', 'OffSpec', 'Status bit 2: temperature out of range (severity 300)'),
                  ('ProbeLeakage', 'MaintReq', 'Status bit 3: probe leakage (severity 300)'),
                  ('CleanLeakage', 'MaintReq', 'Status bit 4: clean leakage (severity 300)'),

@@ -131,8 +131,20 @@ export class FuturaSimulator {
         // factory calibration of the biomass: ZeroValue = background capacitance of the medium, multiplier 1.0 = 10^6 cells/ml per pF/cm (manual 2.2, cell culture)
         const calibration = this.find(this.futuraFunctions, "BioMassMeasurement", "CalibrationValues") as UAVariable
         calibration.setValueFromSource({ dataType: DataType.Double, arrayType: 1 as any, value: Float64Array.from([C_INFINITY, 1.0]) } as any)
+        this.installMeasurementMode()
     }
     private sourceName: string
+
+    /** MeasurementMode: running from the start, initialised with CellCulture (0); CurrentValue follows TargetValue */
+    private installMeasurementMode() {
+        const mode = this.find(this.futuraFunctions, "MeasurementMode")
+        promoteToFiniteStateMachine(mode.getChildByName("ControlFunctionState")).setState(LADSFunctionalState.Running)
+        const target = mode.getChildByName("TargetValue") as UAVariable, current = mode.getChildByName("CurrentValue") as UAVariable
+        const setUInt32 = (v: UAVariable, value: number) => v.setValueFromSource({ dataType: DataType.UInt32, value })
+        setUInt32(target, 0)
+        setUInt32(current, 0)      // CellCulture
+        target.on("value_changed", dataValue => setUInt32(current, Number(dataValue.value.value)))
+    }
 
     // ---------------------------------------------------------------- helpers
     private find(root: UAObject, ...path: string[]): any {
@@ -177,6 +189,42 @@ export class FuturaSimulator {
         method("Stop", "Stops the simulation and keeps the process time", () => this.stop())
         method("Reset", "Stops the simulation and sets the process time to zero", () => { this.stop(); this.processHours = 0; this.apply() })
         this.setSpectra(true)    // SPECTRA is installed by default (calls apply())
+    }
+
+    // ---------------------------------------------------------------- command effects
+    private doubleArray(v: UAVariable): number[] {
+        const a = v.readValue().value.value as ArrayLike<number> | null
+        return a ? Array.from(a) : []
+    }
+    private setDoubleArray(v: UAVariable, arr: number[]) {
+        v.setValueFromSource({ dataType: DataType.Double, arrayType: 1 as any, value: Float64Array.from(arr) } as any)
+    }
+    private get biomassCalibration(): UAVariable { return this.find(this.futuraFunctions, "BioMassMeasurement", "CalibrationValues") }
+    private get scanCapacitance(): UAObject { return this.find(this.spectraUnit, "FunctionSet", "ScanCapacitance") }
+
+    /** Zero: the current capacitance becomes the zero of the reading and the current scan becomes the zero of the scan */
+    zeroNow() {
+        const cap = this.find(this.futuraFunctions, "Capacitance", "SensorValue").readValue().value.value as number
+        const cal = this.doubleArray(this.biomassCalibration)
+        cal[0] = cap
+        this.setDoubleArray(this.biomassCalibration, cal)
+        const scan = this.doubleArray(this.scanCapacitance.getChildByName("SensorValue") as UAVariable)
+        if (scan.length > 0) this.setDoubleArray(this.scanCapacitance.getChildByName("CalibrationValues") as UAVariable, scan)
+        this.apply()
+    }
+    /** ClearZero: resets the zero of the reading and of the scan to 0 (the multiplier is kept) */
+    clearZero() {
+        const cal = this.doubleArray(this.biomassCalibration)
+        cal[0] = 0
+        this.setDoubleArray(this.biomassCalibration, cal)
+        const scanCal = this.scanCapacitance.getChildByName("CalibrationValues") as UAVariable
+        this.setDoubleArray(scanCal, this.doubleArray(scanCal).map(() => 0))
+        this.apply()
+    }
+    /** IncrementAutoclaveCount: increases AutoclaveCycles of the probe by 1 */
+    incrementAutoclaveCount() {
+        const v = this.find(this.device, "Components", "Probe", "LifetimeCounters", "AutoclaveCycles") as UAVariable
+        v.setValueFromSource({ dataType: DataType.UInt32, value: Number(v.readValue().value.value ?? 0) + 1 })
     }
 
     // ---------------------------------------------------------------- control
@@ -249,7 +297,8 @@ export class FuturaSimulator {
         const setArray = (name: string, arr: number[]) => (this.find(fs, name, "SensorValue") as UAVariable).setValueFromSource({ dataType: DataType.Double, arrayType: 1 as any, value: Float64Array.from(arr) } as any)
         const setScalar = (name: string, v: number) => this.setDouble(this.find(fs, name, "SensorValue"), v)
         setArray("ScanFrequencies", SCAN_FREQUENCIES)
-        setArray("ScanCapacitance", SCAN_FREQUENCIES.map(f => C_INFINITY + m.deltaC * dispersion(f, m.fc, m.alpha) + noise(0.002 * cap + 0.01)))
+        const scanZero = this.doubleArray(this.scanCapacitance.getChildByName("CalibrationValues") as UAVariable)      // zero per frequency (Zero command)
+        setArray("ScanCapacitance", SCAN_FREQUENCIES.map((f, i) => C_INFINITY + m.deltaC * dispersion(f, m.fc, m.alpha) + noise(0.002 * cap + 0.01) - (scanZero[i] ?? 0)))
         setArray("ScanConductivity", SCAN_FREQUENCIES.map(f => m.sigmaLow + conductivityStep(m.fc, m.deltaC) * (1 - dispersion(f, m.fc, m.alpha)) + noise(0.01)))
         setScalar("DeltaCapacitance", m.deltaC)
         setScalar("CriticalFrequency", m.fc)
