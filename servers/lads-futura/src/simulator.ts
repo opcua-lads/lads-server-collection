@@ -7,7 +7,14 @@ Created programmatically as a "Simulator" BaseObject below the device (own names
 
 Process time advances as  processHours = realSeconds * TimeLapse / 3600.
 Data source: a CSV file (columns: time_h, capacitance, conductivity, temperature; header optional, linear interpolation)
-or, without a file, a built-in fed-batch growth curve (logistic capacitance, slowly falling conductivity, 37 degC).
+or, without a file, a built-in 250 h batch (growth, peak at about 145 h, decline; 37 degC).
+
+The SPECTRA values are derived from a physical model (FUTURA SPECTRA User Manual 2819-09-00, sections 13 and 14):
+  Eq. 7  Cole-Cole function C(f) = dC [1 + (f/fc)^(1-a) sin(a pi/2)] / [1 + 2 (f/fc)^(1-a) sin(a pi/2) + (f/fc)^(2(1-a))] + Cinf
+  Eq. 8  dC = 9 P r Cm / 4                       (P volume fraction, r cell radius, Cm membrane capacitance)
+  Eq. 9  fc = 1 / (2 pi r Cm (1/sigma_i + 1/(2 sigma_e)))
+The probe capacitance is C(580 kHz); the model is inverted (capacitance -> dC -> P, cell number, ...).
+Cole-Cole alpha is empirical (no closed formula in the manual) and follows a typical time course.
 */
 
 import { AccessLevelFlag, DataType, DataValue, LocalizedText, StatusCodes, UAMethod, UAObject, UAVariable, Variant, AddressSpace, Namespace, CallMethodResultOptions } from "node-opcua"
@@ -19,12 +26,66 @@ interface Sample { t: number, cap: number, cond: number, temp: number }
 const SCAN_FREQUENCIES = Array.from({ length: 25 }, (_, i) => Math.round(50 * Math.pow(20000 / 50, i / 24)))   // kHz, log spaced 50 .. 20000
 const MEASURING_FREQUENCY = 580   // kHz
 
+// ---------------------------------------------------------------- physical model
+const DURATION_H = 250
+const MEMBRANE_CAPACITANCE = 1.0   // Cm in uF/cm^2 (user parameter, default 1.0)
+const SIGMA_INTERNAL = 2.5         // cytoplasm conductivity in mS/cm (animal cells: 2 - 3)
+const C_INFINITY = 4               // background capacitance of the suspension in pF/cm (also the zero of the biomass)
+const DELTA_C_PEAK = 250           // pF/cm at the maximum of the batch
+
+// smooth curve (cubic Hermite, finite-difference tangents) through anchor points [time h, value]
+function curve(points: [number, number][], t: number): number {
+    const n = points.length
+    if (t <= points[0][0]) return points[0][1]
+    if (t >= points[n - 1][0]) return points[n - 1][1]
+    let i = 1
+    while (points[i][0] < t) i++
+    const [x0, y0] = points[i - 1], [x1, y1] = points[i]
+    const slope = (k: number) => { const a = points[Math.max(k - 1, 0)], b = points[Math.min(k + 1, n - 1)]; return (b[1] - a[1]) / (b[0] - a[0]) }
+    const h = x1 - x0, u = (t - x0) / h
+    return (2 * u ** 3 - 3 * u ** 2 + 1) * y0 + (u ** 3 - 2 * u ** 2 + u) * h * slope(i - 1) + (-2 * u ** 3 + 3 * u ** 2) * y1 + (u ** 3 - u ** 2) * h * slope(i)
+}
+// typical animal-cell batch: dC relative to its maximum, Cole-Cole alpha, cell radius in um
+const DELTA_C_SHAPE: [number, number][] = [[0, 0.004], [25, 0.05], [50, 0.16], [75, 0.30], [100, 0.47], [120, 0.72], [135, 0.93], [145, 1], [160, 0.93], [180, 0.80], [200, 0.70], [225, 0.60], [250, 0.54]]
+const ALPHA_CURVE: [number, number][] = [[0, 0.30], [15, 0.22], [40, 0.15], [80, 0.08], [120, 0.05], [145, 0.045], [180, 0.06], [220, 0.08], [250, 0.09]]
+const RADIUS_CURVE: [number, number][] = [[0, 7], [100, 7], [120, 6.95], [185, 6.0], [250, 5.0]]
+
+// normalised real part of Eq. 7 (1 at 0 Hz, 0 at infinite frequency)
+const dispersion = (f: number, fc: number, alpha: number) => {
+    const x = Math.pow(f / fc, 1 - alpha), sn = Math.sin(alpha * Math.PI / 2)
+    return (1 + x * sn) / (1 + 2 * x * sn + x * x)
+}
+// Eq. 9, r in um, sigma_e in mS/cm -> kHz
+const characteristicFrequency = (rUm: number, sigmaE: number) =>
+    1 / (2 * Math.PI * (rUm * 1e-4) * (MEMBRANE_CAPACITANCE * 1e-6) * (1 / (SIGMA_INTERNAL * 1e-3) + 1 / (2 * sigmaE * 1e-3))) / 1e3
+// conductivity increment of the dispersion (Kramers-Kronig): 2 pi fc dC, in mS/cm for fc in kHz and dC in pF/cm
+const conductivityStep = (fc: number, deltaC: number) => 2 * Math.PI * fc * deltaC * 1e-6
+
+interface Fit { r: number, alpha: number, fc: number, deltaC: number, P: number, sigmaLow: number, sigmaE: number }
+
+// inversion of the model: probe capacitance (at the measuring frequency) and conductivity -> Cole-Cole parameters and cell data
+function solveModel(cap: number, cond: number, t: number): Fit {
+    const r = curve(RADIUS_CURVE, t), alpha = curve(ALPHA_CURVE, t)
+    let sigmaE = cond, fc = 0, deltaC = 0, P = 0, sigmaLow = cond
+    for (let k = 0; k < 4; k++) {
+        fc = characteristicFrequency(r, sigmaE)
+        const d = dispersion(MEASURING_FREQUENCY, fc, alpha)
+        deltaC = Math.max(0, cap - C_INFINITY) / d
+        P = Math.min(0.6, 4 * deltaC / (9 * (r * 1e-4) * MEMBRANE_CAPACITANCE * 1e6))                     // Eq. 8
+        sigmaLow = cond - conductivityStep(fc, deltaC) * (1 - d)
+        sigmaE = sigmaLow * (1 + P / 2) / (1 - P)                                                             // Maxwell: suspension of non-conducting spheres
+    }
+    return { r, alpha, fc, deltaC, P, sigmaLow, sigmaE }
+}
+
 function builtInProfile(): Sample[] {
-    // 120 h batch: lag ~15 h, exponential phase, plateau; capacitance in pF/cm
     const out: Sample[] = []
-    for (let t = 0; t <= 120; t += 0.5) {
-        const growth = 1 / (1 + Math.exp(-0.11 * (t - 55)))
-        out.push({ t, cap: 4 + 190 * growth, cond: 11.5 - 1.8 * growth - 0.004 * t, temp: 37.0 })
+    for (let t = 0; t <= DURATION_H; t += 0.5) {
+        const shape = curve(DELTA_C_SHAPE, t)
+        const cond = 11.5 - 1.8 * shape - 0.004 * t                  // suspension conductivity, mS/cm
+        const fc = characteristicFrequency(curve(RADIUS_CURVE, t), cond)
+        const cap = C_INFINITY + DELTA_C_PEAK * shape * dispersion(MEASURING_FREQUENCY, fc, curve(ALPHA_CURVE, t))
+        out.push({ t, cap, cond, temp: 37.0 })
     }
     return out
 }
@@ -172,30 +233,29 @@ export class FuturaSimulator {
         // probe operation duration (ms)
         try { this.find(this.device, "Components", "Probe", "OperationCounters", "OperationDuration").setValueFromSource({ dataType: DataType.Double, value: this.processHours * 3600000 }) } catch { /* optional */ }
 
-        if (this.spectraInstalled) this.applySpectra(cap, cond)
+        if (this.spectraInstalled) this.applySpectra(s.cap, s.cond)
     }
 
-    // Cole-Cole type dispersion with fc = 1500 kHz, scaled so that C(580 kHz) equals the measured capacitance
+    // SPECTRA values from the model (Eq. 7 - 9); capacitance and conductivity are the noise-free probe values
     private applySpectra(cap: number, cond: number) {
-        const alpha = 0.1, fc = 1500
-        const disp = (f: number) => 1 / (1 + Math.pow(f / fc, 2 * (1 - alpha)))
-        const deltaC = cap / disp(MEASURING_FREQUENCY)
+        const m = solveModel(cap, cond, this.processHours)
         const fs = this.find(this.spectraUnit, "FunctionSet")
         const setArray = (name: string, arr: number[]) => (this.find(fs, name, "SensorValue") as UAVariable).setValueFromSource({ dataType: DataType.Double, arrayType: 1 as any, value: Float64Array.from(arr) } as any)
         const setScalar = (name: string, v: number) => this.setDouble(this.find(fs, name, "SensorValue"), v)
         setArray("ScanFrequencies", SCAN_FREQUENCIES)
-        setArray("ScanCapacitance", SCAN_FREQUENCIES.map(f => deltaC * disp(f) + noise(0.002 * cap + 0.01)))
-        setArray("ScanConductivity", SCAN_FREQUENCIES.map(f => cond * (1 + 0.1 * (1 - disp(f))) + noise(0.01)))
-        setScalar("DeltaCapacitance", deltaC)
-        setScalar("CriticalFrequency", fc)
-        setScalar("ColeColeAlpha", alpha)
+        setArray("ScanCapacitance", SCAN_FREQUENCIES.map(f => C_INFINITY + m.deltaC * dispersion(f, m.fc, m.alpha) + noise(0.002 * cap + 0.01)))
+        setArray("ScanConductivity", SCAN_FREQUENCIES.map(f => m.sigmaLow + conductivityStep(m.fc, m.deltaC) * (1 - dispersion(f, m.fc, m.alpha)) + noise(0.01)))
+        setScalar("DeltaCapacitance", m.deltaC)
+        setScalar("CriticalFrequency", m.fc)
+        setScalar("ColeColeAlpha", m.alpha)
         setScalar("QualityOfFit", 0.995 + noise(0.003))
-        setScalar("CellDiameter", 15 + noise(0.2))
-        setScalar("CapacitanceInfinity", 0)
-        setScalar("InternalConductivity", 0.6 * cond)
-        setScalar("SuspensionConductivity", cond)
-        setScalar("MediumConductivity", cond * 1.05)
-        setScalar("DerivedBiomass", Math.max(0, deltaC - 4) * 0.5)
-        setScalar("dCapDt", 0)
+        setScalar("CellDiameter", 2 * m.r + noise(0.05))
+        setScalar("CapacitanceInfinity", C_INFINITY)
+        setScalar("InternalConductivity", SIGMA_INTERNAL)
+        setScalar("SuspensionConductivity", m.sigmaLow)
+        setScalar("MediumConductivity", m.sigmaE)
+        setScalar("DerivedBiomass", m.P / (4 / 3 * Math.PI * Math.pow(m.r * 1e-4, 3)) / 1e6)       // million cells/ml (DerivedBiomassType 0)
+        const before = interpolate(this.profile, Math.max(this.profile[0].t, this.processHours - 0.5)).cap
+        setScalar("CapacitanceRate", (cap - before) / Math.min(0.5, Math.max(this.processHours - this.profile[0].t, 0.01)))   // pF/cm per h
     }
 }

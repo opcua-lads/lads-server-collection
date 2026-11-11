@@ -2,7 +2,7 @@
 """Generates nodesets/FuturaConnect.xml (Aber Instruments Futura Connect Xtra, LADS model, layout B).
 Source of truth: 'LADS Information Model for the Futura Connect Xtra (Draft)'. Static address space:
 everything, including ProgramTemplates, ParameterSet variables and alarms, is declared in the types."""
-import sys, datetime
+import sys, re, datetime
 from xml.sax.saxutils import escape
 
 URI = 'http://aberinstruments.com/FuturaConnect/'
@@ -29,6 +29,18 @@ DT = dict(Boolean='i=1', UInt16='i=5', Int32='i=6', UInt32='i=7', Double='i=11',
           LocalizedText='i=21', Duration='i=290', EUInformation='i=887', Range='i=884', EnumValueType='i=7594',
           DeviceHealth='ns=1;i=6244')
 X = lambda s: escape(str(s))
+
+def strip_inst(text):
+    """Removes the references to the EtherNet/IP instances (Inst. n) from descriptions; they stay in the specification."""
+    if not text: return text
+    text = re.sub(r'\s*\([^()]*Inst\. \d+[^()]*\)', '', text)
+    text = re.sub(r';? limit from Inst\. \d+', '', text)
+    return re.sub(r'\s+([.;,])', r'\1', text).strip()
+
+def display_name(browse_name):
+    """Display name from the camel case browse name: a space before every upper case letter except the first;
+    runs of capitals stay together (EURange -> EU Range, ColeColeAlpha -> Cole Cole Alpha)."""
+    return re.sub(r'(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', ' ', browse_name)
 
 def v_str(s): return f'<uax:String>{X(s)}</uax:String>'
 def v_lt(s): return f'<uax:LocalizedText><uax:Text>{X(s)}</uax:Text></uax:LocalizedText>'
@@ -63,7 +75,7 @@ class Node:
     allnodes = []
     def __init__(self, kind, bn, parent=None, rt='HasComponent', td=None, mr=MR_MAND, desc=None, nsb=5, dt=None,
                  value=None, vr=None, ad=None, rw=False, nid=None):
-        self.kind, self.bn, self.nsb, self.td, self.mr, self.desc, self.dt = kind, bn, nsb, td, mr, desc, dt
+        self.kind, self.bn, self.nsb, self.td, self.mr, self.desc, self.dt = kind, bn, nsb, td, mr, strip_inst(desc), dt
         self.value, self.vr, self.ad, self.rw, self.parent, self.rt = value, vr, ad, rw, parent, rt
         self.kids = []
         if nid: self.nid = nid
@@ -84,7 +96,8 @@ class Node:
             if self.ad is not None: a += f' ArrayDimensions="{self.ad}"'
             if self.rw: a += ' AccessLevel="3" UserAccessLevel="3"'
         if self.kind == 'UAObjectType': a += ' IsAbstract="false"'
-        s = f'    <{self.kind} {a}>\n        <DisplayName>{X(self.bn)}</DisplayName>\n'
+        shown = self.bn if self.kind == 'UAObjectType' else display_name(self.bn)
+        s = f'    <{self.kind} {a}>\n        <DisplayName>{X(shown)}</DisplayName>\n'
         if self.desc: s += f'        <Description>{X(self.desc)}</Description>\n'
         s += '        <References>\n'
         if self.kind == 'UAObjectType': s += f'            <Reference ReferenceType="HasSubtype" IsForward="false">{self.td}</Reference>\n'
@@ -160,12 +173,12 @@ def futura_params(ps):
     p_analog(ps, 'FilterLength', 'UInt16', 30, None, (0, 200), 'Filter of the readings in readings; 0 and 1 = off, >= 2 = length of the running average (Inst. 13)')
     p_enum(ps, 'CustomCalibration', CALIB, 0, 'Selects the probe calibration (Inst. 14)')
     ps.var('RockerFilter', DT['UInt16'], v_num('UInt16', 0), rw=True, desc='Filter setting, meaning to be clarified with Aber (Inst. 52)')
-    p_analog(ps, 'PostCleanPulseBlankingPeriod', 'UInt16', 0, None, (0, 0), 'Blanking time of the measurement after a clean pulse; unit and range to be clarified (Inst. 71)')
+    p_analog(ps, 'PostCleanPulseBlankingPeriod', 'UInt16', 0, None, (0, 0), 'Blanking time of the measurement after a clean pulse; unit to be clarified (Inst. 71)')
 def spectra_params(ps):
     p_enum(ps, 'CellType', CELL, 0, 'Cell type for the fit; sets the range of the internal conductivity (Inst. 223)')
     p_enum(ps, 'DerivedBiomassType', BIOM, 0, 'Unit of the derived biomass (Inst. 224)')
-    p_analog(ps, 'MembraneCapacitance', 'Double', 1.0, None, (0, 0), 'Membrane capacitance in uF/cm; range to be clarified (Inst. 225)')
-    p_analog(ps, 'MinimumFrequency', 'UInt16', 106, U_KHZ, (0, 0), 'Lower frequency limit of the evaluation; range to be clarified (Inst. 227)')
+    p_analog(ps, 'MembraneCapacitance', 'Double', 1.0, None, (0, 0), 'Membrane capacitance in uF/cm (Inst. 225)')
+    p_analog(ps, 'MinimumFrequency', 'UInt16', 106, U_KHZ, (0, 0), 'Lower frequency limit of the evaluation (Inst. 227)')
 
 TEMPLATES = [
     ('Zero', 'Zeroes the capacitance (Inst. 18 = 1). Single-frequency mode: current capacitance becomes the ZeroValue; scan mode: zero for all scan frequencies.'),
@@ -174,6 +187,7 @@ TEMPLATES = [
     ('IncrementAutoclaveCount', 'Increases AutoclaveCycles of the probe by 1 (Inst. 35).'),
     ('SlopeCalibration', 'Sets the slope of the biomass calibration; KeyValue property "BioMassMultiplier" (Double) (Inst. 19).')]
 def add_template(pts, name, desc):
+    desc = strip_inst(desc)
     t = pts.obj(name, T['ProgramTemplate'], desc=desc)
     dtm = f'<uax:DateTime>{TODAY}T00:00:00Z</uax:DateTime>'
     t.prop('Author', DT['String'], v_str('Aber Instruments'), nsb=4)
@@ -201,11 +215,11 @@ control_twostate(fs, 'ZeroNow', 'Zero command (Inst. 18 = 1)')
 control_twostate(fs, 'ClearZero', 'Clear zero command (Inst. 18 = 2 and 0.0 into Inst. 15)')
 control_twostate(fs, 'CleanPulseNow', 'Clean pulse command (Inst. 17 = 1)')
 control_twostate(fs, 'IncrementAutoclaveCount', 'Increment autoclave count (Inst. 35)')
-sensor_scalar(fs, 'Capacitance', None, (0, 0), True, 'Capacitance at the measuring frequency, polarisation corrected, pF/cm (Inst. 6); EURange open')
-sensor_scalar(fs, 'Conductivity', U_MS_CM, (0, 0), True, 'Conductivity at the measuring frequency (Inst. 8); EURange open')
+sensor_scalar(fs, 'Capacitance', None, (0, 0), True, 'Capacitance at the measuring frequency, polarisation corrected, pF/cm (Inst. 6)')
+sensor_scalar(fs, 'Conductivity', U_MS_CM, (0, 0), True, 'Conductivity at the measuring frequency (Inst. 8)')
 sensor_scalar(fs, 'BioMassMeasurement', None, (0, 0), True, 'Zeroed and scaled biomass reading, user defined unit, cells/ml with the default multiplier (Inst. 21). CalibrationValues: [0] ZeroValue pF/cm (Inst. 15), [1] BioMassMultiplier (Inst. 19)', cal=[0.0, 1.0])
-sensor_scalar(fs, 'ProbeTemperature', U_CEL, (0, 0), True, 'Process temperature at the probe (Inst. 23); EURange open')
-sensor_scalar(fs, 'ElectronicsTemperature', U_CEL, (0, 0), True, 'Temperature of the FUTURA electronics (Inst. 69); EURange open')
+sensor_scalar(fs, 'ProbeTemperature', U_CEL, (0, 0), True, 'Process temperature at the probe (Inst. 23)')
+sensor_scalar(fs, 'ElectronicsTemperature', U_CEL, (0, 0), True, 'Temperature of the FUTURA electronics (Inst. 69)')
 futura_params(fu_t.obj('ParameterSet', T['BaseObject'], nsb=1))
 pm = fu_t.obj('ProgramManager', T['ProgramManager'], nsb=4)
 pm.obj('ActiveProgram', T['ActiveProgram'], nsb=4)
@@ -225,7 +239,7 @@ N = 25
 sensor_array(fs, 'ScanFrequencies', U_KHZ, (50, 20000), N, False, 'Frequencies of the last scan, 25 values in kHz (Inst. 76)')
 sensor_array(fs, 'ScanCapacitance', None, (0, 0), N, False, 'Capacitance spectrum in pF/cm, index matches ScanFrequencies (Inst. 101, interleaved). CalibrationValues: zero per frequency (Inst. 228)', cal=[0.0] * N)
 sensor_array(fs, 'ScanConductivity', U_MS_CM, (0, 0), N, False, 'Conductivity spectrum, index matches ScanFrequencies (Inst. 101, interleaved)')
-D = [('dCapDt', None, (0, 0), 'Rate of change of the capacitance, pF/cm per h (Inst. 201)'),
+D = [('CapacitanceRate', None, (0, 0), 'Rate of change of the capacitance, pF/cm per h (Inst. 201)'),
      ('DerivedBiomass', None, (0, 0), 'Biomass derived from the spectrum; unit depends on DerivedBiomassType (Inst. 203). EngineeringUnits are set at run time (g/L: GL, volume fraction: 1, cells/ml: none)'),
      ('CellDiameter', U_UM, (0, 0), 'Estimated cell diameter (Inst. 205)'),
      ('ColeColeAlpha', U_ONE, (0, 1), 'Distribution parameter alpha of the Cole-Cole relaxation (Inst. 207)'),
@@ -247,7 +261,7 @@ def comp_common(c, vendor_items, with_sw):
     for name, dt, val in vendor_items:
         c.var(name, DT[dt], val, desc='Aber-specific (not defined by LADS, DI or Machinery)')
 comp_common(probe_t, [], False)
-oc = probe_t.obj('OperationCounters', T['OperationCounters'], nsb=1, rt='HasAddIn', desc='Operating time of the probe (Inst. 25, Probe Total Hours; the server multiplies the hours by 3 600 000)')
+oc = probe_t.obj('OperationCounters', T['OperationCounters'], nsb=1, rt='HasAddIn', desc='Operating time of the probe (register Probe Total Hours; the server multiplies the hours by 3 600 000)')
 oc.prop(PROBE_DURATION, DT['Duration'], '<uax:Double>0</uax:Double>', nsb=1)
 lc = probe_t.obj('LifetimeCounters', T['LifetimeCounters'], nsb=3, rt='HasAddIn')
 for name, d in (('AutoclaveCycles', 'Counted CIP and autoclave cycles (Inst. 27); limit from Inst. 29'), ('LeakageDetections', 'Leakages detected on the probe (Inst. 31); limit from Inst. 33')):

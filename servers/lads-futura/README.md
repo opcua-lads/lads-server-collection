@@ -9,7 +9,7 @@ Example server for the LADS OPC UA model of the Aber Instruments Futura Connect 
 ## Run
 
 ```
-npm run lads-futura                      # port 4851
+npm run lads-futura                      # port 4848
 npm run lads-futura -- -p 4855           # other port
 npm run lads-futura -- --autostart       # start the simulation immediately
 npm run lads-futura -- --data file.csv   # replay recorded data (time_h, capacitance, conductivity, temperature)
@@ -17,8 +17,9 @@ npm run lads-futura -- --data file.csv   # replay recorded data (time_h, capacit
 
 ## Simulator
 
-A `Simulator` object below the device replays a fermentation in time lapse (built-in growth profile or CSV file).
+A `Simulator` object below the device replays a fermentation in time lapse (built-in 250 h batch or CSV file).
 Nodes: `Start()`, `Stop()`, `Reset()`, `Status`, `TimeLapse` (process seconds per real second), `ProcessTime`, `Duration`, `Loop`, `SpectraInstalled`, `DataSource`.
+The SPECTRA values follow the model of the FUTURA SPECTRA User Manual (2819-09-00, sections 13/14): Cole-Cole function (Eq. 7), `DeltaCapacitance = 9 P r Cm / 4` (Eq. 8) and `CriticalFrequency = 1 / (2 pi r Cm (1/sigma_i + 1/(2 sigma_e)))` (Eq. 9). The probe capacitance is the Cole-Cole value at 580 kHz; the model is inverted to volume fraction, cell diameter, cell number and medium conductivity. Cole-Cole alpha has no closed formula in the manual and follows a typical time course.
 With `SpectraInstalled = false` the SPECTRA functions are disabled and its unit stays stopped.
 
 ## Images

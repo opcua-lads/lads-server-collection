@@ -127,7 +127,7 @@ class FuturaServerImpl {
 export async function main() {
     const argv = process.argv.slice()
     const portIdx = argv.indexOf('-p')
-    const port = portIdx !== -1 ? Number(argv[portIdx + 1]) : 4851
+    const port = portIdx !== -1 ? Number(argv[portIdx + 1]) : 4848
     await new FuturaServerImpl(port).start()
 }
 

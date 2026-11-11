@@ -121,7 +121,7 @@
         </References>
     </UAObjectType>
     <UAObject NodeId="ns=5;i=5001" BrowseName="4:FunctionalUnitState" ParentNodeId="ns=5;i=1001">
-        <DisplayName>FunctionalUnitState</DisplayName>
+        <DisplayName>Functional Unit State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1043</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -137,7 +137,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5003" BrowseName="4:FunctionSet" ParentNodeId="ns=5;i=1001">
-        <DisplayName>FunctionSet</DisplayName>
+        <DisplayName>Function Set</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1026</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -155,8 +155,8 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5004" BrowseName="5:MeasurementMode" ParentNodeId="ns=5;i=5003">
-        <DisplayName>MeasurementMode</DisplayName>
-        <Description>Measurement mode (Inst. 1); values as in the register: 0 CellCulture, 1 Bacterial, 2 Microbial, 3 SignalSimulator, 4 Custom, 5 Brewery, 6 Scan</Description>
+        <DisplayName>Measurement Mode</DisplayName>
+        <Description>Measurement mode; values as in the register: 0 CellCulture, 1 Bacterial, 2 Microbial, 3 SignalSimulator, 4 Custom, 5 Brewery, 6 Scan</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1045</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -168,7 +168,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6001" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5004">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -179,7 +179,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=7" NodeId="ns=5;i=6002" BrowseName="4:CurrentValue" ParentNodeId="ns=5;i=5004">
-        <DisplayName>CurrentValue</DisplayName>
+        <DisplayName>Current Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2376</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -191,7 +191,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=21" NodeId="ns=5;i=6003" BrowseName="EnumStrings" ParentNodeId="ns=5;i=6002" ArrayDimensions="7">
-        <DisplayName>EnumStrings</DisplayName>
+        <DisplayName>Enum Strings</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -202,7 +202,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=7" NodeId="ns=5;i=6004" BrowseName="4:TargetValue" ParentNodeId="ns=5;i=5004" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>TargetValue</DisplayName>
+        <DisplayName>Target Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2376</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -214,7 +214,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=21" NodeId="ns=5;i=6005" BrowseName="EnumStrings" ParentNodeId="ns=5;i=6004" ArrayDimensions="7">
-        <DisplayName>EnumStrings</DisplayName>
+        <DisplayName>Enum Strings</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -225,7 +225,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5005" BrowseName="4:ControlFunctionState" ParentNodeId="ns=5;i=5004">
-        <DisplayName>ControlFunctionState</DisplayName>
+        <DisplayName>Control Function State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1044</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -233,8 +233,8 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5006" BrowseName="5:ZeroNow" ParentNodeId="ns=5;i=5003">
-        <DisplayName>ZeroNow</DisplayName>
-        <Description>Zero command (Inst. 18 = 1)</Description>
+        <DisplayName>Zero Now</DisplayName>
+        <Description>Zero command</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1042</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -246,7 +246,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6006" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5006">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -257,7 +257,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6007" BrowseName="4:CurrentValue" ParentNodeId="ns=5;i=5006">
-        <DisplayName>CurrentValue</DisplayName>
+        <DisplayName>Current Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -270,7 +270,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6008" BrowseName="TrueState" ParentNodeId="ns=5;i=6007">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -281,7 +281,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6009" BrowseName="FalseState" ParentNodeId="ns=5;i=6007">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -292,7 +292,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6010" BrowseName="4:TargetValue" ParentNodeId="ns=5;i=5006" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>TargetValue</DisplayName>
+        <DisplayName>Target Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -305,7 +305,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6011" BrowseName="TrueState" ParentNodeId="ns=5;i=6010">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -316,7 +316,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6012" BrowseName="FalseState" ParentNodeId="ns=5;i=6010">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -327,7 +327,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5007" BrowseName="4:ControlFunctionState" ParentNodeId="ns=5;i=5006">
-        <DisplayName>ControlFunctionState</DisplayName>
+        <DisplayName>Control Function State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1044</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -335,8 +335,8 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5008" BrowseName="5:ClearZero" ParentNodeId="ns=5;i=5003">
-        <DisplayName>ClearZero</DisplayName>
-        <Description>Clear zero command (Inst. 18 = 2 and 0.0 into Inst. 15)</Description>
+        <DisplayName>Clear Zero</DisplayName>
+        <Description>Clear zero command</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1042</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -348,7 +348,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6013" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5008">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -359,7 +359,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6014" BrowseName="4:CurrentValue" ParentNodeId="ns=5;i=5008">
-        <DisplayName>CurrentValue</DisplayName>
+        <DisplayName>Current Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -372,7 +372,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6015" BrowseName="TrueState" ParentNodeId="ns=5;i=6014">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -383,7 +383,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6016" BrowseName="FalseState" ParentNodeId="ns=5;i=6014">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -394,7 +394,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6017" BrowseName="4:TargetValue" ParentNodeId="ns=5;i=5008" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>TargetValue</DisplayName>
+        <DisplayName>Target Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -407,7 +407,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6018" BrowseName="TrueState" ParentNodeId="ns=5;i=6017">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -418,7 +418,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6019" BrowseName="FalseState" ParentNodeId="ns=5;i=6017">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -429,7 +429,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5009" BrowseName="4:ControlFunctionState" ParentNodeId="ns=5;i=5008">
-        <DisplayName>ControlFunctionState</DisplayName>
+        <DisplayName>Control Function State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1044</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -437,8 +437,8 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5010" BrowseName="5:CleanPulseNow" ParentNodeId="ns=5;i=5003">
-        <DisplayName>CleanPulseNow</DisplayName>
-        <Description>Clean pulse command (Inst. 17 = 1)</Description>
+        <DisplayName>Clean Pulse Now</DisplayName>
+        <Description>Clean pulse command</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1042</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -450,7 +450,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6020" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5010">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -461,7 +461,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6021" BrowseName="4:CurrentValue" ParentNodeId="ns=5;i=5010">
-        <DisplayName>CurrentValue</DisplayName>
+        <DisplayName>Current Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -474,7 +474,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6022" BrowseName="TrueState" ParentNodeId="ns=5;i=6021">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -485,7 +485,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6023" BrowseName="FalseState" ParentNodeId="ns=5;i=6021">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -496,7 +496,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6024" BrowseName="4:TargetValue" ParentNodeId="ns=5;i=5010" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>TargetValue</DisplayName>
+        <DisplayName>Target Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -509,7 +509,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6025" BrowseName="TrueState" ParentNodeId="ns=5;i=6024">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -520,7 +520,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6026" BrowseName="FalseState" ParentNodeId="ns=5;i=6024">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -531,7 +531,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5011" BrowseName="4:ControlFunctionState" ParentNodeId="ns=5;i=5010">
-        <DisplayName>ControlFunctionState</DisplayName>
+        <DisplayName>Control Function State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1044</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -539,8 +539,8 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5012" BrowseName="5:IncrementAutoclaveCount" ParentNodeId="ns=5;i=5003">
-        <DisplayName>IncrementAutoclaveCount</DisplayName>
-        <Description>Increment autoclave count (Inst. 35)</Description>
+        <DisplayName>Increment Autoclave Count</DisplayName>
+        <Description>Increment autoclave count</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1042</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -552,7 +552,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6027" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5012">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -563,7 +563,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6028" BrowseName="4:CurrentValue" ParentNodeId="ns=5;i=5012">
-        <DisplayName>CurrentValue</DisplayName>
+        <DisplayName>Current Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -576,7 +576,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6029" BrowseName="TrueState" ParentNodeId="ns=5;i=6028">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -587,7 +587,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6030" BrowseName="FalseState" ParentNodeId="ns=5;i=6028">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -598,7 +598,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6031" BrowseName="4:TargetValue" ParentNodeId="ns=5;i=5012" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>TargetValue</DisplayName>
+        <DisplayName>Target Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=2373</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -611,7 +611,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6032" BrowseName="TrueState" ParentNodeId="ns=5;i=6031">
-        <DisplayName>TrueState</DisplayName>
+        <DisplayName>True State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -622,7 +622,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6033" BrowseName="FalseState" ParentNodeId="ns=5;i=6031">
-        <DisplayName>FalseState</DisplayName>
+        <DisplayName>False State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -633,7 +633,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5013" BrowseName="4:ControlFunctionState" ParentNodeId="ns=5;i=5012">
-        <DisplayName>ControlFunctionState</DisplayName>
+        <DisplayName>Control Function State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1044</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -642,7 +642,7 @@
     </UAObject>
     <UAObject NodeId="ns=5;i=5014" BrowseName="5:Capacitance" ParentNodeId="ns=5;i=5003">
         <DisplayName>Capacitance</DisplayName>
-        <Description>Capacitance at the measuring frequency, polarisation corrected, pF/cm (Inst. 6); EURange open</Description>
+        <Description>Capacitance at the measuring frequency, polarisation corrected, pF/cm</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -652,7 +652,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6034" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5014">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -663,7 +663,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6035" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5014">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -673,7 +673,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6036" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6035">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -684,7 +684,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6037" BrowseName="EURange" ParentNodeId="ns=5;i=6035">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -696,7 +696,7 @@
     </UAVariable>
     <UAObject NodeId="ns=5;i=5015" BrowseName="5:Conductivity" ParentNodeId="ns=5;i=5003">
         <DisplayName>Conductivity</DisplayName>
-        <Description>Conductivity at the measuring frequency (Inst. 8); EURange open</Description>
+        <Description>Conductivity at the measuring frequency</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -706,7 +706,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6038" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5015">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -717,7 +717,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6039" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5015">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -727,7 +727,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6040" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6039">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -738,7 +738,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6041" BrowseName="EURange" ParentNodeId="ns=5;i=6039">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -749,8 +749,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5016" BrowseName="5:BioMassMeasurement" ParentNodeId="ns=5;i=5003">
-        <DisplayName>BioMassMeasurement</DisplayName>
-        <Description>Zeroed and scaled biomass reading, user defined unit, cells/ml with the default multiplier (Inst. 21). CalibrationValues: [0] ZeroValue pF/cm (Inst. 15), [1] BioMassMultiplier (Inst. 19)</Description>
+        <DisplayName>Bio Mass Measurement</DisplayName>
+        <Description>Zeroed and scaled biomass reading, user defined unit, cells/ml with the default multiplier. CalibrationValues: [0] ZeroValue pF/cm, [1] BioMassMultiplier</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -761,7 +761,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6042" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5016">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -772,7 +772,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6043" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5016">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -782,7 +782,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6044" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6043">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -793,7 +793,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6045" BrowseName="EURange" ParentNodeId="ns=5;i=6043">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -804,7 +804,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=11" NodeId="ns=5;i=6046" BrowseName="4:CalibrationValues" ParentNodeId="ns=5;i=5016" ArrayDimensions="2" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>CalibrationValues</DisplayName>
+        <DisplayName>Calibration Values</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -815,8 +815,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5017" BrowseName="5:ProbeTemperature" ParentNodeId="ns=5;i=5003">
-        <DisplayName>ProbeTemperature</DisplayName>
-        <Description>Process temperature at the probe (Inst. 23); EURange open</Description>
+        <DisplayName>Probe Temperature</DisplayName>
+        <Description>Process temperature at the probe</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -826,7 +826,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6047" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5017">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -837,7 +837,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6048" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5017">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -847,7 +847,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6049" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6048">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -858,7 +858,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6050" BrowseName="EURange" ParentNodeId="ns=5;i=6048">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -869,8 +869,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5018" BrowseName="5:ElectronicsTemperature" ParentNodeId="ns=5;i=5003">
-        <DisplayName>ElectronicsTemperature</DisplayName>
-        <Description>Temperature of the FUTURA electronics (Inst. 69); EURange open</Description>
+        <DisplayName>Electronics Temperature</DisplayName>
+        <Description>Temperature of the FUTURA electronics</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -880,7 +880,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6051" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5018">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -891,7 +891,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6052" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5018">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -901,7 +901,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6053" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6052">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -912,7 +912,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6054" BrowseName="EURange" ParentNodeId="ns=5;i=6052">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -923,7 +923,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5019" BrowseName="1:ParameterSet" ParentNodeId="ns=5;i=1001">
-        <DisplayName>ParameterSet</DisplayName>
+        <DisplayName>Parameter Set</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=58</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -938,8 +938,8 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6055" BrowseName="5:MeasuringFrequency" ParentNodeId="ns=5;i=5019" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>MeasuringFrequency</DisplayName>
-        <Description>Measuring frequency (Inst. 10)</Description>
+        <DisplayName>Measuring Frequency</DisplayName>
+        <Description>Measuring frequency</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -952,7 +952,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6056" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6055">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -963,7 +963,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6057" BrowseName="EURange" ParentNodeId="ns=5;i=6055">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -974,8 +974,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6058" BrowseName="5:DualFrequency" ParentNodeId="ns=5;i=5019" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>DualFrequency</DisplayName>
-        <Description>Second frequency for polarisation correction, 0 = off (Inst. 11)</Description>
+        <DisplayName>Dual Frequency</DisplayName>
+        <Description>Second frequency for polarisation correction, 0 = off</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -988,7 +988,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6059" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6058">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -999,7 +999,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6060" BrowseName="EURange" ParentNodeId="ns=5;i=6058">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1010,8 +1010,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6061" BrowseName="5:PolarisationCorrection" ParentNodeId="ns=5;i=5019" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>PolarisationCorrection</DisplayName>
-        <Description>Type of polarisation correction (Inst. 12)</Description>
+        <DisplayName>Polarisation Correction</DisplayName>
+        <Description>Type of polarisation correction</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=11238</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1024,7 +1024,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=7594" NodeId="ns=5;i=6062" BrowseName="EnumValues" ParentNodeId="ns=5;i=6061" ArrayDimensions="3">
-        <DisplayName>EnumValues</DisplayName>
+        <DisplayName>Enum Values</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1035,7 +1035,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6063" BrowseName="ValueAsText" ParentNodeId="ns=5;i=6061">
-        <DisplayName>ValueAsText</DisplayName>
+        <DisplayName>Value As Text</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1046,8 +1046,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6064" BrowseName="5:FilterLength" ParentNodeId="ns=5;i=5019" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>FilterLength</DisplayName>
-        <Description>Filter of the readings in readings; 0 and 1 = off, &gt;= 2 = length of the running average (Inst. 13)</Description>
+        <DisplayName>Filter Length</DisplayName>
+        <Description>Filter of the readings in readings; 0 and 1 = off, &gt;= 2 = length of the running average</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1060,7 +1060,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6065" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6064">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1071,7 +1071,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6066" BrowseName="EURange" ParentNodeId="ns=5;i=6064">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1082,8 +1082,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6067" BrowseName="5:CustomCalibration" ParentNodeId="ns=5;i=5019" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>CustomCalibration</DisplayName>
-        <Description>Selects the probe calibration (Inst. 14)</Description>
+        <DisplayName>Custom Calibration</DisplayName>
+        <Description>Selects the probe calibration</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=11238</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1096,7 +1096,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=7594" NodeId="ns=5;i=6068" BrowseName="EnumValues" ParentNodeId="ns=5;i=6067" ArrayDimensions="3">
-        <DisplayName>EnumValues</DisplayName>
+        <DisplayName>Enum Values</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1107,7 +1107,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6069" BrowseName="ValueAsText" ParentNodeId="ns=5;i=6067">
-        <DisplayName>ValueAsText</DisplayName>
+        <DisplayName>Value As Text</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1118,8 +1118,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6070" BrowseName="5:RockerFilter" ParentNodeId="ns=5;i=5019" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>RockerFilter</DisplayName>
-        <Description>Filter setting, meaning to be clarified with Aber (Inst. 52)</Description>
+        <DisplayName>Rocker Filter</DisplayName>
+        <Description>Filter setting, meaning to be clarified with Aber</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1130,8 +1130,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6071" BrowseName="5:PostCleanPulseBlankingPeriod" ParentNodeId="ns=5;i=5019" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>PostCleanPulseBlankingPeriod</DisplayName>
-        <Description>Blanking time of the measurement after a clean pulse; unit and range to be clarified (Inst. 71)</Description>
+        <DisplayName>Post Clean Pulse Blanking Period</DisplayName>
+        <Description>Blanking time of the measurement after a clean pulse; unit to be clarified</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1144,7 +1144,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6072" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6071">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1155,7 +1155,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6073" BrowseName="EURange" ParentNodeId="ns=5;i=6071">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1166,7 +1166,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5020" BrowseName="4:ProgramManager" ParentNodeId="ns=5;i=1001">
-        <DisplayName>ProgramManager</DisplayName>
+        <DisplayName>Program Manager</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1006</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1177,7 +1177,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5021" BrowseName="4:ActiveProgram" ParentNodeId="ns=5;i=5020">
-        <DisplayName>ActiveProgram</DisplayName>
+        <DisplayName>Active Program</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1040</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1185,7 +1185,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5022" BrowseName="4:ProgramTemplateSet" ParentNodeId="ns=5;i=5020">
-        <DisplayName>ProgramTemplateSet</DisplayName>
+        <DisplayName>Program Template Set</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1019</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1199,7 +1199,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6074" BrowseName="NodeVersion" ParentNodeId="ns=5;i=5022">
-        <DisplayName>NodeVersion</DisplayName>
+        <DisplayName>Node Version</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1211,7 +1211,7 @@
     </UAVariable>
     <UAObject NodeId="ns=5;i=5023" BrowseName="5:Zero" ParentNodeId="ns=5;i=5022">
         <DisplayName>Zero</DisplayName>
-        <Description>Zeroes the capacitance (Inst. 18 = 1). Single-frequency mode: current capacitance becomes the ZeroValue; scan mode: zero for all scan frequencies.</Description>
+        <Description>Zeroes the capacitance. Single-frequency mode: current capacitance becomes the ZeroValue; scan mode: zero for all scan frequencies.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1018</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1254,11 +1254,11 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5023</Reference>
         </References>
         <Value>
-            <uax:LocalizedText><uax:Text>Zeroes the capacitance (Inst. 18 = 1). Single-frequency mode: current capacitance becomes the ZeroValue; scan mode: zero for all scan frequencies.</uax:Text></uax:LocalizedText>
+            <uax:LocalizedText><uax:Text>Zeroes the capacitance. Single-frequency mode: current capacitance becomes the ZeroValue; scan mode: zero for all scan frequencies.</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6078" BrowseName="4:DeviceTemplateId" ParentNodeId="ns=5;i=5023">
-        <DisplayName>DeviceTemplateId</DisplayName>
+        <DisplayName>Device Template Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1291,8 +1291,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5024" BrowseName="5:ClearZero" ParentNodeId="ns=5;i=5022">
-        <DisplayName>ClearZero</DisplayName>
-        <Description>Removes zero offsets. Optional property "Scope": All (default), Reading or Scan (Inst. 18 = 2 for the scan zero, 0.0 into Inst. 15 for the reading zero).</Description>
+        <DisplayName>Clear Zero</DisplayName>
+        <Description>Removes zero offsets. Optional property "Scope": All (default), Reading or Scan.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1018</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1335,11 +1335,11 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5024</Reference>
         </References>
         <Value>
-            <uax:LocalizedText><uax:Text>Removes zero offsets. Optional property "Scope": All (default), Reading or Scan (Inst. 18 = 2 for the scan zero, 0.0 into Inst. 15 for the reading zero).</uax:Text></uax:LocalizedText>
+            <uax:LocalizedText><uax:Text>Removes zero offsets. Optional property "Scope": All (default), Reading or Scan.</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6084" BrowseName="4:DeviceTemplateId" ParentNodeId="ns=5;i=5024">
-        <DisplayName>DeviceTemplateId</DisplayName>
+        <DisplayName>Device Template Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1372,8 +1372,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5025" BrowseName="5:CleanPulse" ParentNodeId="ns=5;i=5022">
-        <DisplayName>CleanPulse</DisplayName>
-        <Description>Triggers a clean pulse (Inst. 17 = 1); PostCleanPulseBlankingPeriod applies afterwards.</Description>
+        <DisplayName>Clean Pulse</DisplayName>
+        <Description>Triggers a clean pulse; PostCleanPulseBlankingPeriod applies afterwards.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1018</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1416,11 +1416,11 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5025</Reference>
         </References>
         <Value>
-            <uax:LocalizedText><uax:Text>Triggers a clean pulse (Inst. 17 = 1); PostCleanPulseBlankingPeriod applies afterwards.</uax:Text></uax:LocalizedText>
+            <uax:LocalizedText><uax:Text>Triggers a clean pulse; PostCleanPulseBlankingPeriod applies afterwards.</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6090" BrowseName="4:DeviceTemplateId" ParentNodeId="ns=5;i=5025">
-        <DisplayName>DeviceTemplateId</DisplayName>
+        <DisplayName>Device Template Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1453,8 +1453,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5026" BrowseName="5:IncrementAutoclaveCount" ParentNodeId="ns=5;i=5022">
-        <DisplayName>IncrementAutoclaveCount</DisplayName>
-        <Description>Increases AutoclaveCycles of the probe by 1 (Inst. 35).</Description>
+        <DisplayName>Increment Autoclave Count</DisplayName>
+        <Description>Increases AutoclaveCycles of the probe by 1.</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1018</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1497,11 +1497,11 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5026</Reference>
         </References>
         <Value>
-            <uax:LocalizedText><uax:Text>Increases AutoclaveCycles of the probe by 1 (Inst. 35).</uax:Text></uax:LocalizedText>
+            <uax:LocalizedText><uax:Text>Increases AutoclaveCycles of the probe by 1.</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6096" BrowseName="4:DeviceTemplateId" ParentNodeId="ns=5;i=5026">
-        <DisplayName>DeviceTemplateId</DisplayName>
+        <DisplayName>Device Template Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1534,8 +1534,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5027" BrowseName="5:SlopeCalibration" ParentNodeId="ns=5;i=5022">
-        <DisplayName>SlopeCalibration</DisplayName>
-        <Description>Sets the slope of the biomass calibration; KeyValue property "BioMassMultiplier" (Double) (Inst. 19).</Description>
+        <DisplayName>Slope Calibration</DisplayName>
+        <Description>Sets the slope of the biomass calibration; KeyValue property "BioMassMultiplier" (Double).</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1018</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1578,11 +1578,11 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5027</Reference>
         </References>
         <Value>
-            <uax:LocalizedText><uax:Text>Sets the slope of the biomass calibration; KeyValue property "BioMassMultiplier" (Double) (Inst. 19).</uax:Text></uax:LocalizedText>
+            <uax:LocalizedText><uax:Text>Sets the slope of the biomass calibration; KeyValue property "BioMassMultiplier" (Double).</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6102" BrowseName="4:DeviceTemplateId" ParentNodeId="ns=5;i=5027">
-        <DisplayName>DeviceTemplateId</DisplayName>
+        <DisplayName>Device Template Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1615,7 +1615,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5028" BrowseName="4:ResultSet" ParentNodeId="ns=5;i=5020">
-        <DisplayName>ResultSet</DisplayName>
+        <DisplayName>Result Set</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1020</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1624,7 +1624,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6105" BrowseName="NodeVersion" ParentNodeId="ns=5;i=5028">
-        <DisplayName>NodeVersion</DisplayName>
+        <DisplayName>Node Version</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1635,7 +1635,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5029" BrowseName="4:SupportedPropertiesSet" ParentNodeId="ns=5;i=1001">
-        <DisplayName>SupportedPropertiesSet</DisplayName>
+        <DisplayName>Supported Properties Set</DisplayName>
         <Description>Properties accepted in the Properties argument of StartProgram</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1033</Reference>
@@ -1655,7 +1655,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5031" BrowseName="5:BioMassMultiplier" ParentNodeId="ns=5;i=5029">
-        <DisplayName>BioMassMultiplier</DisplayName>
+        <DisplayName>Bio Mass Multiplier</DisplayName>
         <Description>SlopeCalibration: slope of the biomass calibration (Double)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1035</Reference>
@@ -1664,7 +1664,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5032" BrowseName="4:FunctionalUnitState" ParentNodeId="ns=5;i=1002">
-        <DisplayName>FunctionalUnitState</DisplayName>
+        <DisplayName>Functional Unit State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1043</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1680,7 +1680,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5034" BrowseName="4:FunctionSet" ParentNodeId="ns=5;i=1002">
-        <DisplayName>FunctionSet</DisplayName>
+        <DisplayName>Function Set</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1026</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1702,8 +1702,8 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5035" BrowseName="5:ScanFrequencies" ParentNodeId="ns=5;i=5034">
-        <DisplayName>ScanFrequencies</DisplayName>
-        <Description>Frequencies of the last scan, 25 values in kHz (Inst. 76)</Description>
+        <DisplayName>Scan Frequencies</DisplayName>
+        <Description>Frequencies of the last scan, 25 values in kHz</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1015</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1713,7 +1713,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6106" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5035">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1724,7 +1724,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=11" NodeId="ns=5;i=6107" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5035" ArrayDimensions="25">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1734,7 +1734,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6108" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6107">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1745,7 +1745,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6109" BrowseName="EURange" ParentNodeId="ns=5;i=6107">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1756,8 +1756,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5036" BrowseName="5:ScanCapacitance" ParentNodeId="ns=5;i=5034">
-        <DisplayName>ScanCapacitance</DisplayName>
-        <Description>Capacitance spectrum in pF/cm, index matches ScanFrequencies (Inst. 101, interleaved). CalibrationValues: zero per frequency (Inst. 228)</Description>
+        <DisplayName>Scan Capacitance</DisplayName>
+        <Description>Capacitance spectrum in pF/cm, index matches ScanFrequencies. CalibrationValues: zero per frequency</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1015</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1768,7 +1768,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6110" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5036">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1779,7 +1779,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=11" NodeId="ns=5;i=6111" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5036" ArrayDimensions="25">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1789,7 +1789,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6112" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6111">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1800,7 +1800,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6113" BrowseName="EURange" ParentNodeId="ns=5;i=6111">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1811,7 +1811,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=11" NodeId="ns=5;i=6114" BrowseName="4:CalibrationValues" ParentNodeId="ns=5;i=5036" ArrayDimensions="25">
-        <DisplayName>CalibrationValues</DisplayName>
+        <DisplayName>Calibration Values</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1822,8 +1822,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5037" BrowseName="5:ScanConductivity" ParentNodeId="ns=5;i=5034">
-        <DisplayName>ScanConductivity</DisplayName>
-        <Description>Conductivity spectrum, index matches ScanFrequencies (Inst. 101, interleaved)</Description>
+        <DisplayName>Scan Conductivity</DisplayName>
+        <Description>Conductivity spectrum, index matches ScanFrequencies</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1015</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1833,7 +1833,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6115" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5037">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1844,7 +1844,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=11" NodeId="ns=5;i=6116" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5037" ArrayDimensions="25">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1854,7 +1854,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6117" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6116">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1865,7 +1865,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6118" BrowseName="EURange" ParentNodeId="ns=5;i=6116">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1875,9 +1875,9 @@
             <uax:ExtensionObject><uax:TypeId><uax:Identifier>i=886</uax:Identifier></uax:TypeId><uax:Body><uax:Range><uax:Low>0</uax:Low><uax:High>0</uax:High></uax:Range></uax:Body></uax:ExtensionObject>
         </Value>
     </UAVariable>
-    <UAObject NodeId="ns=5;i=5038" BrowseName="5:dCapDt" ParentNodeId="ns=5;i=5034">
-        <DisplayName>dCapDt</DisplayName>
-        <Description>Rate of change of the capacitance, pF/cm per h (Inst. 201)</Description>
+    <UAObject NodeId="ns=5;i=5038" BrowseName="5:CapacitanceRate" ParentNodeId="ns=5;i=5034">
+        <DisplayName>Capacitance Rate</DisplayName>
+        <Description>Rate of change of the capacitance, pF/cm per h</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1887,7 +1887,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6119" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5038">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1898,7 +1898,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6120" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5038">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1908,7 +1908,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6121" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6120">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1919,7 +1919,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6122" BrowseName="EURange" ParentNodeId="ns=5;i=6120">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1930,8 +1930,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5039" BrowseName="5:DerivedBiomass" ParentNodeId="ns=5;i=5034">
-        <DisplayName>DerivedBiomass</DisplayName>
-        <Description>Biomass derived from the spectrum; unit depends on DerivedBiomassType (Inst. 203). EngineeringUnits are set at run time (g/L: GL, volume fraction: 1, cells/ml: none)</Description>
+        <DisplayName>Derived Biomass</DisplayName>
+        <Description>Biomass derived from the spectrum; unit depends on DerivedBiomassType. EngineeringUnits are set at run time (g/L: GL, volume fraction: 1, cells/ml: none)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1941,7 +1941,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6123" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5039">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1952,7 +1952,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6124" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5039">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1962,7 +1962,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6125" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6124">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1973,7 +1973,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6126" BrowseName="EURange" ParentNodeId="ns=5;i=6124">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1984,8 +1984,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5040" BrowseName="5:CellDiameter" ParentNodeId="ns=5;i=5034">
-        <DisplayName>CellDiameter</DisplayName>
-        <Description>Estimated cell diameter (Inst. 205)</Description>
+        <DisplayName>Cell Diameter</DisplayName>
+        <Description>Estimated cell diameter</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -1995,7 +1995,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6127" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5040">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2006,7 +2006,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6128" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5040">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2016,7 +2016,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6129" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6128">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2027,7 +2027,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6130" BrowseName="EURange" ParentNodeId="ns=5;i=6128">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2038,8 +2038,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5041" BrowseName="5:ColeColeAlpha" ParentNodeId="ns=5;i=5034">
-        <DisplayName>ColeColeAlpha</DisplayName>
-        <Description>Distribution parameter alpha of the Cole-Cole relaxation (Inst. 207)</Description>
+        <DisplayName>Cole Cole Alpha</DisplayName>
+        <Description>Distribution parameter alpha of the Cole-Cole relaxation</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2049,7 +2049,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6131" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5041">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2060,7 +2060,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6132" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5041">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2070,7 +2070,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6133" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6132">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2081,7 +2081,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6134" BrowseName="EURange" ParentNodeId="ns=5;i=6132">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2092,8 +2092,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5042" BrowseName="5:DeltaCapacitance" ParentNodeId="ns=5;i=5034">
-        <DisplayName>DeltaCapacitance</DisplayName>
-        <Description>Delta C = C(low frequency) - C(infinity), pF/cm (Inst. 209)</Description>
+        <DisplayName>Delta Capacitance</DisplayName>
+        <Description>Delta C = C(low frequency) - C(infinity), pF/cm</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2103,7 +2103,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6135" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5042">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2114,7 +2114,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6136" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5042">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2124,7 +2124,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6137" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6136">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2135,7 +2135,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6138" BrowseName="EURange" ParentNodeId="ns=5;i=6136">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2146,8 +2146,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5043" BrowseName="5:CriticalFrequency" ParentNodeId="ns=5;i=5034">
-        <DisplayName>CriticalFrequency</DisplayName>
-        <Description>Characteristic frequency of the relaxation (Inst. 211)</Description>
+        <DisplayName>Critical Frequency</DisplayName>
+        <Description>Characteristic frequency of the relaxation</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2157,7 +2157,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6139" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5043">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2168,7 +2168,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6140" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5043">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2178,7 +2178,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6141" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6140">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2189,7 +2189,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6142" BrowseName="EURange" ParentNodeId="ns=5;i=6140">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2200,8 +2200,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5044" BrowseName="5:InternalConductivity" ParentNodeId="ns=5;i=5034">
-        <DisplayName>InternalConductivity</DisplayName>
-        <Description>Conductivity of the cell interior (Inst. 213)</Description>
+        <DisplayName>Internal Conductivity</DisplayName>
+        <Description>Conductivity of the cell interior</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2211,7 +2211,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6143" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5044">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2222,7 +2222,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6144" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5044">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2232,7 +2232,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6145" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6144">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2243,7 +2243,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6146" BrowseName="EURange" ParentNodeId="ns=5;i=6144">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2254,8 +2254,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5045" BrowseName="5:SuspensionConductivity" ParentNodeId="ns=5;i=5034">
-        <DisplayName>SuspensionConductivity</DisplayName>
-        <Description>Conductivity of the suspension (Inst. 215)</Description>
+        <DisplayName>Suspension Conductivity</DisplayName>
+        <Description>Conductivity of the suspension</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2265,7 +2265,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6147" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5045">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2276,7 +2276,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6148" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5045">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2286,7 +2286,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6149" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6148">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2297,7 +2297,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6150" BrowseName="EURange" ParentNodeId="ns=5;i=6148">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2308,8 +2308,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5046" BrowseName="5:MediumConductivity" ParentNodeId="ns=5;i=5034">
-        <DisplayName>MediumConductivity</DisplayName>
-        <Description>Conductivity of the medium (Inst. 217)</Description>
+        <DisplayName>Medium Conductivity</DisplayName>
+        <Description>Conductivity of the medium</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2319,7 +2319,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6151" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5046">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2330,7 +2330,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6152" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5046">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2340,7 +2340,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6153" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6152">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2351,7 +2351,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6154" BrowseName="EURange" ParentNodeId="ns=5;i=6152">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2362,8 +2362,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5047" BrowseName="5:CapacitanceInfinity" ParentNodeId="ns=5;i=5034">
-        <DisplayName>CapacitanceInfinity</DisplayName>
-        <Description>Capacitance at high frequency, pF/cm (Inst. 219)</Description>
+        <DisplayName>Capacitance Infinity</DisplayName>
+        <Description>Capacitance at high frequency, pF/cm</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2373,7 +2373,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6155" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5047">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2384,7 +2384,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6156" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5047">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2394,7 +2394,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6157" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6156">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2405,7 +2405,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6158" BrowseName="EURange" ParentNodeId="ns=5;i=6156">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2416,8 +2416,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5048" BrowseName="5:QualityOfFit" ParentNodeId="ns=5;i=5034">
-        <DisplayName>QualityOfFit</DisplayName>
-        <Description>Coefficient of determination R2 of the Cole-Cole fit (Inst. 221)</Description>
+        <DisplayName>Quality Of Fit</DisplayName>
+        <Description>Coefficient of determination R2 of the Cole-Cole fit</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2427,7 +2427,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6159" BrowseName="4:IsEnabled" ParentNodeId="ns=5;i=5048">
-        <DisplayName>IsEnabled</DisplayName>
+        <DisplayName>Is Enabled</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2438,7 +2438,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6160" BrowseName="4:SensorValue" ParentNodeId="ns=5;i=5048">
-        <DisplayName>SensorValue</DisplayName>
+        <DisplayName>Sensor Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2448,7 +2448,7 @@
         </References>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6161" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6160">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2459,7 +2459,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6162" BrowseName="EURange" ParentNodeId="ns=5;i=6160">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2470,7 +2470,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5049" BrowseName="1:ParameterSet" ParentNodeId="ns=5;i=1002">
-        <DisplayName>ParameterSet</DisplayName>
+        <DisplayName>Parameter Set</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=58</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2482,8 +2482,8 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6163" BrowseName="5:CellType" ParentNodeId="ns=5;i=5049" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>CellType</DisplayName>
-        <Description>Cell type for the fit; sets the range of the internal conductivity (Inst. 223)</Description>
+        <DisplayName>Cell Type</DisplayName>
+        <Description>Cell type for the fit; sets the range of the internal conductivity</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=11238</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2496,7 +2496,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=7594" NodeId="ns=5;i=6164" BrowseName="EnumValues" ParentNodeId="ns=5;i=6163" ArrayDimensions="3">
-        <DisplayName>EnumValues</DisplayName>
+        <DisplayName>Enum Values</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2507,7 +2507,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6165" BrowseName="ValueAsText" ParentNodeId="ns=5;i=6163">
-        <DisplayName>ValueAsText</DisplayName>
+        <DisplayName>Value As Text</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2518,8 +2518,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6166" BrowseName="5:DerivedBiomassType" ParentNodeId="ns=5;i=5049" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>DerivedBiomassType</DisplayName>
-        <Description>Unit of the derived biomass (Inst. 224)</Description>
+        <DisplayName>Derived Biomass Type</DisplayName>
+        <Description>Unit of the derived biomass</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=11238</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2532,7 +2532,7 @@
         </Value>
     </UAVariable>
     <UAVariable ValueRank="1" DataType="i=7594" NodeId="ns=5;i=6167" BrowseName="EnumValues" ParentNodeId="ns=5;i=6166" ArrayDimensions="3">
-        <DisplayName>EnumValues</DisplayName>
+        <DisplayName>Enum Values</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2543,7 +2543,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6168" BrowseName="ValueAsText" ParentNodeId="ns=5;i=6166">
-        <DisplayName>ValueAsText</DisplayName>
+        <DisplayName>Value As Text</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2554,8 +2554,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6169" BrowseName="5:MembraneCapacitance" ParentNodeId="ns=5;i=5049" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>MembraneCapacitance</DisplayName>
-        <Description>Membrane capacitance in uF/cm; range to be clarified (Inst. 225)</Description>
+        <DisplayName>Membrane Capacitance</DisplayName>
+        <Description>Membrane capacitance in uF/cm</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2568,7 +2568,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6170" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6169">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2579,7 +2579,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6171" BrowseName="EURange" ParentNodeId="ns=5;i=6169">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2590,8 +2590,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6172" BrowseName="5:MinimumFrequency" ParentNodeId="ns=5;i=5049" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>MinimumFrequency</DisplayName>
-        <Description>Lower frequency limit of the evaluation; range to be clarified (Inst. 227)</Description>
+        <DisplayName>Minimum Frequency</DisplayName>
+        <Description>Lower frequency limit of the evaluation</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2604,7 +2604,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6173" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6172">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2615,7 +2615,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=6174" BrowseName="EURange" ParentNodeId="ns=5;i=6172">
-        <DisplayName>EURange</DisplayName>
+        <DisplayName>EU Range</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2660,7 +2660,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6177" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5050">
-        <DisplayName>SerialNumber</DisplayName>
+        <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2671,8 +2671,8 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5051" BrowseName="1:OperationCounters" ParentNodeId="ns=5;i=1003">
-        <DisplayName>OperationCounters</DisplayName>
-        <Description>Operating time of the probe (Inst. 25, Probe Total Hours; the server multiplies the hours by 3 600 000)</Description>
+        <DisplayName>Operation Counters</DisplayName>
+        <Description>Operating time of the probe (register Probe Total Hours; the server multiplies the hours by 3 600 000)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1009</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2681,7 +2681,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=290" NodeId="ns=5;i=6178" BrowseName="1:OperationDuration" ParentNodeId="ns=5;i=5051">
-        <DisplayName>OperationDuration</DisplayName>
+        <DisplayName>Operation Duration</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2692,7 +2692,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5052" BrowseName="3:LifetimeCounters" ParentNodeId="ns=5;i=1003">
-        <DisplayName>LifetimeCounters</DisplayName>
+        <DisplayName>Lifetime Counters</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1015</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2702,8 +2702,8 @@
         </References>
     </UAObject>
     <UAVariable DataType="i=7" NodeId="ns=5;i=6179" BrowseName="5:AutoclaveCycles" ParentNodeId="ns=5;i=5052">
-        <DisplayName>AutoclaveCycles</DisplayName>
-        <Description>Counted CIP and autoclave cycles (Inst. 27); limit from Inst. 29</Description>
+        <DisplayName>Autoclave Cycles</DisplayName>
+        <Description>Counted CIP and autoclave cycles</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=468</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2717,7 +2717,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6180" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6179">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2728,7 +2728,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6181" BrowseName="1:LimitValue" ParentNodeId="ns=5;i=6179">
-        <DisplayName>LimitValue</DisplayName>
+        <DisplayName>Limit Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2739,7 +2739,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6182" BrowseName="1:StartValue" ParentNodeId="ns=5;i=6179">
-        <DisplayName>StartValue</DisplayName>
+        <DisplayName>Start Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2750,8 +2750,8 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=7" NodeId="ns=5;i=6183" BrowseName="5:LeakageDetections" ParentNodeId="ns=5;i=5052">
-        <DisplayName>LeakageDetections</DisplayName>
-        <Description>Leakages detected on the probe (Inst. 31); limit from Inst. 33</Description>
+        <DisplayName>Leakage Detections</DisplayName>
+        <Description>Leakages detected on the probe</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=468</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2765,7 +2765,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=887" NodeId="ns=5;i=6184" BrowseName="EngineeringUnits" ParentNodeId="ns=5;i=6183">
-        <DisplayName>EngineeringUnits</DisplayName>
+        <DisplayName>Engineering Units</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2776,7 +2776,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6185" BrowseName="1:LimitValue" ParentNodeId="ns=5;i=6183">
-        <DisplayName>LimitValue</DisplayName>
+        <DisplayName>Limit Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2787,7 +2787,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=11" NodeId="ns=5;i=6186" BrowseName="1:StartValue" ParentNodeId="ns=5;i=6183">
-        <DisplayName>StartValue</DisplayName>
+        <DisplayName>Start Value</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2833,7 +2833,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6189" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5053">
-        <DisplayName>SerialNumber</DisplayName>
+        <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2844,7 +2844,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6190" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5053">
-        <DisplayName>SoftwareRevision</DisplayName>
+        <DisplayName>Software Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2855,7 +2855,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6191" BrowseName="5:StatusFlags" ParentNodeId="ns=5;i=1004">
-        <DisplayName>StatusFlags</DisplayName>
+        <DisplayName>Status Flags</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
@@ -2867,7 +2867,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=1" NodeId="ns=5;i=6192" BrowseName="5:SignalSimulatorConnected" ParentNodeId="ns=5;i=1004">
-        <DisplayName>SignalSimulatorConnected</DisplayName>
+        <DisplayName>Signal Simulator Connected</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
@@ -2879,7 +2879,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6193" BrowseName="5:BootloaderVersion" ParentNodeId="ns=5;i=1004">
-        <DisplayName>BootloaderVersion</DisplayName>
+        <DisplayName>Bootloader Version</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
@@ -2926,7 +2926,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6196" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5054">
-        <DisplayName>SerialNumber</DisplayName>
+        <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2937,7 +2937,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6197" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5054">
-        <DisplayName>SoftwareRevision</DisplayName>
+        <DisplayName>Software Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2948,7 +2948,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=5" NodeId="ns=5;i=6198" BrowseName="5:StatusFlags" ParentNodeId="ns=5;i=1005">
-        <DisplayName>StatusFlags</DisplayName>
+        <DisplayName>Status Flags</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
@@ -2960,7 +2960,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6199" BrowseName="5:BootloaderVersion" ParentNodeId="ns=5;i=1005">
-        <DisplayName>BootloaderVersion</DisplayName>
+        <DisplayName>Bootloader Version</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
@@ -2972,7 +2972,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=7" NodeId="ns=5;i=6200" BrowseName="5:FirmwareCheckSum" ParentNodeId="ns=5;i=1005">
-        <DisplayName>FirmwareCheckSum</DisplayName>
+        <DisplayName>Firmware Check Sum</DisplayName>
         <Description>Aber-specific (not defined by LADS, DI or Machinery)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
@@ -3006,7 +3006,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6203" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=1000">
-        <DisplayName>SerialNumber</DisplayName>
+        <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3017,7 +3017,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6204" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=1000">
-        <DisplayName>SoftwareRevision</DisplayName>
+        <DisplayName>Software Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3028,7 +3028,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6205" BrowseName="1:HardwareRevision" ParentNodeId="ns=5;i=1000">
-        <DisplayName>HardwareRevision</DisplayName>
+        <DisplayName>Hardware Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3039,7 +3039,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6206" BrowseName="1:DeviceRevision" ParentNodeId="ns=5;i=1000">
-        <DisplayName>DeviceRevision</DisplayName>
+        <DisplayName>Device Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3050,7 +3050,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6207" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=1000">
-        <DisplayName>ProductInstanceUri</DisplayName>
+        <DisplayName>Product Instance Uri</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3061,7 +3061,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6208" BrowseName="1:AssetId" ParentNodeId="ns=5;i=1000">
-        <DisplayName>AssetId</DisplayName>
+        <DisplayName>Asset Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3072,7 +3072,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6209" BrowseName="1:ComponentName" ParentNodeId="ns=5;i=1000">
-        <DisplayName>ComponentName</DisplayName>
+        <DisplayName>Component Name</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3083,7 +3083,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=6" NodeId="ns=5;i=6210" BrowseName="1:RevisionCounter" ParentNodeId="ns=5;i=1000">
-        <DisplayName>RevisionCounter</DisplayName>
+        <DisplayName>Revision Counter</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3094,7 +3094,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6211" BrowseName="1:DeviceManual" ParentNodeId="ns=5;i=1000">
-        <DisplayName>DeviceManual</DisplayName>
+        <DisplayName>Device Manual</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3117,7 +3117,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6213" BrowseName="2:HierarchicalLocation" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>HierarchicalLocation</DisplayName>
+        <DisplayName>Hierarchical Location</DisplayName>
         <Description>Hierarchical location of the device, e.g. FactoryA/BuildingC/Floor1</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3129,7 +3129,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6214" BrowseName="2:OperationalLocation" ParentNodeId="ns=5;i=1000" AccessLevel="3" UserAccessLevel="3">
-        <DisplayName>OperationalLocation</DisplayName>
+        <DisplayName>Operational Location</DisplayName>
         <Description>Operational location of the device, e.g. Warehouse1/Sheet3</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3141,7 +3141,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5055" BrowseName="1:DeviceTypeImage" ParentNodeId="ns=5;i=1000">
-        <DisplayName>DeviceTypeImage</DisplayName>
+        <DisplayName>Device Type Image</DisplayName>
         <Description>Organizes pictures of the device</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
@@ -3193,7 +3193,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6217" BrowseName="1:SerialNumber" ParentNodeId="ns=5;i=5056">
-        <DisplayName>SerialNumber</DisplayName>
+        <DisplayName>Serial Number</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3204,7 +3204,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6218" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=5056">
-        <DisplayName>ProductInstanceUri</DisplayName>
+        <DisplayName>Product Instance Uri</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3215,7 +3215,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6219" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5056">
-        <DisplayName>SoftwareRevision</DisplayName>
+        <DisplayName>Software Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3226,7 +3226,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6220" BrowseName="1:HardwareRevision" ParentNodeId="ns=5;i=5056">
-        <DisplayName>HardwareRevision</DisplayName>
+        <DisplayName>Hardware Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3237,7 +3237,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6221" BrowseName="1:DeviceRevision" ParentNodeId="ns=5;i=5056">
-        <DisplayName>DeviceRevision</DisplayName>
+        <DisplayName>Device Revision</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3248,7 +3248,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6222" BrowseName="1:AssetId" ParentNodeId="ns=5;i=5056">
-        <DisplayName>AssetId</DisplayName>
+        <DisplayName>Asset Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3259,7 +3259,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6223" BrowseName="1:ComponentName" ParentNodeId="ns=5;i=5056">
-        <DisplayName>ComponentName</DisplayName>
+        <DisplayName>Component Name</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3270,7 +3270,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6224" BrowseName="1:DeviceManual" ParentNodeId="ns=5;i=5056">
-        <DisplayName>DeviceManual</DisplayName>
+        <DisplayName>Device Manual</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3281,7 +3281,7 @@
         </Value>
     </UAVariable>
     <UAVariable DataType="i=6" NodeId="ns=5;i=6225" BrowseName="1:RevisionCounter" ParentNodeId="ns=5;i=5056">
-        <DisplayName>RevisionCounter</DisplayName>
+        <DisplayName>Revision Counter</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3303,7 +3303,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5057" BrowseName="4:DeviceState" ParentNodeId="ns=5;i=1000">
-        <DisplayName>DeviceState</DisplayName>
+        <DisplayName>Device State</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1039</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -3311,7 +3311,7 @@
         </References>
     </UAObject>
     <UAVariable DataType="ns=1;i=6244" NodeId="ns=5;i=6227" BrowseName="1:DeviceHealth" ParentNodeId="ns=5;i=1000">
-        <DisplayName>DeviceHealth</DisplayName>
+        <DisplayName>Device Health</DisplayName>
         <Description>NAMUR NE 107: worst DeviceHealth of all active alarms of Probe, Futura and Spectra</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
@@ -3323,7 +3323,7 @@
         </Value>
     </UAVariable>
     <UAObject NodeId="ns=5;i=5058" BrowseName="1:DeviceHealthAlarms" ParentNodeId="ns=5;i=1000">
-        <DisplayName>DeviceHealthAlarms</DisplayName>
+        <DisplayName>Device Health Alarms</DisplayName>
         <Description>One alarm per status bit of the Probe, Futura and Spectra; the alarm source is the affected component</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
@@ -3341,7 +3341,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5059" BrowseName="5:ProbeTemperatureOutOfRange" ParentNodeId="ns=5;i=5058">
-        <DisplayName>ProbeTemperatureOutOfRange</DisplayName>
+        <DisplayName>Probe Temperature Out Of Range</DisplayName>
         <Description>Status bit 2: temperature out of range (severity 300)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15590</Reference>
@@ -3350,7 +3350,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5060" BrowseName="5:ProbeLeakage" ParentNodeId="ns=5;i=5058">
-        <DisplayName>ProbeLeakage</DisplayName>
+        <DisplayName>Probe Leakage</DisplayName>
         <Description>Status bit 3: probe leakage (severity 300)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15739</Reference>
@@ -3359,7 +3359,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5061" BrowseName="5:CleanLeakage" ParentNodeId="ns=5;i=5058">
-        <DisplayName>CleanLeakage</DisplayName>
+        <DisplayName>Clean Leakage</DisplayName>
         <Description>Status bit 4: clean leakage (severity 300)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15739</Reference>
@@ -3368,7 +3368,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5062" BrowseName="5:ProbeMemoryFileMissing" ParentNodeId="ns=5;i=5058">
-        <DisplayName>ProbeMemoryFileMissing</DisplayName>
+        <DisplayName>Probe Memory File Missing</DisplayName>
         <Description>Status bit 7: probe memory, file missing (severity 600)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15292</Reference>
@@ -3377,7 +3377,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5063" BrowseName="5:NoProbe" ParentNodeId="ns=5;i=5058">
-        <DisplayName>NoProbe</DisplayName>
+        <DisplayName>No Probe</DisplayName>
         <Description>Status bit 9: no probe (severity 600); measurements get Bad_SensorFailure</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15292</Reference>
@@ -3386,7 +3386,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5064" BrowseName="5:FuturaCapacitanceOutOfRange" ParentNodeId="ns=5;i=5058">
-        <DisplayName>FuturaCapacitanceOutOfRange</DisplayName>
+        <DisplayName>Futura Capacitance Out Of Range</DisplayName>
         <Description>Status bit 0: capacitance out of range (severity 300)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15590</Reference>
@@ -3395,7 +3395,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5065" BrowseName="5:FuturaConductivityOutOfRange" ParentNodeId="ns=5;i=5058">
-        <DisplayName>FuturaConductivityOutOfRange</DisplayName>
+        <DisplayName>Futura Conductivity Out Of Range</DisplayName>
         <Description>Status bit 1: conductivity out of range (severity 300)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15590</Reference>
@@ -3404,7 +3404,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5066" BrowseName="5:FuturaMemoryFileMissing" ParentNodeId="ns=5;i=5058">
-        <DisplayName>FuturaMemoryFileMissing</DisplayName>
+        <DisplayName>Futura Memory File Missing</DisplayName>
         <Description>Status bit 6: FUTURA memory, file missing (severity 600)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15292</Reference>
@@ -3413,7 +3413,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5067" BrowseName="5:SpectraCurveFitError" ParentNodeId="ns=5;i=5058">
-        <DisplayName>SpectraCurveFitError</DisplayName>
+        <DisplayName>Spectra Curve Fit Error</DisplayName>
         <Description>Status bit 12: Cole-Cole curve fit error (severity 300)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=15590</Reference>
@@ -3460,7 +3460,7 @@
         </References>
     </UAObject>
     <UAObject NodeId="ns=5;i=5072" BrowseName="4:FunctionalUnitSet" ParentNodeId="ns=5;i=1000">
-        <DisplayName>FunctionalUnitSet</DisplayName>
+        <DisplayName>Functional Unit Set</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1023</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
