@@ -20,6 +20,7 @@ npm run lads-futura -- --data file.csv   # replay recorded data (time_h, capacit
 A `Simulator` object below the device replays a fermentation in time lapse (built-in 250 h batch or CSV file).
 Nodes: `Start()`, `Stop()`, `Reset()`, `Status`, `TimeLapse` (process seconds per real second), `ProcessTime`, `Duration`, `Loop`, `SpectraInstalled`, `DataSource`.
 The SPECTRA values follow the model of the FUTURA SPECTRA User Manual (2819-09-00, sections 13/14): Cole-Cole function (Eq. 7), `DeltaCapacitance = 9 P r Cm / 4` (Eq. 8) and `CriticalFrequency = 1 / (2 pi r Cm (1/sigma_i + 1/(2 sigma_e)))` (Eq. 9). The probe capacitance is the Cole-Cole value at 580 kHz; the model is inverted to volume fraction, cell diameter, cell number and medium conductivity. Cole-Cole alpha has no closed formula in the manual and follows a typical time course.
+`BioMassMeasurement` = (`Capacitance` - ZeroValue) x BioMassMultiplier with the `CalibrationValues` of the function (start values 4 pF/cm and 1.0; both writable). With 1.0 the reading is the viable cell density in 10^6 cells/ml (rule of thumb of the manual: 1 pF/cm = 10^6 cells/ml, Cell Culture mode).
 With `SpectraInstalled = false` the SPECTRA functions are disabled and its unit stays stopped.
 
 ## Commands

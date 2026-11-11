@@ -128,6 +128,9 @@ export class FuturaSimulator {
         this.profile = dataFile ? loadCsv(dataFile) : builtInProfile()
         this.sourceName = dataFile ?? "built-in fed-batch profile"
         this.createNodes()
+        // factory calibration of the biomass: ZeroValue = background capacitance of the medium, multiplier 1.0 = 10^6 cells/ml per pF/cm (manual 2.2, cell culture)
+        const calibration = this.find(this.futuraFunctions, "BioMassMeasurement", "CalibrationValues") as UAVariable
+        calibration.setValueFromSource({ dataType: DataType.Double, arrayType: 1 as any, value: Float64Array.from([C_INFINITY, 1.0]) } as any)
     }
     private sourceName: string
 
@@ -227,7 +230,10 @@ export class FuturaSimulator {
         const cond = s.cond + noise(0.02)
         this.setDouble(value("Capacitance"), cap)
         this.setDouble(value("Conductivity"), cond)
-        this.setDouble(value("BioMassMeasurement"), Math.max(0, cap - 4) * 1.0)    // zero 4 pF/cm, multiplier 1.0
+        // BioMassMeasurement = (Capacitance - ZeroValue) x BioMassMultiplier, both from CalibrationValues (client writable)
+        const calibration = this.find(fs, "BioMassMeasurement", "CalibrationValues").readValue().value.value as ArrayLike<number> | null
+        const zero = calibration?.[0] ?? 0, multiplier = calibration?.[1] ?? 1
+        this.setDouble(value("BioMassMeasurement"), Math.max(0, cap - zero) * multiplier)
         this.setDouble(value("ProbeTemperature"), s.temp + noise(0.05))
         this.setDouble(value("ElectronicsTemperature"), 31 + 0.02 * Math.min(this.processHours, 60) + noise(0.03))
         // probe operation duration (ms)

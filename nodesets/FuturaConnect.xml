@@ -761,7 +761,7 @@
     </UAVariable>
     <UAObject NodeId="ns=5;i=5016" BrowseName="5:BioMassMeasurement" ParentNodeId="ns=5;i=5003">
         <DisplayName>Bio Mass Measurement</DisplayName>
-        <Description>Zeroed and scaled biomass reading, user defined unit, cells/ml with the default multiplier. CalibrationValues: [0] ZeroValue pF/cm, [1] BioMassMultiplier</Description>
+        <Description>Zeroed and scaled biomass reading: (Capacitance - ZeroValue) x BioMassMultiplier, user defined unit. In Cell Culture mode the multiplier 1.0 gives 10^6 viable cells/ml (rule of thumb of the manual: 1 pF/cm = 10^6 cells/ml). CalibrationValues: [0] ZeroValue pF/cm, [1] BioMassMultiplier</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1016</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
