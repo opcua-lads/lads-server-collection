@@ -22,6 +22,14 @@ Nodes: `Start()`, `Stop()`, `Reset()`, `Status`, `TimeLapse` (process seconds pe
 The SPECTRA values follow the model of the FUTURA SPECTRA User Manual (2819-09-00, sections 13/14): Cole-Cole function (Eq. 7), `DeltaCapacitance = 9 P r Cm / 4` (Eq. 8) and `CriticalFrequency = 1 / (2 pi r Cm (1/sigma_i + 1/(2 sigma_e)))` (Eq. 9). The probe capacitance is the Cole-Cole value at 580 kHz; the model is inverted to volume fraction, cell diameter, cell number and medium conductivity. Cole-Cole alpha has no closed formula in the manual and follows a typical time course.
 With `SpectraInstalled = false` the SPECTRA functions are disabled and its unit stays stopped.
 
+## Commands
+
+ZeroNow, ClearZero, CleanPulseNow and IncrementAutoclaveCount are TwoStateDiscreteControlFunctions for clients that cannot call methods; the same commands are the ProgramTemplates Zero, ClearZero, CleanPulse and IncrementAutoclaveCount (`StartProgram` of the Futura unit). Both routes behave the same (`src/commands.ts`):
+- `ControlFunctionState` is always Running
+- writing `TargetValue = true` (or `StartProgram`) while `CurrentValue` is true returns `BadInvalidState`
+- otherwise an Info event "<Function> initiated" is raised, `CurrentValue` becomes true (executing), `TargetValue` returns to false after about 100 ms and `CurrentValue` after about 1000 ms
+- `SlopeCalibration` is not simulated (`BadNotSupported`)
+
 ## Images
 
 All images in `src/resources/images` are exposed below `DeviceTypeImage`.

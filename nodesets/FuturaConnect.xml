@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<UANodeSet LastModified="2026-11-10T00:00:00Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<UANodeSet LastModified="2026-11-11T00:00:00Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <NamespaceUris>
         <Uri>http://opcfoundation.org/UA/DI/</Uri>
         <Uri>http://opcfoundation.org/UA/AMB/</Uri>
@@ -8,7 +8,7 @@
         <Uri>http://aberinstruments.com/FuturaConnect/</Uri>
     </NamespaceUris>
     <Models>
-        <Model ModelUri="http://aberinstruments.com/FuturaConnect/" PublicationDate="2026-11-10T00:00:00Z" Version="0.1.0">
+        <Model ModelUri="http://aberinstruments.com/FuturaConnect/" PublicationDate="2026-11-11T00:00:00Z" Version="0.1.0">
             <RequiredModel ModelUri="http://opcfoundation.org/UA/" PublicationDate="2023-12-15T00:00:00Z" Version="1.05.03"/>
             <RequiredModel ModelUri="http://opcfoundation.org/UA/DI/" PublicationDate="2022-11-03T00:00:00Z" Version="1.04.0"/>
             <RequiredModel ModelUri="http://opcfoundation.org/UA/AMB/" PublicationDate="2022-11-01T00:00:00Z" Version="1.01.0"/>
@@ -126,8 +126,19 @@
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1043</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=1001</Reference>
+            <Reference ReferenceType="HasComponent">ns=5;i=7001</Reference>
         </References>
     </UAObject>
+    <UAMethod NodeId="ns=5;i=7001" BrowseName="4:StartProgram" ParentNodeId="ns=5;i=5001">
+        <DisplayName>Start Program</DisplayName>
+        <Description>Starts one of the ProgramTemplates (Zero, ClearZero, CleanPulse, IncrementAutoclaveCount) with the same behaviour as the corresponding command function</Description>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5001</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6098</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=6121</Reference>
+        </References>
+    </UAMethod>
     <UAObject NodeId="ns=5;i=5002" BrowseName="1:Lock" ParentNodeId="ns=5;i=1001">
         <DisplayName>Lock</DisplayName>
         <References>
@@ -1243,7 +1254,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5023</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6077" BrowseName="4:Description" ParentNodeId="ns=5;i=5023">
@@ -1276,7 +1287,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5023</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6080" BrowseName="4:Version" ParentNodeId="ns=5;i=5023">
@@ -1324,7 +1335,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5024</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6083" BrowseName="4:Description" ParentNodeId="ns=5;i=5024">
@@ -1357,7 +1368,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5024</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6086" BrowseName="4:Version" ParentNodeId="ns=5;i=5024">
@@ -1405,7 +1416,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5025</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6089" BrowseName="4:Description" ParentNodeId="ns=5;i=5025">
@@ -1438,7 +1449,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5025</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6092" BrowseName="4:Version" ParentNodeId="ns=5;i=5025">
@@ -1486,7 +1497,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5026</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6095" BrowseName="4:Description" ParentNodeId="ns=5;i=5026">
@@ -1519,7 +1530,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5026</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6098" BrowseName="4:Version" ParentNodeId="ns=5;i=5026">
@@ -1567,7 +1578,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5027</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=6101" BrowseName="4:Description" ParentNodeId="ns=5;i=5027">
@@ -1600,7 +1611,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5027</Reference>
         </References>
         <Value>
-            <uax:DateTime>2026-11-10T00:00:00Z</uax:DateTime>
+            <uax:DateTime>2026-11-11T00:00:00Z</uax:DateTime>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6104" BrowseName="4:Version" ParentNodeId="ns=5;i=5027">

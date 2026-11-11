@@ -105,6 +105,7 @@ class Node:
         if self.parent is not None and self.mr: s += f'            <Reference ReferenceType="HasModellingRule">{self.mr}</Reference>\n'
         if self.parent is not None: s += f'            <Reference ReferenceType="{self.rt}" IsForward="false">{self.parent.nid}</Reference>\n'
         for k in self.kids: s += f'            <Reference ReferenceType="{k.rt}">{k.nid}</Reference>\n'
+        for r in getattr(self, 'extra', []): s += f'            <Reference ReferenceType="HasProperty">{r}</Reference>\n'      # argument properties of the standard method
         s += '        </References>\n'
         if self.kind == 'UAVariable' and self.value is not None: s += f'        <Value>\n            {self.value}\n        </Value>\n'
         return s + f'    </{self.kind}>\n'
@@ -207,7 +208,10 @@ fe_t  = objtype('ns=5;i=1004', 'FuturaElectronicsType', T['LADSComponent'], 'FUT
 sm_t  = objtype('ns=5;i=1005', 'SpectraModuleType', T['LADSComponent'], 'SPECTRA module; the component exists statically, empty if no SPECTRA is installed')
 
 # FuturaUnitType
-fu_t.obj('FunctionalUnitState', T['FunctionalUnitState'], nsb=4)
+state = fu_t.obj('FunctionalUnitState', T['FunctionalUnitState'], nsb=4)
+# StartProgram is optional in FunctionalUnitStateMachineType; the FUTURA declares it (same Input/OutputArguments as the standard method) to start the command ProgramTemplates
+start_program = Node('UAMethod', 'StartProgram', state, td=None, nsb=4, nid='ns=5;i=7001', desc='Starts one of the ProgramTemplates (Zero, ClearZero, CleanPulse, IncrementAutoclaveCount) with the same behaviour as the corresponding command function')
+start_program.extra = ['ns=4;i=6098', 'ns=4;i=6121']
 fu_t.obj('Lock', T['Lock'], nsb=1)
 fs = fu_t.obj('FunctionSet', T['FunctionSet'], nsb=4)
 control_multistate(fs, 'MeasurementMode', MODES, 4, 'Measurement mode (Inst. 1); values as in the register: 0 CellCulture, 1 Bacterial, 2 Microbial, 3 SignalSimulator, 4 Custom, 5 Brewery, 6 Scan')

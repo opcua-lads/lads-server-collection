@@ -13,6 +13,7 @@ import { createServer, DIObjectIds, DeviceTypeImage, initComponent, LADSDeviceHe
 import { LADSDevice } from "@interfaces"
 import { exit } from "process"
 import { FuturaSimulator } from "./simulator"
+import { installFuturaCommands } from "./commands"
 
 const NS_FUTURA = "http://aberinstruments.com/FuturaConnect/"
 
@@ -103,6 +104,9 @@ class FuturaServerImpl {
 
         // device helper: Machines folder, event notifier tree, device state machine (Initialization -> Operating)
         new LADSDeviceHelper(ladsDevice, { initializationTime: 2000, shutdownTime: 2000, raiseEvents: false, adjustFunctionIsEnabled: false })
+
+        // command behaviour of the TwoStateDiscreteControlFunctions and StartProgram of the FUTURA unit
+        installFuturaCommands(ladsDevice)
 
         // time-lapse simulator (programmatically created Simulator object below the device)
         const dataIdx = process.argv.indexOf('--data')
