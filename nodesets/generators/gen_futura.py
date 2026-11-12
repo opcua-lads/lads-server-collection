@@ -228,9 +228,9 @@ futura_params(fu_t.obj('ParameterSet', T['BaseObject'], nsb=1))
 pm = fu_t.obj('ProgramManager', T['ProgramManager'], nsb=4)
 pm.obj('ActiveProgram', T['ActiveProgram'], nsb=4)
 pts = pm.obj('ProgramTemplateSet', T['ProgramTemplateSet'], nsb=4)
-pts.prop('NodeVersion', DT['String'], v_str('1'))
+pts.prop('NodeVersion', DT['String'], v_str('0'))
 for n, d in TEMPLATES: add_template(pts, n, d)
-rs = pm.obj('ResultSet', T['ResultSet'], nsb=4); rs.prop('NodeVersion', DT['String'], v_str('1'))
+rs = pm.obj('ResultSet', T['ResultSet'], nsb=4); rs.prop('NodeVersion', DT['String'], v_str('0'))
 sp = fu_t.obj('SupportedPropertiesSet', T['SupportedPropertiesSet'], nsb=4, desc='Properties accepted in the Properties argument of StartProgram')
 sp.obj('Scope', T['SupportedProperty'], desc='ClearZero: All (default), Reading or Scan')
 sp.obj('BioMassMultiplier', T['SupportedProperty'], desc='SlopeCalibration: slope of the biomass calibration (Double)')
@@ -262,6 +262,7 @@ def comp_common(c, vendor_items, with_sw):
     ident = {'Manufacturer': (DT['LocalizedText'], v_lt('Aber Instruments')), 'Model': (DT['LocalizedText'], v_lt('')), 'SerialNumber': (DT['String'], v_str(''))}
     if with_sw: ident['SoftwareRevision'] = (DT['String'], v_str(''))
     add_ident(c, T['ComponentIdent'], ident)
+    c.prop('Model', DT['LocalizedText'], v_lt(''), nsb=1, desc='Model of the component (mandatory)')
     for name, dt, val in vendor_items:
         c.var(name, DT[dt], val, desc='Aber-specific (not defined by LADS, DI or Machinery)')
 comp_common(probe_t, [], False)
@@ -271,7 +272,7 @@ lc = probe_t.obj('LifetimeCounters', T['LifetimeCounters'], nsb=3, rt='HasAddIn'
 for name, d in (('AutoclaveCycles', 'Counted CIP and autoclave cycles (Inst. 27); limit from Inst. 29 (placeholder 100, to be confirmed)'), ('LeakageDetections', 'Leakages detected on the probe (Inst. 31); limit from Inst. 33 (placeholder 100, to be confirmed)')):
     v = lc.var(name, DT['UInt32'], v_num('UInt32', 0), td=T['LifetimeVariable'], nsb=5, desc=d)
     v.prop('EngineeringUnits', DT['EUInformation'], v_eu(U_ONE))
-    v.prop('LimitValue', DT['Double'], v_num('Double', 100), nsb=1); v.prop('StartValue', DT['Double'], v_num('Double', 0), nsb=1)
+    v.prop('LimitValue', DT['UInt32'], v_num('UInt32', 100), nsb=1); v.prop('StartValue', DT['UInt32'], v_num('UInt32', 0), nsb=1)
 comp_common(fe_t, [('SignalSimulatorConnected', 'Boolean', v_bool(False)), ('BootloaderVersion', 'String', v_str(''))], True)
 comp_common(sm_t, [('BootloaderVersion', 'String', v_str('')), ('FirmwareCheckSum', 'UInt32', v_num('UInt32', 0))], True)
 
@@ -310,10 +311,61 @@ comps.obj('Probe', probe_t.nid, desc='Probe'); comps.obj('Futura', fe_t.nid, des
 fus = dev_t.obj('FunctionalUnitSet', T['FunctionalUnitSet'], nsb=4)
 fus.obj('Futura', FU_ID, desc='FUTURA functional unit'); fus.obj('Spectra', SU_ID, desc='SPECTRA functional unit')
 
+
+# ============================ completion of the mandatory instance declarations
+# OPC UA modelling convention: an instance declaration inside a type must declare again the mandatory children of its type definition
+# (and of the instance declaration it overrides in a supertype); a subtype re-declares the mandatory declarations of its supertypes.
+# Done recursively until nothing is missing (generators/nodeset_model.py). New NodeIds start at EXPAND_BASE so that all other NodeIds stay stable.
+sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__)))
+from nodeset_model import Model, BASE
+import os
+URIS = [BASE, 'http://opcfoundation.org/UA/DI/', 'http://opcfoundation.org/UA/AMB/', 'http://opcfoundation.org/UA/Machinery/', 'http://opcfoundation.org/UA/LADS/', URI]
+REFNAME = {'i=47': 'HasComponent', 'i=46': 'HasProperty', 'i=17604': 'HasAddIn', 'i=35': 'Organizes', 'i=49': 'HasOrderedComponent'}
+EXPAND_BASE = 10000
+def _tup(s):
+    m = re.match(r'ns=(\d+);(.*)', s); return (URIS[int(m.group(1))], m.group(2)) if m else (BASE, s)
+def _str(t):
+    i = URIS.index(t[0]); return (f'ns={i};' if i else '') + t[1]
+def _own_model(base):
+    m = Model(); m.nodes = dict(base.nodes)
+    for n in Node.allnodes:
+        is_type = n.kind == 'UAObjectType'
+        m.nodes[_tup(n.nid)] = dict(cls=n.kind, id=_tup(n.nid), name=(URIS[n.nsb], n.bn), rule=n.mr, own=True,
+                                    td=None if is_type or not n.td else _tup(n.td), sup=_tup(n.td) if is_type else None,
+                                    dt=_tup(n.dt) if n.dt else None, vr=n.vr, ad=n.ad, desc=n.desc, value=n.value, access='3' if n.rw else None,
+                                    children=[(k.rt, _tup(k.nid)) for k in n.kids] + [('i=46', _tup(r)) for r in getattr(n, 'extra', [])])
+    inv = {v: k for k, v in REFNAME.items()}
+    for n in Node.allnodes:
+        for k in n.kids: m.nodes[_tup(k.nid)].update(reftype=inv.get(k.rt, 'i=47'), parent=_tup(n.nid))
+    return m
+def expand_mandatory():
+    base = Model()
+    d = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+    for f in ['Opc.Ua.NodeSet2.xml', 'Opc.Ua.Di.NodeSet2.xml', 'Opc.Ua.AMB.NodeSet2.xml', 'Opc.Ua.Machinery.NodeSet2.xml', 'Opc.Ua.LADS.NodeSet2.xml']:
+        base.load(os.path.join(d, f))
+    counter, added = EXPAND_BASE, 0
+    for _ in range(25):
+        model = _own_model(base)
+        gaps = model.gaps()
+        if not gaps: break
+        byid = {_tup(n.nid): n for n in Node.allnodes}
+        for owner, decl, path in gaps:
+            counter += 1; added += 1
+            n = Node(decl['cls'], decl['name'][1], byid[owner], rt=REFNAME.get(decl.get('reftype'), 'HasComponent'), mr=MR_MAND,
+                     td=_str(decl['td']) if decl['td'] else None, nsb=URIS.index(decl['name'][0]),
+                     dt=_str(model.data_type(decl)) if decl['cls'] == 'UAVariable' else None, desc=decl.get('desc'),
+                     nid=f'ns=5;i={counter}', rw=decl.get('access') == '3', vr=decl.get('vr'), ad=decl.get('ad'), value=v_str('0') if decl['name'][1] == 'NodeVersion' else decl.get('value'))
+            if decl['cls'] == 'UAMethod':          # input / output arguments: the properties of the standard method are referenced
+                n.extra = [_str(c) for r, c in model.nodes[decl['id']]['children'] if r in ('i=46', 'HasProperty')]
+    else:
+        raise SystemExit('expand_mandatory: no fixpoint')
+    print('expanded', added, 'mandatory instance declarations')
+expand_mandatory()
+
 # ============================ output
 ALIAS = {'Boolean': 'i=1', 'UInt16': 'i=5', 'Int32': 'i=6', 'UInt32': 'i=7', 'Double': 'i=11', 'String': 'i=12', 'DateTime': 'i=13',
          'LocalizedText': 'i=21', 'Duration': 'i=290', 'EUInformation': 'i=887', 'Range': 'i=884', 'EnumValueType': 'i=7594',
-         'HasComponent': 'i=47', 'HasProperty': 'i=46', 'HasSubtype': 'i=45', 'HasTypeDefinition': 'i=40', 'HasModellingRule': 'i=37', 'HasAddIn': 'i=17604'}
+         'HasComponent': 'i=47', 'HasProperty': 'i=46', 'HasSubtype': 'i=45', 'HasTypeDefinition': 'i=40', 'HasModellingRule': 'i=37', 'HasAddIn': 'i=17604', 'Organizes': 'i=35', 'HasOrderedComponent': 'i=49'}
 with open(OUT, 'w', encoding='utf-8') as f:
     f.write('<?xml version="1.0" encoding="utf-8"?>\n')
     f.write('<UANodeSet LastModified="%sT00:00:00Z" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:uax="http://opcfoundation.org/UA/2008/02/Types.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema">\n' % TODAY)
