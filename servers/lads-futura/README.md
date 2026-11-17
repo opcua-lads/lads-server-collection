@@ -42,6 +42,12 @@ Effects on the simulated device:
 
 The `StatusFlags` register (UInt16) sits on the device next to `DeviceHealth`; the alarms of `DeviceHealthAlarms` are derived from its bits (`src/health.ts`), their source is the affected component (Probe, Futura or Spectra), and `DeviceHealth` is the worst active alarm (NAMUR NE 107). The Simulator object has a writable `StatusFlags` to trigger them: bits 0 capacitance, 1 conductivity, 2 temperature out of range, 3 probe leakage, 4 clean leakage, 6 FUTURA memory, 7 probe memory, 9 no probe, 10 signal simulator connected (sets `SignalSimulatorConnected`), 12 curve fit error. Events are raised when an alarm becomes active or inactive and whenever `DeviceHealth` changes. Note: `DeviceHealth = FAILURE` aborts running functional units (behaviour of `LADSDeviceHelper`).
 
+## State machines
+
+- **FunctionalUnitState (Futura, Spectra):** `AvailableStates` are Stopped, Running, Stopping, Aborting, Aborted and Clearing, `AvailableTransitions` all seven transitions of the FunctionalStateMachineType between them. Stopped -> Running at start, Running -> Stopping -> Stopped at stop. The Spectra unit stays Stopped without a SPECTRA. A device failure (DeviceHealth FAILURE, e.g. no probe) aborts the running units (Running -> Aborting -> Aborted after 1 s); this is done by the generic `LADSDeviceHelper` in `utils`. The `Clear` method of the unit (Aborted -> Clearing -> Stopped) then returns the unit to Running: the FUTURA unit always, the SPECTRA unit only if a SPECTRA is installed, otherwise it stays Stopped. Clear is rejected with Bad_InvalidState while the unit is not Aborted or DeviceHealth is still FAILURE.
+- **ControlFunctionState of the commands and MeasurementMode:** always Running; `AvailableStates` contains only Running and `AvailableTransitions` is empty. Start and Stop answer Bad_InvalidState.
+- node-opcua reports every state of the type as available; the server narrows the control functions with `setAlwaysRunning()` (`utils/src/lads-statemachines.ts`). The NodeSet carries the same values as defaults.
+
 ## Images
 
 All images in `src/resources/images` are exposed below `DeviceTypeImage`.
@@ -51,3 +57,5 @@ All images in `src/resources/images` are exposed below `DeviceTypeImage`.
 ```
 python3 nodesets/generators/gen_futura.py nodesets/FuturaConnect.xml
 ```
+
+The generator completes the mandatory instance declarations (OPC UA modelling convention). Check a NodeSet with `python3 nodesets/generators/check_modelling.py nodesets/FuturaConnect.xml nodesets/Opc.Ua.NodeSet2.xml nodesets/Opc.Ua.Di.NodeSet2.xml nodesets/Opc.Ua.AMB.NodeSet2.xml nodesets/Opc.Ua.Machinery.NodeSet2.xml nodesets/Opc.Ua.LADS.NodeSet2.xml`.

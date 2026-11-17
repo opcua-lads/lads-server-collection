@@ -75,13 +75,20 @@ export class FuturaHealth {
         const hasEventSource = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasEventSource))!
         const conditionClass = addressSpace.findObjectType(makeNodeId(11164))       // MaintenanceConditionClassType
 
-        // the components are the sources of the alarms
+        // the components are the sources of the alarms; node-opcua needs every condition source to be an event source.
+        // Components is the notifier of its components (HasEventSource) and the device is notified by Components (HasNotifier),
+        // so a subscription at the device receives the alarm events and no component appears directly below the device.
+        const componentsFolder = find(device, "Components") as UAObject
+        const hasNotifier = addressSpace.findReferenceType(makeNodeId(ReferenceTypeIds.HasNotifier))!
         const components = new Map<string, UAObject>()
         for (const name of ["Probe", "Futura", "Spectra"]) {
-            const component = find(device, "Components", name) as UAObject
+            const component = find(componentsFolder, name) as UAObject
             components.set(name, component)
-            device.addReference({ referenceType: hasEventSource, nodeId: component.nodeId })
+            this.addReferenceOnce(componentsFolder, hasEventSource, component)
         }
+        this.addReferenceOnce(device, hasNotifier, componentsFolder)
+        componentsFolder.setEventNotifier(1)
+        device.setEventNotifier(1)
 
         // replace the static alarm objects of the type by condition instances that can be activated
         const namespace = folder.namespace as Namespace
@@ -125,6 +132,10 @@ export class FuturaHealth {
                 set: (variant: Variant) => { this.apply(Number(variant.value) & 0xFFFF); return StatusCodes.Good },
             },
         })
+    }
+
+    private addReferenceOnce(from: UAObject, referenceType: any, to: UAObject) {
+        try { from.addReference({ referenceType, nodeId: to.nodeId }) } catch { /* the reference exists already */ }
     }
 
     get health(): EnumDeviceHealth { return Number(this.deviceHealth.readValue().value.value) }

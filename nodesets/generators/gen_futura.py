@@ -212,6 +212,8 @@ state = fu_t.obj('FunctionalUnitState', T['FunctionalUnitState'], nsb=4)
 # StartProgram is optional in FunctionalUnitStateMachineType; the FUTURA declares it (same Input/OutputArguments as the standard method) to start the command ProgramTemplates
 start_program = Node('UAMethod', 'StartProgram', state, td=None, nsb=4, nid='ns=5;i=7001', desc='Starts one of the ProgramTemplates (Zero, ClearZero, CleanPulse, IncrementAutoclaveCount) with the same behaviour as the corresponding command function')
 start_program.extra = ['ns=4;i=6098', 'ns=4;i=6121']
+# Clear is optional in FunctionalStateMachineType; both units declare it (Aborted -> Clearing -> Stopped, then back to Running)
+Node('UAMethod', 'Clear', state, td=None, nsb=4, nid='ns=5;i=7002', desc='Clears an aborted unit: Aborted -> Clearing -> Stopped; the FUTURA unit then runs again')
 fu_t.obj('Lock', T['Lock'], nsb=1)
 fs = fu_t.obj('FunctionSet', T['FunctionSet'], nsb=4)
 control_multistate(fs, 'MeasurementMode', MODES, 0, 'Measurement mode (Inst. 1); values as in the register: 0 CellCulture, 1 Bacterial, 2 Microbial, 3 SignalSimulator, 4 Custom, 5 Brewery, 6 Scan')
@@ -236,7 +238,8 @@ sp.obj('Scope', T['SupportedProperty'], desc='ClearZero: All (default), Reading 
 sp.obj('BioMassMultiplier', T['SupportedProperty'], desc='SlopeCalibration: slope of the biomass calibration (Double)')
 
 # SpectraUnitType
-su_t.obj('FunctionalUnitState', T['FunctionalUnitState'], nsb=4)
+su_state = su_t.obj('FunctionalUnitState', T['FunctionalUnitState'], nsb=4)
+Node('UAMethod', 'Clear', su_state, td=None, nsb=4, nid='ns=5;i=7003', desc='Clears an aborted unit: Aborted -> Clearing -> Stopped; the SPECTRA unit then runs again if a SPECTRA is installed, otherwise it stays Stopped')
 su_t.obj('Lock', T['Lock'], nsb=1)
 fs = su_t.obj('FunctionSet', T['FunctionSet'], nsb=4)
 N = 25
@@ -326,6 +329,7 @@ def _tup(s):
     m = re.match(r'ns=(\d+);(.*)', s); return (URIS[int(m.group(1))], m.group(2)) if m else (BASE, s)
 def _str(t):
     i = URIS.index(t[0]); return (f'ns={i};' if i else '') + t[1]
+NAME2ID = {v: k for k, v in REFNAME.items()}
 def _own_model(base):
     m = Model(); m.nodes = dict(base.nodes)
     for n in Node.allnodes:
@@ -333,11 +337,30 @@ def _own_model(base):
         m.nodes[_tup(n.nid)] = dict(cls=n.kind, id=_tup(n.nid), name=(URIS[n.nsb], n.bn), rule=n.mr, own=True,
                                     td=None if is_type or not n.td else _tup(n.td), sup=_tup(n.td) if is_type else None,
                                     dt=_tup(n.dt) if n.dt else None, vr=n.vr, ad=n.ad, desc=n.desc, value=n.value, access='3' if n.rw else None,
-                                    children=[(k.rt, _tup(k.nid)) for k in n.kids] + [('i=46', _tup(r)) for r in getattr(n, 'extra', [])])
+                                    children=[(NAME2ID.get(k.rt, k.rt), _tup(k.nid)) for k in n.kids] + [('i=46', _tup(r)) for r in getattr(n, 'extra', [])])
     inv = {v: k for k, v in REFNAME.items()}
     for n in Node.allnodes:
         for k in n.kids: m.nodes[_tup(k.nid)].update(reftype=inv.get(k.rt, 'i=47'), parent=_tup(n.nid))
     return m
+
+# State machines: the mandatory AvailableStates / AvailableTransitions of the FunctionalStateMachineType and the initial CurrentState get values.
+# FunctionalUnit: Stopped, Running and the failure path Running -> Aborting -> Aborted -> Clearing -> Stopped plus the transient state Stopping (all seven transitions).
+# Control functions (commands, MeasurementMode) are always Running: no transitions.
+FSM_STATES = dict(Stopped=5085, Running=5099, Stopping=5100, Aborting=5159, Aborted=5160, Clearing=5143)
+FSM_TRANSITIONS = dict(StoppedToRunning=5102, RunningToStopping=5105, StoppingToStopped=5101, RunningToAborting=5103, AbortingToAborted=5126, AbortedToClearing=5165, ClearingToStopped=5104)
+def v_nodeid(i): return f'<uax:NodeId><uax:Identifier>ns=4;i={i}</uax:Identifier></uax:NodeId>'
+def v_nodeid_list(ids): return '<uax:ListOfNodeId>' + ''.join(v_nodeid(i) for i in ids) + '</uax:ListOfNodeId>'
+def state_machine_values(n):
+    machine = n.parent.parent if n.bn == 'Id' and n.parent is not None and n.parent.bn == 'CurrentState' else n.parent
+    if machine is None or machine.td not in (T['FunctionalUnitState'], T['ControlFunctionState']): return
+    control = machine.td == T['ControlFunctionState']
+    states = ['Running'] if control else list(FSM_STATES)
+    transitions = [] if control else list(FSM_TRANSITIONS)
+    initial = 'Running' if control else 'Stopped'
+    if n.bn == 'AvailableStates' and n.parent is machine: n.value, n.ad = v_nodeid_list(FSM_STATES[s] for s in states), len(states)
+    elif n.bn == 'AvailableTransitions' and n.parent is machine: n.value, n.ad = v_nodeid_list(FSM_TRANSITIONS[s] for s in transitions), (len(transitions) or 0)
+    elif n.bn == 'CurrentState' and n.parent is machine: n.value = v_lt(initial)
+    elif n.bn == 'Id': n.value = v_nodeid(FSM_STATES[initial])
 def expand_mandatory():
     base = Model()
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
@@ -355,6 +378,7 @@ def expand_mandatory():
                      td=_str(decl['td']) if decl['td'] else None, nsb=URIS.index(decl['name'][0]),
                      dt=_str(model.data_type(decl)) if decl['cls'] == 'UAVariable' else None, desc=decl.get('desc'),
                      nid=f'ns=5;i={counter}', rw=decl.get('access') == '3', vr=decl.get('vr'), ad=decl.get('ad'), value=v_str('0') if decl['name'][1] == 'NodeVersion' else decl.get('value'))
+            state_machine_values(n)
             if decl['cls'] == 'UAMethod':          # input / output arguments: the properties of the standard method are referenced
                 n.extra = [_str(c) for r, c in model.nodes[decl['id']]['children'] if r in ('i=46', 'HasProperty')]
     else:

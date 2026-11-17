@@ -50,7 +50,8 @@ class Model:
         while t and t in self.nodes and t not in res: res.append(t); t = self.nodes[t]['sup']
         return res
     def mand(self, owner):
-        return [self.nodes[c] for r, c in self.nodes[owner]['children'] if c in self.nodes and self.nodes[c]['rule'] == MANDATORY]
+        # reftype = the reference by which this owner has the child (the same declaration may be referenced differently elsewhere)
+        return [dict(self.nodes[c], reftype=r) for r, c in self.nodes[owner]['children'] if c in self.nodes and self.nodes[c]['rule'] == MANDATORY]
     def gather(self, decls, types):
         exp = {}
         for d in decls:

@@ -19,8 +19,9 @@ Cole-Cole alpha is empirical (no closed formula in the manual) and follows a typ
 
 import { AccessLevelFlag, DataType, DataValue, LocalizedText, StatusCodes, UAMethod, UAObject, UAVariable, Variant, AddressSpace, Namespace, CallMethodResultOptions } from "node-opcua"
 import { readFileSync } from "fs"
-import { promoteToFiniteStateMachine } from "@utils"
+import { promoteToFiniteStateMachine, enterStateChain, enterClearing, setAlwaysRunning } from "@utils"
 import { LADSFunctionalState } from "@interfaces"
+import { EnumDeviceHealth } from "node-opcua-nodeset-di"
 
 interface Sample { t: number, cap: number, cond: number, temp: number }
 const SCAN_FREQUENCIES = Array.from({ length: 25 }, (_, i) => Math.round(50 * Math.pow(20000 / 50, i / 24)))   // kHz, log spaced 50 .. 20000
@@ -132,13 +133,14 @@ export class FuturaSimulator {
         const calibration = this.find(this.futuraFunctions, "BioMassMeasurement", "CalibrationValues") as UAVariable
         calibration.setValueFromSource({ dataType: DataType.Double, arrayType: 1 as any, value: Float64Array.from([C_INFINITY, 1.0]) } as any)
         this.installMeasurementMode()
+        this.installClear()
     }
     private sourceName: string
 
     /** MeasurementMode: running from the start, initialised with CellCulture (0); CurrentValue follows TargetValue */
     private installMeasurementMode() {
         const mode = this.find(this.futuraFunctions, "MeasurementMode")
-        promoteToFiniteStateMachine(mode.getChildByName("ControlFunctionState")).setState(LADSFunctionalState.Running)
+        setAlwaysRunning(mode.getChildByName("ControlFunctionState") as any)
         const target = mode.getChildByName("TargetValue") as UAVariable, current = mode.getChildByName("CurrentValue") as UAVariable
         const setUInt32 = (v: UAVariable, value: number) => v.setValueFromSource({ dataType: DataType.UInt32, value })
         setUInt32(target, 0)
@@ -243,8 +245,38 @@ export class FuturaSimulator {
         this.setUnitState(this.futuraUnit, LADSFunctionalState.Stopped)
         this.setUnitState(this.spectraUnit, LADSFunctionalState.Stopped)
     }
+    /** getCurrentState() returns the browse name with the namespace index (5:Stopped) */
+    private currentStateName = (machine: { getCurrentState(): string | null }) => (machine.getCurrentState() ?? "").replace(/^\d+:/, "")
+
+    /** Running and Stopped follow the transitions of the FunctionalStateMachine: Stopped -> Running, Running -> Stopping -> Stopped (after a short delay) */
     private setUnitState(unit: UAObject, state: LADSFunctionalState) {
-        try { promoteToFiniteStateMachine(this.find(unit, "FunctionalUnitState")).setState(state) } catch { /* state machine not available */ }
+        try {
+            const machine = promoteToFiniteStateMachine(this.find(unit, "FunctionalUnitState"))
+            const current = this.currentStateName(machine)
+            if (current === state) return
+            if (state === LADSFunctionalState.Stopped && current === LADSFunctionalState.Running) {
+                machine.setState(LADSFunctionalState.Stopping)
+                void enterStateChain(machine, [LADSFunctionalState.Stopped])
+            } else if (state === LADSFunctionalState.Running && current && current !== LADSFunctionalState.Stopped) {
+                // only a stopped unit can start
+            } else machine.setState(state)
+        } catch { /* state machine not available */ }
+    }
+    /** Clear: Aborted -> Clearing -> Stopped, then Running again (FUTURA always, SPECTRA only if installed; without SPECTRA it stays Stopped) */
+    private installClear() {
+        for (const unit of [this.futuraUnit, this.spectraUnit]) {
+            const clear = this.find(unit, "FunctionalUnitState").getChildByName("Clear") as UAMethod | null
+            clear?.bindMethod(async (_inputArguments: unknown[], _context: unknown): Promise<CallMethodResultOptions> => {
+                const machine = promoteToFiniteStateMachine(this.find(unit, "FunctionalUnitState"))
+                const failure = Number(this.find(this.device, "DeviceHealth").readValue?.().value.value) === EnumDeviceHealth.FAILURE
+                if (this.currentStateName(machine) !== LADSFunctionalState.Aborted || failure) return { statusCode: StatusCodes.BadInvalidState }
+                const name = unit === this.futuraUnit ? "FUTURA" : "SPECTRA"
+                void enterClearing(machine, unit, `${name} cleared`).then(() => {
+                    if (this.timer && (unit === this.futuraUnit || this.spectraInstalled)) this.setUnitState(unit, LADSFunctionalState.Running)
+                })
+                return { statusCode: StatusCodes.Good }
+            })
+        }
     }
     private setSpectra(on: boolean) {
         this.spectraInstalled = on

@@ -15,7 +15,7 @@ The commands Zero, ClearZero, CleanPulse and IncrementAutoclaveCount are modelle
 */
 
 import { CallMethodResultOptions, DataType, DataValue, ISessionContext, LocalizedText, StatusCode, StatusCodes, UAVariable, VariantLike } from "node-opcua"
-import { EventSeverity, getBooleanValue, getLADSFunctionalUnits, promoteToFiniteStateMachine, raiseEvent, setBooleanValue } from "@utils"
+import { EventSeverity, getBooleanValue, getLADSFunctionalUnits, promoteToFiniteStateMachine, raiseEvent, setAlwaysRunning, setBooleanValue } from "@utils"
 import { LADSDevice, LADSFunctionalState, LADSFunctionalUnit, LADSTwoStateDiscreteControlFunction } from "@interfaces"
 
 const TARGET_RESET_MS = 100
@@ -45,7 +45,7 @@ export class CommandFunction {
 
         // the command function is always running; it can neither be stopped nor started
         const state = commandFunction.controlFunctionState
-        promoteToFiniteStateMachine(state).setState(LADSFunctionalState.Running)
+        setAlwaysRunning(state)
         state.start?.bindMethod(async (_inputArguments: VariantLike[], _context: ISessionContext) => ({ statusCode: StatusCodes.BadInvalidState }))
         state.stop?.bindMethod(async (_inputArguments: VariantLike[], _context: ISessionContext) => ({ statusCode: StatusCodes.BadInvalidState }))
 
@@ -114,7 +114,7 @@ export function installMeasurementMode(unit: LADSFunctionalUnit) {
     const current = node.getChildByName("CurrentValue") as UAVariable
     const state = node.getChildByName("ControlFunctionState")
     if (state) {
-        promoteToFiniteStateMachine(state).setState(LADSFunctionalState.Running)
+        setAlwaysRunning(state)
         state.getChildByName("Start")?.bindMethod?.(async (_i: VariantLike[], _c: ISessionContext) => ({ statusCode: StatusCodes.BadInvalidState }))
         state.getChildByName("Stop")?.bindMethod?.(async (_i: VariantLike[], _c: ISessionContext) => ({ statusCode: StatusCodes.BadInvalidState }))
     }

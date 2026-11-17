@@ -1,4 +1,5 @@
 import EventEmitter from "events";
+import { DataType, UAVariable, Variant, VariantArrayType } from "node-opcua";
 import { LocalizedText, TransitionSelector, UAFiniteStateMachine, UAObject, UAInitialState, UAMethod, UAState, UAStateMachine, UAStateMachine_Base, UAStateMachineEx, UAStateMachineHelper, UAStateVariable, UATransitionEx, UATransitionVariable } from "node-opcua";
 import { promoteToFiniteStateMachine, sleepMilliSeconds } from "./lads-utils";
 import { get } from "http";
@@ -73,4 +74,28 @@ export async function enterClearing(stateMachine: UAStateMachineEx, eventSource:
     } catch (err) {
         raiseEvent(eventSource, `Clearing failed: ${err}`, EventSeverity.Alarm)
     }
+}
+
+
+//---------------------------------------------------------------
+// AvailableStates / AvailableTransitions
+//---------------------------------------------------------------
+/** node-opcua reports all states and transitions of the state machine type as available. This restricts the two variables to the given browse names. */
+export function restrictAvailableStatesAndTransitions(stateMachine: UAStateMachineEx, stateNames: string[], transitionNames: string[]) {
+    const bind = (variableName: string, nodes: { browseName: { name: string }, nodeId: any }[], names: string[]) => {
+        const variable = stateMachine.getComponentByName(variableName, 0) as UAVariable | null
+        variable?.bindVariable({
+            get: () => new Variant({ arrayType: VariantArrayType.Array, dataType: DataType.NodeId, value: nodes.filter(node => names.includes(node.browseName.name)).map(node => node.nodeId) })
+        }, true)
+    }
+    bind("AvailableStates", stateMachine.getStates(), stateNames)
+    bind("AvailableTransitions", stateMachine.getTransitions(), transitionNames)
+}
+
+/** A control function that is always Running (a command, a mode selector): the only available state is Running and there are no transitions. */
+export function setAlwaysRunning(controlFunctionState: UAFiniteStateMachine): UAStateMachineEx {
+    const stateMachine = promoteToFiniteStateMachine(controlFunctionState)
+    stateMachine.setState(LADSFunctionalState.Running)
+    restrictAvailableStatesAndTransitions(stateMachine, [LADSFunctionalState.Running], [])
+    return stateMachine
 }
