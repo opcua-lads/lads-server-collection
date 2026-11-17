@@ -12,7 +12,6 @@
 import { join } from "path"
 import assert from "assert";
 import {
-    ApplicationType,
     CallMethodResultOptions,
     DataType,
     IAddressSpace,
@@ -36,6 +35,7 @@ import { UADevice } from "node-opcua-nodeset-di"
 
 import {
     DIObjectIds,
+    createServer,
     LADSDeviceHelper,
     constructNameNodeIdExtensionObject,
     getChildObjects,
@@ -98,24 +98,12 @@ class FtNirServerImpl {
 
             // build the server object
             const uri = "LADS-FT-NIR-Server"
-            this.server = new OPCUAServer({
-                port: port,
-                // basic information about the server
-                buildInfo: {
-                    manufacturerName: "AixEngineers",
-                    productName: uri,
-                    productUri: uri,
-                    softwareVersion: "1.0.0",
-                },
-                serverInfo: {
-                    applicationName: "LADS FT-NIR",
-                    applicationType: ApplicationType.Server,
-                    productUri: uri,
-                    applicationUri: uri,
-
-                },
-                // nodesets used by the server
-                nodeset_filename: node_set_filenames,
+            this.server = createServer({
+                applicationName: "LADS FT-NIR",
+                applicationDirectory: __dirname,
+                port,
+                uri,
+                nodeset_filenames: node_set_filenames,
             })
 
         }

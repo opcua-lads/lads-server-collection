@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { join } from 'path'
 import assert from "assert"
-import { ApplicationType, OPCUAServer, UAObject, coerceNodeId, } from "node-opcua"
-import { DIObjectIds, setStringValue, } from "@utils"
+import { OPCUAServer, UAObject, coerceNodeId, } from "node-opcua"
+import { createServer, DIObjectIds, setStringValue, } from "@utils"
 import { ViscometerDevice } from './interfaces'
 import { ViscometerDeviceImpl } from './device'
 
@@ -54,24 +54,12 @@ class ViscometerServerImpl {
 
             // build the server object
             const uri = "LADS-Viscometer-Server"
-            this.server = new OPCUAServer({
-                port: port,
-                // basic information about the server
-                buildInfo: {
-                    manufacturerName: "AixEngineers",
-                    productName: uri,
-                    productUri: uri,
-                    softwareVersion: "1.0.0",
-                },
-                serverInfo: {
-                    applicationName: "LADS Viscometer",
-                    applicationType: ApplicationType.Server,
-                    productUri: uri,
-                    applicationUri: uri,
-
-                },
-                // nodesets used by the server
-                nodeset_filename: node_set_filenames,
+            this.server = createServer({
+                applicationName: "LADS Viscometer",
+                applicationDirectory: __dirname,
+                port,
+                uri,
+                nodeset_filenames: node_set_filenames,
             })
 
         }

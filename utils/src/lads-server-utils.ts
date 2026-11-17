@@ -9,7 +9,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { ApplicationType, OPCUACertificateManager, OPCUAServer, OPCUAServerOptions, RegisterServerMethod, setWarningLogger } from "node-opcua"
+import {
+    ApplicationType, BonjourHolder, OPCUACertificateManager, OPCUAServer, OPCUAServerOptions, RegisterServerManagerMDNSONLY,
+    RegisterServerMethod, setWarningLogger
+} from "node-opcua"
+import os from "os"
 import { refreshSiteLocation } from "./lads-site-config"
 import path from "path";
 
@@ -80,7 +84,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
 
     // support local discovery 
     const ldsSupport = options.ldsSupport ?? true
-    if (options.ldsSupport) {
+    if (ldsSupport) {
         serverOptions.registerServerMethod = RegisterServerMethod.MDNS
         serverOptions.capabilitiesForMDNS = ["DA", "HD", "AC", "DI"]
     }
@@ -88,7 +92,12 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     try {
         // build the server object
         const server = new OPCUAServer(serverOptions)
-        if (ldsSupport) installShutdownService(server, options.applicationName)
+        if (ldsSupport) {
+            // node-opcua's own mDNS manager announces the host as "TODO-find how to extract hostname" and uses the
+            // applicationUri as instance name; replace it by one that announces <hostname>.local and a readable name
+            server.registerServerManager = new LadsMdnsRegisterServerManager({ server }, options.applicationName)
+            installShutdownService(server, options.applicationName)
+        }
         return server
     }
     catch (err) {
@@ -96,6 +105,64 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
         return undefined
     }
 }
+/**
+ * DNS-SD instance name: readable, without dots (they would split the name into several DNS labels) and at most 63 bytes
+ * (the limit of a DNS label).
+ */
+export function mdnsInstanceName(applicationName: string): string {
+    let name = applicationName.replace(/\./g, " ").replace(/\s+/g, " ").trim()
+    while (Buffer.byteLength(name, "utf8") > 63) name = name.slice(0, -1)
+    return name
+}
+
+/**
+ * The mDNS host name of ONE server: <computer>-<application>.local, for example macbook-pro-lads-ph-meter.local.
+ * It must not be the host name of the computer itself: macOS (mDNSResponder) owns that name and renames the whole
+ * computer ("MacBook-Pro-2") as soon as another process announces addresses for it, and several servers on one computer
+ * would also fight over it. The name is unique, so there is no conflict. Resolvers treat only names below ".local" as
+ * multicast names (os.hostname() has no ".local" on Windows and Linux); a DNS label has at most 63 bytes.
+ */
+export function mdnsHostName(applicationName: string): string {
+    const label = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+    const name = [label(os.hostname().split(".")[0]), label(applicationName)].filter((part) => part).join("-")
+    return name.slice(0, 63).replace(/-+$/, "") + ".local"
+}
+
+/**
+ * Announces the server on the multicast subnet like RegisterServerManagerMDNSONLY of node-opcua (service _opcua-tcp._tcp,
+ * TXT caps and path), but with a usable host name and instance name. It is installed instead of the original manager,
+ * so node-opcua starts it with the server and stops it on shutdown (mDNS goodbye).
+ */
+class LadsMdnsRegisterServerManager extends RegisterServerManagerMDNSONLY {
+    private readonly announcement = new BonjourHolder()
+    private readonly baseServer: OPCUAServer
+
+    constructor(options: { server: OPCUAServer }, private readonly applicationName: string) {
+        super(options)
+        this.baseServer = options.server
+    }
+
+    override async start(): Promise<void> {
+        await this.announcement.announcedOnMulticastSubnet({
+            capabilities: this.baseServer.capabilitiesForMDNS,
+            name: mdnsInstanceName(this.applicationName),
+            path: "/",
+            host: mdnsHostName(this.applicationName),
+            port: this.baseServer.endpoints[0].port
+        })
+        this.emit("serverRegistered")
+    }
+
+    override async stop(): Promise<void> {
+        await this.announcement.stopAnnouncedOnMulticastSubnet()
+        this.emit("serverUnregistered")
+    }
+
+    override dispose(): void {
+        // the base class asserts on its own (never started) holder; nothing else to release here
+    }
+}
+
 // shutdown including sending mDNS goodbye message
 function installShutdownService(server: OPCUAServer, name: string, signals = ['SIGINT', 'SIGTERM']): void {
     const shutdown = async (signal: string) => {
