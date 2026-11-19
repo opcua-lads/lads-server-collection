@@ -9,12 +9,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ISessionContext, ServerSession, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
+import { UserNameIdentityToken, CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ISessionContext, ServerSession, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
 import { UALockingServices } from "node-opcua-nodeset-di";
 import { EventEmitter } from "stream";
 import { getBooleanValue, getNumericValue, getStringValue, setBooleanValue, setNumericValue, setStringValue } from "./lads-variable-utils";
 import { getDINamespace } from "./lads-utils";
 import { assert } from "console";
+
+// node-opcua never fills sessionContext.userIdentity: the login name is the user name of the session's identity token
+function loginName(session: ServerSession): string | undefined {
+    const token = session?.userIdentityToken
+    return token instanceof UserNameIdentityToken && token.userName ? token.userName : undefined
+}
 
 export enum Duration {
     Second = 1000,
@@ -86,7 +92,7 @@ export class LockImpl extends EventEmitter {
         this.locked = true
         this.sessionContext = sessionContext
         const session = sessionContext.session as ServerSession
-        const userIdentity = sessionContext.userIdentity
+        const userIdentity = loginName(session) ?? sessionContext.userIdentity
         const applicationUri: string = session.clientDescription?.applicationUri ? session.clientDescription.applicationUri : ""
         const applicationName: string = session.clientDescription?.applicationName ? session.clientDescription?.applicationName.text : ""
         const policyId: string = session.userIdentityToken?.policyId ? session.userIdentityToken?.policyId : "unknown"
