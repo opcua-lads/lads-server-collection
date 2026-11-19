@@ -464,6 +464,7 @@ export interface LADSComponentOptions {
     manufacturerUri?: string
     model?: string
     softwareRevision?: string
+    hardwareRevision?: string
     deviceRevision?: string
     productCode?: string
     deviceManual?: string
@@ -480,11 +481,19 @@ export interface LADSComponentOptions {
 
 export function initComponent(component: UAComponent, options: LADSComponentOptions) {
     if (!component) return
-    const productInstanceUri = options.productInstanceUri ?? `${options.manufacturerUri ?? "aixengineers.de"}/${options.model ?? "unknown"}/${options.serialNumber, "4711"}`
+    const productInstanceUri = options.productInstanceUri ?? `${options.manufacturerUri ?? "aixengineers.de"}/${options.model ?? "unknown"}/${options.serialNumber ?? "4711"}`
+    // the core nameplate has to exist: a missing property (not declared in the nodeset) is reported instead of silently skipped
+    const warnMissing = (name: string, variable: unknown, value?: string) => {
+        if (value && !variable) console.warn(`initComponent: ${component.browseName?.name ?? "component"} has no ${name}; "${value}" is not published`)
+    }
+    warnMissing("Manufacturer", component.manufacturer, options.manufacturer)
+    warnMissing("Model", component.model, options.model)
+    warnMissing("SerialNumber", component.serialNumber, options.serialNumber)
     options.manufacturer ? setStringValue(component.manufacturer, options.manufacturer) : 0
     options.manufacturerUri ? setStringValue(component.manufacturerUri, options.manufacturerUri) : 0
     options.model ? setStringValue(component.model, options.model) : 0
     options.softwareRevision ? setStringValue(component.softwareRevision, options.softwareRevision) : 0
+    options.hardwareRevision ? setStringValue(component.hardwareRevision, options.hardwareRevision) : 0
     options.deviceRevision ? setStringValue(component.deviceRevision, options.deviceRevision) : 0
     options.productCode ? setStringValue(component.productCode, options.productCode) : 0
     options.deviceManual ? setStringValue(component.deviceManual, options.deviceManual) : 0
@@ -943,7 +952,6 @@ export class LADSDeviceHelper {
         const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
         this.raiseEvent(`health changed to ${key} .. `)
         if (value == EnumDeviceHealth.FAILURE) {
-            this.machineryItemState?.setState(MachineryItemState.OutOfService)
             this.functionalUnitStateMachines.forEach((stateMachine) => {
                 if (state2str(stateMachine.getCurrentState()).includes(LADSFunctionalState.Running)) {
                     stateMachine.setState(LADSFunctionalState.Aborting)
@@ -951,6 +959,7 @@ export class LADSDeviceHelper {
                 }
             })
         }
+        this.adjustMachineryItemState()   // FAILURE: OutOfService, any other health: back to the state of the functional units
     }
 
     async onMachineryOperationModeChanged(dataValue: DataValue) {
@@ -965,10 +974,21 @@ export class LADSDeviceHelper {
         this.raiseEvent(`item state changed to ${state} .. `)
     }
 
+    /**
+     * Derives the MachineryItemState from the functional units (and the device health), highest priority first:
+     *   OutOfService  a functional unit is Aborting, Aborted or Clearing (abort until the unit is cleared), or DeviceHealth is FAILURE
+     *   Executing     at least one functional unit is Running
+     *   NotExecuting  otherwise
+     * @returns the number of running functional units
+     */
     adjustMachineryItemState(): number {
         const functionalUnitStates = this.functionalUnitStateMachines.map((stateMachine => (state2str(stateMachine.getCurrentState()))))
         const functionalUnitsRunnning = functionalUnitStates.reduce((count, state) => { return state.includes(LADSFunctionalState.Running) ? count + 1 : count }, 0)
-        this.machineryItemState?.setState(functionalUnitsRunnning > 0 ? MachineryItemState.Executing : MachineryItemState.NotExecuting)
+        const aborted = functionalUnitStates.some(state => OutOfServiceFunctionalStates.some(outOfService => state.includes(outOfService)))
+        const failure = (this.device.deviceHealth?.readValue().value.value as number | undefined) === EnumDeviceHealth.FAILURE
+        const itemState = aborted || failure ? MachineryItemState.OutOfService
+            : functionalUnitsRunnning > 0 ? MachineryItemState.Executing : MachineryItemState.NotExecuting
+        this.machineryItemState?.setState(itemState)
         return functionalUnitsRunnning
     }
 
@@ -999,4 +1019,7 @@ export class LADSDeviceHelper {
 }
 
 function state2str(value: string | null) { return value ? value : '' }
+
+/** States of a functional unit in which the machinery item is out of service (abort until the unit is cleared). */
+const OutOfServiceFunctionalStates: string[] = [LADSFunctionalState.Aborting, LADSFunctionalState.Aborted, LADSFunctionalState.Clearing]
 
