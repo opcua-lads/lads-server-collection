@@ -6,7 +6,7 @@
             "serialPort": "",
             "protocol": "Simulator",
             "name": "My Sartorius Cubis II Balance",
-            "enabled": false
+            "enabled": true
         },
         {
             "serialPort": "/dev/tty.usbmodem00294063041",
