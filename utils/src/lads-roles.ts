@@ -12,7 +12,7 @@
  * is set on the method nodes. A user gets the union of the rights of all of his roles (plus AuthenticatedUser).
  */
 
-import { allPermissions, NodeClass, OPCUAServer, setNamespaceMetaData, PermissionFlag, RolePermissionTypeOptions, UAMethod, UAObject, UAObjectType, WellKnownRoles } from "node-opcua"
+import { AnonymousIdentityToken, DataType, PermissionType, SessionContext, Variant, VariantArrayType, allPermissions, NodeClass, OPCUAServer, setNamespaceMetaData, PermissionFlag, RolePermissionTypeOptions, UAMethod, UAObject, UAObjectType, WellKnownRoles } from "node-opcua"
 
 const ReadOnly = PermissionFlag.Browse | PermissionFlag.Read | PermissionFlag.ReadHistory | PermissionFlag.ReceiveEvents
 const Everything = allPermissions
@@ -39,17 +39,27 @@ function rolePermissions(rights: RoleRights): RolePermissionTypeOptions[] {
 
 /**
  * Default rights of the roles for all nodes of the server's namespaces that have no rights of their own, including nodes created
- * later (Results, ...). node-opcua evaluates the default through the NamespaceMetadata object of the namespace below Server/Namespaces;
- * the server's own namespace has none, so it is created here.
+ * later (Results, ...). node-opcua evaluates the default through the NamespaceMetadata object of the namespace below Server/Namespaces
+ * (its DefaultRolePermissions property). The server's own namespace has no such object, and the objects of the namespaces loaded
+ * from nodesets have no DefaultRolePermissions property, so both are created here.
  */
 export function applyDefaultRolePermissions(server: OPCUAServer): void {
     const addressSpace = server.engine.addressSpace
     const namespaces = addressSpace.rootFolder.objects.server.getChildByName("Namespaces") as any
+    const own = addressSpace.getOwnNamespace()
     // namespace 0 stays open: the server object, the type system and the role set must be readable and are protected by their attributes
     for (let index = 1; index < addressSpace.getNamespaceArray().length; index++) {
         const namespace = addressSpace.getNamespace(index)
         if (!namespaces.getComponentByName(namespace.namespaceUri, namespace.index)) setNamespaceMetaData(namespace)
         namespace.setDefaultRolePermissions(rolePermissions(DefaultRights))
+        const metadata = namespaces.getChildByName(namespace.namespaceUri)
+        const defaults = { get: () => new Variant({ dataType: DataType.ExtensionObject, arrayType: VariantArrayType.Array, value: namespace.getDefaultRolePermissions() }) }
+        const property = metadata?.getChildByName("DefaultRolePermissions")
+        if (property) {
+            property.bindVariable(defaults, true)       // nodesets define the property with an empty value
+        } else if (metadata) {
+            own.addVariable({ propertyOf: metadata, browseName: "DefaultRolePermissions", dataType: "RolePermissionType", valueRank: 1, accessLevel: "CurrentRead", minimumSamplingInterval: 0, value: defaults })
+        }
     }
 }
 
@@ -74,6 +84,19 @@ export function restrictOperationModeMethods(server: OPCUAServer): number {
     return count
 }
 
+/** self test: how many variables could an anonymous user still write? Must be 0 (type system of namespace 0 excluded). */
+export function countOpenVariablesForAnonymous(server: OPCUAServer): number {
+    const addressSpace = server.engine.addressSpace
+    const context = new SessionContext({ session: { userIdentityToken: new AnonymousIdentityToken({ policyId: "anonymous" }) } as any, server: server as any })
+    let open = 0
+    for (let index = 1; index < addressSpace.getNamespaceArray().length; index++) {
+        for (const node of (addressSpace.getNamespace(index) as any).nodeIterator() as Iterable<any>) {
+            if (node.nodeClass === NodeClass.Variable && context.checkPermission(node, PermissionType.Write)) open++
+        }
+    }
+    return open
+}
+
 /** installs the role rights; to be called once for a server that has users configured */
 export function installRolePermissions(server: OPCUAServer): void {
     server.once("post_initialize", () => applyDefaultRolePermissions(server))
@@ -82,7 +105,12 @@ export function installRolePermissions(server: OPCUAServer): void {
     ;(server as any).start = async (...args: any[]) => {
         const result = await start(...args)
         const count = restrictOperationModeMethods(server)
-        console.log(`Role based access: read only for Anonymous/Observer, operator may not call ${count} operation mode methods`)
+        let check = ""
+        try {
+            const open = countOpenVariablesForAnonymous(server)
+            check = open === 0 ? ", self test ok (anonymous can write no variable)" : `, WARNING: anonymous can still write ${open} variables`
+        } catch (err) { check = `, self test failed: ${err}` }
+        console.log(`Role based access: read only for Anonymous/Observer, operator may not call ${count} operation mode methods${check}`)
         return result
     }
 }
