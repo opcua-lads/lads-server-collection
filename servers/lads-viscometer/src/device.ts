@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, getStringValue, DefaultLocation, initComponent, LADSDeviceHelper, DeviceTypeImage, setStringValue, DefaultHierarchicalLocation } from "@utils"
-import { assert, coerceNodeId, IAddressSpace, ObjectTypeIds, UAEventType } from "node-opcua"
+import { LADSComponentOptions, getStringValue, DefaultLocation, initComponent, LADSDeviceHelper, DeviceTypeImage, setStringValue } from "@utils"
+import { assert, coerceNodeId, IAddressSpace, ObjectTypeIds, UAEventType, UAObject } from "node-opcua"
 import { ViscometerDevice } from "./interfaces"
 import { ViscometerUnitImpl } from "./unit"
 import { ViscometerUnitSimulatorImpl } from "./unit-simulator"
@@ -119,14 +119,28 @@ export class ViscometerDeviceImpl {
             softwareRevision: "1.0",
             deviceRevision: "1.0",
             assetId: "0815-4711",
+            hardwareRevision: "1.0",
             componentName: `My ${name}`,
             location: DefaultLocation,
         }
-        initComponent(device, deviceOptions)
+        initComponent(device, deviceOptions)   // also fills device.identification; HierarchicalLocation defaults to the site (config/lads-site.json)
+
+        // nameplates of the components (copied to their Identification, too)
+        const components = device.getChildByName("Components") as UAObject
+        const serialNumber = deviceOptions.serialNumber
+        const componentOptions: { [name: string]: LADSComponentOptions } = {
+            Viscometer: { manufacturer: "Brookfield Engineering", manufacturerUri: "brookfieldengineering.com", model: "DV II+", serialNumber, softwareRevision: "1.0" },
+            TemperatureController: { manufacturer: "AixEngineers", model: "TC1", serialNumber: "0815", softwareRevision: "1.0" },
+            BarcodeReader: { manufacturer: "AixEngineers", model: "BR1", serialNumber: "0815", softwareRevision: "1.0" },
+        }
+        for (const [componentName, options] of Object.entries(componentOptions)) {
+            const component = components?.getChildByName(componentName)
+            if (component) initComponent(component as any, options)
+            else console.warn(`Viscometer component ${componentName} not found`)
+        }
 
         // LCC PoC integration
         setStringValue(this.device.componentName, this.device.getDisplayName())
-        setStringValue(this.device.hierarchicalLocation, DefaultHierarchicalLocation)
         
         // initialize device
         const deviceHelper = new LADSDeviceHelper(this.device, {initializationTime: 2000, shutdownTime: 2000, raiseEvents: true})

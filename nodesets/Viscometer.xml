@@ -968,8 +968,35 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6169</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6175</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8001</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8003</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8004</Reference>
         </References>
     </UAObject>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=8001" BrowseName="1:Model" ParentNodeId="ns=5;i=5019">
+        <DisplayName>Model</DisplayName>
+        <Description>Model name of the component</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=8003" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5019">
+        <DisplayName>SoftwareRevision</DisplayName>
+        <Description>Revision level of the software of the component</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=8004" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=5019">
+        <DisplayName>ProductInstanceUri</DisplayName>
+        <Description>Globally unique resource identifier provided by the manufacturer</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6044" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5013">
         <DisplayName>Manufacturer</DisplayName>
         <References>
@@ -1020,8 +1047,35 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6050</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6051</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8005</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8006</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8007</Reference>
         </References>
     </UAObject>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=8005" BrowseName="1:Model" ParentNodeId="ns=5;i=5021">
+        <DisplayName>Model</DisplayName>
+        <Description>Model name of the component</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=8006" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5021">
+        <DisplayName>SoftwareRevision</DisplayName>
+        <Description>Revision level of the software of the component</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=8007" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=5021">
+        <DisplayName>ProductInstanceUri</DisplayName>
+        <Description>Globally unique resource identifier provided by the manufacturer</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6047" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5020">
         <DisplayName>Manufacturer</DisplayName>
         <References>
@@ -1089,8 +1143,35 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6055</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6056</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8008</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8009</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=8010</Reference>
         </References>
     </UAObject>
+    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=8008" BrowseName="1:Model" ParentNodeId="ns=5;i=5023">
+        <DisplayName>Model</DisplayName>
+        <Description>Model name of the component</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=8009" BrowseName="1:SoftwareRevision" ParentNodeId="ns=5;i=5023">
+        <DisplayName>SoftwareRevision</DisplayName>
+        <Description>Revision level of the software of the component</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=8010" BrowseName="1:ProductInstanceUri" ParentNodeId="ns=5;i=5023">
+        <DisplayName>ProductInstanceUri</DisplayName>
+        <Description>Globally unique resource identifier provided by the manufacturer</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+    </UAVariable>
     <UAVariable DataType="LocalizedText" NodeId="ns=5;i=6052" BrowseName="1:Manufacturer" ParentNodeId="ns=5;i=5022">
         <DisplayName>Manufacturer</DisplayName>
         <References>
