@@ -104,6 +104,8 @@ export function createServerAuthentication(config = readUsersConfig()): ServerAu
                 const entry = known(username)
                 // a hash is computed in any case, so that unknown users cost the same time as wrong passwords
                 const valid = verifyPassword(password, entry?.password ?? "scrypt$00$00")
+                if (entry === undefined) console.warn(`Login refused: unknown user "${username}"`)
+                else if (!valid) console.warn(`Login refused: wrong password for user "${username}"`)
                 return valid && entry !== undefined
             },
             getUserRoles: (username: string) => rolesOf(known(username))
