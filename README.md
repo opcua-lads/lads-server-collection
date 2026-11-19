@@ -42,3 +42,49 @@ npm install   # or npm/yarn
 npm run <server-name>       # see individual READMEs for options
 
 # 3. point any OPC UA client to  opc.tcp://localhost:<port>
+```
+
+### User login and roles (optional)
+
+By default all servers accept anonymous clients with full access. If `config/lads-users.json` exists and lists users, **every server** started
+from this repository (they all use `createServer()`) requires a login for write access and enforces role based rights. Without that file
+nothing changes.
+
+```bash
+npm run user:add -- operator Operator      # asks for the password (no echo) and stores a scrypt hash
+npm run user:add -- engineer Engineer
+npm run user:add -- --remove operator
+```
+
+`config/lads-users.json` is not committed (see `.gitignore`; `config/lads-users.example.json` shows the format). The file is read when a
+server starts: restart the servers after changing it. The file location can be set with `LADS_USERS_CONFIG`.
+
+```json
+{
+    "allowAnonymous": true,
+    "secureOnly": false,
+    "users": { "operator": { "password": "scrypt$<salt>$<hash>", "roles": ["Operator"] } }
+}
+```
+
+- `allowAnonymous` (default `true`): `false` refuses anonymous sessions.
+- `secureOnly` (default `false`): `true` offers only `Sign` and `SignAndEncrypt` endpoints. Use it whenever a login is used outside of
+  your own computer: with security mode `None` the password travels in clear text.
+- `roles`: OPC UA well-known roles (`Observer`, `Operator`, `Engineer`, `Supervisor`, `ConfigureAdmin`, `SecurityAdmin`). A logged in user also
+  gets `AuthenticatedUser`; rights of several roles add up.
+
+| Role | Rights |
+|---|---|
+| Anonymous, AuthenticatedUser, Observer | browse, read, history, events (read only; no write, no method call - this includes the lock) |
+| Operator | everything, except calling the methods of `MachineryOperationMode` (`GotoProcessing`, `GotoMaintenance`, `GotoSetup`) |
+| Engineer, Supervisor, ConfigureAdmin, SecurityAdmin | everything |
+
+The rights are defined in `utils/src/lads-roles.ts` (`DefaultRights`, `OperationModeMethodRights`). At start the server logs
+`Role based access: ... self test ok (anonymous can write no variable)`; a `WARNING` there means the protection is not effective.
+Refused logins are logged as `Login refused: unknown user ...` or `wrong password for user ...` (never the password).
+
+The lock (`InitLock`) shows the login name as locking user, e.g. `operator@<client application>@<host>`.
+
+**Clients and gateways need a user for write access.** Anonymous clients can only read. For the OPC UA to MHS gateway configure
+`"auth": { "type": "username", "username": "MHSAgent", "password_env": "AGENT_PASSWORD" }` for the server and set the environment variable with
+the password before starting the gateway (and the gateway editor, which starts the gateway as a child process).
