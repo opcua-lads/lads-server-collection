@@ -22,7 +22,7 @@ T = dict(
     SupportedProperty='ns=4;i=1035', DeviceState='ns=4;i=1039', ControlFunctionState='ns=4;i=1044',
     AnalogScalar='ns=4;i=1016', AnalogArray='ns=4;i=1015', TwoStateControl='ns=4;i=1042',
     MultiStateControl='ns=4;i=1045', Components='ns=4;i=1025',
-    Lock='ns=1;i=6388', LifetimeVariable='ns=1;i=468',
+    Lock='ns=1;i=6388', LifetimeVariable='ns=1;i=468', MachineryItemState='ns=3;i=1002', OperationMode='ns=4;i=1050',
     MachineIdent='ns=3;i=1012', ComponentIdent='ns=3;i=1005', LifetimeCounters='ns=3;i=1015', OperationCounters='ns=3;i=1009',
     Failure='ns=1;i=15292', OffSpec='ns=1;i=15590', MaintReq='ns=1;i=15739')
 DT = dict(Boolean='i=1', UInt16='i=5', Int32='i=6', UInt32='i=7', Double='i=11', String='i=12', DateTime='i=13',
@@ -361,12 +361,12 @@ def state_machine_values(n):
     elif n.bn == 'AvailableTransitions' and n.parent is machine: n.value, n.ad = v_nodeid_list(FSM_TRANSITIONS[s] for s in transitions), (len(transitions) or 0)
     elif n.bn == 'CurrentState' and n.parent is machine: n.value = v_lt(initial)
     elif n.bn == 'Id': n.value = v_nodeid(FSM_STATES[initial])
-def expand_mandatory():
+def expand_mandatory(start=EXPAND_BASE):
     base = Model()
     d = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
     for f in ['Opc.Ua.NodeSet2.xml', 'Opc.Ua.Di.NodeSet2.xml', 'Opc.Ua.AMB.NodeSet2.xml', 'Opc.Ua.Machinery.NodeSet2.xml', 'Opc.Ua.LADS.NodeSet2.xml']:
         base.load(os.path.join(d, f))
-    counter, added = EXPAND_BASE, 0
+    counter, added = start, 0
     for _ in range(25):
         model = _own_model(base)
         gaps = model.gaps()
@@ -384,7 +384,17 @@ def expand_mandatory():
     else:
         raise SystemExit('expand_mandatory: no fixpoint')
     print('expanded', added, 'mandatory instance declarations')
-expand_mandatory()
+    return counter
+last_expanded = expand_mandatory()
+
+# Added after the first expansion on purpose: the new declarations get the NodeIds after the existing ones, all other NodeIds stay stable.
+# MachineryItemState (Machinery) and MachineryOperationMode (LADS operation mode state machine) are optional in LADSDeviceType; they are derived
+# from the device state, the functional units and DeviceHealth by LADSDeviceHelper. The optional Goto methods allow clients to change the mode.
+dev_t.obj('MachineryItemState', T['MachineryItemState'], nsb=3, nid='ns=5;i=5075', desc='MachineryItemState indicates the current state of the device in conformance with the Machinery Basics specification.')
+op_mode = dev_t.obj('MachineryOperationMode', T['OperationMode'], nsb=3, nid='ns=5;i=5076', desc='State machine representing the operation mode of a laboratory device. Optional methods allow for initiating changes of the operation mode from remote.')
+for i, m in enumerate(['GotoMaintenance', 'GotoProcessing', 'GotoSetup']):
+    Node('UAMethod', m, op_mode, td=None, nsb=4, nid=f'ns=5;i={7004 + i}')
+expand_mandatory(last_expanded)
 
 # ============================ output
 ALIAS = {'Boolean': 'i=1', 'UInt16': 'i=5', 'Int32': 'i=6', 'UInt32': 'i=7', 'Double': 'i=11', 'String': 'i=12', 'DateTime': 'i=13',

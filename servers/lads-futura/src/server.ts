@@ -9,7 +9,7 @@ Licensed under the GNU Affero General Public License v3 or later, see <http://ww
 
 import { assert, coerceNodeId, OPCUAServer, UAObject, UAVariable } from "node-opcua"
 import { join } from "path"
-import { createServer, DIObjectIds, DeviceTypeImage, initComponent, LADSDeviceHelper, LADSComponentOptions, installVariableHistory, DefaultLocation, DefaultHierarchicalLocation } from "@utils"
+import { createServer, DIObjectIds, DeviceTypeImage, initComponent, LADSDeviceHelper, LADSComponentOptions, installVariableHistory, DefaultLocation, DefaultHierarchicalLocation, setNumericValue } from "@utils"
 import { LADSDevice } from "@interfaces"
 import { exit } from "process"
 import { FuturaSimulator } from "./simulator"
@@ -93,6 +93,16 @@ class FuturaServerImpl {
         for (const [name, options] of Object.entries(componentOptions)) {
             const component = components?.getChildByName(name)
             if (component) initComponent(component as any, options)
+        }
+
+        // lifetime counters (the probe has AutoclaveCycles and LeakageDetections): start with a used device, random values in [25, 75]
+        const randomCount = () => 25 + Math.floor(Math.random() * 51)
+        for (const component of components?.getComponents() ?? []) {
+            const lifetimeCounters = (component as UAObject).getChildByName("LifetimeCounters") as UAObject | null
+            for (const counter of ["AutoclaveCycles", "LeakageDetections"]) {
+                const variable = lifetimeCounters?.getChildByName(counter) as UAVariable | null
+                if (variable) setNumericValue(variable, randomCount())
+            }
         }
 
         // history for the main measurements
