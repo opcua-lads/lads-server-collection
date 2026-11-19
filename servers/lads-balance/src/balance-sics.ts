@@ -37,16 +37,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { BalanceReading, toGrams, DeviceInfo, BalanceStatus, BalanceTareMode, BalanceEvents, getDecimalDigits } from "./balance";
 import { StreamBalance } from "./balance-stream";
+
+/** Mnemonic of the response to a command: SI and SIR answer with "S", all others with their own name (I4 -> "I4", TA -> "TA"). */
+function sicsResponseMnemonic(cmd: string): string {
+    const name = cmd.trim().split(/\s+/)[0].toUpperCase()
+    return (name === "SI" || name === "SIR") ? "S" : name
+}
+
+/**
+ * The text of an "I<n> A <text>" response: without the quotes, undefined if the command was not executed (I4 I, ES, ET, EL)
+ * or the response is not the one of this command.
+ */
+export function sicsInfoText(response: string, mnemonic: string): string | undefined {
+    const m = response.trim().match(new RegExp(`^${mnemonic}\\s+[AB]\\s+(.*)$`, "i"))
+    if (!m) return undefined
+    const text = m[1].replace(/^"(.*)"$/, "$1").replace(/"/g, "").trim()
+    return text.length > 0 ? text : undefined
+}
+
 export class SicsBalance extends StreamBalance {
     status: BalanceStatus
     presetTare: number = 0
+
+    /** Sends a SICS command and returns its response line (one line per command; late replies of other commands are discarded). */
+    protected async sics(cmd: string): Promise<string> {
+        const expected = sicsResponseMnemonic(cmd)
+        return this.requestLine(cmd, line => {
+            const token = line.trim().split(/\s+/)[0].toUpperCase()
+            return token === expected || token === "ES" || token === "ET" || token === "EL"
+        })
+    }
 
     get supportsPresetTare(): boolean { return true }
 
     async getCurrentReading(): Promise<BalanceReading> {
 
         // Current weight (and stable/unstable) from SI
-        const siResp = await this.sendCommand("SI");
+        const siResp = await this.sics("SI");
         const m = siResp.match(/S\s+([SD])\s+([+-]?\d+(?:\.\d+)?)\s*(\w+)/);
         if (!m) {
             if (siResp.trim() == "EL") {
@@ -70,7 +97,7 @@ export class SicsBalance extends StreamBalance {
             const weight = toGrams(Number(value), unit);
 
             // Current tare value from TA (to determine if tared)
-            const taResp = await this.sendCommand("TA");
+            const taResp = await this.sics("TA");
             const tMatch = taResp.match(/^TA\s+A\s+([+-]?\d+(?:\.\d+)?)\s*(\w+)/);
             const tareWeight = tMatch ? toGrams(Number(tMatch[1]), tMatch[2]) : undefined
             let tareMode = BalanceTareMode.None
@@ -106,23 +133,23 @@ export class SicsBalance extends StreamBalance {
      * Zero the balance
      */
     async setZero(): Promise<void> {
-        await this.sendCommand("Z");
+        await this.sics("Z");
     }
 
     /**
      * Set current gross as tare
      */
     async setTare(): Promise<void> {
-        await this.sendCommand("T");
+        await this.sics("T");
     }
 
     async clearTare(): Promise<void> {
-        await this.sendCommand(`TAC`)
+        await this.sics(`TAC`)
         this.presetTare = 0
     }
 
     async setPresetTare(oresetTare: number): Promise<void> {
-        await this.sendCommand(`TA ${oresetTare.toFixed(2)} g`)
+        await this.sics(`TA ${oresetTare.toFixed(2)} g`)
         this.presetTare = oresetTare
     }
 
@@ -142,8 +169,8 @@ export class SicsBalance extends StreamBalance {
         }
 
         try {
-            const respI2 = await this.sendCommand("I2");
-            const m = respI2.slice(5).replaceAll('"', "")
+            const respI2 = await this.sics("I2");
+            const m = sicsInfoText(respI2, "I2")
             if (m) {
                 info.model = m.trim()
                 if (info.model.startsWith("CUB")) {
@@ -158,15 +185,15 @@ export class SicsBalance extends StreamBalance {
         }
 
         try {
-            const respI3 = await this.sendCommand("I3");
-            const v = respI3.slice(5).replaceAll('"', "")
+            const respI3 = await this.sics("I3");
+            const v = sicsInfoText(respI3, "I3")
             console.log('Received Firmware:', v);
             if (v) info.firmware = v.trim();
         } catch {  }
 
         try {
-            const respI4 = await this.sendCommand("I4");
-            const s = respI4.slice(5).replaceAll('"', "")
+            const respI4 = await this.sics("I4");
+            const s = sicsInfoText(respI4, "I4")
             console.log('Received Serial:', s);
             if (s) info.serialNumber = s.trim();
         } catch { 

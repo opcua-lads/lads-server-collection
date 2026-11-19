@@ -31,6 +31,11 @@ export abstract class StreamBalance extends Balance {
     private buffer = "";
     private listenersAttached = false;
 
+    // complete response lines (line based protocols such as SICS); the raw buffer above is kept for the others (SBI)
+    private lineRest = "";
+    private lines: string[] = [];
+    private lineWaiter?: () => void;
+
     public constructor(
         protected readonly transport: BalanceTransport,
         private readonly commandTerminator = "\r\n",
@@ -45,7 +50,9 @@ export abstract class StreamBalance extends Balance {
         this.listenersAttached = true;
 
         this.transport.on("data", data => {
-            this.buffer += data.toString("utf8");
+            const text = data.toString("utf8");
+            this.buffer += text;
+            this.collectLines(text);
         });
 
         this.transport.on("error", error => {
@@ -102,6 +109,63 @@ export abstract class StreamBalance extends Balance {
             await this.transport.write(cmd + this.commandTerminator);
             await new Promise<void>(resolve => setTimeout(resolve, waitMs));
             return this.buffer;
+        });
+    }
+
+    /** Splits the received text into complete lines (CRLF or LF terminated); an incomplete last line waits for its rest. */
+    private collectLines(text: string): void {
+        const parts = (this.lineRest + text).split(/\r\n|\n/);
+        this.lineRest = parts.pop() ?? "";
+        for (const part of parts) {
+            if (part.trim().length > 0) this.lines.push(part.trim());
+        }
+        this.lineWaiter?.();
+    }
+
+    private waitForLine(timeoutMs: number): Promise<void> {
+        return new Promise<void>(resolve => {
+            const done = () => {
+                clearTimeout(timer);
+                this.lineWaiter = undefined;
+                resolve();
+            };
+            const timer = setTimeout(done, timeoutMs);
+            this.lineWaiter = done;
+        });
+    }
+
+    /**
+     * Sends a command and returns the response line that belongs to it: lines for which <accept> is false (late replies of
+     * earlier commands, unsolicited output) are discarded, the call returns as soon as the line has arrived completely.
+     * Lines received before the command was sent are stale and dropped. Returns "" if no matching line arrives within
+     * <timeoutMs> (the balance does not answer).
+     */
+    protected async requestLine(cmd: string, accept: (line: string) => boolean, timeoutMs = 1500): Promise<string> {
+        return this.withOperationLock(async () => {
+            if (!this.transport.isOpen) {
+                throw new Error("Balance transport is not connected");
+            }
+
+            this.lines.length = 0;
+            this.lineRest = "";
+            await this.transport.write(cmd + this.commandTerminator);
+
+            const deadline = Date.now() + timeoutMs;
+            for (;;) {
+                const index = this.lines.findIndex(accept);
+                if (index >= 0) {
+                    const skipped = this.lines.splice(0, index + 1);
+                    const line = skipped.pop() as string;
+                    if (skipped.length > 0) console.debug(`${cmd}: ignored ${JSON.stringify(skipped)}`);
+                    return line;
+                }
+                const remaining = deadline - Date.now();
+                if (remaining <= 0) {
+                    if (this.lines.length > 0) console.debug(`${cmd}: no matching response, received ${JSON.stringify(this.lines)}`);
+                    return "";
+                }
+                await this.waitForLine(remaining);
+            }
         });
     }
 
