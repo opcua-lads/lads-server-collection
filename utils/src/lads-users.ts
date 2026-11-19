@@ -10,9 +10,9 @@
  * {
  *   "allowAnonymous": true,                    // default true; false = login required
  *   "secureOnly": false,                       // true = only Sign / SignAndEncrypt endpoints (passwords never travel in clear text)
- *   "users": {
- *     "operator": { "password": "scrypt$<salt hex>$<hash hex>", "roles": ["Operator"] }
- *   }
+ *   "users": [
+ *     { "name": "operator", "password": "scrypt$<salt hex>$<hash hex>", "roles": ["Operator"] }
+ *   ]
  * }
  *
  * Passwords are stored as scrypt hashes, never in clear text. Create entries with: npm run user:add -- <name> <role[,role]>
@@ -26,6 +26,7 @@ import { makeRoles, MessageSecurityMode, SecurityPolicy, UserManagerOptions, Wel
 import type { NodeId } from "node-opcua"
 
 export interface LADSUserEntry {
+    name: string
     password: string        // scrypt$<salt hex>$<hash hex>
     roles?: string[]
 }
@@ -33,7 +34,7 @@ export interface LADSUserEntry {
 export interface LADSUsersConfig {
     allowAnonymous?: boolean
     secureOnly?: boolean
-    users?: { [name: string]: LADSUserEntry }
+    users?: LADSUserEntry[]
 }
 
 const KeyLength = 32
@@ -63,7 +64,12 @@ export function usersConfigFile(): string {
 export function readUsersConfig(file = usersConfigFile()): LADSUsersConfig | undefined {
     if (!existsSync(file)) return undefined
     try {
-        return JSON.parse(readFileSync(file, "utf8")) as LADSUsersConfig
+        const config = JSON.parse(readFileSync(file, "utf8")) as LADSUsersConfig
+        if (config.users !== undefined && !Array.isArray(config.users)) {
+            console.warn(`User configuration ${file}: "users" must be an array of { name, password, roles }, ignored`)
+            config.users = []
+        }
+        return config
     } catch (err) {
         console.warn(`User configuration ${file} ignored: ${err}`)
         return undefined
@@ -90,14 +96,14 @@ export interface ServerAuthentication {
  * Server options for the configured users, or undefined if no users are configured (then nothing changes).
  */
 export function createServerAuthentication(config = readUsersConfig()): ServerAuthentication | undefined {
-    const users = config?.users
-    if (!users || Object.keys(users).length === 0) return undefined
-    for (const [name, entry] of Object.entries(users)) {
+    const users = config?.users ?? []
+    if (users.length === 0) return undefined
+    for (const entry of users) {
         for (const role of entry.roles ?? []) {
-            if (!(role in WellKnownRoles)) console.warn(`User ${name}: unknown role "${role}" ignored`)
+            if (!(role in WellKnownRoles)) console.warn(`User ${entry.name}: unknown role "${role}" ignored`)
         }
     }
-    const known = (username: string) => Object.prototype.hasOwnProperty.call(users, username) ? users[username] : undefined
+    const known = (username: string) => users.find(entry => entry.name === username)
     const authentication: ServerAuthentication = {
         userManager: {
             isValidUser: (username: string, password: string) => {

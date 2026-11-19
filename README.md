@@ -63,13 +63,14 @@ server starts: restart the servers after changing it. The file location can be s
 {
     "allowAnonymous": true,
     "secureOnly": false,
-    "users": { "operator": { "password": "scrypt$<salt>$<hash>", "roles": ["Operator"] } }
+    "users": [ { "name": "operator", "password": "scrypt$<salt>$<hash>", "roles": ["Operator"] } ]
 }
 ```
 
 - `allowAnonymous` (default `true`): `false` refuses anonymous sessions.
 - `secureOnly` (default `false`): `true` offers only `Sign` and `SignAndEncrypt` endpoints. Use it whenever a login is used outside of
   your own computer: with security mode `None` the password travels in clear text.
+- `users`: array of `{ name, password, roles }`.
 - `roles`: OPC UA well-known roles (`Observer`, `Operator`, `Engineer`, `Supervisor`, `ConfigureAdmin`, `SecurityAdmin`). A logged in user also
   gets `AuthenticatedUser`; rights of several roles add up.
 

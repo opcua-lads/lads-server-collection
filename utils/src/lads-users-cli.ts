@@ -24,10 +24,10 @@ async function main() {
     const args = process.argv.slice(2)
     const file = usersConfigFile()
     const config = readUsersConfig(file) ?? {}
-    config.users = config.users ?? {}
+    config.users = config.users ?? []
 
     if (args[0] === "--remove" && args[1]) {
-        delete config.users[args[1]]
+        config.users = config.users.filter(user => user.name !== args[1])
         writeUsersConfig(config, file)
         console.log(`User ${args[1]} removed (${file})`)
         return
@@ -48,7 +48,10 @@ async function main() {
         console.error("Passwords empty or different, nothing changed")
         process.exit(1)
     }
-    config.users[name] = { password: hashPassword(password), roles }
+    const entry = { name, password: hashPassword(password), roles }
+    const index = config.users.findIndex(user => user.name === name)
+    if (index >= 0) config.users[index] = entry
+    else config.users.push(entry)
     writeUsersConfig(config, file)
     console.log(`User ${name} (${roles.join(", ")}) saved in ${file}`)
 }
