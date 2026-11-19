@@ -16,6 +16,7 @@ import {
 import os from "os"
 import { refreshSiteLocation } from "./lads-site-config"
 import path from "path";
+import { createServerAuthentication } from "./lads-users"
 
 export interface CreateServerOptions {
     port?: number
@@ -72,6 +73,16 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
         }
     }
     
+    // optional user name / password login and roles (config/lads-users.json); without users nothing changes
+    const authentication = createServerAuthentication()
+    if (authentication) {
+        serverOptions.userManager = authentication.userManager
+        serverOptions.allowAnonymous = authentication.allowAnonymous
+        if (authentication.securityModes) serverOptions.securityModes = authentication.securityModes
+        if (authentication.securityPolicies) serverOptions.securityPolicies = authentication.securityPolicies
+        console.log(`${options.applicationName}: user login enabled (anonymous ${authentication.allowAnonymous ? "allowed" : "refused"}${authentication.securityModes ? ", secure endpoints only" : ""})`)
+    }
+
     // support self signed certifcate 
     const certificateSupport = options.certificateSupport ?? true
     if (certificateSupport) {

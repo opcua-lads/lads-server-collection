@@ -1,0 +1,7 @@
+{
+    "allowAnonymous": true,
+    "secureOnly": false,
+    "users": {
+        "operator": { "password": "scrypt$<salt hex>$<hash hex>   (create with: npm run user:add -- operator Operator)", "roles": ["Operator"] }
+    }
+}

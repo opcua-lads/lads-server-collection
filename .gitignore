@@ -8,6 +8,7 @@ pnpm-debug.log*
 # - Project specific items
 servers/lads-balance/doc/
 config/lads-site.json
+config/lads-users.json
 lib/asm/schemas/automated-reactors.json
 
 # — Package‑manager lockfiles (keep if you want deterministic installs) —
