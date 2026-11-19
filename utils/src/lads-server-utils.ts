@@ -17,6 +17,7 @@ import os from "os"
 import { refreshSiteLocation } from "./lads-site-config"
 import path from "path";
 import { createServerAuthentication } from "./lads-users"
+import { installRolePermissions } from "./lads-roles"
 
 export interface CreateServerOptions {
     port?: number
@@ -109,6 +110,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
             server.registerServerManager = new LadsMdnsRegisterServerManager({ server }, options.applicationName)
             installShutdownService(server, options.applicationName)
         }
+        if (authentication) installRolePermissions(server)
         return server
     }
     catch (err) {
