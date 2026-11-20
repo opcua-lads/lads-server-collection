@@ -766,6 +766,8 @@ export function loginName(session: ServerSession | undefined): string | undefine
 export class LADSDeviceHelper {
     static eventType: UAObjectType
     private operationMode?: string          // last operation mode, for the transition event
+    private itemState?: string              // last item state and device state: value_changed also fires when the same state is set again
+    private deviceStateText?: string
     private operationModeCause?: string     // who triggered the current change of the operation mode
     device: LADSDevice
     options: LADSDeviceHelperOptions
@@ -980,6 +982,9 @@ export class LADSDeviceHelper {
     async onDeviceStateChanged(dataValue: DataValue) {
         const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
+        const previous = this.deviceStateText
+        this.deviceStateText = state
+        if (previous === state) return
         this.raiseEvent(`state changed to ${state} .. `, this.device.deviceState)
         if (!this.options.raiseEvents) this.raiseStateEvent(`Device state changed to ${state}`, this.device.deviceState)
         if (!state.includes(LADSDeviceState.Operate)) {
@@ -1017,6 +1022,9 @@ export class LADSDeviceHelper {
     async onMachineryItemStateChanged(dataValue: DataValue) {
         const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
+        const previous = this.itemState
+        this.itemState = state
+        if (previous === state) return
         if (!this.options.raiseEvents) this.raiseStateEvent(`Machinery item state changed to ${state}`, this.device.machineryItemState)
         else this.raiseEvent(`item state changed to ${state} .. `, this.device.machineryItemState)
     }
