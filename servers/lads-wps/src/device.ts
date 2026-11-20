@@ -32,6 +32,9 @@ import { LADSComponent, LifetimeVariableType } from "@interfaces"
 import { MaintenanceTaskImpl } from "@utils"
 import { EnumDeviceHealth } from "node-opcua-nodeset-di"
 import { LockImpl } from "@utils"
+import { DeviceTypeImage } from "@utils"
+import { join } from "path"
+import { existsSync } from "fs"
 
 
 //--------------------------------------------------------------- 
@@ -72,9 +75,18 @@ export class WpsDeviceImpl {
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
             browseName: config.name,
-            optionals: ["Lock"]
+            optionals: ["Lock", "DeviceTypeImage", "DeviceHealth", "DeviceHealthAlarms"]   // DI DeviceType optionals
         }) as WpsDevice
         this.device = device
+
+        // device type image (DI DeviceTypeImage folder): the configured file, as soon as it is in resources/images
+        const imagesDir = join(__dirname, "resources", "images")
+        if (config.deviceTypeImage && existsSync(join(imagesDir, config.deviceTypeImage))) {
+            DeviceTypeImage.create({ parent: device, imagesDir, imageFiles: [config.deviceTypeImage] })
+        } else if (config.deviceTypeImage) {
+            console.warn(`${config.name}: device type image ${join(imagesDir, config.deviceTypeImage)} not found`)
+        }
+
         this.initComponents(config)
 
         // eventually initialize lock
@@ -201,6 +213,17 @@ export class WpsDeviceImpl {
             this.uvLamp,
             this.tocSensor
         ].filter(component => (component !== undefined))
+
+        // DeviceHealthAlarms (DI 4.5.4) organizes the maintenance tasks of the components: MaintenanceTaskType (LADS 7.1.10)
+        // is a subtype of DI MaintenanceRequiredAlarmType, so each task is a device health alarm itself. One instance, two paths:
+        // HasComponent below the component's maintenance object, Organizes from the device's DeviceHealthAlarms folder.
+        const healthAlarms = this.device.getChildByName("DeviceHealthAlarms") as UAObject
+        if (healthAlarms) {
+            this.components.forEach(component => {
+                const alarm = component.task?.discreteAlarm
+                if (alarm) healthAlarms.addReference({ referenceType: "Organizes", nodeId: alarm.nodeId })
+            })
+        }
 
         // subscribe to device health changes
         setNumericValue(this.device.deviceHealth, EnumDeviceHealth.NORMAL)

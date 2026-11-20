@@ -89,7 +89,7 @@ export class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWith
     }
 
     evaluate() {
-        if (this.isRunning) return
+        if (!this.isRunning) return   // count only while dispensing
         const V = this.computeVolumes()
         if ((getNumericValue(this.targetValue) - V) <= 0) {
             this.enterStop()

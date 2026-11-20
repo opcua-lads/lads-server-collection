@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // functional unit implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState, MachineryOperationMode, LADSAnalogControlFunction } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, getLADSNamespace, AnalogControlFunctionImpl } from "@utils"
+import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState, MachineryOperationMode } from "@interfaces"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, enterClearing } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode, ISessionContext } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
 import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
@@ -78,6 +78,7 @@ export class WpsUnitImpl extends EventEmitter {
     programTemplates: ProgramTemplateTuple[] = []
     currentRunOptions: CurrentRunOptions
     pendingRequest: LADSFunctionalState
+    runCompleted = false   // set when a dispense reached its set point: the run ends regularly (Complete -> Idle)
     documentSet: ComplianceDocumentSetImpl
     lock: LockImpl
 
@@ -106,6 +107,7 @@ export class WpsUnitImpl extends EventEmitter {
         const functionalUnitSet = parent.getFunctionalUnitSet()
         const wpsUnitType = getWpsNameSpace(functionalUnitSet.addressSpace).findObjectType("WPSUnitType")
         optionals.push(
+            "FunctionalUnitState.Clear",   // Aborted (e.g. after an E-Stop) -> Clearing -> Stopped
             "FunctionSet.DispenseVolume.ControlFunctionState.StartWithTargetValue",
             "FunctionSet.DispenseTime.ControlFunctionState.StartWithTargetValue")
         this.functionalUnit = wpsUnitType.instantiate({
@@ -122,6 +124,7 @@ export class WpsUnitImpl extends EventEmitter {
         stateMachine.startProgram?.bindMethod(this.startProgram.bind(this))
         stateMachine.stop?.bindMethod(this.stop.bind(this))
         stateMachine.abort?.bindMethod(this.abort.bind(this))
+        stateMachine.clear?.bindMethod(this.clear.bind(this))
         const runningStateMachine = functionalUnit.functionalUnitState.runningStateMachine
         runningStateMachine.unhold?.bindMethod(this.resume.bind(this))
         runningStateMachine.unsuspend?.bindMethod(this.resume.bind(this))
@@ -130,9 +133,11 @@ export class WpsUnitImpl extends EventEmitter {
         this.functionalUnitState.currentState.on("value_changed", this.onFunctionalUnitStateChanged.bind(this))
         this.runningState = promoteToFiniteStateMachine(runningStateMachine)
         this.runningState.currentState.on("value_changed", this.onRunningStateChanged.bind(this))
+        // default: Running.Idle (as the freezer); a dispense or a program goes to Running.Execute and back to Idle.
+        // Order as in the freezer: first the unit to Running, then the sub state (Resetting -> Idle) - its change
+        // writes the effective display name "Running.Idle"
+        this.functionalUnitState.setState(LADSFunctionalState.Running)
         this.transiteReset()
-        this.functionalUnitState.setState(LADSFunctionalState.Stopped)
-        this.deactivateRunnnigState()
 
         // initialize lock
         if (functionalUnit.lock) {
@@ -207,26 +212,6 @@ export class WpsUnitImpl extends EventEmitter {
             this.toc.on("value_changed", (dataValue) => setNumericValue(this.tocSensor.sensorValue, dataValue.value.value))
         }
 
-        // controller alarm test
-        if (true) {
-            const analogControlFunctionType = getLADSNamespace(functionalUnit.addressSpace).findObjectType("AnalogControlFunctionType")
-            const tc = analogControlFunctionType.instantiate({
-                componentOf: functionSet,
-                browseName: "Temperature Controller",
-                optionals: ["ControlFunctionState.Start", "ControlFunctionState.Stop"]
-            }) as LADSAnalogControlFunction
-            const temperatureController = new AnalogControlFunctionImpl(tc, {
-                lowLimit: -1,
-                lowLowLimit: -2,
-                highLimit: 1,
-                highHighLimit: 2
-            })
-            setNumericValue(tc.currentValue, 25)
-            setNumericValue(tc.targetValue, 37)
-            this.temperature.on("value_changed", (dataValue: DataValue) => setNumericValue(tc.currentValue, dataValue.value.value))
-            // temperatureController.alarmMonitor.setEnabledState(false)
-        }
-
         // init program manager
         this.initProgramTemplates()
         this.initControllers(functionSet)
@@ -234,8 +219,13 @@ export class WpsUnitImpl extends EventEmitter {
         // start simlulation
         const dT = 500
         let runTime = 0
-        setInterval(() => {
-            this.evaluate(runTime, dT)
+        const timer = setInterval(() => {
+            try {
+                this.evaluate(runTime, dT)
+            } catch (err) {
+                clearInterval(timer)   // the address space is gone (server shutting down): stop the simulation quietly
+                return
+            }
             runTime += dT
         }, dT)
     }
@@ -244,6 +234,23 @@ export class WpsUnitImpl extends EventEmitter {
         this.dispenseModeController = new DispenseModeControlFunctionImpl(functionSet.dispenseMode)
         this.dispenseVolumeController = new DispenseVolumeControlFunctionImpl(functionSet.dispenseVolume, this.flow)
         this.dispenseTimeController = new DispenseTimerControlFunctionImpl(functionSet.dispenseTime, this.dispenseVolumeController)
+        // all dispense controllers start Stopped (otherwise their state stays empty)
+        for (const c of [this.dispenseModeController, this.dispenseVolumeController, this.dispenseTimeController])
+            c.stateMachine.setState(LADSFunctionalState.Stopped)
+        // a dispense started directly at its control function (DispenseVolume / DispenseTime Start) is a dispense run
+        // of the unit, too: Running.Idle -> Running.Execute, and back to Idle when the controller stops
+        for (const c of [this.dispenseVolumeController, this.dispenseTimeController])
+            c.on("start", () => { if (!this.currentRunOptions && this.readyToStart()) this.beginDispenseRun(c) })
+    }
+
+    private beginDispenseRun(controller: DispenseVolumeControlFunctionImpl | DispenseTimerControlFunctionImpl, context?: ISessionContext) {
+        this.initCurrentRunOptions(DispenseId)
+        const F = getNumericValue(this.flow) > 0 ? getNumericValue(this.flow) : 1.0
+        const V = getNumericValue(this.dispenseVolumeController.targetValue)
+        const T = getNumericValue(this.dispenseTimeController.targetValue)
+        this.currentRunOptions.estimatedRuntime = controller === this.dispenseVolumeController ? 60000 * V / F : T
+        controller.once("stop", () => { if (this.currentRunOptions?.programTemplateId === DispenseId) this.runCompleted = true })
+        this.enterRunning(context)
     }
 
     protected isAccessibleBy(sessionContext: ISessionContext): boolean { return this.lock ? this.lock.isAccessibleBy(sessionContext) : true }
@@ -293,7 +300,12 @@ export class WpsUnitImpl extends EventEmitter {
 
     private readyToStart(): boolean {
         const currentState = this.functionalUnitState.getCurrentState();
-        return (currentState.includes(LADSFunctionalState.Stopped) || currentState.includes(LADSFunctionalState.Aborted))
+        if (currentState.includes(LADSFunctionalState.Running)) return this.isIdle && !this.currentRunOptions
+        return currentState.includes(LADSFunctionalState.Stopped)   // Aborted needs Clear first
+    }
+
+    private readyToClear(): boolean {
+        return this.functionalUnitState.getCurrentState().includes(LADSFunctionalState.Aborted)
     }
 
     private readyToStop(): boolean {
@@ -386,7 +398,10 @@ export class WpsUnitImpl extends EventEmitter {
         setStringValue(activeProgram.deviceProgramRunId, options.runId)
         this.currentRunOptions = options
         this.pendingRequest = LADSFunctionalState.Running
-        this.functionalUnitState.setState(LADSFunctionalState.Running)
+        this.runCompleted = false
+        if (!this.functionalUnitState.getCurrentState().includes(LADSFunctionalState.Running)) {
+            this.functionalUnitState.setState(LADSFunctionalState.Running)   // activates the running state machine in Idle
+        }
         await this.transiteStart()
         await this.run()
     }
@@ -427,7 +442,9 @@ export class WpsUnitImpl extends EventEmitter {
                     } else if (step.confirmation) {
                         waiting = !this.isExecuting
                     }
-                    if ((this.pendingRequest === LADSFunctionalState.Stopping) || (this.pendingRequest === LADSFunctionalState.Aborted)) {
+                    if (this.runCompleted) {
+                        waiting = false   // e.g. the dispense reached its volume / time: regular end below
+                    } else if ((this.pendingRequest === LADSFunctionalState.Stopping) || (this.pendingRequest === LADSFunctionalState.Aborting)) {
                         waiting = false
                         aborted = true
                         this.leaveRunning(this.pendingRequest)
@@ -437,12 +454,14 @@ export class WpsUnitImpl extends EventEmitter {
                 }
             }
         }
-        if (!aborted) this.leaveRunning(LADSFunctionalState.Stopping)
+        if (!aborted) this.leaveRunning(LADSFunctionalState.Running)   // regular end: Completing -> Complete -> Idle
     }
 
+    // state: Running = the run ended regularly, Stopping = it was stopped, Aborting = it was aborted
     private async leaveRunning(state: LADSFunctionalState) {
         const stateMachine = this.functionalUnitState
-        stateMachine.setState(state)
+        if (state === LADSFunctionalState.Aborting) stateMachine.setState(LADSFunctionalState.Aborting)
+        else if (state === LADSFunctionalState.Running) await this.transiteToComplete()
         const options = this.currentRunOptions
         if (options) {
             this.currentRunOptions = undefined
@@ -472,8 +491,14 @@ export class WpsUnitImpl extends EventEmitter {
         }
         await this.dispenseModeController.enterStop()
         await this.dispenseTimeController.enterStop()
-        await this.transiteReset()
-        stateMachine.setState(LADSFunctionalState.Stopped)
+        if (this.dispenseVolumeController.stateMachine.getCurrentState()?.includes(LADSFunctionalState.Running))
+            await this.dispenseVolumeController.enterStop()   // a stopped / aborted dispense ends the volume controller, too
+        this.pendingRequest = undefined
+        if (state === LADSFunctionalState.Aborting) {
+            stateMachine.setState(LADSFunctionalState.Aborted)
+        } else {
+            await this.transiteReset()   // back to Running.Idle, the unit stays operative
+        }
     }
 
     private async startDispense(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
@@ -481,16 +506,7 @@ export class WpsUnitImpl extends EventEmitter {
         if (!this.readyToStart()) return { statusCode: StatusCodes.BadInvalidState }
         const mode = getNumericValue(this.dispenseModeController.currentValue)
         const controller = mode === 0 ? this.dispenseVolumeController : this.dispenseTimeController
-        this.initCurrentRunOptions(DispenseId)
-        // estimate runtimg
-        const F = getNumericValue(this.flow) > 0 ? getNumericValue(this.flow) : 1.0
-        const V = getNumericValue(this.dispenseVolumeController.targetValue)
-        const T = getNumericValue(this.dispenseTimeController.targetValue)
-        const estimatedRuntime = mode === 0 ? 60000 * V / F : T
-        this.currentRunOptions.estimatedRuntime = estimatedRuntime
-        this.enterRunning(context)
-        controller.enterStart()
-        controller.on("stop", () => this.pendingRequest = LADSFunctionalState.Stopping)
+        controller.enterStart()   // its "start" event begins the dispense run (see initControllers)
         return { statusCode: StatusCodes.Good }
     }
 
@@ -526,7 +542,13 @@ export class WpsUnitImpl extends EventEmitter {
     private async stop(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
         if (!this.readyToStop()) return { statusCode: StatusCodes.BadInvalidState }
-        this.pendingRequest = LADSFunctionalState.Stopping
+        if (this.currentRunOptions) {
+            this.pendingRequest = LADSFunctionalState.Stopping   // the run ends, the unit goes back to Running.Idle
+        } else {
+            this.functionalUnitState.setState(LADSFunctionalState.Stopping)
+            await sleepMilliSeconds(200)
+            this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+        }
         return { statusCode: StatusCodes.Good }
     }
 
@@ -537,16 +559,24 @@ export class WpsUnitImpl extends EventEmitter {
         return { statusCode: StatusCodes.Good }
     }
 
+    private async clear(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
+        if (!this.isAccessibleBy(context)) return { statusCode: StatusCodes.BadLocked }
+        if (!this.readyToClear()) return { statusCode: StatusCodes.BadInvalidState }
+        enterClearing(this.functionalUnitState, this.functionalUnit)   // not awaited: Aborted -> Clearing -> Stopped
+        return { statusCode: StatusCodes.Good }
+    }
+
     // runnning state machine
     private isInRunningState(state: LADSRunnnigState): boolean { return this.runningState.getCurrentState().includes(state) }
     private get isHeld(): boolean { return this.isInRunningState(LADSRunnnigState.Held) }
     private get isSuspended(): boolean { return this.isInRunningState(LADSRunnnigState.Suspended) }
     private get isExecuting(): boolean { return this.isInRunningState(LADSRunnnigState.Execute) }
+    private get isIdle(): boolean { return this.isInRunningState(LADSRunnnigState.Idle) }
 
     private onFunctionalUnitStateChanged(value: DataValue) {
         const stateName: LocalizedText = value.value.value
         if (stateName.text.includes(LADSFunctionalState.Running)) {
-            this.activateRunningState()
+            this.activateRunningState(LADSRunnnigState.Idle)
         } else {
             const lastState = this.functionalUnitState.getCurrentState()
             if (lastState) {

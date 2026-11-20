@@ -45,6 +45,7 @@ export interface DeviceConfig {
     hasUF?: boolean
     hasUV?: boolean
     hasTOC?: boolean
+    deviceTypeImage?: string    // file in resources/images (DI DeviceTypeImage folder)
 }
 
 const DefaultConfig: ServerConfig = {
@@ -58,6 +59,7 @@ const DefaultConfig: ServerConfig = {
             model: "arium pro VF",
             serialNumber: "4711",
             hasTOC: true,
+            deviceTypeImage: "sartorius-arium-pro.png",
             hasUF: true,
             hasUV: true
         },
@@ -67,6 +69,7 @@ const DefaultConfig: ServerConfig = {
             manufacturer: "sartorius",
             model: "arium pro DI",
             serialNumber: "4712",
+            deviceTypeImage: "sartorius-arium-pro.png",
         },
     ]
 }
