@@ -42,6 +42,13 @@ for n in m.nodes.values():
         if n['cls'] == 'UAMethod' and r in ('HasProperty', 'i=46'): continue      # shared InputArguments / OutputArguments
         (errors if n['cls'] in ('UAObject', 'UAVariable') and t['cls'] in ('UAObject', 'UAVariable') and t.get('rule') and t['id'][0] != BASE else warnings).append(
             f'reference {path(n["id"])} -> {r} {t["name"][1]} of {t["id"][0].rstrip("/").split("/")[-1]} ({t["id"][1]})')
+# 4. remote operation mode: MachineryOperationMode of a device without the Goto methods cannot be switched (optional in LADS, wanted for maintenance)
+kids = m.kids()
+for n in m.nodes.values():
+    if not n['own'] or n['cls'] != 'UAObject' or n['name'][1] != 'MachineryOperationMode': continue
+    have = {m.nodes[c]['name'][1] for c in kids.get(n['id'], []) if m.nodes[c]['cls'] == 'UAMethod'}
+    missing = [x for x in ('GotoProcessing', 'GotoMaintenance', 'GotoSetup') if x not in have]
+    if missing: warnings.append(f'{path(n["id"])} ({n["id"][1]}) has no ' + ', '.join(missing))
 for e in errors: print('error    ' + e)
 for w in warnings: print('warning  ' + w)
 print(f'gaps: {len(g)}, errors: {len(errors)}, warnings: {len(warnings)}', file=sys.stderr)

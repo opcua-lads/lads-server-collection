@@ -1621,4 +1621,28 @@
             </uax:ExtensionObject>
         </Value>
     </UAVariable>
+    <UAMethod NodeId="ns=5;i=7016" BrowseName="4:GotoProcessing" ParentNodeId="ns=5;i=5012">
+        <DisplayName>GotoProcessing</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5012</Reference>
+        </References>
+    </UAMethod>
+
+    <UAMethod NodeId="ns=5;i=7017" BrowseName="4:GotoMaintenance" ParentNodeId="ns=5;i=5012">
+        <DisplayName>GotoMaintenance</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5012</Reference>
+        </References>
+    </UAMethod>
+
+    <UAMethod NodeId="ns=5;i=7018" BrowseName="4:GotoSetup" ParentNodeId="ns=5;i=5012">
+        <DisplayName>GotoSetup</DisplayName>
+        <References>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5012</Reference>
+        </References>
+    </UAMethod>
+
 </UANodeSet>
