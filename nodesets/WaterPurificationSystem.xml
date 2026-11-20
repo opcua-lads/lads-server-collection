@@ -272,6 +272,7 @@
             <Reference ReferenceType="HasAddIn">ns=5;i=5016</Reference>
             <Reference ReferenceType="HasProperty">ns=4;i=6029</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6091</Reference>
+            <Reference ReferenceType="HasProperty">ns=5;i=7093</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=7067</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=7068</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=7069</Reference>
@@ -518,6 +519,14 @@
             <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty">i=3728</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="String" NodeId="ns=5;i=7093" BrowseName="2:HierarchicalLocation" ParentNodeId="ns=5;i=1002" UserAccessLevel="3" AccessLevel="3">
+        <DisplayName>HierarchicalLocation</DisplayName>
+        <Description>HierarchicalLocation provides the hierarchical location of the Device or Component. The structure within the string may expose several levels. How this is exposed, which delimiters are used, etc. is vendor-specific. Examples of such strings are “FactoryA/BuildingC/Floor1” or “Area1-ProcessCell17-Unit4” (see OPC UA OPC 10000-110 for more details).</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
         </References>
     </UAVariable>
     <UAVariable DataType="String" NodeId="ns=5;i=6091" BrowseName="2:OperationalLocation" ParentNodeId="ns=5;i=1002" UserAccessLevel="3" AccessLevel="3">
