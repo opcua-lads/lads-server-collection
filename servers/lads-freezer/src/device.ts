@@ -34,7 +34,6 @@ export class FreezerDeviceImpl {
         initComponent(device, config)
  
          // LCC PoC integration
-         setStringValue(this.device.componentName, this.device.getDisplayName())
          setStringValue(this.device.hierarchicalLocation, config.hierarchicalLocation ?? DefaultHierarchicalLocation)
  
         // install default device helper

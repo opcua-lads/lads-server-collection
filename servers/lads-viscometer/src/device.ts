@@ -120,7 +120,7 @@ export class ViscometerDeviceImpl {
             deviceRevision: "1.0",
             assetId: "0815-4711",
             hardwareRevision: "1.0",
-            componentName: `My ${name}`,
+            componentName: "My Viscometer",
             location: DefaultLocation,
         }
         initComponent(device, deviceOptions)   // also fills device.identification; HierarchicalLocation defaults to the site (config/lads-site.json)
@@ -139,8 +139,6 @@ export class ViscometerDeviceImpl {
             else console.warn(`Viscometer component ${componentName} not found`)
         }
 
-        // LCC PoC integration
-        setStringValue(this.device.componentName, this.device.getDisplayName())
         
         // initialize device
         const deviceHelper = new LADSDeviceHelper(this.device, {initializationTime: 2000, shutdownTime: 2000, raiseEvents: true})
