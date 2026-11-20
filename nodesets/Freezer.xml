@@ -155,7 +155,6 @@
             <Reference ReferenceType="HasComponent">ns=5;i=5004</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=6137</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=5007</Reference>
-            <Reference ReferenceType="HasComponent">ns=5;i=7043</Reference>
             <Reference ReferenceType="HasComponent">ns=5;i=7044</Reference>
         </References>
     </UAObject>
@@ -3308,15 +3307,6 @@
             <Reference ReferenceType="HasProperty">ns=4;i=6021</Reference>
         </References>
     </UAMethod>
-    <UAObject NodeId="ns=5;i=7043" BrowseName="4:Operational" ParentNodeId="ns=5;i=5002">
-        <DisplayName>Operational</DisplayName>
-        <Description>Operational organizes the methods and current state of the cover function.</Description>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">ns=1;i=1005</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5002</Reference>
-        </References>
-    </UAObject>
     <UAObject NodeId="ns=5;i=7044" BrowseName="4:Operational" ParentNodeId="ns=5;i=5002">
         <DisplayName>Operational</DisplayName>
         <Description>Operational organizes the methods and current state of the cover function.</Description>
@@ -3324,18 +3314,9 @@
             <Reference ReferenceType="HasTypeDefinition">ns=1;i=1005</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5002</Reference>
-            <Reference ReferenceType="Organizes">ns=5;i=7045</Reference>
             <Reference ReferenceType="Organizes">ns=5;i=7046</Reference>
         </References>
     </UAObject>
-    <UAVariable DataType="i=21" NodeId="ns=5;i=7045" BrowseName="CurrentState" ParentNodeId="ns=5;i=7044">
-        <DisplayName>Current State</DisplayName>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="Organizes" IsForward="false">ns=5;i=7044</Reference>
-        </References>
-    </UAVariable>
     <UAVariable DataType="i=21" NodeId="ns=5;i=7046" BrowseName="CurrentState" ParentNodeId="ns=5;i=7044">
         <DisplayName>Current State</DisplayName>
         <References>
@@ -3343,18 +3324,9 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="Organizes" IsForward="false">ns=5;i=7044</Reference>
             <Reference ReferenceType="HasProperty">ns=5;i=7047</Reference>
-            <Reference ReferenceType="HasProperty">ns=5;i=7048</Reference>
         </References>
     </UAVariable>
     <UAVariable DataType="i=17" NodeId="ns=5;i=7047" BrowseName="Id" ParentNodeId="ns=5;i=7046">
-        <DisplayName>Id</DisplayName>
-        <References>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-            <Reference ReferenceType="HasModellingRule">i=78</Reference>
-            <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=7046</Reference>
-        </References>
-    </UAVariable>
-    <UAVariable DataType="i=17" NodeId="ns=5;i=7048" BrowseName="Id" ParentNodeId="ns=5;i=7046">
         <DisplayName>Id</DisplayName>
         <References>
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
@@ -3385,38 +3357,6 @@
             <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5010</Reference>
         </References>
     </UAMethod>
-
-    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=7052" BrowseName="CurrentState" ParentNodeId="ns=5;i=5025">
-        <DisplayName>CurrentState</DisplayName>
-        <References>
-            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5025</Reference>
-            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
-        </References>
-    </UAVariable>
-
-    <UAVariable DataType="NodeId" NodeId="ns=5;i=7053" BrowseName="Id" ParentNodeId="ns=5;i=7052">
-        <DisplayName>Id</DisplayName>
-        <References>
-            <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=7052</Reference>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-        </References>
-    </UAVariable>
-
-    <UAVariable DataType="LocalizedText" NodeId="ns=5;i=7054" BrowseName="CurrentState" ParentNodeId="ns=5;i=5026">
-        <DisplayName>CurrentState</DisplayName>
-        <References>
-            <Reference ReferenceType="HasComponent" IsForward="false">ns=5;i=5026</Reference>
-            <Reference ReferenceType="HasTypeDefinition">i=2760</Reference>
-        </References>
-    </UAVariable>
-
-    <UAVariable DataType="NodeId" NodeId="ns=5;i=7055" BrowseName="Id" ParentNodeId="ns=5;i=7054">
-        <DisplayName>Id</DisplayName>
-        <References>
-            <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=7054</Reference>
-            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
-        </References>
-    </UAVariable>
 
     <UAMethod NodeId="ns=5;i=7056" BrowseName="4:GotoProcessing" ParentNodeId="ns=5;i=5026">
         <DisplayName>GotoProcessing</DisplayName>
