@@ -121,7 +121,7 @@ export abstract class ViscometerUnitImpl {
         if (withEvent) {
             raiseEvent(controller, "Started")
         }
-
+        return StatusCodes.Good
     }
     
     private stopController(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx, withEvent: boolean): StatusCode {
@@ -133,6 +133,34 @@ export abstract class ViscometerUnitImpl {
         if (withEvent) {
             raiseEvent(controller, "Stopped")
         }
+        return StatusCodes.Good
+    }
+
+    // Manual operation: the functional unit follows the controllers. It is Running as long as one of the controllers runs,
+    // unless a program run (which owns the unit state) is active.
+
+    /** Start of a controller by hand: the unit goes from Stopped to Running; in any other state (Aborted, Stopping ...) the start is refused. */
+    private startControllerByHand(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx): StatusCode {
+        const unitState = this.functionalUnitState.getCurrentState()
+        if (unitState.includes(LADSFunctionalState.Stopped)) {
+            this.functionalUnitState.setState(LADSFunctionalState.Running)
+            raiseEvent(this.functionalUnit, `Started by the ${controller.getDisplayName()}`)
+        } else if (!unitState.includes(LADSFunctionalState.Running)) {
+            return StatusCodes.BadInvalidState
+        }
+        return this.startController(controller, stateMachine, true)
+    }
+
+    /** Stop of a controller by hand: when no controller runs any more, the unit goes back to Stopped. */
+    private stopControllerByHand(controller: LADSBaseControlFunction, stateMachine: UAStateMachineEx): StatusCode {
+        const status = this.stopController(controller, stateMachine, true)
+        const anyRunning = [this.speedControllerState, this.temperatureControllerState]
+            .some(machine => machine.getCurrentState().includes(LADSFunctionalState.Running))
+        if (!this.runActive && !anyRunning && this.isRunning()) {
+            this.functionalUnitState.setState(LADSFunctionalState.Stopped)
+            raiseEvent(this.functionalUnit, "Stopped, all controllers are off")
+        }
+        return status
     }
     
     // speed controller
@@ -150,11 +178,11 @@ export abstract class ViscometerUnitImpl {
     }
 
     private async startSpeedController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.startController(this.speedController, this.speedControllerState, true) }
+        return { statusCode: this.startControllerByHand(this.speedController, this.speedControllerState) }
     }
 
     private async stopSpeedController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.stopController(this.speedController, this.speedControllerState, true) }
+        return { statusCode: this.stopControllerByHand(this.speedController, this.speedControllerState) }
     }
 
     private evaluateSpeedController(dT: number) {
@@ -194,11 +222,11 @@ export abstract class ViscometerUnitImpl {
     }
 
     private async startTemperatureController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.startController(this.temperatureController, this.temperatureControllerState, true) }
+        return { statusCode: this.startControllerByHand(this.temperatureController, this.temperatureControllerState) }
     }
 
     private async stopTemperatureController(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.stopController(this.temperatureController, this.temperatureControllerState, true) }
+        return { statusCode: this.stopControllerByHand(this.temperatureController, this.temperatureControllerState) }
     }
 
     private evaluateTemperatureController(dT: number) {
@@ -359,6 +387,7 @@ export abstract class ViscometerUnitImpl {
         if (!this.isRunning()) return { statusCode: StatusCodes.BadInvalidState }
         const stateMachine = this.functionalUnitState
         stateMachine.setState(LADSFunctionalState.Stopping)
+        this.stopControllers()    // Stop of the unit switches off both controllers, with or without a program run
         enterStateChain(stateMachine, [LADSFunctionalState.Stopped])    // not awaited: Stopping -> Stopped
             .catch(err => raiseEvent(this.functionalUnit, `Stopping failed: ${err}`, EventSeverity.Alarm))
         return { statusCode: StatusCodes.Good }
