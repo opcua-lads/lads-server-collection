@@ -58,7 +58,7 @@ export function applyDefaultRolePermissions(server: OPCUAServer): void {
         if (property) {
             property.bindVariable(defaults, true)       // nodesets define the property with an empty value
         } else if (metadata) {
-            own.addVariable({ propertyOf: metadata, browseName: "DefaultRolePermissions", dataType: "RolePermissionType", valueRank: 1, accessLevel: "CurrentRead", minimumSamplingInterval: 0, value: defaults })
+            own.addVariable({ propertyOf: metadata, browseName: "DefaultRolePermissions", dataType: "RolePermissionType", valueRank: 1, accessLevel: "CurrentRead", minimumSamplingInterval: 1000, value: defaults })
         }
     }
 }
