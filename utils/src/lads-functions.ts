@@ -449,11 +449,17 @@ export class AnalogControlFunctionWithTotalizerImpl extends AnalogControlFunctio
     constructor(controlFunction: LADSAnalogControlFunctionWithTotalizer) {
         super(controlFunction)
         this.totalizedValue = controlFunction.totalizedValue
-        controlFunction.resetTotalizer?.bindMethod(this.handleResetTotalizer.bind(this))
+        // ResetTotalizer is optional in AnalogControlFunctionWithTotalizerType (LADS 7.6.8.2): add it when the instance lacks it
+        const reset = controlFunction.resetTotalizer ?? controlFunction.namespace.addMethod(controlFunction, {
+            browseName: new QualifiedName({ name: "ResetTotalizer", namespaceIndex: getLADSNamespace(controlFunction.addressSpace).index }),
+            inputArguments: [{ name: "Value", description: { text: "Value the totalizer is reset to" }, dataType: DataType.Double }],
+            outputArguments: [],
+        })
+        reset.bindMethod(this.handleResetTotalizer.bind(this))
     }
 
     private async handleResetTotalizer(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        const value = inputArguments.length > 0 ? Number(inputArguments[0]) : 0
+        const value = inputArguments.length > 0 ? Number(inputArguments[0].value ?? 0) : 0
         setNumericValue(this.totalizedValue, value)
         return { statusCode: StatusCodes.Good }
     }
