@@ -8,6 +8,9 @@
  * Without a file, or with an unknown site label, the single hard coded fallback ("essentim Office") is used.
  *
  * Site selection, highest priority first:
+ *   0. per device entry:    "devices": { "<ProductInstanceUri>": "<label>" | "<hierarchical location>" }
+ *                           (see siteOfDevice: devices of one server, even of one DeviceSet, can be at different places,
+ *                           e.g. two labs at the same site; the value is a site label or directly a hierarchical location)
  *   1. command line:        --site "<label>"
  *   2. environment:         LADS_SITE=<label>
  *   3. per server entry:    "servers": { "lads-viscometer": "<label>" }
@@ -40,6 +43,7 @@ export interface LADSSiteConfig {
     hierarchicalLocation?: string
     hierarchicalLocations?: NamedHierarchicalLocation[]
     servers?: { [serverName: string]: string }
+    devices?: { [productInstanceUri: string]: string }
     geocode?: boolean
     geocodeCache?: { [hierarchicalLocation: string]: string }
 }
@@ -53,6 +57,7 @@ export interface LADSSite {
     file?: string
     locationSource: "preset" | "config" | "cache" | "fallback"
     geocode: boolean
+    devices: { [productInstanceUri: string]: string }
 }
 
 // the only hard coded values
@@ -106,8 +111,26 @@ export function loadSite(): LADSSite {
         hierarchicalLocation: entry.value,
         hierarchicalLocationLabel: entry.label,
         hierarchicalLocations: locations,
+        devices: config.devices ?? {},
         source: file ?? "built-in fallback"
     }
+}
+
+/**
+ * The site of one device from the "devices" section of the configuration, by its ProductInstanceUri (unique per device instance,
+ * DI). The value is the label of a hierarchicalLocations entry or directly a hierarchical location ("DE/Aachen/.../Lab_2").
+ * Undefined when the device has no entry: it uses the site of its server.
+ */
+export function siteOfDevice(productInstanceUri: string | undefined): NamedHierarchicalLocation | undefined {
+    if (!productInstanceUri) return undefined
+    const key = Object.keys(Site.devices).find(k => k.trim().toLowerCase() === productInstanceUri.trim().toLowerCase())
+    if (!key) return undefined
+    const value = Site.devices[key].trim()
+    const preset = Site.hierarchicalLocations.slice().reverse().find(location => location.label === value)
+    if (preset) return preset
+    if (value.includes("/")) return { label: value, value }
+    console.warn(`Site of device ${productInstanceUri}: unknown site "${value}" (neither a label nor a hierarchical location), ignored.`)
+    return undefined
 }
 
 export const Site: LADSSite = loadSite()

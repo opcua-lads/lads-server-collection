@@ -70,7 +70,7 @@ import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
 import { getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
 import { eventData, raiseEvent } from "./lads-event-utils"
 import { AFODictionary } from "@afo"
-import { Site, NamedHierarchicalLocation } from "./lads-site-config"
+import { Site, NamedHierarchicalLocation, siteOfDevice } from "./lads-site-config"
 import { GeoLocationUpdater } from "./lads-geolocation"
 
 export enum DIObjectIds {
@@ -797,8 +797,13 @@ export class LADSDeviceHelper {
         // provide machinery compatibility
         this.buildMachineryStructure(device)
 
-        // devices without an explicit HierarchicalLocation get the one of the site configuration (config/lads-site.json)
-        if (device.hierarchicalLocation && !getStringValue(device.hierarchicalLocation, "")) {
+        // HierarchicalLocation from the site configuration (config/lads-site.json): a "devices" entry for this device
+        // (by ProductInstanceUri) wins; devices without an explicit value get the site of their server
+        const deviceSite = siteOfDevice(getStringValue(device.productInstanceUri, ""))
+        if (device.hierarchicalLocation && deviceSite) {
+            setStringValue(device.hierarchicalLocation, deviceSite.value)
+            console.log(`Site of ${device.getDisplayName()}: ${deviceSite.label} (${deviceSite.value}) [devices entry]`)
+        } else if (device.hierarchicalLocation && !getStringValue(device.hierarchicalLocation, "")) {
             setStringValue(device.hierarchicalLocation, DefaultHierarchicalLocation)
         }
 
