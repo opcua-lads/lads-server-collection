@@ -9,17 +9,31 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DataType, DataValue, UAAnalogUnitRange, UAObject, UATwoStateDiscrete, UAVariable } from "node-opcua"
+import { BaseNode, DataType, DataValue, UAAnalogUnitRange, UAObject, UATwoStateDiscrete, UAVariable } from "node-opcua"
 import { getEUInformation, getStringValue } from "./lads-variable-utils"
 
 //---------------------------------------------------------------
 // generic event raising
 //---------------------------------------------------------------
-/** Raises a BaseEventType event. The event source (SourceName) is provided by the event itself, so the message does not repeat it. */
-export function raiseEvent(node: UAObject, message: string, severity: number = 0) {
+/**
+ * Raises a BaseEventType event on the notifier node. The event source (SourceNode, SourceName) is the notifier itself, or
+ * the given source when the event belongs to a part below it (for example the DeviceHealth variable, the state machine
+ * of MachineryOperationMode): clients can then route the event by its SourceNode, not by its text.
+ */
+export function raiseEvent(node: UAObject, message: string, severity: number = 0, source?: BaseNode) {
     if (!node) return
     const eventType = node.addressSpace.findObjectType("BaseEventType")
-    node.raiseEvent(eventType, { message: { dataType: DataType.LocalizedText, value: message }, severity: { dataType: DataType.UInt16, value: severity } })
+    node.raiseEvent(eventType, eventData(message, severity, source))
+}
+
+/** Event data: message, severity and, if given, the source node */
+export function eventData(message: string, severity: number = 0, source?: BaseNode): Record<string, any> {
+    const data: Record<string, any> = {
+        message: { dataType: DataType.LocalizedText, value: message },
+        severity: { dataType: DataType.UInt16, value: severity }
+    }
+    if (source) data.sourceNode = { dataType: DataType.NodeId, value: source.nodeId }
+    return data
 }
 
 //---------------------------------------------------------------

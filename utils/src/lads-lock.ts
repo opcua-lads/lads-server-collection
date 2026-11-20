@@ -69,7 +69,7 @@ export class LockImpl extends EventEmitter {
 
     eventSource: UAObject
 
-    private raise(message: string, severity: number = 0) { raiseEvent(this.eventSource, message, severity) }
+    private raise(message: string, severity: number = 0) { raiseEvent(this.eventSource, message, severity, this.lock) }
 
     isAccessibleBy(sessionContext: ISessionContext): boolean {
         // eventually renew lock on every call

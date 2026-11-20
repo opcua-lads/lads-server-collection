@@ -165,7 +165,7 @@ export class FuturaHealth {
 
         if (worst !== this.health) {
             this.deviceHealth.setValueFromSource({ dataType: DataType.Int32, value: worst })
-            if (raiseEvents) raiseEvent(this.device, `DeviceHealth changed to ${EnumDeviceHealth[worst]}`, healthSeverity(worst))
+            if (raiseEvents) raiseEvent(this.device, `DeviceHealth changed to ${EnumDeviceHealth[worst]}`, healthSeverity(worst), this.deviceHealth)   // source: the DeviceHealth variable
         }
     }
 }

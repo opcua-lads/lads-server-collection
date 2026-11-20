@@ -68,7 +68,7 @@ import {
     LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
 import { getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
-import { raiseEvent } from "./lads-event-utils"
+import { eventData, raiseEvent } from "./lads-event-utils"
 import { AFODictionary } from "@afo"
 import { Site, NamedHierarchicalLocation } from "./lads-site-config"
 import { GeoLocationUpdater } from "./lads-geolocation"
@@ -893,31 +893,30 @@ export class LADSDeviceHelper {
         components.forEach(component => this.createMachineryBuildingBlocks(component))
     }
 
-    raiseEvent(message: string) {
+    raiseEvent(message: string, source?: BaseNode) {
         if (!this.options.raiseEvents) return
-        this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: message } })
+        this.device.raiseEvent(LADSDeviceHelper.eventType, eventData(message, 0, source))
     }
 
     /** Events of the device state and of the machinery state machines, on by default. */
-    raiseStateEvent(message: string, severity: number = 0) {
+    raiseStateEvent(message: string, source: BaseNode | undefined, severity: number = 0) {
         if (!(this.options.raiseStateEvents ?? true)) return
-        raiseEvent(this.device, message, severity)
+        raiseEvent(this.device, message, severity, source)
     }
 
     /** TransitionEventType (OPC 10000-5) with FromState and ToState; falls back to a BaseEventType event. */
-    raiseTransitionEvent(fromState: string, toState: string, message: string, severity: number) {
+    raiseTransitionEvent(source: BaseNode | undefined, fromState: string, toState: string, message: string, severity: number) {
         if (!(this.options.raiseStateEvents ?? true)) return
         const eventType = this.device.addressSpace.findEventType("TransitionEventType")
         try {
             if (!eventType) throw new Error("TransitionEventType not found")
             this.device.raiseEvent(eventType, {
-                message: { dataType: DataType.LocalizedText, value: message },
-                severity: { dataType: DataType.UInt16, value: severity },
+                ...eventData(message, severity, source),
                 fromState: { dataType: DataType.LocalizedText, value: new LocalizedText({ text: fromState }) },
                 toState: { dataType: DataType.LocalizedText, value: new LocalizedText({ text: toState }) }
             })
         } catch (error) {
-            raiseEvent(this.device, message, severity)
+            raiseEvent(this.device, message, severity, source)
         }
     }
 
@@ -981,8 +980,8 @@ export class LADSDeviceHelper {
     async onDeviceStateChanged(dataValue: DataValue) {
         const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
-        this.raiseEvent(`state changed to ${state} .. `)
-        if (!this.options.raiseEvents) this.raiseStateEvent(`Device state changed to ${state}`)
+        this.raiseEvent(`state changed to ${state} .. `, this.device.deviceState)
+        if (!this.options.raiseEvents) this.raiseStateEvent(`Device state changed to ${state}`, this.device.deviceState)
         if (!state.includes(LADSDeviceState.Operate)) {
             this.adjustMachineryItemState()
         }
@@ -991,7 +990,7 @@ export class LADSDeviceHelper {
     async onDeviceHealthChanged(dataValue: DataValue) {
         const value = (dataValue as DataValueT<EnumDeviceHealth, DataType.UInt32>).value.value
         const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
-        this.raiseEvent(`health changed to ${key} .. `)
+        this.raiseEvent(`health changed to ${key} .. `, this.device.deviceHealth)
         if (value == EnumDeviceHealth.FAILURE) {
             this.functionalUnitStateMachines.forEach((stateMachine) => {
                 if (state2str(stateMachine.getCurrentState()).includes(LADSFunctionalState.Running)) {
@@ -1012,14 +1011,14 @@ export class LADSDeviceHelper {
         const cause = this.operationModeCause ? ` ${this.operationModeCause}` : ""
         const severity = state.includes(MachineryOperationMode.Maintenance) ? 300
             : state.includes(MachineryOperationMode.Setup) ? 100 : 0
-        this.raiseTransitionEvent(previous, state, `Operation mode changed from ${previous} to ${state}${cause}`, severity)
+        this.raiseTransitionEvent(this.device.machineryOperationMode, previous, state, `Operation mode changed from ${previous} to ${state}${cause}`, severity)
     }
 
     async onMachineryItemStateChanged(dataValue: DataValue) {
         const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
-        if (!this.options.raiseEvents) this.raiseStateEvent(`Machinery item state changed to ${state}`)
-        else this.raiseEvent(`item state changed to ${state} .. `)
+        if (!this.options.raiseEvents) this.raiseStateEvent(`Machinery item state changed to ${state}`, this.device.machineryItemState)
+        else this.raiseEvent(`item state changed to ${state} .. `, this.device.machineryItemState)
     }
 
     /**
