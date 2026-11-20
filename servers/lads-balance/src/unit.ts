@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSAnalogScalarSensorFunction, LADSActiveProgram, LADSFunctionalState, LADSTwoStateDiscreteSensorFunction, LADSMultiStateDiscreteSensorFunction } from "@interfaces"
-import { getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode, createResult, initNodeVersion, enterAborted, enterClearing, EventSeverity } from "@utils"
+import { installVariableHistory, getDescriptionVariable, promoteToFiniteStateMachine, setNumericValue, raiseEvent, setStringValue, setDateTimeValue, copyProgramTemplate, setPropertiesValue, setSamplesValue, setSessionInformation, ProgramTemplateElement, addProgramTemplate, setBooleanValue, getDateTimeValue, getStringValue, modifyStatusCode, createResult, initNodeVersion, enterAborted, enterClearing, EventSeverity } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, CallMethodResultOptions, Variant, StatusCode, ISessionContext } from "node-opcua"
 import { join } from "path"
 import { BalanceDeviceImpl, getBalanceNameSpace } from "./device"
@@ -131,8 +131,7 @@ export abstract class BalanceUnitImpl extends EventEmitter {
         const functionSet = true ? this.functionalUnit.getComponentByName("FunctionSet") as BalanceFunctionSet : functionalUnit.functionSet
         // balance sensor
         this.currentWeight = functionSet.currentWeight
-        this.currentWeight.sensorValue.historizing = true
-        addressSpace.installHistoricalDataNode(this.currentWeight.sensorValue)
+        installVariableHistory(this.currentWeight.sensorValue)
         this.weightStable = functionSet.weightStable
         this.tareMode = functionSet.tareMode
         this.grossWeight = functionSet.currentWeight.functionSet?.grossWeight

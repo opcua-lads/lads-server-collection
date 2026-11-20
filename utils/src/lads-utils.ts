@@ -82,8 +82,12 @@ export enum DIObjectIds {
 //---------------------------------------------------------------
 export async function sleepMilliSeconds(ms: number): Promise<void> { return new Promise((resolve) => setTimeout(resolve, ms)) }
 
+const historizedVariables = new WeakSet<UAVariable>()
+
+/** Installs the history of a variable, once: a second installation records every value twice ("date not increasing" warnings). */
 export function installVariableHistory(variable: UAVariable) {
-    if (!variable) return
+    if (!variable || historizedVariables.has(variable)) return
+    historizedVariables.add(variable)
     variable.historizing = true
     variable.addressSpace.installHistoricalDataNode(variable)
 }

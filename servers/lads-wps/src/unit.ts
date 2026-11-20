@@ -146,10 +146,7 @@ export class WpsUnitImpl extends EventEmitter {
         this.outletConductivitySensor = new AnalogScalarSensorFunctionImpl(functionSet.outletConductivity, { lowLowLimit: -0.01, lowLimit: 0.0, highLimit: 0.16, highHighLimit: 0.2 })
         this.temperatureSensor = new AnalogScalarSensorFunctionImpl(functionSet.temperature, { lowLowLimit: 0.0, lowLimit: 10.0, highLimit: 35, highHighLimit: 40 })
         this.tocSensor = functionSet.TOC ? new AnalogScalarSensorFunctionImpl(functionSet.TOC, { lowLowLimit: -0.1, lowLimit: -0.1, highLimit: 10, highHighLimit: 20 }) : undefined
-        installVariableHistory(this.inletConductivitySensor.sensorValue)
-        installVariableHistory(this.outletConductivitySensor.sensorValue)
-        installVariableHistory(this.temperatureSensor.sensorValue)
-        installVariableHistory(this.tocSensor?.sensorValue)
+        // the history of the sensor values is installed by AnalogScalarSensorFunctionImpl
 
         // add AFO
         AFODictionary.addReferences(functionalUnit, AFODictionaryIds.purification)
