@@ -2247,6 +2247,25 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=7055</Reference>
         </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>5002322</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>l</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>litre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=7089" BrowseName="EURange" ParentNodeId="ns=5;i=7055">
         <DisplayName>EU Range</DisplayName>
@@ -2271,6 +2290,25 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=7087</Reference>
         </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>5002322</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>l</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>litre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
     </UAVariable>
     <UAVariable DataType="i=884" NodeId="ns=5;i=7092" BrowseName="EURange" ParentNodeId="ns=5;i=7087">
         <DisplayName>EU Range</DisplayName>
