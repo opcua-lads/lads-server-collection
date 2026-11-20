@@ -438,8 +438,7 @@ export function createResult(resultSet: UAObject, name: string): LADSResult {
 export function setSessionInformation(result: LADSResult, context: ISessionContext) {
     // analyze session context
     const session = context.session as ServerSession
-    const userIdentity = ""
-    //const userIdentity = (context as SessionContext).userIdentity
+    const userIdentity = loginName(session)   // the user name of the session's identity token (sessionContext.userIdentity is never filled)
     const applicationUri: string = session.clientDescription?.applicationUri ? session.clientDescription.applicationUri : ""
     const applicationName: string = session.clientDescription?.applicationName ? session.clientDescription?.applicationName.text : ""
     const sessionName: string = session.sessionName
