@@ -24,12 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 
 import { LADSProgramTemplate } from "@interfaces"
+import { AFODictionaryIds } from "@afo"
 
 export interface WpsProgramTemplate {
     name: string,
     description?: string,
     component?: string
     maintenanceMode?: boolean
+    terms?: string[]    // AFO terms of the template (default: preventative maintenance)
     steps: WpsProgramTemplateStep[]
 }
 
@@ -44,11 +46,13 @@ export const DispenseId = "Dispense"
 export const ProgramTemplateDispense: WpsProgramTemplate = {
     name: DispenseId,
     description: "Dispense based on current mode and set-points",
+    terms: [AFODictionaryIds.dispensing],
     steps: [{ name: "Dispense", duration: 600000 }]
 }
 
 export const ProgramTemplateSanitization: WpsProgramTemplate = {
     name: "Sanitization",
+    terms: [AFODictionaryIds.cleaning, AFODictionaryIds.preventative_maintenance],
     maintenanceMode: true,
     steps: [
         { name: "Disconnect the feed-water hose from the device", confirmation: true },
@@ -106,6 +110,7 @@ export const ProgramTemplateDepressurization: WpsProgramTemplate = {
 
 export const ProgramTemplateFlushTOC: WpsProgramTemplate = {
     name: "Flush TOC",
+    terms: [AFODictionaryIds.cleaning, AFODictionaryIds.preventative_maintenance],
     steps: [
         { name: "Flushing 5min", duration: 300000 },
     ]
@@ -113,6 +118,7 @@ export const ProgramTemplateFlushTOC: WpsProgramTemplate = {
 
 export const ProgramTemplateRecalibrateTOC: WpsProgramTemplate = {
     name: "Recalibrate TOC",
+    terms: [AFODictionaryIds.calibration, AFODictionaryIds.preventative_maintenance],
     maintenanceMode: true,
     steps: [
         { name: "Recalibrating TOC", confirmation: true },

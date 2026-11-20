@@ -26,7 +26,9 @@ export class DispenseModeControlFunctionImpl extends MulitStateDiscreteControlFu
         super(controlFunction)
         this.targetValue?.on("value_changed", (dataValue: DataValue) => { this.currentValue.setValueFromSource(dataValue.value) })
         setNumericValue(this.targetValue, 0)
-        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.setting, AFODictionaryIds.setting)
+        // the mode selects how water is dispensed; the target value keeps the default "control setting", the current
+        // value (the active mode) is not a setting
+        AFODictionary.addReferences(controlFunction, AFODictionaryIds.dispensing)
     }
 }
 
@@ -36,7 +38,9 @@ export class DispenseTimerControlFunctionImpl extends TimerControlFunctionImpl {
         super(controlFunction, true)
         setNumericValue(this.targetValue, 60.0)
         this.dispenseController = dispenseController
-        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.dispensing_duration, AFODictionaryIds.dispensing, AFODictionaryIds.dispensing_duration)
+        AFODictionary.addReferences(controlFunction, AFODictionaryIds.dispensing)
+        AFODictionary.addReferences(controlFunction.targetValue, AFODictionaryIds.duration_setting)    // setpoint: how long to dispense
+        AFODictionary.addReferences(controlFunction.currentValue, AFODictionaryIds.dispensing_duration) // actual: time dispensed so far
     }
 
     protected onStart(): Promise<void> {
@@ -63,7 +67,10 @@ export class DispenseVolumeControlFunctionImpl extends AnalogControlFunctionWith
         this.flow = flow
         this.timeBase = timeBase
         this.timestamp = Date.now()
-        AFODictionary.addControlFunctionReferences(controlFunction, AFODictionaryIds.dispensing, AFODictionaryIds.dispensing, AFODictionaryIds.dispensed_volume)
+        AFODictionary.addReferences(controlFunction, AFODictionaryIds.dispensing)
+        AFODictionary.addReferences(controlFunction.targetValue, AFODictionaryIds.volume_setting)      // setpoint: volume to dispense
+        AFODictionary.addReferences(controlFunction.currentValue, AFODictionaryIds.dispensed_volume)   // actual: volume dispensed so far
+        AFODictionary.addReferences(controlFunction.totalizedValue, AFODictionaryIds.dispensed_volume) // sum of all dispensed volumes
     }
 
     protected onStart(): Promise<void> {

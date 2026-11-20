@@ -158,6 +158,8 @@ export class WpsUnitImpl extends EventEmitter {
         AFODictionary.addSensorFunctionReferences(this.inletConductivitySensor.sensorFunction, AFODictionaryIds.electric_conductivity)
         AFODictionary.addSensorFunctionReferences(this.outletConductivitySensor.sensorFunction, AFODictionaryIds.electric_conductivity)
         AFODictionary.addSensorFunctionReferences(this.temperatureSensor.sensorFunction, AFODictionaryIds.temperature, AFODictionaryIds.temperature_measurement)
+        // AFO has no total organic carbon term: TOC (ppb) is the mass fraction of organic carbon in the water
+        AFODictionary.addSensorFunctionReferences(this.tocSensor?.sensorFunction, AFODictionaryIds.mass_fraction)
 
         // experimental - create compliance-document-set & add DoC
         const device = this.parent.device
@@ -291,7 +293,7 @@ export class WpsUnitImpl extends EventEmitter {
                 author: "AixEngineers",
                 created: date,
                 modified: date,
-                referenceIds: [AFODictionaryIds.preventative_maintenance],
+                referenceIds: template.terms ?? [AFODictionaryIds.preventative_maintenance],
             }).programTemplate
             this.programTemplates.push({ template: template, node: node })
         })
