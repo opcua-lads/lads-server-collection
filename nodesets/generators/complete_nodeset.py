@@ -33,8 +33,11 @@ new, counter = [], max_id
 for _ in range(25):
     gaps = [g for g in model.gaps() if model.nodes[g[0]]['own']]
     if not gaps: break
+    done = set()
     for owner, decl, p in gaps:
-        if not model.nodes[owner]['own']: continue      # the standard argument properties referenced by a method are not ours
+        if not model.nodes[owner]['own']: continue
+        if (owner, decl['name']) in done: continue      # the same owner is reached by several paths
+        done.add((owner, decl['name']))      # the standard argument properties referenced by a method are not ours
         counter += 1
         nid = (own_uri, f'i={counter}')
         reft = REFNAME.get(decl.get('reftype'), decl.get('reftype') or 'HasComponent')

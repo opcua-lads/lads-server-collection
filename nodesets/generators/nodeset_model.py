@@ -30,9 +30,11 @@ class Model:
         for e in root:
             tag = e.tag.replace(NS, '')
             if tag not in ('UAObject', 'UAVariable', 'UAObjectType', 'UAVariableType', 'UAMethod'): continue
-            n = dict(cls=tag, id=nid(e.get('NodeId')), name=bn(e.get('BrowseName')), rule=None, td=None, sup=None, children=[], own=own,
+            n = dict(cls=tag, id=nid(e.get('NodeId')), name=bn(e.get('BrowseName')), rule=None, td=None, sup=None, children=[], up=[], pid=nid(e.get('ParentNodeId')), value=None, own=own,
                      dt=nid(e.get('DataType')) if e.get('DataType') else None, vr=e.get('ValueRank'), ad=e.get('ArrayDimensions'),
                      access=e.get('AccessLevel'), desc=None)
+            v = e.find(NS + 'Value')
+            if v is not None: n['value'] = ''.join(v.itertext()).strip()
             d = e.find(NS + 'Description')
             if d is not None: n['desc'] = d.text
             for r in e.iter(NS + 'Reference'):
@@ -41,6 +43,7 @@ class Model:
                 elif t == 'i=40': n['td'] = tgt
                 elif t == 'i=45' and not fwd: n['sup'] = tgt
                 elif t in HIER and fwd: n['children'].append((t, tgt))
+                elif t in HIER and not fwd: n['up'].append((t, tgt))
             self.nodes[n['id']] = n
         for n in self.nodes.values():
             for r, c in n['children']:
@@ -92,3 +95,14 @@ class Model:
             for t in self.chain(decl.get('td')):
                 if self.nodes[t].get('dt'): return self.nodes[t]['dt']
         return (BASE, 'i=17') if decl['name'][1] == 'Id' else (BASE, 'i=24')   # Id of the state machine variables is a NodeId
+
+    def kids(self):
+        """{parent id: [child ids]}: the children by forward references, by reverse references of the child and by ParentNodeId"""
+        k = {}
+        def add(p, c):
+            if p in self.nodes and c in self.nodes and c not in k.setdefault(p, []): k[p].append(c)
+        for n in self.nodes.values():
+            for r, c in n['children']: add(n['id'], c)
+            for r, p in n['up']: add(p, n['id'])
+            if n['pid']: add(n['pid'], n['id'])
+        return k
