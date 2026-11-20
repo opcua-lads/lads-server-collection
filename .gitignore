@@ -48,3 +48,6 @@ logs/
 *.log
 servers/lads-balance/src/config.json
 servers/lads-balance/src/config.json
+
+__pycache__/
+*.pyc
