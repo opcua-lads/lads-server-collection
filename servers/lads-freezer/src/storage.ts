@@ -206,7 +206,7 @@ class ProgramManagerImpl {
             modified: date,
             author: author,
             version: "1.0",
-            referenceIds: [AFODictionaryIds.removing_material]
+            referenceIds: [AFODictionaryIds.sample_identifier, AFODictionaryIds.removing_material]
         }))
         this.programTemplateElements.push(addProgramTemplate(programTemplates, {
             identifier: "Check In",
@@ -215,7 +215,7 @@ class ProgramManagerImpl {
             modified: date,
             author: author,
             version: "1.0",
-            referenceIds: [AFODictionaryIds.adding_of_material]
+            referenceIds: [AFODictionaryIds.sample_identifier, AFODictionaryIds.adding_of_material]
         }))
         this.programTemplateElements.push(addProgramTemplate(programTemplates, {
             identifier: "Report Inventory",
@@ -224,7 +224,7 @@ class ProgramManagerImpl {
             modified: date,
             author: author,
             version: "1.0",
-            referenceIds: [AFODictionaryIds.reporting]
+            referenceIds: [AFODictionaryIds.sample_identifier, AFODictionaryIds.sample_document, AFODictionaryIds.reporting]
         }))
         const functionSet = functionalUnit.functionSet
         this.door = functionSet.door
