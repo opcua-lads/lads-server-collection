@@ -92,7 +92,7 @@ export class MWServerImpl {
 
     constructor(config: ServerConfig) {
         this.config = config
-        const port = this.config.port ?? 4845
+        const port = this.config.port ?? 4846
         const uri = "LADS-MW5X-Server"
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
