@@ -45,6 +45,7 @@ import {
     StatusCode,
     ISessionContext,
     DataValue,
+    UserNameIdentityToken,
     QualifiedName} from "node-opcua"
 import {
     LADSDevice,
@@ -67,6 +68,7 @@ import {
     LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
 import { getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
+import { raiseEvent } from "./lads-event-utils"
 import { AFODictionary } from "@afo"
 import { Site, NamedHierarchicalLocation } from "./lads-site-config"
 import { GeoLocationUpdater } from "./lads-geolocation"
@@ -750,12 +752,21 @@ export class LADSFiniteStateMachineHelper {
 export interface LADSDeviceHelperOptions {
     initializationTime?: number
     shutdownTime?: number
-    raiseEvents?: boolean
+    raiseEvents?: boolean       // events of the functional units and of the device health
+    raiseStateEvents?: boolean  // events of DeviceState, MachineryItemState and MachineryOperationMode (default true)
     adjustFunctionIsEnabled?: boolean
+}
+
+/** node-opcua never fills sessionContext.userIdentity: the login name is the user name of the session's identity token */
+export function loginName(session: ServerSession | undefined): string | undefined {
+    const token = session?.userIdentityToken
+    return token instanceof UserNameIdentityToken && token.userName ? token.userName : undefined
 }
 
 export class LADSDeviceHelper {
     static eventType: UAObjectType
+    private operationMode?: string          // last operation mode, for the transition event
+    private operationModeCause?: string     // who triggered the current change of the operation mode
     device: LADSDevice
     options: LADSDeviceHelperOptions
     deviceStateMachine: UAStateMachineEx
@@ -887,6 +898,29 @@ export class LADSDeviceHelper {
         this.device.raiseEvent(LADSDeviceHelper.eventType, { message: { dataType: DataType.LocalizedText, value: message } })
     }
 
+    /** Events of the device state and of the machinery state machines, on by default. */
+    raiseStateEvent(message: string, severity: number = 0) {
+        if (!(this.options.raiseStateEvents ?? true)) return
+        raiseEvent(this.device, message, severity)
+    }
+
+    /** TransitionEventType (OPC 10000-5) with FromState and ToState; falls back to a BaseEventType event. */
+    raiseTransitionEvent(fromState: string, toState: string, message: string, severity: number) {
+        if (!(this.options.raiseStateEvents ?? true)) return
+        const eventType = this.device.addressSpace.findEventType("TransitionEventType")
+        try {
+            if (!eventType) throw new Error("TransitionEventType not found")
+            this.device.raiseEvent(eventType, {
+                message: { dataType: DataType.LocalizedText, value: message },
+                severity: { dataType: DataType.UInt16, value: severity },
+                fromState: { dataType: DataType.LocalizedText, value: new LocalizedText({ text: fromState }) },
+                toState: { dataType: DataType.LocalizedText, value: new LocalizedText({ text: toState }) }
+            })
+        } catch (error) {
+            raiseEvent(this.device, message, severity)
+        }
+    }
+
     async onGotoOperating(this: LADSDeviceHelper, inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         this.enterDeviceOperating()
         return { statusCode: StatusCodes.Good }
@@ -903,7 +937,13 @@ export class LADSDeviceHelper {
     }
 
     async onGotoOperationMode(this: LADSDeviceHelper, operationMode: MachineryOperationMode, inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
-        return { statusCode: this.enterOperationMode(operationMode) }
+        const user = loginName(context.session as ServerSession) ?? "unknown user"
+        this.operationModeCause = `by ${user} (Goto${operationMode})`
+        try {
+            return { statusCode: this.enterOperationMode(operationMode) }
+        } finally {
+            this.operationModeCause = undefined
+        }
     }
 
     enterOperationMode(operationMode: MachineryOperationMode): StatusCode {
@@ -942,6 +982,7 @@ export class LADSDeviceHelper {
         const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
         this.raiseEvent(`state changed to ${state} .. `)
+        if (!this.options.raiseEvents) this.raiseStateEvent(`Device state changed to ${state}`)
         if (!state.includes(LADSDeviceState.Operate)) {
             this.adjustMachineryItemState()
         }
@@ -965,13 +1006,20 @@ export class LADSDeviceHelper {
     async onMachineryOperationModeChanged(dataValue: DataValue) {
         const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
-        this.raiseEvent(`operation mode changed to ${state} .. `)
+        const previous = this.operationMode
+        this.operationMode = state
+        if (previous === undefined || previous === state) return
+        const cause = this.operationModeCause ? ` ${this.operationModeCause}` : ""
+        const severity = state.includes(MachineryOperationMode.Maintenance) ? 300
+            : state.includes(MachineryOperationMode.Setup) ? 100 : 0
+        this.raiseTransitionEvent(previous, state, `Operation mode changed from ${previous} to ${state}${cause}`, severity)
     }
 
     async onMachineryItemStateChanged(dataValue: DataValue) {
         const state = (dataValue as DataValueT<LocalizedText, DataType.LocalizedText>).value.value.text
         if (!state) return
-        this.raiseEvent(`item state changed to ${state} .. `)
+        if (!this.options.raiseEvents) this.raiseStateEvent(`Machinery item state changed to ${state}`)
+        else this.raiseEvent(`item state changed to ${state} .. `)
     }
 
     /**

@@ -9,18 +9,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { UserNameIdentityToken, CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ISessionContext, ServerSession, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
+import { UAObject, CallMethodResultOptions, coerceNodeId, DataType, IAddressSpace, ISessionContext, ServerSession, StatusCode, StatusCodes, UAVariable, Variant, VariantLike } from "node-opcua";
 import { UALockingServices } from "node-opcua-nodeset-di";
 import { EventEmitter } from "stream";
 import { getBooleanValue, getNumericValue, getStringValue, setBooleanValue, setNumericValue, setStringValue } from "./lads-variable-utils";
-import { getDINamespace } from "./lads-utils";
+import { getDINamespace, loginName } from "./lads-utils";
+import { raiseEvent } from "./lads-event-utils";
 import { assert } from "console";
-
-// node-opcua never fills sessionContext.userIdentity: the login name is the user name of the session's identity token
-function loginName(session: ServerSession): string | undefined {
-    const token = session?.userIdentityToken
-    return token instanceof UserNameIdentityToken && token.userName ? token.userName : undefined
-}
 
 export enum Duration {
     Second = 1000,
@@ -68,7 +63,13 @@ export class LockImpl extends EventEmitter {
         lock.breakLock?.bindMethod(this.breakLock.bind(this))
         lock.remainingLockTime?.bindVariable({ get: () => { return new Variant({ dataType: DataType.Double, value: this.remainingLockTime }) } }, true)
         this.parentLock = parentLock
+        // events are raised by the owner of the lock (functional unit or device)
+        this.eventSource = (lock.parent as UAObject | null) ?? lock
     }
+
+    eventSource: UAObject
+
+    private raise(message: string, severity: number = 0) { raiseEvent(this.eventSource, message, severity) }
 
     isAccessibleBy(sessionContext: ISessionContext): boolean {
         // eventually renew lock on every call
@@ -89,6 +90,7 @@ export class LockImpl extends EventEmitter {
     get remainingLockTime(): number { return this.locked ? this.timestampExpired - Date.now() : 0 }
 
     private startTimer(sessionContext: ISessionContext) {
+        const wasLocked = this.locked
         this.locked = true
         this.sessionContext = sessionContext
         const session = sessionContext.session as ServerSession
@@ -101,13 +103,23 @@ export class LockImpl extends EventEmitter {
         //setStringValue(this.lock.lockingClient, `ApplicationName: ${applicationName}, ApplicationURI: ${applicationUri}`)
         setStringValue(this.lock.lockingClient, `${applicationName}`)
         this.renewTimer()
+        if (!wasLocked) {
+            const client = applicationName ? ` (${applicationName})` : ""
+            const context = this.context ? `, context "${this.context}"` : ""
+            this.raise(`Locked by ${user}${client}${context}`)
+        }
     }
 
     private renewTimer() {
         if (!this.locked) return
         if (this.timeout) clearTimeout(this.timeout)
         this.timestampExpired = Date.now() + LockImpl.maxInactiveLockTime
-        this.timeout = setTimeout(() => { this.stopTimer() }, LockImpl.maxInactiveLockTime)
+        this.timeout = setTimeout(() => {
+            const seconds = Math.round(LockImpl.maxInactiveLockTime / 1000)
+            const user = this.lockingUser
+            this.stopTimer()
+            this.raise(`Lock of ${user || "unknown user"} expired after ${seconds} s without activity`, 300)
+        }, LockImpl.maxInactiveLockTime)
     }
 
     private stopTimer() {
@@ -143,13 +155,18 @@ export class LockImpl extends EventEmitter {
     private async exitLock(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.locked) return LockImpl.methodResult({ result: LockResult.NotLocked })
         if (context != this.sessionContext) return { statusCode: StatusCodes.BadLocked }
+        const user = this.lockingUser
         this.stopTimer()
+        this.raise(`Unlocked by ${user}`)
         return LockImpl.methodResult({ result: LockResult.OK })
     }
 
     private async breakLock(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.locked) return LockImpl.methodResult({ result: LockResult.NotLocked })
+        const owner = this.lockingUser
+        const breaker = loginName(context?.session as ServerSession) ?? "unknown user"
         this.stopTimer()
+        this.raise(`Lock of ${owner} broken by ${breaker}`, 300)
         return LockImpl.methodResult({ result: LockResult.OK })
     }
 }
