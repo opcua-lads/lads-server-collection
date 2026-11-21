@@ -15,12 +15,35 @@ import {
 } from "node-opcua"
 import os from "os"
 import fs from "fs"
+import dns from "dns"
 import { exploreCertificate, readCertificate } from "node-opcua-crypto"
 import { refreshSiteLocation } from "./lads-site-config"
 import path from "path";
 import { createServerAuthentication } from "./lads-users"
 import { installRolePermissions } from "./lads-roles"
 import { LdsRegistration } from "./lads-lds-registration"
+
+/**
+ * node-opcua determines the fully qualified host name once per process with a reverse DNS lookup of the computer's own
+ * address (dns.lookupService). Without a DNS server that answers it (e.g. after a VPN went down) this waits 30 s for the
+ * timeout, and node-opcua then uses os.hostname() anyway. Limit the reverse lookup to 2 s: same result, no 30 s start.
+ */
+const ReverseLookupTimeout = 2000
+const originalLookupService = dns.lookupService
+;(dns as any).lookupService = (address: string, port: number, callback: (err: Error | null, hostname?: string, service?: string) => void) => {
+    let done = false
+    const timer = setTimeout(() => {
+        if (done) return
+        done = true
+        callback(Object.assign(new Error(`reverse DNS lookup of ${address} timed out`), { code: "ETIMEOUT" }))
+    }, ReverseLookupTimeout)
+    originalLookupService.call(dns, address, port, (err: Error | null, hostname: string, service: string) => {
+        if (done) return
+        done = true
+        clearTimeout(timer)
+        callback(err, hostname, service)
+    })
+}
 
 export interface CreateServerOptions {
     port?: number
