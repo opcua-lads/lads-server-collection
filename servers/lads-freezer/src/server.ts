@@ -23,6 +23,9 @@ export interface FreezerConfig extends LADSComponentOptions {
     /** server settings: OPC UA port and the application name the server announces (mDNS), unique per freezer */
     port?: number
     serverName?: string
+    /** display name of the freezer device (default "MyFreezer" from the nodeset); the gateway derives the MHS device id from
+     *  it, so every freezer that runs beside another one needs its own, e.g. "My Liebherr Freezer" -> my-liebherr-freezer */
+    deviceName?: string
     /** "Eppendorf" (default) or "Liebherr": the built-in freezer the file starts from; the file overrides any of its keys */
     preset?: string
     /** storage: compartments, samples per compartment and the pattern of the sample ids they are loaded with
@@ -44,7 +47,7 @@ const LiebherrFreezer: FreezerConfig = {
     assetId: "0815-4711",
     componentName: "My Liebherr Freezer",
     location: DefaultLocation,
-    deviceTypeImage: "liebherr-susfg.png",
+    deviceTypeImage: "liebherr-sufsg.png",
 }
 
 const EppendorfFreezer: FreezerConfig = {
@@ -108,6 +111,7 @@ class FreezerServerImpl {
         devices.forEach(device => {
             if (device.typeDefinitionObj === freezerDeviceType) {
                 const freezerDevice = device as FreezerDevice
+                if (config.deviceName) freezerDevice.setDisplayName(config.deviceName)
                 const deviceImpl = new FreezerDeviceImpl(freezerDevice, config)
                 this.devices.push(deviceImpl)
             }

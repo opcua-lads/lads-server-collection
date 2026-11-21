@@ -2,6 +2,7 @@
     "preset": "Liebherr",
     "port": 4846,
     "serverName": "LADS Freezer Liebherr",
+    "deviceName": "My Liebherr Freezer",
     "serialNumber": "4712",
     "componentName": "My Liebherr Freezer",
     "compartments": 4,
