@@ -70,6 +70,7 @@ export class DeviceTypeImage {
     private addImageVariable(parent: UAObject, resourcesDir: string, fileName: string): void {
         const browseName = this.toBrowseName(fileName);
         const absolutePath = path.resolve(resourcesDir, fileName);
+        if (!fs.existsSync(absolutePath)) console.warn(`DeviceTypeImage: ${absolutePath} not found, the image stays empty`)
         const imageDataType = imageDataTypeFromExtension(fileName);
 
         const variable = parent.namespace.addVariable({
