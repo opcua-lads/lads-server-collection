@@ -69,6 +69,22 @@ class LadsDiscoveryServer extends OPCUADiscoveryServer {
         reply(new RegisterServerResponse({}))
     }
 
+    /**
+     * Logs who asks the LDS: FindServers / FindServersOnNetwork always, GetEndpoints from other computers (the registration
+     * clients of the local servers call GetEndpoints every minute). Shows at once whether a client (Prosys, UaExpert in a VM)
+     * reaches the LDS at all.
+     */
+    override on_request(message: any, channel: any): void {
+        const name: string = message?.request?.schema?.name ?? ""
+        const from = String(channel?.remoteAddress ?? "?").replace(/^::ffff:/, "")
+        const local = from === "127.0.0.1" || from === "::1"
+        if (name === "FindServersRequest" || name === "FindServersOnNetworkRequest" || (name === "GetEndpointsRequest" && !local)) {
+            const url = message.request.endpointUrl ? ` (endpointUrl ${message.request.endpointUrl})` : ""
+            console.log(`${new Date().toISOString()} ${name.replace(/Request$/, "")} from ${from}${url}: ${this.registeredServers.size} registered servers`)
+        }
+        super.on_request(message, channel)
+    }
+
     /** drops registrations that were not renewed in time */
     prune() {
         const now = Date.now()
