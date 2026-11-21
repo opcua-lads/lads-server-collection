@@ -835,7 +835,17 @@ export class LADSDeviceHelper {
                 setStringValue(device.hierarchicalLocation, DefaultHierarchicalLocation)
             }
         }
+        // the Identification (Machinery building block) carries its own HierarchicalLocation: keep it equal to the device's,
+        // whatever sets the site (this helper, the default, a client writing it)
+        const identificationSite = (device.identification as any)?.hierarchicalLocation as UAVariable | undefined
+        const syncIdentification = () => {
+            if (!identificationSite || !device.hierarchicalLocation) return
+            const site = getStringValue(device.hierarchicalLocation, "")
+            if (site && getStringValue(identificationSite, "") !== site) setStringValue(identificationSite, site)
+        }
+        device.hierarchicalLocation?.on("value_changed", syncIdentification)
         applySite()
+        syncIdentification()
         productInstanceUri?.on("value_changed", applySite)
 
         // eventually look up the geographic location of the hierarchical location in the background (config/lads-site.json)
