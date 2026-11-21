@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue, LADSMaintenanceTaskResult, raiseEvent } from "@utils"
+import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, setNumericArrayValue, setDateTimeValue, getDateTimeValue, getNumericValue, getNumericArrayValue, setStringValue, LADSMaintenanceTaskResult, raiseEvent, installDeviceHealthEvents } from "@utils"
 import { WpsDevice, WpsFunctionalUnit, WpsFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, WpsServerImpl } from "./server"
 import { IAddressSpace, INamespace, LocalizedText, makeNodeId, n, ObjectTypeIds, UAObject } from "node-opcua"
@@ -122,7 +122,7 @@ export class WpsDeviceImpl {
         }, 1000)
 
         // register events
-        this.device.deviceHealth?.on("value_changed", (dataValue) => raiseEvent(this.device, `Device health changed to ${EnumDeviceHealth[dataValue.value.value]}`))
+        installDeviceHealthEvents(this.device)   // severity from the health state (NE 107)
         this.device.machineryOperationMode?.currentState.on("value_changed", (dataValue) => raiseEvent(this.device, `Device operation mode changed to ${(dataValue.value.value as LocalizedText).text}`))
         
         // ready

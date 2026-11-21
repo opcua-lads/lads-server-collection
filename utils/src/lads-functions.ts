@@ -12,10 +12,11 @@
 import { LADSFunction, LADSAnalogControlFunction, LADSAnalogControlFunctionWithTotalizer, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSMultiStateDiscreteControlFunction, LADSTimerControlFunction, LADSAnalogScalarSensorWithCompensationFunction, LADSAnalogArraySensorFunction, LADSAnalogScalarSensorWithCompensationFunction_Base, LADSFunctionalStateMachine } from "@interfaces";
 import { LADSAnalogScalarSensorFunction_Base } from "@interfaces"
 import EventEmitter from "events";
+import { EnumDeviceHealth } from "node-opcua-nodeset-di"
 import {
     UAAnalogUnitRange, DataType, Namespace, makeNodeId, ReferenceTypeIds, ObjectTypeIds,
     InstantiateExclusiveLimitAlarmOptions, ConditionInfo, LocalizedText, StatusCodes, CallMethodResultOptions, UAState, UAStateMachineEx, VariantLike, UAMultiStateDiscrete, AccessLevelFlag, UAVariable, QualifiedName,
-    UAVariableT, UAExclusiveDeviationAlarmEx, UAExclusiveLimitAlarmEx, DataValue,
+    UAVariableT, UAExclusiveDeviationAlarmEx, UAExclusiveLimitAlarmEx, DataValue, UAObject,
     UAProperty,
     EUInformation,
     coerceNodeId,
@@ -52,6 +53,28 @@ export enum EventSeverity {
     Low = Warning,
     High = Warning,
     HighHigh = Alarm
+}
+
+/**
+ * DeviceHealth (OPC 10000-100, DeviceHealthEnumeration after NAMUR NE 107) as event severity, in the NE 107 order of priority
+ * Failure > Check function > Off spec > Maintenance required > Normal.
+ */
+export function deviceHealthSeverity(health: number): number {
+    switch (health) {
+        case EnumDeviceHealth.FAILURE: return EventSeverity.Critical                // 900: malfunction of the device
+        case EnumDeviceHealth.CHECK_FUNCTION: return EventSeverity.Alarm            // 600: output temporarily not valid (work on the device)
+        case EnumDeviceHealth.OFF_SPEC: return 400                                  // Warning: operating outside its specified range
+        case EnumDeviceHealth.MAINTENANCE_REQUIRED: return EventSeverity.Warning    // 300: still valid, maintenance needed soon
+        default: return EventSeverity.Info                                          // NORMAL
+    }
+}
+
+/** Raises an event with the matching severity whenever the DeviceHealth of the device changes. */
+export function installDeviceHealthEvents(device: UAObject & { deviceHealth?: UAVariable }) {
+    device.deviceHealth?.on("value_changed", (dataValue: DataValue) => {
+        const health = dataValue.value.value as number
+        raiseEvent(device, `Device health changed to ${EnumDeviceHealth[health] ?? health}`, deviceHealthSeverity(health))
+    })
 }
 
 export interface SensorFunctionOptions extends AlarmMonitorOptions {
