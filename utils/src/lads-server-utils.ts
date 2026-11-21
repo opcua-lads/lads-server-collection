@@ -58,6 +58,21 @@ export function instanceApplicationUri(uri: string, instance: string | number): 
     return `urn:${host}:${uri}:${instance}`
 }
 
+/**
+ * Further host names of the endpoints besides the computer name: <name>.local (resolvable by mDNS) and the IPv4 addresses of
+ * the network interfaces. A client in another subnet (e.g. a VM) cannot resolve the bare computer name, and a client that
+ * connects by IP address finds no matching endpoint without them.
+ */
+export function alternateHostnames(): string[] {
+    const names = new Set<string>([`${os.hostname().split(".")[0]}.local`])
+    for (const addresses of Object.values(os.networkInterfaces())) {
+        for (const address of addresses ?? []) {
+            if (address.family === "IPv4" && !address.internal) names.add(address.address)
+        }
+    }
+    return [...names]
+}
+
 /** node-opcua creates the server certificate only when the file is missing; one issued for another applicationUri is set aside. */
 function dropStaleCertificate(certificateFile: string, applicationUri: string) {
     if (!fs.existsSync(certificateFile)) return
@@ -79,6 +94,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     // basic server options
     const serverOptions: OPCUAServerOptions = {
         port,
+        alternateHostname: alternateHostnames(),
         buildInfo: {
             manufacturerName: options.manufacturerName ?? "AixEngineers",
             productName: options.uri,

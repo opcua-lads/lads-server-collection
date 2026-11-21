@@ -55,6 +55,12 @@ export class LdsRegistration {
         if (this.registered) await this.register(false)
     }
 
+    /** every endpoint URL of the server (computer name, <name>.local, IP addresses), so that clients in other subnets can connect */
+    private discoveryUrls(): string[] {
+        const urls = this.server.endpoints.flatMap((endpoint) => endpoint.endpointDescriptions().map((d) => d.endpointUrl ?? ""))
+        return [...new Set(urls.filter((url) => url))]
+    }
+
     private async register(isOnline: boolean) {
         const server = this.server
         const client = OPCUAClientBase.create({
@@ -76,7 +82,7 @@ export class LdsRegistration {
                     productUri: server.serverInfo.productUri,
                     serverNames: [{ locale: "en", text: this.applicationName }],
                     serverType: ApplicationType.Server,
-                    discoveryUrls: [server.getEndpointUrl()],
+                    discoveryUrls: this.discoveryUrls(),
                     isOnline,
                     gatewayServerUri: null,
                     semaphoreFilePath: null,

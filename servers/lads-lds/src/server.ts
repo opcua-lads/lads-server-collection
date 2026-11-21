@@ -28,7 +28,7 @@ import {
     ApplicationType, MessageSecurityMode, OPCUACertificateManager, OPCUADiscoveryServer, RegisterServerRequest, RegisterServerResponse,
     SecurityPolicy, ServiceFault, StatusCode, StatusCodes
 } from "node-opcua"
-import { instanceApplicationUri, mdnsHostName, mdnsInstanceName } from "@utils"
+import { alternateHostnames, instanceApplicationUri, mdnsHostName, mdnsInstanceName } from "@utils"
 
 /** A registration that was not renewed for this long is dropped (the servers renew every minute; a crashed one never signs off). */
 const RegistrationTimeout = 3 * 60_000
@@ -97,6 +97,7 @@ export async function main() {
     const applicationName = `LADS Local Discovery Server (${os.hostname().split(".")[0]})`
     const server = new LadsDiscoveryServer({
         port,
+        alternateHostname: alternateHostnames(),   // reachable by <name>.local and IP address (clients in other subnets, VMs)
         serverCertificateManager,
         certificateFile: path.join(certRoot, "own", "certs", `certificate-${port}.pem`),
         privateKeyFile: path.join(certRoot, "own", "private", "private_key.pem"),
