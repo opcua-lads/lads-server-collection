@@ -52,6 +52,7 @@ export class BalanceDeviceImpl {
         const device = deviceType.instantiate({
             componentOf: getDeviceSet(addressSpace),
             browseName: config.name,
+            optionals: ["ManufacturerUri", "ProductInstanceUri"],   // DI nameplate (VendorNameplate), set by initComponent
         }) as BalanceDevice
         this.device = device
 

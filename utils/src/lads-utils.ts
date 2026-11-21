@@ -484,9 +484,28 @@ export interface LADSComponentOptions {
     operationalLocation?: string
 }
 
+/** Internet domains of the manufacturers simulated here: ManufacturerUri and the first part of the ProductInstanceUri. */
+const KnownManufacturerUris: [RegExp, string][] = [
+    [/sartorius/i, "sartorius.com"], [/mettler/i, "mt.com"], [/brookfield/i, "brookfieldengineering.com"],
+    [/eppendorf/i, "eppendorf.com"], [/liebherr/i, "liebherr.com"], [/memmert/i, "memmert.com"], [/aber/i, "aberinstruments.com"],
+]
+export function knownManufacturerUri(manufacturer?: string): string | undefined {
+    return manufacturer ? KnownManufacturerUris.find(([pattern]) => pattern.test(manufacturer))?.[1] : undefined
+}
+
+/**
+ * ProductInstanceUri (OPC 10000-100, 4.5.2): "a globally unique resource identifier provided by the manufacturer", here
+ * <manufacturer domain>/<model>/<serial number>, with model and serial number made URI safe (blanks to '-', others encoded).
+ */
+export function makeProductInstanceUri(manufacturerUri: string, model?: string, serialNumber?: string): string {
+    const segment = (text: string) => encodeURI(text.trim().replace(/\s+/g, "-")).replace(/[/?#]/g, encodeURIComponent)   // "DV-II+Pro" stays readable
+    return `${manufacturerUri}/${segment(model ?? "unknown")}/${segment(serialNumber ?? "4711")}`
+}
+
 export function initComponent(component: UAComponent, options: LADSComponentOptions) {
     if (!component) return
-    const productInstanceUri = options.productInstanceUri ?? `${options.manufacturerUri ?? "aixengineers.de"}/${options.model ?? "unknown"}/${options.serialNumber ?? "4711"}`
+    const manufacturerUri = options.manufacturerUri ?? knownManufacturerUri(options.manufacturer)
+    const productInstanceUri = options.productInstanceUri ?? makeProductInstanceUri(manufacturerUri ?? "aixengineers.de", options.model, options.serialNumber)
     // the core nameplate has to exist: a missing property (not declared in the nodeset) is reported instead of silently skipped
     const warnMissing = (name: string, variable: unknown, value?: string) => {
         if (value && !variable) console.warn(`initComponent: ${component.browseName?.name ?? "component"} has no ${name}; "${value}" is not published`)
@@ -495,7 +514,7 @@ export function initComponent(component: UAComponent, options: LADSComponentOpti
     warnMissing("Model", component.model, options.model)
     warnMissing("SerialNumber", component.serialNumber, options.serialNumber)
     options.manufacturer ? setStringValue(component.manufacturer, options.manufacturer) : 0
-    options.manufacturerUri ? setStringValue(component.manufacturerUri, options.manufacturerUri) : 0
+    manufacturerUri ? setStringValue(component.manufacturerUri, manufacturerUri) : 0
     options.model ? setStringValue(component.model, options.model) : 0
     options.softwareRevision ? setStringValue(component.softwareRevision, options.softwareRevision) : 0
     options.hardwareRevision ? setStringValue(component.hardwareRevision, options.hardwareRevision) : 0
