@@ -25,7 +25,7 @@
 import os from "os"
 import path from "path"
 import {
-    ApplicationType, MessageSecurityMode, OPCUACertificateManager, OPCUADiscoveryServer, RegisterServerRequest, RegisterServerResponse,
+    ApplicationDescription, ApplicationType, MessageSecurityMode, OPCUACertificateManager, OPCUADiscoveryServer, RegisterServerRequest, RegisterServerResponse,
     SecurityPolicy, ServiceFault, StatusCode, StatusCodes
 } from "node-opcua"
 import { alternateHostnames, dropStaleCertificate, installCertificateFactory, instanceApplicationUri, mdnsHostName, mdnsInstanceName, productUriOf } from "@utils"
@@ -37,8 +37,42 @@ const RegistrationTimeout = 3 * 60_000
  * RegisterServer (without a discovery configuration) only lists the server for FindServers. node-opcua's LDS would also
  * announce it on mDNS (and fails on the empty mDNS name): the servers announce themselves, a second announcement is not wanted.
  */
+/** host of an opc.tcp URL, lower case ("opc.tcp://[::1]:4840/x" gives "::1") */
+function hostOf(url?: string | null): string | undefined {
+    return url ? /^opc\.tcp:\/\/\[?([^\]/:]+)/i.exec(url)?.[1]?.toLowerCase() : undefined
+}
+
+/**
+ * The discovery URLs of a server that fit the host name the client used to reach the LDS (OPC 10000-4, FindServers: the
+ * endpointUrl tells the server which URLs to return): the same host name or IP address; localhost gives the computer name.
+ * Unknown host: all URLs. So a client gets one reachable address per server instead of one per network interface.
+ */
+function urlsFor(urls: string[], clientHost?: string): string[] {
+    if (!clientHost) return urls
+    const local = ["localhost", "127.0.0.1", "::1"].includes(clientHost)
+    const wanted = local ? os.hostname().split(".")[0].toLowerCase() : clientHost
+    const fitting = urls.filter((url) => hostOf(url) === wanted)
+    return fitting.length ? fitting : urls
+}
+
 class LadsDiscoveryServer extends OPCUADiscoveryServer {
     private readonly lastSeen = new Map<string, number>()
+    /** per secure channel: the host name the client used (from the endpointUrl of its requests) */
+    private readonly clientHosts = new WeakMap<object, string>()
+
+    override getServers(channel: any): ApplicationDescription[] {
+        const host = this.clientHosts.get(channel)
+        return super.getServers(channel).map((server: any) => {
+            const urls: string[] = server.discoveryUrls ?? []
+            const fitting = urlsFor(urls, host)
+            if (fitting.length === urls.length) return server
+            return new ApplicationDescription({
+                applicationName: server.applicationName, applicationType: server.applicationType, applicationUri: server.applicationUri,
+                discoveryProfileUri: server.discoveryProfileUri, gatewayServerUri: server.gatewayServerUri, productUri: server.productUri,
+                discoveryUrls: fitting,
+            })
+        })
+    }
 
     protected override _on_RegisterServerRequest(message: any, channel: any): void {
         const request = message.request as RegisterServerRequest
@@ -76,6 +110,8 @@ class LadsDiscoveryServer extends OPCUADiscoveryServer {
      */
     override on_request(message: any, channel: any): void {
         const name: string = message?.request?.schema?.name ?? ""
+        const requestHost = hostOf(message?.request?.endpointUrl)
+        if (requestHost && channel) this.clientHosts.set(channel, requestHost)
         const from = String(channel?.remoteAddress ?? "?").replace(/^::ffff:/, "")
         const local = from === "127.0.0.1" || from === "::1"
         if (name === "FindServersRequest" || name === "FindServersOnNetworkRequest" || (name === "GetEndpointsRequest" && !local)) {
