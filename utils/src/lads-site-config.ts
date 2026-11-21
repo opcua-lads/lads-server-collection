@@ -8,9 +8,10 @@
  * Without a file, or with an unknown site label, the single hard coded fallback ("essentim Office") is used.
  *
  * Site selection, highest priority first:
- *   0. per device entry:    "devices": { "<ProductInstanceUri>": "<label>" | "<hierarchical location>" }
- *                           (see siteOfDevice: devices of one server, even of one DeviceSet, can be at different places,
- *                           e.g. two labs at the same site; the value is a site label or directly a hierarchical location)
+ *   0. per device:          the site whose "devices" array holds the device's ProductInstanceUri:
+ *                           "hierarchicalLocations": [{ "label": "Lab 2", "value": "DE/.../Lab_2", "devices": ["<uri>", ...] }]
+ *                           (devices of one server, even of one DeviceSet, can be at different places, e.g. two labs at one
+ *                           site). Still read: the older map "devices": { "<ProductInstanceUri>": "<label>" | "<location>" }
  *   1. command line:        --site "<label>"
  *   2. environment:         LADS_SITE=<label>
  *   3. per server entry:    "servers": { "lads-viscometer": "<label>" }
@@ -36,6 +37,7 @@ export interface NamedHierarchicalLocation {
     label: string
     value: string
     location?: string       // optional manual GPS location of this site
+    devices?: string[]      // ProductInstanceUris of the devices at this site (devices that differ from their server's site)
 }
 
 export interface LADSSiteConfig {
@@ -117,13 +119,19 @@ export function loadSite(): LADSSite {
 }
 
 /**
- * The site of one device from the "devices" section of the configuration, by its ProductInstanceUri (unique per device instance,
+ * The site of one device: the hierarchicalLocations entry whose "devices" array lists its ProductInstanceUri, else the older
+ * "devices" map of the configuration, by its ProductInstanceUri (unique per device instance,
  * DI). The value is the label of a hierarchicalLocations entry or directly a hierarchical location ("DE/Aachen/.../Lab_2").
  * Undefined when the device has no entry: it uses the site of its server.
  */
 export function siteOfDevice(productInstanceUri: string | undefined): NamedHierarchicalLocation | undefined {
     if (!productInstanceUri) return undefined
-    const key = Object.keys(Site.devices).find(k => k.trim().toLowerCase() === productInstanceUri.trim().toLowerCase())
+    // case and blanks do not matter: "sartorius.com/arium pro VF/4711" fits "sartorius.com/arium-pro-VF/4711"
+    const normalize = (uri: string) => uri.trim().toLowerCase().replace(/\s+/g, "-")
+    const uri = normalize(productInstanceUri)
+    const site = Site.hierarchicalLocations.slice().reverse().find(location => location.devices?.some(d => normalize(d) === uri))
+    if (site) return site
+    const key = Object.keys(Site.devices).find(k => normalize(k) === uri)
     if (!key) return undefined
     const value = Site.devices[key].trim()
     const preset = Site.hierarchicalLocations.slice().reverse().find(location => location.label === value)
