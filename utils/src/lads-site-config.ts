@@ -134,7 +134,7 @@ export function siteOfDevice(productInstanceUri: string | undefined): NamedHiera
 }
 
 export const Site: LADSSite = loadSite()
-console.log(`Site: ${Site.hierarchicalLocationLabel} (${Site.hierarchicalLocation}), ${Site.location} (${Site.locationSource}) [${Site.source}]`)
+let siteReported = false
 
 //---------------------------------------------------------------
 // geographical lookup of the hierarchical location
@@ -194,6 +194,11 @@ export function cacheLocation(file: string, hierarchicalLocation: string, locati
  * Never throws and never blocks the startup (call without await). The result is stored in the config file and used from the next start on.
  */
 export async function refreshSiteLocation(): Promise<void> {
+    // reported by the device servers (createServer), not on every import of the utils (e.g. by the Local Discovery Server)
+    if (!siteReported) {
+        siteReported = true
+        console.log(`Site: ${Site.hierarchicalLocationLabel} (${Site.hierarchicalLocation}), ${Site.location} (${Site.locationSource}) [${Site.source}]`)
+    }
     try {
         if (!Site.geocode || Site.locationSource !== "fallback") return
         const location = await geocode(Site.hierarchicalLocation)
