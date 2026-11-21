@@ -43,7 +43,7 @@ export class ViscometerUnitSimulatorImpl extends ViscometerUnitImpl {
         this.viscosity_0 = namespace.addVariable({
             componentOf: simulator,
             browseName: "Simulated Viscosity",
-            description: "Viscosity at temperature 25°C and shear rate 1/s",
+            description: "Viscosity [mPa·s] at temperature 25°C and shear rate 1/s (consistency index K of the power law model)",
             dataType: DataType.Double,
             value: {dataType: DataType.Double, value: 622.8 },
             accessLevel: AccessLevelFlag.CurrentRead | AccessLevelFlag.CurrentWrite
@@ -51,7 +51,7 @@ export class ViscometerUnitSimulatorImpl extends ViscometerUnitImpl {
         this.alpha = namespace.addVariable({
             componentOf: simulator,
             browseName: "Simulated Alpha",
-            description: "Temperature coefficient for viscosity [%/K]",
+            description: "Temperature coefficient for viscosity [1/K]: viscosity = viscosity(25°C) / (1 + alpha × (T - 25°C)); 0.01 = 1 %/K",
             dataType: DataType.Double,
             value: {dataType: DataType.Double, value: 0.01 },
             accessLevel: AccessLevelFlag.CurrentRead | AccessLevelFlag.CurrentWrite
@@ -61,7 +61,7 @@ export class ViscometerUnitSimulatorImpl extends ViscometerUnitImpl {
             browseName: "Simulated N",
             description: "Flow behavior index according to power law model. N = 1 : no shear rate dependency; N > 1: shear thickening, dilatant; 0 < N < 1 : shear thinning, pseudo-plastic",
             dataType: DataType.Double,
-            value: {dataType: DataType.Double, value: 0.95 },
+            value: {dataType: DataType.Double, value: 0.6 },   // shear thinning like lotions, liquid soaps, emulsion paints (0.4 ... 0.8)
             accessLevel: AccessLevelFlag.CurrentRead | AccessLevelFlag.CurrentWrite
         })        
     }
@@ -88,7 +88,7 @@ export class ViscometerUnitSimulatorImpl extends ViscometerUnitImpl {
         const noise =  0.002 * (Math.random() - 0.5)
         const relativeTorque = viscosity_pv * npv / 100.0 / (this.model.tk * this.spindle.smc) + noise
         setNumericValue(this.relativeTorque.sensorValue, relativeTorque)
-        const torque = 1000.0 * this.model.tk * (relativeTorque / 100.0) // absolute toreque in mNm
+        const torque = this.model.fullScaleTorque * (relativeTorque / 100.0) // absolute torque in mN·m: spring torque at 100 % (model) × torque %
         setNumericValue(this.torque.sensorValue, torque)
 
         // measured viscosity
