@@ -101,7 +101,7 @@ class ViscometerServerImpl {
 // create and start server including a list of viscometers
 //---------------------------------------------------------------
 export async function main() {
-    const server = new ViscometerServerImpl(4840)
+    const server = new ViscometerServerImpl(4849)   // 4840 is the well-known port of the Local Discovery Server (servers/lads-lds)
     await server.start(['/dev/ttyUSB0'])
 }
 

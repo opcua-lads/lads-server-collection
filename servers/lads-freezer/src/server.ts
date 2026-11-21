@@ -70,7 +70,6 @@ class FreezerServerImpl {
     constructor(port: number, applicationName = "LADS Freezer", serialNumber = "4711") {
         const manufacturerUri = "aixengineers.de"
         const uri = `${manufacturerUri}/LADS-Freezer-Server`
-        const applicationUri = `${uri}/${serialNumber}`   // unique per freezer (serial number from the config)
 
         // provide paths for the nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
@@ -88,7 +87,7 @@ class FreezerServerImpl {
             applicationDirectory: __dirname,
             port: port,
             uri: uri,
-            applicationUri: applicationUri,
+            serialNumber: serialNumber,   // part of the applicationUri: unique per instance
             nodeset_filenames
         })
     }

@@ -99,7 +99,6 @@ export class AtmoWebServerImpl {
     constructor(config: AtmoWebConfig) {
         const manufacturerUri = "aixengineers.de"
         const uri = `${manufacturerUri}/LADS-AtmoWEB-Server`
-        const applicationUri = `${uri}/${config.serialNumber ?? 4711}`
         console.log(`${uri} starting ${IncludeAFO ? "with AFO support (takes some time to load) .." : ".."}`);
 
         // provide paths for the nodeset files
@@ -119,7 +118,7 @@ export class AtmoWebServerImpl {
             applicationDirectory: __dirname,
             port: config.port ?? 4843,
             uri: uri,
-            applicationUri: applicationUri,
+            serialNumber: String(config.serialNumber ?? 4711),   // part of the applicationUri: unique per instance
             nodeset_filenames
         })
 

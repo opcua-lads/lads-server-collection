@@ -14,10 +14,13 @@ import {
     RegisterServerMethod, setWarningLogger
 } from "node-opcua"
 import os from "os"
+import fs from "fs"
+import { exploreCertificate, readCertificate } from "node-opcua-crypto"
 import { refreshSiteLocation } from "./lads-site-config"
 import path from "path";
 import { createServerAuthentication } from "./lads-users"
 import { installRolePermissions } from "./lads-roles"
+import { LdsRegistration } from "./lads-lds-registration"
 
 export interface CreateServerOptions {
     port?: number
@@ -25,8 +28,12 @@ export interface CreateServerOptions {
     manufacturerName?: string
     applicationName: string
     applicationDirectory: string
+    /** Identifies this server instance (OPC 10000-4, 7.2). Default: urn:<host>:<uri>:<serialNumber or port>. */
     applicationUri?: string
+    /** Serial number of the instance, part of the default applicationUri (otherwise the port). */
+    serialNumber?: string
     softwareVersion?: string
+    /** Identifies the product (productUri, the same for every instance) */
     uri: string
     certificateSupport?: boolean
     automaticallyAcceptUnknownCertificate?: boolean
@@ -41,11 +48,37 @@ setWarningLogger((context: any, ...args: any[]) => {
     console.warn(`${new Date().toISOString()} :${context?.filename} :${context?.callerline}`, ...args)
 })
 
+/**
+ * The applicationUri of a server instance. OPC 10000-4, 7.2: "The globally unique identifier for the application instance";
+ * the productUri (7.31) identifies the product and is the same for all instances. Host and serial number (or port) make
+ * several instances of one product distinct, on one computer and across computers.
+ */
+export function instanceApplicationUri(uri: string, instance: string | number): string {
+    const host = os.hostname().split(".")[0].toLowerCase()
+    return `urn:${host}:${uri}:${instance}`
+}
+
+/** node-opcua creates the server certificate only when the file is missing; one issued for another applicationUri is set aside. */
+function dropStaleCertificate(certificateFile: string, applicationUri: string) {
+    if (!fs.existsSync(certificateFile)) return
+    try {
+        const uris = exploreCertificate(readCertificate(certificateFile)).tbsCertificate.extensions?.subjectAltName?.uniformResourceIdentifier ?? []
+        if (uris.includes(applicationUri)) return
+        fs.renameSync(certificateFile, `${certificateFile}.${Date.now()}.old`)
+        console.log(`server certificate was issued for ${uris.join(", ") || "no URI"}; a new one is created for ${applicationUri}`)
+    }
+    catch (err) {
+        console.warn(`server certificate ${certificateFile} could not be checked: ${err}`)
+    }
+}
+
 export function createServer(options: CreateServerOptions): OPCUAServer {
     refreshSiteLocation()    // background lookup of the site's GPS location (silent, cached in config/lads-site.json)
+    const port = options.port ?? 4850
+    const applicationUri = options.applicationUri ?? instanceApplicationUri(options.uri, options.serialNumber ?? port)
     // basic server options
     const serverOptions: OPCUAServerOptions = {
-        port: options.port ?? 4850,
+        port,
         buildInfo: {
             manufacturerName: options.manufacturerName ?? "AixEngineers",
             productName: options.uri,
@@ -56,7 +89,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
             applicationName: options.applicationName,
             applicationType: ApplicationType.Server,
             productUri: options.uri,
-            applicationUri: options.applicationUri ?? options.uri,
+            applicationUri,
 
         },
         // nodesets used by the server
@@ -90,7 +123,9 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
         const automaticallyAcceptUnknownCertificate =  options.automaticallyAcceptUnknownCertificate ?? true
         const certRoot = path.join(options.applicationDirectory, "certs");
         serverOptions.serverCertificateManager = new OPCUACertificateManager({ rootFolder: certRoot, automaticallyAcceptUnknownCertificate });
-        serverOptions.certificateFile = path.join(certRoot, "own", "certs", "certificate.pem");
+        // one certificate per instance (several instances of a server share the application directory)
+        serverOptions.certificateFile = path.join(certRoot, "own", "certs", `certificate-${port}.pem`);
+        dropStaleCertificate(serverOptions.certificateFile, applicationUri)
         serverOptions.privateKeyFile = path.join(certRoot, "own", "private", "private_key.pem");
     }
 
@@ -149,10 +184,12 @@ export function mdnsHostName(applicationName: string): string {
 class LadsMdnsRegisterServerManager extends RegisterServerManagerMDNSONLY {
     private readonly announcement = new BonjourHolder()
     private readonly baseServer: OPCUAServer
+    private readonly lds: LdsRegistration
 
     constructor(options: { server: OPCUAServer }, private readonly applicationName: string) {
         super(options)
         this.baseServer = options.server
+        this.lds = new LdsRegistration(options.server, applicationName)
     }
 
     override async start(): Promise<void> {
@@ -163,10 +200,12 @@ class LadsMdnsRegisterServerManager extends RegisterServerManagerMDNSONLY {
             host: mdnsHostName(this.applicationName),
             port: this.baseServer.endpoints[0].port
         })
+        this.lds.start()   // also listed by the Local Discovery Server (FindServers), when one runs
         this.emit("serverRegistered")
     }
 
     override async stop(): Promise<void> {
+        await this.lds.stop()
         await this.announcement.stopAnnouncedOnMulticastSubnet()
         this.emit("serverUnregistered")
     }
