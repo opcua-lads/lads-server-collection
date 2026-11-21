@@ -55,7 +55,20 @@ setWarningLogger((context: any, ...args: any[]) => {
  */
 export function instanceApplicationUri(uri: string, instance: string | number): string {
     const host = os.hostname().split(".")[0].toLowerCase()
-    return `urn:${host}:${uri}:${instance}`
+    return `${productUriOf(uri)}:${host}:${instance}`
+}
+
+/** Readable product name: "aixengineers.de/LADS-Freezer-Server" and "LADS-Freezer-Server" both give "LADS-Freezer-Server". */
+export function productNameOf(uri: string): string {
+    return uri.replace(/^urn:[^:]+:/i, "").replace(/^.*\//, "")
+}
+
+/**
+ * productUri (OPC 10000-4, 7.31: "the globally unique identifier for the Server product"), the same form for every server:
+ * urn:aixengineers.de:<product name>. A value that already has a URI scheme (urn:, http:, ...) is kept.
+ */
+export function productUriOf(uri: string): string {
+    return /^[a-z][a-z0-9+.-]*:/i.test(uri) ? uri : `urn:aixengineers.de:${productNameOf(uri)}`
 }
 
 /**
@@ -117,14 +130,14 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
         alternateHostname: alternateHostnames(),
         buildInfo: {
             manufacturerName: options.manufacturerName ?? "AixEngineers",
-            productName: options.uri,
-            productUri: options.uri,
+            productName: productNameOf(options.uri),
+            productUri: productUriOf(options.uri),
             softwareVersion: options.softwareVersion ?? "1.0.0",
         },
         serverInfo: {
             applicationName: options.applicationName,
             applicationType: ApplicationType.Server,
-            productUri: options.uri,
+            productUri: productUriOf(options.uri),
             applicationUri,
 
         },

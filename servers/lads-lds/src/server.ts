@@ -28,7 +28,7 @@ import {
     ApplicationType, MessageSecurityMode, OPCUACertificateManager, OPCUADiscoveryServer, RegisterServerRequest, RegisterServerResponse,
     SecurityPolicy, ServiceFault, StatusCode, StatusCodes
 } from "node-opcua"
-import { alternateHostnames, instanceApplicationUri, mdnsHostName, mdnsInstanceName } from "@utils"
+import { alternateHostnames, instanceApplicationUri, mdnsHostName, mdnsInstanceName, productUriOf } from "@utils"
 
 /** A registration that was not renewed for this long is dropped (the servers renew every minute; a crashed one never signs off). */
 const RegistrationTimeout = 3 * 60_000
@@ -119,7 +119,7 @@ export async function main() {
         privateKeyFile: path.join(certRoot, "own", "private", "private_key.pem"),
         serverInfo: {
             applicationUri,
-            productUri: uri,
+            productUri: productUriOf(uri),
             applicationName: { text: applicationName, locale: "en" },
         },
         // RegisterServer needs a secured channel; FindServers / FindServersOnNetwork / GetEndpoints work on None as well
