@@ -19,7 +19,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, ISessionContext, LocalizedText, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
+import { AccessLevelFlag, assert, CallMethodResultOptions, DataType, DataValue, ISessionContext, LocalizedText, Range, StatusCode, StatusCodes, UAObject, UAStateMachineEx, Variant, VariantArrayType, VariantLike } from "node-opcua"
 import { ViscometerFunctionalUnit } from "./interfaces"
 import { ViscometerModelParameters, ViscometerModels, ViscometerSpindleParameters, ViscometerSpindles, ViscometerDeviceImpl } from "./device"
 import { LADSActiveProgram, LADSAnalogControlFunction, LADSAnalogScalarSensorFunction, LADSBaseControlFunction, LADSFunctionalState, LADSProgramTemplate, LADSResult, LADSSampleInfo } from "@interfaces"
@@ -83,6 +83,10 @@ export abstract class ViscometerUnitImpl {
         // initialize other functions
         this.relativeTorque = functionSet.relativeTorque
         this.torque = functionSet.torque
+        // the torque range follows the model's spring (the nodeset's -10 … 1000 mN·m fits no Brookfield spring)
+        const fullScale = this.model.fullScaleTorque
+        this.torque.sensorValue.euRange?.setValueFromSource({ dataType: DataType.ExtensionObject,
+            value: new Range({ low: -0.1 * fullScale, high: fullScale }) })
         this.shearStress = functionSet.shearStress
         this.shearRate = functionSet.shearRate
         this.temperature = functionSet.temperature

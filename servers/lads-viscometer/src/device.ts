@@ -78,21 +78,27 @@ export const ViscometerSpindles: ViscometerSpindleParameters[] = [
     {name: "SC4-34", code: 34, smc: 64, src: 0.28},
 ]
 
-export interface ViscometerModelParameters { name: string, tk: number, code: string}
+/**
+ * A Brookfield model is defined by its torsion spring. tk: torque constant relative to the RV spring (used in the handbook
+ * equations: viscosity [cP] = 100 / rpm × tk × smc × torque %, shear stress [dyn/cm²] = tk × src × smc × torque %).
+ * fullScaleTorque: the spring torque at 100 % in mN·m (handbook "spring torque": RV 7187 dyne·cm = 0.7187 mN·m, LV 673.7 dyne·cm,
+ * HA 14374 dyne·cm, HB 57496 dyne·cm; the others scale with tk). It does not depend on the spindle.
+ */
+export interface ViscometerModelParameters { name: string, tk: number, fullScaleTorque: number, code: string}
 
 export const ViscometerModels: ViscometerModelParameters[] = [
-    {name: "LVDV-II+", tk: 0.09373, code: "LV"},
-    {name: "2.5LVDV-II+", tk: 0.2343, code: "2.5 LV"},
-    {name: "5LVDV-II+", tk: 0.4686, code: "5 LV"},
-    {name: "1/4 RVDV-II+", tk: 0.25, code: "0.25 RV"},
-    {name: "1/2 RVDV-II+", tk: 0.5, code: "0.5 RV"},
-    {name: "RVDV-II+", tk: 1.0, code: "RV"},
-    {name: "HADV-II+", tk: 2.0, code: "HA"},
-    {name: "2HADV-II+", tk: 4.0, code: "2 HA"},
-    {name: "2.5HADV-II+", tk: 5.0, code: "2.5 HA"},
-    {name: "HBDV-II+", tk: 8.0, code: "HB"},
-    {name: "2HBDV-II+", tk: 16.0, code: "2 HB"},
-    {name: "2.5HBDV-II+", tk: 20.0, code: "2.5 HB"},
+    {name: "LVDV-II+", tk: 0.09373, fullScaleTorque: 0.06737, code: "LV"},
+    {name: "2.5LVDV-II+", tk: 0.2343, fullScaleTorque: 0.16839, code: "2.5 LV"},
+    {name: "5LVDV-II+", tk: 0.4686, fullScaleTorque: 0.33678, code: "5 LV"},
+    {name: "1/4 RVDV-II+", tk: 0.25, fullScaleTorque: 0.17968, code: "0.25 RV"},
+    {name: "1/2 RVDV-II+", tk: 0.5, fullScaleTorque: 0.35935, code: "0.5 RV"},
+    {name: "RVDV-II+", tk: 1.0, fullScaleTorque: 0.7187, code: "RV"},
+    {name: "HADV-II+", tk: 2.0, fullScaleTorque: 1.4374, code: "HA"},
+    {name: "2HADV-II+", tk: 4.0, fullScaleTorque: 2.8748, code: "2 HA"},
+    {name: "2.5HADV-II+", tk: 5.0, fullScaleTorque: 3.5935, code: "2.5 HA"},
+    {name: "HBDV-II+", tk: 8.0, fullScaleTorque: 5.7496, code: "HB"},
+    {name: "2HBDV-II+", tk: 16.0, fullScaleTorque: 11.4992, code: "2 HB"},
+    {name: "2.5HBDV-II+", tk: 20.0, fullScaleTorque: 14.374, code: "2.5 HB"},
 ]
 
 export class ViscometerDeviceImpl {

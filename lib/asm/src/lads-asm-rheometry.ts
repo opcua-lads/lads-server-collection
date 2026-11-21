@@ -13,7 +13,7 @@
 // LADS Allotrope Simple Model for Rheometry
 //---------------------------------------------------------------
 
-import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, Units, AggregateDocument, AllotropeSimpleModelRecorderOptions } from "./lads-asm"
+import { MeasurementAggregateDocument, DataCube, MeasurementDocument, Property, DataCubeStructure, AllotropeSimpleModel, AllotropeSimpleModelRecorder, Units, AggregateDocument, AllotropeSimpleModelRecorderOptions, asmUnitFactor } from "./lads-asm"
 import { UAVariable } from "node-opcua"
 import { AFODictionaryIds } from "@afo/lads-afo-ids"
 
@@ -124,6 +124,8 @@ export interface RheometryRecorderOptions extends AllotropeSimpleModelRecorderOp
 
 export class RheometryRecorder extends AllotropeSimpleModelRecorder {
     options: RheometryRecorderOptions
+    /** factors from the device units (EngineeringUnits) to the units of the data cube structure (e.g. mPa·s -> Pa.s: 0.001) */
+    factors: { shearRate: number, shearStress: number, viscosity: number, torque: number, temperature: number }
 
     constructor(options: RheometryRecorderOptions) {
         super(options, [
@@ -132,6 +134,17 @@ export class RheometryRecorder extends AllotropeSimpleModelRecorder {
         ])
         this.options = options
         this.referenceIds.push(AFODictionaryIds.rheometry, AFODictionaryIds.rheometry_aggregate_document)
+        this.factors = {
+            shearRate: asmUnitFactor(options.shearRate, Units._s, "shear rate"),
+            shearStress: asmUnitFactor(options.shearStress, Units.Pa, "shear stress"),
+            viscosity: asmUnitFactor(options.viscosity, Units.Pas, "viscosity"),
+            torque: asmUnitFactor(options.torque, Units.Nm, "torque"),
+            temperature: asmUnitFactor(options.temperature, Units.degC, "temperature"),
+        }
+    }
+
+    private converted(variable: UAVariable, factor: number): number[] {
+        return this.dataRecorder.trackValues(variable).map(value => factor * Number(value))
     }
 
     createModel(): RheometryModel {
@@ -141,15 +154,15 @@ export class RheometryRecorder extends AllotropeSimpleModelRecorder {
             "cube-structure": RheometryCurveDataCubeStructure,
             "data": {
                 "dimensions": [
-                    this.dataRecorder.trackValues(options.shearRate),
+                    this.converted(options.shearRate, this.factors.shearRate),
                     this.dataRecorder.trackValues(options.runtime).map(value => 0.001 * Number(value)),
                     this.dataRecorder.trackValues(options.stepRuntime).map(value => 0.001 * Number(value)),
                 ],
                 "measures": [
-                    this.dataRecorder.trackValues(options.shearStress),
-                    this.dataRecorder.trackValues(options.viscosity),
-                    this.dataRecorder.trackValues(options.torque),
-                    this.dataRecorder.trackValues(options.temperature),
+                    this.converted(options.shearStress, this.factors.shearStress),
+                    this.converted(options.viscosity, this.factors.viscosity),
+                    this.converted(options.torque, this.factors.torque),
+                    this.converted(options.temperature, this.factors.temperature),
                 ]
             },
             "label": identifier
