@@ -28,6 +28,7 @@ import { AccessLevelFlag, DataType, SessionContext, UAVariable } from 'node-opcu
 //---------------------------------------------------------------
 export class pHMeterSimulatorUnitImpl extends pHMeterUnitImpl {
     simpHPV: UAVariable
+    simRandomOnMeasure: UAVariable
     simpHOfs: UAVariable
     simpHSlope: UAVariable
     simpHRaw: UAVariable
@@ -48,6 +49,15 @@ export class pHMeterSimulatorUnitImpl extends pHMeterUnitImpl {
             browseName: "pH.PV",
             dataType: DataType.Double,
             value: { dataType: DataType.Double, value: 6.0 }
+        })
+        // option: a Measure run without a 'ph' property draws a random pH (7 ± 3) into pH.PV (true, as before), or keeps the pH.PV
+        // set by hand (false), so that a sample can be simulated on purpose; writable at run time
+        this.simRandomOnMeasure = namespace.addVariable({
+            componentOf: simulator,
+            browseName: "pH.RandomOnMeasure",
+            description: "true: a Measure run without a 'ph' property sets pH.PV to a random value (7 ± 3); false: it keeps the pH.PV set by hand",
+            dataType: DataType.Boolean,
+            value: { dataType: DataType.Boolean, value: true }
         })
         this.simpHSlope = namespace.addVariable({
             componentOf: simulator,
@@ -136,7 +146,11 @@ export class pHMeterSimulatorUnitImpl extends pHMeterUnitImpl {
         const options = this.currentRunOptions
         const pHPropertyKey = options.programTemplateId === ProgramTemplateIds.Measure ? "ph" : "buffer"
         const pHProperty = options.properties?.find(property => property?.key?.toLowerCase().includes(pHPropertyKey))
-        options.referenceValue = pHProperty ? Number(pHProperty.value) : pHValues.find(value => value.id === options.programTemplateId).value
+        const isMeasure = options.programTemplateId === ProgramTemplateIds.Measure
+        const random = this.simRandomOnMeasure.readValue().value.value !== false
+        options.referenceValue = pHProperty ? Number(pHProperty.value)
+            : isMeasure && !random ? getNumericValue(this.simpHPV)    // keep the pH.PV set by hand
+            : pHValues.find(value => value.id === options.programTemplateId).value
         setNumericValue(this.simpHPV, options.referenceValue)
 
         // enter measuring
