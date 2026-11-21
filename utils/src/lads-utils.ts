@@ -821,9 +821,11 @@ export class LADSDeviceHelper {
         // the ProductInstanceUri changes: some devices learn model and serial number only later (e.g. a balance from its
         // device info), and the site must follow.
         let appliedSite: string | undefined
+        // on the device itself or only in its Identification (e.g. the balances)
+        const productInstanceUri = device.productInstanceUri ?? (device.identification as any)?.productInstanceUri
         const applySite = () => {
             if (!device.hierarchicalLocation) return
-            const deviceSite = siteOfDevice(getStringValue(device.productInstanceUri, ""))
+            const deviceSite = siteOfDevice(getStringValue(productInstanceUri, ""))
             if (deviceSite) {
                 if (appliedSite === deviceSite.value) return
                 appliedSite = deviceSite.value
@@ -834,7 +836,7 @@ export class LADSDeviceHelper {
             }
         }
         applySite()
-        device.productInstanceUri?.on("value_changed", applySite)
+        productInstanceUri?.on("value_changed", applySite)
 
         // eventually look up the geographic location of the hierarchical location in the background (config/lads-site.json)
         GeoLocationUpdater.install(device)
