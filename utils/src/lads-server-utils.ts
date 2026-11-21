@@ -73,6 +73,26 @@ export function alternateHostnames(): string[] {
     return [...names]
 }
 
+/**
+ * GetEndpoints for a host name the server does not know (e.g. "localhost", while the endpoints carry the computer name,
+ * <name>.local and the IP addresses): node-opcua then returns the endpoints of ALL host names, but CreateSession only those
+ * of the chosen one, and strict clients (.NET stack, gateway) refuse the session: "Server did not return a number of
+ * ServerEndpoints that matches the one from GetEndpoints" (BadSecurityChecksFailed). OPC 10000-4, GetEndpoints: "The Server
+ * should return a suitable default URL if it does not recognize the HostName in the URL" - so answer for the primary host name.
+ */
+function installDefaultEndpointUrl(server: OPCUAServer) {
+    const target = server as any
+    const original = target._on_GetEndpointsRequest.bind(server)
+    target._on_GetEndpointsRequest = (message: any, channel: any) => {
+        const request = message.request
+        const endpoints: { endpointUrl?: string | null }[] = target._get_endpoints(null)
+        if (request?.endpointUrl && endpoints.length && !endpoints.some((e) => e.endpointUrl === request.endpointUrl)) {
+            request.endpointUrl = endpoints[0].endpointUrl
+        }
+        original(message, channel)
+    }
+}
+
 /** node-opcua creates the server certificate only when the file is missing; one issued for another applicationUri is set aside. */
 function dropStaleCertificate(certificateFile: string, applicationUri: string) {
     if (!fs.existsSync(certificateFile)) return
@@ -155,6 +175,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     try {
         // build the server object
         const server = new OPCUAServer(serverOptions)
+        installDefaultEndpointUrl(server)
         if (ldsSupport) {
             // node-opcua's own mDNS manager announces the host as "TODO-find how to extract hostname" and uses the
             // applicationUri as instance name; replace it by one that announces <hostname>.local and a readable name
