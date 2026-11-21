@@ -68,7 +68,7 @@ import {
     LADSComponent} from "@interfaces"
 import { EnumDeviceHealth, UAComponent } from  "node-opcua-nodeset-di"
 import { getNumericValue, getStringValue, modifyStatusCode, setBooleanValue, setDateTimeValue, setNodeIdValue, setNumericValue, setStringValue } from "./lads-variable-utils"
-import { eventData, raiseEvent } from "./lads-event-utils"
+import { deviceHealthSeverity, eventData, raiseEvent } from "./lads-event-utils"
 import { AFODictionary } from "@afo"
 import { Site, NamedHierarchicalLocation, siteOfDevice } from "./lads-site-config"
 import { GeoLocationUpdater } from "./lads-geolocation"
@@ -922,9 +922,9 @@ export class LADSDeviceHelper {
         components.forEach(component => this.createMachineryBuildingBlocks(component))
     }
 
-    raiseEvent(message: string, source?: BaseNode) {
+    raiseEvent(message: string, source?: BaseNode, severity: number = 0) {
         if (!this.options.raiseEvents) return
-        this.device.raiseEvent(LADSDeviceHelper.eventType, eventData(message, 0, source))
+        this.device.raiseEvent(LADSDeviceHelper.eventType, eventData(message, severity, source))
     }
 
     /** Events of the device state and of the machinery state machines, on by default. */
@@ -1022,7 +1022,7 @@ export class LADSDeviceHelper {
     async onDeviceHealthChanged(dataValue: DataValue) {
         const value = (dataValue as DataValueT<EnumDeviceHealth, DataType.UInt32>).value.value
         const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
-        this.raiseEvent(`health changed to ${key} .. `, this.device.deviceHealth)
+        this.raiseEvent(`health changed to ${key} .. `, this.device.deviceHealth, deviceHealthSeverity(value))
         if (value == EnumDeviceHealth.FAILURE) {
             this.functionalUnitStateMachines.forEach((stateMachine) => {
                 if (state2str(stateMachine.getCurrentState()).includes(LADSFunctionalState.Running)) {

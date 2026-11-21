@@ -15,7 +15,7 @@ For simulation the object Simulator has a writable variable StatusFlags. Writing
 
 import { AddressSpace, DataType, Namespace, QualifiedName, ReferenceTypeIds, UAObject, UAVariable, AccessLevelFlag, StatusCodes, Variant, makeNodeId } from "node-opcua"
 import { EnumDeviceHealth } from "node-opcua-nodeset-di"
-import { EventSeverity, raiseEvent } from "@utils"
+import { deviceHealthSeverity, EventSeverity, raiseEvent } from "@utils"
 
 /**
  * Readable display name from a camel case browse name: a space before every upper case letter except the first;
@@ -51,10 +51,6 @@ const PRIORITY: Record<number, number> = {
 }
 
 /** severity of the DeviceHealth event: like the alarms (Failure 600, other abnormal states 300), Normal is Info */
-function healthSeverity(health: EnumDeviceHealth): number {
-    if (health === EnumDeviceHealth.NORMAL) return EventSeverity.Info
-    return health === EnumDeviceHealth.FAILURE ? EventSeverity.Alarm : EventSeverity.Warning
-}
 
 export class FuturaHealth {
     private alarms = new Map<AlarmDefinition, any>()
@@ -165,7 +161,7 @@ export class FuturaHealth {
 
         if (worst !== this.health) {
             this.deviceHealth.setValueFromSource({ dataType: DataType.Int32, value: worst })
-            if (raiseEvents) raiseEvent(this.device, `DeviceHealth changed to ${EnumDeviceHealth[worst]}`, healthSeverity(worst), this.deviceHealth)   // source: the DeviceHealth variable
+            if (raiseEvents) raiseEvent(this.device, `DeviceHealth changed to ${EnumDeviceHealth[worst]}`, deviceHealthSeverity(worst), this.deviceHealth)   // source: the DeviceHealth variable
         }
     }
 }

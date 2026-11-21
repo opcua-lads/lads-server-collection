@@ -11,6 +11,7 @@
 
 import { BaseNode, DataType, DataValue, UAAnalogUnitRange, UAObject, UATwoStateDiscrete, UAVariable } from "node-opcua"
 import { getEUInformation, getStringValue } from "./lads-variable-utils"
+import { EnumDeviceHealth } from "node-opcua-nodeset-di"
 
 //---------------------------------------------------------------
 // generic event raising
@@ -34,6 +35,28 @@ export function eventData(message: string, severity: number = 0, source?: BaseNo
     }
     if (source) data.sourceNode = { dataType: DataType.NodeId, value: source.nodeId }
     return data
+}
+
+/**
+ * DeviceHealth (OPC 10000-100, DeviceHealthEnumeration after NAMUR NE 107) as event severity, in the NE 107 order of priority
+ * Failure > Check function > Off spec > Maintenance required > Normal.
+ */
+export function deviceHealthSeverity(health: number): number {
+    switch (health) {
+        case EnumDeviceHealth.FAILURE: return 900   // Critical: malfunction of the device
+        case EnumDeviceHealth.CHECK_FUNCTION: return 600   // Alarm: output temporarily not valid (work on the device)
+        case EnumDeviceHealth.OFF_SPEC: return 400   // Warning: operating outside its specified range
+        case EnumDeviceHealth.MAINTENANCE_REQUIRED: return 300   // Warning: still valid, maintenance needed soon
+        default: return 0     // Info: NORMAL
+    }
+}
+
+/** Raises an event with the matching severity whenever the DeviceHealth of the device changes. */
+export function installDeviceHealthEvents(device: UAObject & { deviceHealth?: UAVariable }) {
+    device.deviceHealth?.on("value_changed", (dataValue: DataValue) => {
+        const health = dataValue.value.value as number
+        raiseEvent(device, `Device health changed to ${EnumDeviceHealth[health] ?? health}`, deviceHealthSeverity(health))
+    })
 }
 
 //---------------------------------------------------------------
