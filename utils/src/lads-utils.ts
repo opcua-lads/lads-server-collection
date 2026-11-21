@@ -816,15 +816,25 @@ export class LADSDeviceHelper {
         // provide machinery compatibility
         this.buildMachineryStructure(device)
 
-        // HierarchicalLocation from the site configuration (config/lads-site.json): a "devices" entry for this device
-        // (by ProductInstanceUri) wins; devices without an explicit value get the site of their server
-        const deviceSite = siteOfDevice(getStringValue(device.productInstanceUri, ""))
-        if (device.hierarchicalLocation && deviceSite) {
-            setStringValue(device.hierarchicalLocation, deviceSite.value)
-            console.log(`Site of ${device.getDisplayName()}: ${deviceSite.label} (${deviceSite.value}) [devices entry]`)
-        } else if (device.hierarchicalLocation && !getStringValue(device.hierarchicalLocation, "")) {
-            setStringValue(device.hierarchicalLocation, DefaultHierarchicalLocation)
+        // HierarchicalLocation from the site configuration (config/lads-site.json): a site that lists this device (by its
+        // ProductInstanceUri) wins; devices without an explicit site get the site of their server. Applied again whenever
+        // the ProductInstanceUri changes: some devices learn model and serial number only later (e.g. a balance from its
+        // device info), and the site must follow.
+        let appliedSite: string | undefined
+        const applySite = () => {
+            if (!device.hierarchicalLocation) return
+            const deviceSite = siteOfDevice(getStringValue(device.productInstanceUri, ""))
+            if (deviceSite) {
+                if (appliedSite === deviceSite.value) return
+                appliedSite = deviceSite.value
+                setStringValue(device.hierarchicalLocation, deviceSite.value)
+                console.log(`Site of ${device.getDisplayName()}: ${deviceSite.label} (${deviceSite.value}) [listed at that site]`)
+            } else if (!getStringValue(device.hierarchicalLocation, "")) {
+                setStringValue(device.hierarchicalLocation, DefaultHierarchicalLocation)
+            }
         }
+        applySite()
+        device.productInstanceUri?.on("value_changed", applySite)
 
         // eventually look up the geographic location of the hierarchical location in the background (config/lads-site.json)
         GeoLocationUpdater.install(device)
