@@ -28,7 +28,7 @@ import {
     ApplicationType, MessageSecurityMode, OPCUACertificateManager, OPCUADiscoveryServer, RegisterServerRequest, RegisterServerResponse,
     SecurityPolicy, ServiceFault, StatusCode, StatusCodes
 } from "node-opcua"
-import { alternateHostnames, instanceApplicationUri, mdnsHostName, mdnsInstanceName, productUriOf } from "@utils"
+import { alternateHostnames, dropStaleCertificate, installCertificateFactory, instanceApplicationUri, mdnsHostName, mdnsInstanceName, productUriOf } from "@utils"
 
 /** A registration that was not renewed for this long is dropped (the servers renew every minute; a crashed one never signs off). */
 const RegistrationTimeout = 3 * 60_000
@@ -109,13 +109,15 @@ export async function main() {
     const applicationUri = instanceApplicationUri(uri, port)
     const certRoot = path.join(__dirname, "certs")
     const serverCertificateManager = new OPCUACertificateManager({ rootFolder: certRoot, automaticallyAcceptUnknownCertificate: true })
+    const certificateFile = path.join(certRoot, "own", "certs", `certificate-${port}.pem`)
+    dropStaleCertificate(certificateFile, applicationUri)   // a certificate issued for another applicationUri is created anew
 
     const applicationName = `LADS Local Discovery Server (${os.hostname().split(".")[0]})`
     const server = new LadsDiscoveryServer({
         port,
         alternateHostname: alternateHostnames(),   // reachable by <name>.local and IP address (clients in other subnets, VMs)
         serverCertificateManager,
-        certificateFile: path.join(certRoot, "own", "certs", `certificate-${port}.pem`),
+        certificateFile,
         privateKeyFile: path.join(certRoot, "own", "private", "private_key.pem"),
         serverInfo: {
             applicationUri,
@@ -126,6 +128,7 @@ export async function main() {
         securityModes: [MessageSecurityMode.None, MessageSecurityMode.Sign, MessageSecurityMode.SignAndEncrypt],
         securityPolicies: [SecurityPolicy.None, SecurityPolicy.Basic256Sha256, SecurityPolicy.Aes128_Sha256_RsaOaep],
     })
+    installCertificateFactory(server)   // subject AixEngineers, host names incl. <name>.local
     server.on("onRegisterServer", (registered, firstTime) => {
         if (firstTime) console.log(`registered: ${registered.serverNames?.[0]?.text ?? registered.serverUri} (${registered.discoveryUrls?.join(", ")})`)
     })

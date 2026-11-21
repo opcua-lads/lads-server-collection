@@ -107,13 +107,55 @@ function installDefaultEndpointUrl(server: OPCUAServer) {
 }
 
 /** node-opcua creates the server certificate only when the file is missing; one issued for another applicationUri is set aside. */
-function dropStaleCertificate(certificateFile: string, applicationUri: string) {
+/** Subject of the self-signed application instance certificates (node-opcua's default is O=Sterfive/L=Orleans/C=FR) */
+export const CertificateOrganization = "AixEngineers"
+export const CertificateSubject = `/O=${CertificateOrganization}/L=Aachen/C=DE`
+OPCUACertificateManager.defaultCertificateSubject = CertificateSubject
+
+/**
+ * dNSNames of the certificate (OPC 10000-6, 6.2.2: servers shall specify a dNSName or a static IPAddress of the machine):
+ * the computer name and <name>.local, both stable. IP addresses are left out on purpose: they change (DHCP, VPN), and the
+ * host name check of the clients may be suppressed (OPC 10000-4, 6.1.3), the URI check may not.
+ */
+export function certificateDnsNames(): string[] {
+    const short = os.hostname().split(".")[0]
+    return [...new Set([os.hostname(), short, `${short}.local`])]
+}
+
+/** node-opcua creates a missing certificate with its own host names; this one uses certificateDnsNames and CertificateSubject. */
+export function installCertificateFactory(server: any) {
+    server.createDefaultCertificate = async function () {
+        if (fs.existsSync(this.certificateFile)) return
+        const name = coerceText(this.serverInfo.applicationName) ?? "LADS Server"
+        const commonName = `${name}@${os.hostname().split(".")[0]}`.substring(0, 63)
+        await this.serverCertificateManager.createSelfSignedCertificate({
+            applicationUri: this.serverInfo.applicationUri,
+            dns: certificateDnsNames(),
+            outputFile: this.certificateFile,
+            subject: `/CN=${commonName}${CertificateSubject}`,
+            startDate: new Date(),
+            validity: 365 * 10,
+        })
+    }
+}
+
+function coerceText(text: any): string | undefined {
+    return typeof text === "string" ? text : text?.text ?? undefined
+}
+
+export function dropStaleCertificate(certificateFile: string, applicationUri: string) {
     if (!fs.existsSync(certificateFile)) return
     try {
-        const uris = exploreCertificate(readCertificate(certificateFile)).tbsCertificate.extensions?.subjectAltName?.uniformResourceIdentifier ?? []
-        if (uris.includes(applicationUri)) return
+        const tbs = exploreCertificate(readCertificate(certificateFile)).tbsCertificate
+        const uris = tbs.extensions?.subjectAltName?.uniformResourceIdentifier ?? []
+        const dns: string[] = tbs.extensions?.subjectAltName?.dNSName ?? []
+        const reason = !uris.includes(applicationUri) ? `was issued for ${uris.join(", ") || "no URI"}`
+            : tbs.subject?.organizationName !== CertificateOrganization ? `was issued by ${tbs.subject?.organizationName ?? "unknown"}`
+            : certificateDnsNames().some((name) => !dns.includes(name)) ? `lacks host names (has ${dns.join(", ")})`
+            : undefined
+        if (!reason) return
         fs.renameSync(certificateFile, `${certificateFile}.${Date.now()}.old`)
-        console.log(`server certificate was issued for ${uris.join(", ") || "no URI"}; a new one is created for ${applicationUri}`)
+        console.log(`server certificate ${reason}; a new one is created for ${applicationUri}`)
     }
     catch (err) {
         console.warn(`server certificate ${certificateFile} could not be checked: ${err}`)
@@ -188,6 +230,7 @@ export function createServer(options: CreateServerOptions): OPCUAServer {
     try {
         // build the server object
         const server = new OPCUAServer(serverOptions)
+        installCertificateFactory(server)
         installDefaultEndpointUrl(server)
         if (ldsSupport) {
             // node-opcua's own mDNS manager announces the host as "TODO-find how to extract hostname" and uses the
