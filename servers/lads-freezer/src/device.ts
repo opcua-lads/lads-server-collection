@@ -43,7 +43,8 @@ export class FreezerDeviceImpl {
         this.freezerUnit = new FreezerUnitImpl(device.functionalUnitSet.freezerUnit)
 
         // cerate storage
-        this.storage = new StorageImpl(this)
+        this.storage = new StorageImpl(this, config.manufacturer, config.compartments ?? 3, config.samplesPerCompartment ?? 24,
+            config.sampleIdPattern)
 
          // set AFO dictionary entries
          AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references

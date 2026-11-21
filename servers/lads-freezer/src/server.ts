@@ -10,7 +10,8 @@
  */
 
 import { assert, coerceNodeId, nodesets, OPCUAServer, UAObject } from "node-opcua"
-import { join } from "path"
+import { join, resolve } from "path"
+import { readFileSync } from "fs"
 import { createServer, DefaultLocation, DIObjectIds, getChildObjects, LADSComponentOptions } from "@utils"
 import { FreezerDevice } from "./interfaces"
 import { FreezerDeviceImpl } from "./device"
@@ -19,6 +20,16 @@ import { FreezerDeviceImpl } from "./device"
 export interface FreezerConfig extends LADSComponentOptions {
     deviceTypeImage?: string
     hierarchicalLocation?: string
+    /** server settings: OPC UA port and the application name the server announces (mDNS), unique per freezer */
+    port?: number
+    serverName?: string
+    /** "Eppendorf" (default) or "Liebherr": the built-in freezer the file starts from; the file overrides any of its keys */
+    preset?: string
+    /** storage: compartments, samples per compartment and the pattern of the sample ids they are loaded with
+     * (see formatSampleId: "47{compartment:2}{index:4}" -> 47010001 …) */
+    compartments?: number
+    samplesPerCompartment?: number
+    sampleIdPattern?: string
 }
 
 export const IncludeAFO = true
@@ -56,10 +67,10 @@ class FreezerServerImpl {
     server: OPCUAServer
     devices: FreezerDeviceImpl[] = []
 
-    constructor(port: number) {
+    constructor(port: number, applicationName = "LADS Freezer", serialNumber = "4711") {
         const manufacturerUri = "aixengineers.de"
         const uri = `${manufacturerUri}/LADS-Freezer-Server`
-        const applicationUri = `${uri}/4711`
+        const applicationUri = `${uri}/${serialNumber}`   // unique per freezer (serial number from the config)
 
         // provide paths for the nodeset files
         const nodeset_path = join(process.cwd(), 'nodesets')
@@ -73,7 +84,7 @@ class FreezerServerImpl {
 
         const nodeset_filenames = [nodeset_standard, nodeset_di, nodeset_machinery, nodeset_amb, nodeset_lads, nodeset_freezer, ...(IncludeAFO ? [nodeset_afo] : [])]
         this.server = createServer({
-            applicationName: "LADS Freezer",
+            applicationName,
             applicationDirectory: __dirname,
             port: port,
             uri: uri,
@@ -111,9 +122,32 @@ class FreezerServerImpl {
     }
 }
 
+/**
+ * The freezer to run: the built-in Eppendorf freezer (port 4842, samples 4701… – as before), or the file given with
+ * --config <file> (relative to the working directory): a JSON object with any FreezerConfig keys, e.g.
+ * { "preset": "Liebherr", "port": 4846, "serverName": "LADS Freezer Aachen", "serialNumber": "4712",
+ *   "componentName": "My Liebherr Freezer", "sampleIdPattern": "48{compartment:2}{index:4}" }
+ */
+function loadConfig(): FreezerConfig {
+    const at = process.argv.indexOf("--config")
+    if (at < 0) return { port: 4842, ...EppendorfFreezer }
+    const path = resolve(process.argv[at + 1] ?? "")
+    let file: FreezerConfig
+    try {
+        file = JSON.parse(readFileSync(path, "utf-8"))
+    } catch (err) {
+        console.error(`Freezer configuration ${path} could not be read: ${err}`)
+        process.exit(1)
+    }
+    const base = (file.preset ?? "").toLowerCase() === "liebherr" ? LiebherrFreezer : EppendorfFreezer
+    console.log(`Freezer configuration: ${path}`)
+    return { port: 4842, ...base, ...file }
+}
+
 export async function main() {
-    const server = new FreezerServerImpl(4842)
-    await server.start(EppendorfFreezer)
+    const config = loadConfig()
+    const server = new FreezerServerImpl(config.port ?? 4842, config.serverName ?? "LADS Freezer", config.serialNumber ?? "4711")
+    await server.start(config)
 }
 
 main()

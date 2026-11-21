@@ -1,0 +1,10 @@
+{
+    "preset": "Liebherr",
+    "port": 4846,
+    "serverName": "LADS Freezer Liebherr",
+    "serialNumber": "4712",
+    "componentName": "My Liebherr Freezer",
+    "compartments": 4,
+    "samplesPerCompartment": 12,
+    "sampleIdPattern": "48{compartment:2}{index:4}"
+}

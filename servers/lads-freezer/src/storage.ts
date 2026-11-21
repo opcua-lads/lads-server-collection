@@ -10,6 +10,21 @@ interface Compartment extends UAComponent {
     samples: UAProperty<any, DataType.ExtensionObject>
 }
 
+/** The sample ids the freezer is loaded with at start: 47 + compartment (2 digits) + number (4 digits), e.g. 47010001 */
+export const DefaultSampleIdPattern = "47{compartment:2}{index:4}"
+
+/**
+ * A sample id from a pattern: {compartment} and {index} are replaced by the compartment and the sample number, {compartment:2}
+ * and {index:4} zero-padded to that many digits; everything else is kept, e.g. "48{compartment:2}{index:4}" -> 48010001,
+ * "AC-{compartment}-{index:3}" -> AC-1-001. Freezers that run at the same time need patterns that cannot give the same id.
+ */
+export function formatSampleId(pattern: string, compartment: number, index: number): string {
+    return pattern.replace(/\{(compartment|index)(?::(\d+))?\}/g, (_, what: string, digits?: string) => {
+        const n = what === "compartment" ? compartment : index
+        return digits ? pad(n, Number(digits)) : String(n)
+    })
+}
+
 function pad(n: number, m: number): string {
     return n.toString().padStart(m, "0");
 }
@@ -88,7 +103,8 @@ export class StorageImpl {
     cabinet: UAObject
     compartments: Compartment[] = []
 
-    constructor(deviceImpl: FreezerDeviceImpl, manufacturer = "Eppendorf", compartmentCount = 3, samplesPerCompartment = 24) {
+    constructor(deviceImpl: FreezerDeviceImpl, manufacturer = "Eppendorf", compartmentCount = 3, samplesPerCompartment = 24,
+        sampleIdPattern = DefaultSampleIdPattern) {
         this.deviceImpl = deviceImpl
         this.programManagerImpl = new ProgramManagerImpl(this)
 
@@ -128,12 +144,11 @@ export class StorageImpl {
                 browseName: name.replaceAll(" ", ""),
                 displayName: name
             })
-            const header = `47${pad(i, 2)}`
             const sampleInfos: LADSSampleInfo[] = []
             for (let id = 1; id <= samplesPerCompartment; id++) {
                 sampleInfos.push({
                     containerId: pad(i, 4),
-                    sampleId: `${header}${pad(id, 4)}`,
+                    sampleId: formatSampleId(sampleIdPattern, i, id),
                     position: "",
                     customData: ""
                 })

@@ -1,0 +1,10 @@
+{
+    "preset": "Eppendorf",
+    "port": 4842,
+    "serverName": "LADS Freezer",
+    "serialNumber": "4711",
+    "componentName": "My Eppendorf Freezer",
+    "compartments": 3,
+    "samplesPerCompartment": 24,
+    "sampleIdPattern": "47{compartment:2}{index:4}"
+}
