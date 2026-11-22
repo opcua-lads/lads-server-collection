@@ -25,7 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import fs from "fs"
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSComponent } from "@interfaces"
-import { LADSComponentOptions, getStringValue, DefaultLocation, initComponent, LADSDeviceHelper, DeviceTypeImage, DefaultHierarchicalLocation } from "@utils"
+import { LADSComponentOptions, getStringValue, DefaultLocation, initComponent, LADSDeviceHelper, DeviceTypeImage, DefaultHierarchicalLocation, bindDeviceHealth, getNumericValue } from "@utils"
+import { EnumDeviceHealth } from "node-opcua-nodeset-di"
+import { UAObject, UAVariable } from "node-opcua"
+
+/** electrode lifetime (%) below which the pH meter needs maintenance (a new electrode) */
+const ElectrodeLifetimeWarning = 10
 import { pHMeterDevice, pHMeterFunctionalUnit, pHMeterFunctionalUnitSet } from "./interfaces"
 import { pHMeterSevenEasyUnitImpl } from "./unit-seven-easy"
 import { pHMeterSimulatorUnitImpl } from "./unit-simulator"
@@ -82,6 +87,13 @@ export class pHMeterDeviceImpl {
 
         // attach device helper
         const helper = new LADSDeviceHelper(device)
+
+        // DeviceHealth: MAINTENANCE_REQUIRED when the estimated lifetime of the electrode is below the warning value
+        const lifetime = ((sensor as unknown as UAObject).getChildByName("LifetimeCounters") as UAObject | null)
+            ?.getChildByName("EstimatedLifetime") as UAVariable | null
+        if (lifetime) bindDeviceHealth(device as any,
+            () => getNumericValue(lifetime, 100) < ElectrodeLifetimeWarning ? EnumDeviceHealth.MAINTENANCE_REQUIRED : EnumDeviceHealth.NORMAL,
+            [lifetime])
 
         // set AFO dictionary entries
         AFODictionary.addDefaultDeviceReferences(device) // crawl through the complete information model tree and add default references

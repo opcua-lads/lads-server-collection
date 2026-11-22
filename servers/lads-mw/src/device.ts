@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // device implementation
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
-import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent, getStringValue, setStringValue, setDateTimeValue, getChildObjects, installDeviceHealthEvents } from "@utils"
+import { LADSComponentOptions, DefaultLocation, initComponent, LADSDeviceHelper, getDeviceSet, setNumericValue, raiseEvent, getStringValue, setStringValue, setDateTimeValue, getChildObjects } from "@utils"
 import { MWDevice, MWFunctionalUnit, MWFunctionalUnitSet } from "./interfaces"
 import { DeviceConfig, MWServerImpl,  } from "./server"
 import { IAddressSpace, INamespace, LocalizedText } from "node-opcua"
@@ -79,7 +79,7 @@ export class MWDeviceImpl {
 
 
         // register events
-        installDeviceHealthEvents(this.device)   // severity from the health state (NE 107)
+        // DeviceHealth events (severity from the NE 107 state): raised by the LADSDeviceHelper
         this.device.machineryOperationMode?.currentState?.on("value_changed", (dataValue) => raiseEvent(this.device, `Device operation mode changed to ${(dataValue.value.value as LocalizedText).text}`))
         
         // ready

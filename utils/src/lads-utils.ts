@@ -813,12 +813,64 @@ export interface LADSDeviceHelperOptions {
     raiseEvents?: boolean       // events of the functional units and of the device health
     raiseStateEvents?: boolean  // events of DeviceState, MachineryItemState and MachineryOperationMode (default true)
     adjustFunctionIsEnabled?: boolean
+    deviceHealth?: boolean      // create DeviceHealth (DI) if the device has none and start it with NORMAL (default true)
+    raiseHealthEvents?: boolean // event "Device health changed to <state>" with the NE 107 severity (default true; off for
+                                // servers that raise their own, e.g. the FUTURA)
+}
+
+/**
+ * DeviceHealth (OPC 10000-100 4.5.4, DeviceHealthEnumeration after NAMUR NE 107) for every device: a device whose type or
+ * nodeset has none gets the optional DI variable (BrowseName DI:DeviceHealth); a DeviceHealth without a value starts with
+ * NORMAL. Other states are set only by instrument-specific code, and only for conditions of the device itself, its
+ * components or the machine (self diagnosis, wear reserve, failures; the alarms of DeviceHealthAlarms), never for process
+ * alarms (limit / deviation alarms of process values such as a temperature outside its band after the door was opened):
+ * those are separate alarms. Examples: the pH meter (electrode lifetime), the WPS (component lifetimes), the FUTURA
+ * (status flags of the electronics).
+ */
+export function ensureDeviceHealth(device: LADSDevice): UAVariable | undefined {
+    const addressSpace = device.addressSpace
+    let health = device.deviceHealth as unknown as UAVariable | undefined
+    if (!health) {
+        const di = getDINamespace(addressSpace)
+        const dataType = addressSpace.findDataType("DeviceHealthEnumeration", di.index)
+        if (!dataType) return undefined
+        health = addressSpace.getOwnNamespace().addVariable({
+            componentOf: device as unknown as UAObject,
+            browseName: { name: "DeviceHealth", namespaceIndex: di.index },
+            description: "Health of the device (NAMUR NE 107)",
+            dataType: dataType.nodeId,
+            accessLevel: "CurrentRead",
+            userAccessLevel: "CurrentRead",
+        })
+        // node-opcua usually installs the child accessor itself; set it where it did not
+        if (!device.deviceHealth) try { (device as any).deviceHealth = health } catch { /* read-only accessor */ }
+    }
+    const value = health.readValue().value.value
+    if (value === null || value === undefined) health.setValueFromSource({ dataType: DataType.Int32, value: EnumDeviceHealth.NORMAL })
+    return health
 }
 
 /** node-opcua never fills sessionContext.userIdentity: the login name is the user name of the session's identity token */
 export function loginName(session: ServerSession | undefined): string | undefined {
     const token = session?.userIdentityToken
     return token instanceof UserNameIdentityToken && token.userName ? token.userName : undefined
+}
+
+/**
+ * Keeps the DeviceHealth of a device up to date: evaluate() is called whenever one of the trigger variables changes
+ * (and every intervalMs, if given); the DeviceHealth is written only when the result differs. For instrument-specific
+ * device / component conditions only, not for process alarms (see ensureDeviceHealth).
+ */
+export function bindDeviceHealth(device: LADSDevice, evaluate: () => EnumDeviceHealth, triggers: (BaseNode | undefined | null)[] = [], intervalMs = 0) {
+    const health = ensureDeviceHealth(device)
+    if (!health) return
+    const update = () => {
+        const next = evaluate()
+        if (Number(health.readValue().value.value) !== next) health.setValueFromSource({ dataType: DataType.Int32, value: next })
+    }
+    for (const t of triggers) (t as UAVariable | undefined)?.on?.("value_changed", update)
+    if (intervalMs > 0) setInterval(update, intervalMs)
+    update()
 }
 
 export class LADSDeviceHelper {
@@ -890,6 +942,9 @@ export class LADSDeviceHelper {
         // eventually adjust isEnabled of functions
         if (options.adjustFunctionIsEnabled ?? true) 
             this.adjustFunctionIsEnabled()
+
+        // DeviceHealth: created if missing, NORMAL at start
+        if (options.deviceHealth ?? true) ensureDeviceHealth(device)
 
         // get and promote state-machines
         this.deviceStateMachine = promoteToFiniteStateMachine(device.deviceState)
@@ -1080,7 +1135,8 @@ export class LADSDeviceHelper {
     async onDeviceHealthChanged(dataValue: DataValue) {
         const value = (dataValue as DataValueT<EnumDeviceHealth, DataType.UInt32>).value.value
         const key = Object.keys(EnumDeviceHealth)[Object.values(EnumDeviceHealth).indexOf(value)]
-        this.raiseEvent(`health changed to ${key} .. `, this.device.deviceHealth, deviceHealthSeverity(value))
+        if (this.options.raiseHealthEvents ?? true)
+            raiseEvent(this.device, `Device health changed to ${key ?? value}`, deviceHealthSeverity(value), this.device.deviceHealth)
         if (value == EnumDeviceHealth.FAILURE) {
             this.functionalUnitStateMachines.forEach((stateMachine) => {
                 if (state2str(stateMachine.getCurrentState()).includes(LADSFunctionalState.Running)) {

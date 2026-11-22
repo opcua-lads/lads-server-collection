@@ -115,7 +115,7 @@ class FuturaServerImpl {
         installVariableHistory(sensorValue("Spectra", "DerivedBiomass")!)
 
         // device helper: Machines folder, event notifier tree, device state machine (Initialization -> Operating)
-        new LADSDeviceHelper(ladsDevice, { initializationTime: 2000, shutdownTime: 2000, raiseEvents: false, adjustFunctionIsEnabled: false })
+        new LADSDeviceHelper(ladsDevice, { initializationTime: 2000, shutdownTime: 2000, raiseEvents: false, raiseHealthEvents: false, adjustFunctionIsEnabled: false })   // health events: FuturaHealth
 
         // command behaviour of the TwoStateDiscreteControlFunctions and StartProgram of the FUTURA unit
         // locks: device and functional units (a unit lock has the device lock as parent)
