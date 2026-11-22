@@ -17,7 +17,7 @@ The probe capacitance is C(580 kHz); the model is inverted (capacitance -> dC ->
 Cole-Cole alpha is empirical (no closed formula in the manual) and follows a typical time course.
 */
 
-import { AccessLevelFlag, DataType, DataValue, LocalizedText, StatusCodes, UAMethod, UAObject, UAVariable, Variant, AddressSpace, Namespace, CallMethodResultOptions } from "node-opcua"
+import { AccessLevelFlag, DataType, DataValue, LocalizedText, StatusCodes, UAMethod, UAObject, UAVariable, Variant, AddressSpace, Namespace, CallMethodResultOptions, ISessionContext } from "node-opcua"
 import { readFileSync } from "fs"
 import { promoteToFiniteStateMachine, enterStateChain, enterClearing, setAlwaysRunning } from "@utils"
 import { LADSFunctionalState } from "@interfaces"
@@ -124,6 +124,9 @@ export class FuturaSimulator {
     private spectraInstalled = false
     private status = "Stopped"
     private variables: Record<string, UAVariable> = {}
+
+    /** lock check of the unit methods (Clear): set by the server once the locks are installed */
+    isAccessible?: (unit: string, context: ISessionContext) => boolean
 
     constructor(private addressSpace: AddressSpace, private device: UAObject, dataFile?: string) {
         this.profile = dataFile ? loadCsv(dataFile) : builtInProfile()
@@ -266,7 +269,8 @@ export class FuturaSimulator {
     private installClear() {
         for (const unit of [this.futuraUnit, this.spectraUnit]) {
             const clear = this.find(unit, "FunctionalUnitState").getChildByName("Clear") as UAMethod | null
-            clear?.bindMethod(async (_inputArguments: unknown[], _context: unknown): Promise<CallMethodResultOptions> => {
+            clear?.bindMethod(async (_inputArguments: unknown[], context: ISessionContext): Promise<CallMethodResultOptions> => {
+                if (this.isAccessible && !this.isAccessible(unit.browseName.name!, context)) return { statusCode: StatusCodes.BadLocked }
                 const machine = promoteToFiniteStateMachine(this.find(unit, "FunctionalUnitState"))
                 const failure = Number(this.find(this.device, "DeviceHealth").readValue?.().value.value) === EnumDeviceHealth.FAILURE
                 if (this.currentStateName(machine) !== LADSFunctionalState.Aborted || failure) return { statusCode: StatusCodes.BadInvalidState }

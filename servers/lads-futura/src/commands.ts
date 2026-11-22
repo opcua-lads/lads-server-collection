@@ -17,6 +17,7 @@ The commands Zero, ClearZero, CleanPulse and IncrementAutoclaveCount are modelle
 import { CallMethodResultOptions, DataType, DataValue, ISessionContext, LocalizedText, StatusCode, StatusCodes, UAVariable, VariantLike } from "node-opcua"
 import { EventSeverity, getBooleanValue, getLADSFunctionalUnits, promoteToFiniteStateMachine, raiseEvent, setAlwaysRunning, setBooleanValue } from "@utils"
 import { LADSDevice, LADSFunctionalState, LADSFunctionalUnit, LADSTwoStateDiscreteControlFunction } from "@interfaces"
+import { AccessPredicate, restrictWriteAccess } from "./locks"
 
 const TARGET_RESET_MS = 100
 const EXECUTION_MS = 1000
@@ -38,10 +39,11 @@ export class CommandFunction {
     /** effect of the command on the simulated device; called when the command is initiated (both routes) */
     onExecute?: () => void
 
-    constructor(readonly commandFunction: LADSTwoStateDiscreteControlFunction, onExecute?: () => void) {
+    constructor(readonly commandFunction: LADSTwoStateDiscreteControlFunction, onExecute?: () => void, isAccessible?: AccessPredicate) {
         this.onExecute = onExecute
         this.target = commandFunction.targetValue as unknown as UAVariable
         this.current = commandFunction.currentValue as unknown as UAVariable
+        if (isAccessible) restrictWriteAccess(this.target, isAccessible)   // locked: only the lock owner may write
 
         // the command function is always running; it can neither be stopped nor started
         const state = commandFunction.controlFunctionState
@@ -81,15 +83,16 @@ export class CommandFunction {
 }
 
 /** Installs the command behaviour on the command functions of a functional unit and binds its StartProgram method. */
-export function installCommands(unit: LADSFunctionalUnit): Map<string, CommandFunction> {
+export function installCommands(unit: LADSFunctionalUnit, isAccessible?: AccessPredicate): Map<string, CommandFunction> {
     const functionSet = unit.functionSet as any
     const byFunction = new Map<string, CommandFunction>()
     for (const functionName of new Set(Object.values(PROGRAM_COMMANDS))) {
         const node = functionSet.getChildByName(functionName)
-        if (node) byFunction.set(functionName, new CommandFunction(node as LADSTwoStateDiscreteControlFunction))
+        if (node) byFunction.set(functionName, new CommandFunction(node as LADSTwoStateDiscreteControlFunction, undefined, isAccessible))
     }
 
-    unit.functionalUnitState.startProgram?.bindMethod(async (inputArguments: VariantLike[], _context: ISessionContext): Promise<CallMethodResultOptions> => {
+    unit.functionalUnitState.startProgram?.bindMethod(async (inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> => {
+        if (isAccessible && !isAccessible(context)) return { statusCode: StatusCodes.BadLocked }
         const templateId = String(inputArguments?.[0]?.value ?? "")
         if (templateId === "SlopeCalibration") return { statusCode: StatusCodes.BadNotSupported }      // no command function, not simulated
         if (!(templateId in PROGRAM_COMMANDS)) return { statusCode: StatusCodes.BadInvalidArgument }
@@ -107,10 +110,11 @@ export function installCommands(unit: LADSFunctionalUnit): Map<string, CommandFu
  *   - TargetValue written: unchanged -> nothing; otherwise event "Measurement mode changed to <mode>" (Info) and CurrentValue = TargetValue
  *   - a write always returns Good
  */
-export function installMeasurementMode(unit: LADSFunctionalUnit) {
+export function installMeasurementMode(unit: LADSFunctionalUnit, isAccessible?: AccessPredicate) {
     const node = (unit.functionSet as any).getChildByName("MeasurementMode")
     if (!node) return
     const target = node.getChildByName("TargetValue") as UAVariable
+    if (isAccessible) restrictWriteAccess(target, isAccessible)
     const current = node.getChildByName("CurrentValue") as UAVariable
     const state = node.getChildByName("ControlFunctionState")
     if (state) {
@@ -133,9 +137,9 @@ export function installMeasurementMode(unit: LADSFunctionalUnit) {
 }
 
 /** Installs the commands on the FUTURA functional unit of the device. */
-export function installFuturaCommands(device: LADSDevice): Map<string, CommandFunction> {
+export function installFuturaCommands(device: LADSDevice, isAccessible?: AccessPredicate): Map<string, CommandFunction> {
     const unit = getLADSFunctionalUnits(device).find(u => u.browseName.name === "Futura")
     if (!unit) return new Map()
-    installMeasurementMode(unit)
-    return installCommands(unit)
+    installMeasurementMode(unit, isAccessible)
+    return installCommands(unit, isAccessible)
 }

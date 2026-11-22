@@ -15,6 +15,7 @@ import { exit } from "process"
 import { FuturaSimulator } from "./simulator"
 import { installFuturaCommands } from "./commands"
 import { FuturaHealth } from "./health"
+import { FuturaLocks } from "./locks"
 
 const NS_FUTURA = "http://aberinstruments.com/FuturaConnect/"
 
@@ -117,11 +118,14 @@ class FuturaServerImpl {
         new LADSDeviceHelper(ladsDevice, { initializationTime: 2000, shutdownTime: 2000, raiseEvents: false, adjustFunctionIsEnabled: false })
 
         // command behaviour of the TwoStateDiscreteControlFunctions and StartProgram of the FUTURA unit
-        const commands = installFuturaCommands(ladsDevice)
+        // locks: device and functional units (a unit lock has the device lock as parent)
+        const locks = new FuturaLocks(ladsDevice)
+        const commands = installFuturaCommands(ladsDevice, locks.predicate("Futura"))
 
         // time-lapse simulator (programmatically created Simulator object below the device)
         const dataIdx = process.argv.indexOf('--data')
         const simulator = new FuturaSimulator(addressSpace, device, dataIdx !== -1 ? process.argv[dataIdx + 1] : undefined)
+        simulator.isAccessible = (unit, context) => locks.isAccessibleBy(unit, context)
         if (process.argv.includes('--autostart')) simulator.start()
 
         // StatusFlags -> alarms -> DeviceHealth (writable StatusFlags in the Simulator object)
