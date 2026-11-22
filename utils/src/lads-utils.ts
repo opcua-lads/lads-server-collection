@@ -537,6 +537,42 @@ export function initComponent(component: UAComponent, options: LADSComponentOpti
     }
 }
 
+export interface ComponentNameplate { manufacturer?: string, model?: string, serialNumber?: string }
+
+/** normalized name for matching: "UV Lamp", "UVLamp" and "uv-lamp" are the same */
+const matchName = (s: string | undefined) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "")
+
+/**
+ * The component of a Components folder that matches a name: browse name or display name, ignoring case, blanks and
+ * punctuation; if none matches exactly, the one whose name contains the given name (or the other way round), if unique.
+ */
+export function findComponent(components: UAObject | undefined, name: string): UAComponent | undefined {
+    const wanted = matchName(name)
+    if (!components || !wanted) return undefined
+    const all = components.getComponents().filter(c => c.nodeClass === NodeClass.Object) as unknown as UAComponent[]
+    const names = (c: UAComponent) => [matchName(c.browseName.name), matchName((c as any).displayName?.[0]?.text)]
+    const exact = all.find(c => names(c).includes(wanted))
+    if (exact) return exact
+    const partial = all.filter(c => names(c).some(n => n && (n.includes(wanted) || wanted.includes(n))))
+    return partial.length === 1 ? partial[0] : undefined
+}
+
+/**
+ * New nameplate of a (replaced) component: fields not given keep their current value; ManufacturerUri and
+ * ProductInstanceUri are derived again from the new values (initComponent). Returns the nameplate before and after.
+ */
+export function updateComponentNameplate(component: UAComponent, nameplate: ComponentNameplate): { old: ComponentNameplate, new: ComponentNameplate } {
+    const current = (v: unknown) => getStringValue(v as UAVariable)
+    const old: ComponentNameplate = { manufacturer: current(component.manufacturer), model: current(component.model), serialNumber: current(component.serialNumber) }
+    const next: ComponentNameplate = {
+        manufacturer: nameplate.manufacturer || old.manufacturer,
+        model: nameplate.model || old.model,
+        serialNumber: nameplate.serialNumber || old.serialNumber,
+    }
+    initComponent(component, { ...next } as LADSComponentOptions)
+    return { old, new: next }
+}
+
 //---------------------------------------------------------------
 // Alias name support
 //---------------------------------------------------------------

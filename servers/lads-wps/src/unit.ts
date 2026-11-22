@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //---------------------------------------------------------------
 import { AFODictionary, AFODictionaryIds } from "@afo"
 import { LADSProgramTemplate, LADSProperty, LADSSampleInfo, LADSResult, LADSFunctionalState, LADSRunnnigState, MachineryOperationMode } from "@interfaces"
-import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, enterClearing } from "@utils"
+import { promoteToFiniteStateMachine, setNumericValue, touchNodes, raiseEvent, setStringValue, addProgramTemplate, modifyStatusCode, getNumericValue, installVariableHistory, noise, sleepMilliSeconds, MaintenanceTaskImpl, LADSMaintenanceTaskResult, setNameNodeIdValue, EventDataRecorder, DataExporter, getLADSObjectType, setSessionInformation, getDescriptionVariable, setPropertiesValue, setSamplesValue, setDateTimeValue, copyProgramTemplate, enterClearing, hasServiceRights, findComponent, updateComponentNameplate } from "@utils"
 import { UAObject, DataType, UAStateMachineEx, StatusCodes, VariantLike, CallMethodResultOptions, Variant, StatusCode, UAVariable, DataValue, LocalizedText, BaseNode, ISessionContext } from "node-opcua"
 import { WpsDeviceImpl, getWpsNameSpace } from "./device"
 import { WpsFunctionalUnit, WpsFunctionSet } from "./interfaces"
@@ -32,7 +32,7 @@ import { EventEmitter } from "events"
 import { ComplianceDocumentReferences, ComplianceDocumentSetImpl } from "@utils"
 import { join } from "path"
 import { AnalogScalarSensorFunctionImpl } from "@utils"
-import { WpsProgramTemplate, ProgramTemplateTuple, ProgramTemplateDispense, ProgramTemplateReplaceCartridge, ProgramTemplateReplaceEndfilter, ProgramTemplateDepressurization, ProgramTemplateSanitization, ProgramTemplateFlushTOC, ProgramTemplateReplaceUVLamp, DispenseId, WpsProgramTemplateStep, ProgramTemplateRecalibrateTOC } from "./templates"
+import { WpsProgramTemplate, ProgramTemplateTuple, ProgramTemplateDispense, ProgramTemplateReplaceCartridge, ProgramTemplateReplaceEndfilter, ProgramTemplateDepressurization, ProgramTemplateSanitization, ProgramTemplateFlushTOC, ProgramTemplateReplaceUVLamp, DispenseId, WpsProgramTemplateStep, ProgramTemplateRecalibrateTOC, ProgramTemplateUpdateNameplate } from "./templates"
 import { DispenseModeControlFunctionImpl, DispenseTimerControlFunctionImpl, DispenseVolumeControlFunctionImpl } from "./functions"
 import { LockImpl } from "@utils"
 
@@ -283,6 +283,7 @@ export class WpsUnitImpl extends EventEmitter {
             ProgramTemplateReplaceEndfilter,
             ProgramTemplateDepressurization,
             ProgramTemplateSanitization,
+            ProgramTemplateUpdateNameplate,
         ]
         if (config.hasTOC) programTemplates.push(ProgramTemplateFlushTOC, ProgramTemplateRecalibrateTOC)
         if (config.hasUV) programTemplates.push(ProgramTemplateReplaceUVLamp)
@@ -520,6 +521,10 @@ export class WpsUnitImpl extends EventEmitter {
             return this.startDispense(inputArguments, context)
         } else if (this.initCurrentRunOptions(programTemplateId)) {
             const options = this.currentRunOptions
+            if (options.programTemplate.serviceRights && !hasServiceRights(context)) {
+                this.currentRunOptions = undefined
+                return { statusCode: StatusCodes.BadUserAccessDenied }
+            }
             options.supervisoryJobId = inputArguments[2].value ? inputArguments[2].value : ""
             options.supervisoryTaskId = inputArguments[3].value ? inputArguments[3].value : ""
 
@@ -531,6 +536,15 @@ export class WpsUnitImpl extends EventEmitter {
             const samplesValue = inputArguments[4].value
             options.samples = samplesValue === null ? [] : (samplesValue as Variant[]).map(item => { return (<any>item) as LADSSampleInfo })
 
+            // Update Nameplate: the component has to exist, else the start is refused
+            if (options.programTemplate.nameplate) {
+                const status = this.updateNameplate(options.properties)
+                if (status.isNotGood()) {
+                    this.currentRunOptions = undefined
+                    return { statusCode: status }
+                }
+            }
+
             this.enterRunning(context)
             return {
                 outputArguments: [new Variant({ dataType: DataType.String, value: this.currentRunOptions.runId })],
@@ -539,6 +553,20 @@ export class WpsUnitImpl extends EventEmitter {
         } else {
             return { statusCode: StatusCodes.BadInvalidArgument }
         }
+    }
+
+    /** Update Nameplate: properties Name (component), Manufacturer, Model, SerialNumber (case-insensitive keys) */
+    private updateNameplate(properties: LADSProperty[]): StatusCode {
+        const prop = (...keys: string[]) => properties.find(p => keys.includes(String(p.key ?? (p as any).Key ?? "").toLowerCase()))?.value?.trim()
+        const name = prop("name", "component", "componentname")
+        const nameplate = { manufacturer: prop("manufacturer"), model: prop("model"), serialNumber: prop("serialnumber", "serial") }
+        if (!name || !(nameplate.manufacturer || nameplate.model || nameplate.serialNumber)) return StatusCodes.BadInvalidArgument
+        const component = findComponent(this.parent.device.components as unknown as UAObject, name)
+        if (!component) return StatusCodes.BadInvalidArgument
+        const { old, new: next } = updateComponentNameplate(component, nameplate)
+        const text = (n: typeof old) => `${n.manufacturer} ${n.model} SN ${n.serialNumber}`
+        raiseEvent(this.functionalUnit, `Nameplate of ${component.getDisplayName()} updated: ${text(old)} -> ${text(next)}`)
+        return StatusCodes.Good
     }
 
     private async stop(inputArguments: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {

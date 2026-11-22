@@ -12,7 +12,7 @@
  * is set on the method nodes. A user gets the union of the rights of all of his roles (plus AuthenticatedUser).
  */
 
-import { AnonymousIdentityToken, DataType, PermissionType, SessionContext, Variant, VariantArrayType, allPermissions, NodeClass, OPCUAServer, setNamespaceMetaData, PermissionFlag, RolePermissionTypeOptions, UAMethod, UAObject, UAObjectType, WellKnownRoles } from "node-opcua"
+import { AnonymousIdentityToken, DataType, ISessionContext, PermissionType, SessionContext, Variant, VariantArrayType, allPermissions, NodeClass, OPCUAServer, setNamespaceMetaData, PermissionFlag, RolePermissionTypeOptions, UAMethod, UAObject, UAObjectType, WellKnownRoles } from "node-opcua"
 
 const ReadOnly = PermissionFlag.Browse | PermissionFlag.Read | PermissionFlag.ReadHistory | PermissionFlag.ReceiveEvents
 const Everything = allPermissions
@@ -97,8 +97,26 @@ export function countOpenVariablesForAnonymous(server: OPCUAServer): number {
     return open
 }
 
+/** true once installRolePermissions ran: without configured users there are no roles, and everybody may do everything */
+let rolesActive = false
+
+/** the roles with service rights (engineer level): may run service programs such as Replace Cartridge */
+export const ServiceRoles: (keyof typeof WellKnownRoles)[] = ["Engineer", "Supervisor", "ConfigureAdmin", "SecurityAdmin"]
+
+/** text for template descriptions that need service rights */
+export const ServiceRightsNote = "Requires engineer rights."
+
+/** Has the session a role with service rights? Always true when the server has no users configured. */
+export function hasServiceRights(context: ISessionContext | undefined): boolean {
+    if (!rolesActive) return true
+    const wanted = ServiceRoles.map(role => Number(WellKnownRoles[role]))
+    const roles = context?.getCurrentUserRoles?.() ?? []
+    return roles.some(id => id.namespace === 0 && wanted.includes(Number(id.value)))
+}
+
 /** installs the role rights; to be called once for a server that has users configured */
 export function installRolePermissions(server: OPCUAServer): void {
+    rolesActive = true
     server.once("post_initialize", () => applyDefaultRolePermissions(server))
     // the servers build their structure after initialize() and before start(): the method nodes exist when start() has finished
     const start = server.start.bind(server) as (...args: any[]) => Promise<void>

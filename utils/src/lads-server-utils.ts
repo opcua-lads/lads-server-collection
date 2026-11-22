@@ -10,6 +10,7 @@
  */
 
 import {
+    Subscription,
     ApplicationType, BonjourHolder, OPCUACertificateManager, OPCUAServer, OPCUAServerOptions, RegisterServerManagerMDNSONLY,
     RegisterServerMethod, setWarningLogger
 } from "node-opcua"
@@ -185,7 +186,31 @@ export function dropStaleCertificate(certificateFile: string, applicationUri: st
     }
 }
 
+/**
+ * node-opcua asserts in Subscription.adjustSamplingInterval when the monitored node has a MinimumSamplingInterval outside
+ * [0, maximumSamplingInterval] (e.g. -1, "indeterminate", which the spec allows). A client that re-creates its monitored
+ * items with NodeIds of an older address space (the server was restarted with a changed model) can hit such a node, and the
+ * assert ends the whole server. Guard: on such a node the publishing interval of the subscription is used instead.
+ */
+let samplingGuardInstalled = false
+export function installSamplingIntervalGuard() {
+    if (samplingGuardInstalled) return
+    samplingGuardInstalled = true
+    const proto = Subscription.prototype as any
+    const adjust = proto.adjustSamplingInterval as (samplingInterval: number, node?: unknown) => number
+    proto.adjustSamplingInterval = function (samplingInterval: number, node?: unknown): number {
+        try {
+            return adjust.call(this, samplingInterval, node)
+        } catch (err) {
+            const id = (node as any)?.nodeId?.toString?.() ?? "?"
+            console.warn(`Monitored item on ${id}: invalid MinimumSamplingInterval, using the publishing interval (${this.publishingInterval} ms)`)
+            return this.publishingInterval
+        }
+    }
+}
+
 export function createServer(options: CreateServerOptions): OPCUAServer {
+    installSamplingIntervalGuard()
     refreshSiteLocation()    // background lookup of the site's GPS location (silent, cached in config/lads-site.json)
     const port = options.port ?? 4850
     const applicationUri = options.applicationUri ?? instanceApplicationUri(options.uri, options.serialNumber ?? port)

@@ -25,12 +25,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import { LADSProgramTemplate } from "@interfaces"
 import { AFODictionaryIds } from "@afo"
+import { ServiceRightsNote } from "@utils"
 
 export interface WpsProgramTemplate {
     name: string,
     description?: string,
     component?: string
     maintenanceMode?: boolean
+    serviceRights?: boolean   // only users with engineer rights may start it (see hasServiceRights)
+    nameplate?: boolean       // updates the nameplate of a component from the properties (Update Nameplate)
     terms?: string[]    // AFO terms of the template (default: preventative maintenance)
     steps: WpsProgramTemplateStep[]
 }
@@ -67,8 +70,10 @@ export const ProgramTemplateSanitization: WpsProgramTemplate = {
 
 export const ProgramTemplateReplaceCartridge: WpsProgramTemplate = {
     name: "Replace Cartridge",
+    description: `Replaces the cartridge: depressurization, exchange, flushing; resets its lifetime. ${ServiceRightsNote}`,
     component: "Cartridge",
     maintenanceMode: true,
+    serviceRights: true,
     steps: [
         { name: "Disconnect the feed-water hose from the device", confirmation: true },
         { name: "Collect the water exiting from the outlet in a container (1 L) and start depressurization.", confirmation: true },
@@ -90,8 +95,10 @@ export const ProgramTemplateReplaceEndfilter: WpsProgramTemplate = {
 
 export const ProgramTemplateReplaceUVLamp: WpsProgramTemplate = {
     name: "Replace UV Lamp",
+    description: `Replaces the UV lamp; resets its lifetime. ${ServiceRightsNote}`,
     component: "UVLamp",
     maintenanceMode: true,
+    serviceRights: true,
     steps: [
         { name: "Replace UV Lamp according to the instructions", confirmation: true },
     ]
@@ -124,6 +131,16 @@ export const ProgramTemplateRecalibrateTOC: WpsProgramTemplate = {
         { name: "Recalibrating TOC", confirmation: true },
     ]
 }
+export const ProgramTemplateUpdateNameplate: WpsProgramTemplate = {
+    name: "Update Nameplate",
+    description: "Updates the nameplate of a replaced component. Properties: Name (component, e.g. UV Lamp), Manufacturer, Model, " +
+        "SerialNumber; a property left out keeps its value. An unknown component is refused (BadInvalidArgument). " + ServiceRightsNote,
+    terms: [AFODictionaryIds.preventative_maintenance],
+    serviceRights: true,
+    nameplate: true,
+    steps: [{ name: "Update nameplate", duration: 1000 }]
+}
+
 export interface ProgramTemplateTuple {
     template: WpsProgramTemplate
     node: LADSProgramTemplate
