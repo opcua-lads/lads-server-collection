@@ -160,10 +160,18 @@ export function formatGPSLocation(latitude: number, longitude: number): string {
     return `${latitude >= 0 ? "N" : "S"} ${Math.abs(latitude).toFixed(6)} ${longitude >= 0 ? "E" : "W"} ${Math.abs(longitude).toFixed(6)}`
 }
 
-const pendingGeocodes = new Map<string, Promise<string | undefined>>()
+/** Result of a lookup: the GPS location, or why there is none (HTTP status, timeout, nothing found, ..). */
+export interface GeocodeResult { location?: string, reason?: string }
+
+const pendingGeocodes = new Map<string, Promise<GeocodeResult>>()
 
 /** Looks up the GPS location of a hierarchical location (Nominatim). Parallel requests for the same location share one web request. */
-export function geocode(hierarchicalLocation: string): Promise<string | undefined> {
+export async function geocode(hierarchicalLocation: string): Promise<string | undefined> {
+    return (await geocodeDetailed(hierarchicalLocation)).location
+}
+
+/** Like geocode(), but tells why nothing was found. Never throws. */
+export function geocodeDetailed(hierarchicalLocation: string): Promise<GeocodeResult> {
     let pending = pendingGeocodes.get(hierarchicalLocation)
     if (!pending) {
         pending = geocodeRequest(hierarchicalLocation).finally(() => pendingGeocodes.delete(hierarchicalLocation))
@@ -172,20 +180,27 @@ export function geocode(hierarchicalLocation: string): Promise<string | undefine
     return pending
 }
 
-async function geocodeRequest(hierarchicalLocation: string): Promise<string | undefined> {
+async function geocodeRequest(hierarchicalLocation: string): Promise<GeocodeResult> {
     const query = buildGeocodeQuery(hierarchicalLocation)
-    if (!query.q) return undefined
+    if (!query.q) return { reason: "no address in the hierarchical location" }
     const params = new URLSearchParams({ format: "jsonv2", limit: "1", q: query.q })
     if (query.countrycodes) params.set("countrycodes", query.countrycodes)
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
-        headers: { "User-Agent": "lads-server-examples (AixEngineers)", "Accept": "application/json" },
-        signal: AbortSignal.timeout(4000)
-    })
-    if (!response.ok) return undefined
-    const results = await response.json() as { lat: string, lon: string }[]
-    const latitude = Number(results?.[0]?.lat)
-    const longitude = Number(results?.[0]?.lon)
-    return Number.isFinite(latitude) && Number.isFinite(longitude) ? formatGPSLocation(latitude, longitude) : undefined
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, {
+            headers: { "User-Agent": "lads-server-examples (AixEngineers)", "Accept": "application/json" },
+            signal: AbortSignal.timeout(8000)
+        })
+        if (!response.ok) return { reason: `HTTP ${response.status} ${response.statusText} for "${query.q}"` }
+        const results = await response.json() as { lat: string, lon: string }[]
+        const latitude = Number(results?.[0]?.lat)
+        const longitude = Number(results?.[0]?.lon)
+        return Number.isFinite(latitude) && Number.isFinite(longitude)
+            ? { location: formatGPSLocation(latitude, longitude) }
+            : { reason: `nothing found for "${query.q}"` }
+    } catch (err) {
+        const name = (err as Error)?.name
+        return { reason: name === "TimeoutError" || name === "AbortError" ? `timeout for "${query.q}"` : `${err}` }
+    }
 }
 
 export function cacheLocation(file: string, hierarchicalLocation: string, location: string) {

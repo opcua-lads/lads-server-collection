@@ -9,14 +9,18 @@
  *   1. "location" of the matching named site in config/lads-site.json (manual)
  *   2. "geocodeCache" of config/lads-site.json (result of an earlier lookup, read fresh from the file)
  *   3. web lookup in OpenStreetMap (Nominatim), the result is stored in "geocodeCache"
- * If anything fails (offline, nothing found, ..) the current Location is silently kept. A top-level "location" in the config
- * (applies to all sites) or "geocode": false (or LADS_SITE_GEOCODE=0) disables the task. See lads-site-config.ts.
+ * Several server processes start together and look up the same new site: the web lookup waits a random few seconds and reads the
+ * cache again first, so usually only one process asks Nominatim (at most one request per second is allowed) and the others take
+ * its cached result. If the lookup fails (offline, rate limit, timeout, nothing found) the current Location is kept, the reason
+ * is logged once, and the lookup is retried after 30 s, 2 min, 10 min and then every hour until it succeeds or the
+ * HierarchicalLocation changes. A top-level "location" in the config (applies to all sites) or "geocode": false
+ * (or LADS_SITE_GEOCODE=0) disables the task. See lads-site-config.ts.
  */
 
 import { readFileSync } from "fs"
 import { UAVariable } from "node-opcua"
 import { LADSComponent, MachineIdentificationType } from "@interfaces"
-import { Site, LADSSiteConfig, geocode, cacheLocation } from "./lads-site-config"
+import { Site, LADSSiteConfig, geocodeDetailed, cacheLocation } from "./lads-site-config"
 import { getStringValue, setStringValue } from "./lads-variable-utils"
 
 function readGeocodeCache(): { [hierarchicalLocation: string]: string } {
@@ -27,26 +31,46 @@ function readGeocodeCache(): { [hierarchicalLocation: string]: string } {
     }
 }
 
-/** Resolves the GPS location of a hierarchical location (named site -> cache -> web). Never throws. */
-export async function resolveLocation(hierarchicalLocation: string): Promise<{ location: string, source: string } | undefined> {
+const RetryDelays = [30_000, 120_000, 600_000, 3_600_000]     // after a failed lookup; the last one repeats
+const StaggerMilliSeconds = 8_000                               // random wait before a web lookup (processes starting together)
+
+/** The GPS location from the configuration: named site with a manual location, or the geocode cache (read fresh from the file). */
+function configuredLocation(hierarchicalLocation: string): { location: string, source: string } | undefined {
+    const site = Site.hierarchicalLocations.find(site => site.value === hierarchicalLocation && site.location)
+    if (site) return { location: site.location!, source: `site ${site.label}` }
+    const cached = readGeocodeCache()[hierarchicalLocation]
+    return cached ? { location: cached, source: "cache" } : undefined
+}
+
+/**
+ * Resolves the GPS location of a hierarchical location (named site -> cache -> web). Never throws.
+ * Before a web lookup it waits up to staggerMilliSeconds and looks into the cache again (another process may have found it).
+ */
+export async function resolveLocation(hierarchicalLocation: string, staggerMilliSeconds = 0): Promise<{ location?: string, source?: string, reason?: string }> {
     try {
-        const site = Site.hierarchicalLocations.find(site => site.value === hierarchicalLocation && site.location)
-        if (site) return { location: site.location!, source: `site ${site.label}` }
-        const cached = readGeocodeCache()[hierarchicalLocation]
-        if (cached) return { location: cached, source: "cache" }
-        const location = await geocode(hierarchicalLocation)
-        if (!location) return undefined
-        if (Site.file) {
-            try { cacheLocation(Site.file, hierarchicalLocation, location) } catch { /* caching is optional */ }
+        const configured = configuredLocation(hierarchicalLocation)
+        if (configured) return configured
+        if (staggerMilliSeconds > 0) {
+            await new Promise(resolve => setTimeout(resolve, Math.random() * staggerMilliSeconds))
+            const meanwhile = configuredLocation(hierarchicalLocation)
+            if (meanwhile) return meanwhile
         }
-        return { location, source: "web" }
-    } catch {
-        return undefined
+        const result = await geocodeDetailed(hierarchicalLocation)
+        if (!result.location) return { reason: result.reason ?? "no result" }
+        if (Site.file) {
+            try { cacheLocation(Site.file, hierarchicalLocation, result.location) } catch { /* caching is optional */ }
+        }
+        return { location: result.location, source: "web" }
+    } catch (err) {
+        return { reason: `${err}` }
     }
 }
 
 export class GeoLocationUpdater {
     private timer?: ReturnType<typeof setTimeout>
+    private failures = 0                // failed lookups of the current HierarchicalLocation
+    private target = ""                 // HierarchicalLocation the failures belong to
+    private loggedReason = ""           // a reason is logged once, not on every retry
 
     /** installs the background task if the lookup is enabled and the component has a HierarchicalLocation */
     static install(component: LADSComponent): GeoLocationUpdater | undefined {
@@ -66,17 +90,31 @@ export class GeoLocationUpdater {
     }
 
     private async update(): Promise<void> {
+        const name = this.component.getDisplayName()
         try {
             const value = getStringValue(this.hierarchicalLocation, "")
             if (!value) return
-            const resolved = await resolveLocation(value)
-            if (!resolved) return                                                   // silently keep the current location
+            if (value !== this.target) { this.target = value; this.failures = 0; this.loggedReason = "" }
+            const resolved = await resolveLocation(value, StaggerMilliSeconds)
             if (getStringValue(this.hierarchicalLocation, "") !== value) return     // changed during lookup: the next update follows
+            if (!resolved.location) {
+                const delay = RetryDelays[Math.min(this.failures, RetryDelays.length - 1)]
+                this.failures++
+                if (resolved.reason !== this.loggedReason) {
+                    this.loggedReason = resolved.reason ?? ""
+                    console.warn(`Location of ${name}: no GPS location for ${value} (${resolved.reason}), keeping the current one, retry in ${Math.round(delay / 1000)} s`)
+                }
+                this.schedule(delay)
+                return
+            }
+            if (this.failures) console.log(`Location of ${name}: found after ${this.failures} failed lookup(s)`)
+            this.failures = 0; this.loggedReason = ""
             const nodes = [this.component, this.component.identification] as (MachineIdentificationType | undefined)[]
-            nodes.forEach(node => node?.location ? setStringValue(node.location, resolved.location) : 0)
-            console.log(`Location of ${this.component.getDisplayName()}: ${resolved.location} for ${value} [${resolved.source}]`)
-        } catch {
-            // silently keep the current location
+            nodes.forEach(node => node?.location ? setStringValue(node.location, resolved.location!) : 0)
+            console.log(`Location of ${name}: ${resolved.location} for ${value} [${resolved.source}]`)
+        } catch (err) {
+            console.warn(`Location of ${name}: update failed (${err}), retry in ${RetryDelays[0] / 1000} s`)
+            this.schedule(RetryDelays[0])
         }
     }
 }
