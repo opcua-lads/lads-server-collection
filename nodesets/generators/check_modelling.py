@@ -8,7 +8,12 @@ Errors   - the same BrowseName twice below one node (a declaration that also exi
          - a hierarchical reference from an own node to a node of another nodeset, e.g. a Timer that is a component of
            the LADS declaration 'Operational' instead of declaring its own (listed as warning for ordinary children of
            own nodes, see below)
-Warnings hierarchical references from own nodes to nodes of the dependencies (shared declarations)"""
+Warnings hierarchical references from own nodes to nodes of the dependencies (shared declarations)
+         - a LADS device (own subtype of LADSDeviceType, or an own instance of one) without the nameplate / location nodes
+           that every device should expose (clients such as the MHS fleet use them for the picture, the site and the map):
+           DeviceTypeImage (DI, folder for product pictures), HierarchicalLocation and OperationalLocation (AMB, optional in
+           LADSDeviceType), Identification/Location (Machinery, end-user scheme; also holds the geographical location, e.g.
+           "N 50.777642 E 6.071827"). In a device type declare them Mandatory, so every instance gets them."""
 import sys
 from nodeset_model import Model, BASE
 m = Model()
@@ -48,6 +53,17 @@ for n in m.nodes.values():
     if not n['own'] or n['cls'] != 'UAObject' or n['name'][1] != 'MachineryOperationMode': continue
     have = {m.nodes[c]['name'][1] for c in kids.get(n['id'], []) if m.nodes[c]['cls'] == 'UAMethod'}
     missing = [x for x in ('GotoProcessing', 'GotoMaintenance', 'GotoSetup') if x not in have]
+    if missing: warnings.append(f'{path(n["id"])} ({n["id"][1]}) has no ' + ', '.join(missing))
+# 5. nameplate / location nodes of LADS devices (see the docstring)
+LADS_DEVICE = ('http://opcfoundation.org/UA/LADS/', 'i=1002')
+DEVICE_NODES = ('DeviceTypeImage', 'HierarchicalLocation', 'OperationalLocation')
+dev_types = {n['id'] for n in m.nodes.values() if n['own'] and n['cls'] == 'UAObjectType' and LADS_DEVICE in m.chain(n['id'])[1:]}
+for n in m.nodes.values():
+    if not n['own'] or not (n['id'] in dev_types or (n['cls'] == 'UAObject' and n['td'] in dev_types)): continue
+    have = {m.nodes[c]['name'][1]: c for c in kids.get(n['id'], [])}
+    missing = [x for x in DEVICE_NODES if x not in have]
+    ident = have.get('Identification')
+    if ident is None or 'Location' not in {m.nodes[c]['name'][1] for c in kids.get(ident, [])}: missing.append('Identification/Location')
     if missing: warnings.append(f'{path(n["id"])} ({n["id"][1]}) has no ' + ', '.join(missing))
 for e in errors: print('error    ' + e)
 for w in warnings: print('warning  ' + w)

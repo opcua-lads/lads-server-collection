@@ -11,6 +11,7 @@
         "lads-viscometer": "ts-node -r tsconfig-paths/register servers/lads-viscometer/src/server.ts",
         "lads-balance": "ts-node -r tsconfig-paths/register servers/lads-balance/src/server.ts",
         "lads-futura": "ts-node -r tsconfig-paths/register servers/lads-futura/src/server.ts",
+        "lads-hplc": "ts-node -r tsconfig-paths/register servers/lads-hplc/src/server.ts",
         "user:add": "ts-node -r tsconfig-paths/register utils/src/lads-users-cli.ts",
         "build": "tsc && tsc-alias && copyfiles \"servers/**/src/*.json\" out && copyfiles \"servers/**/src/resources/**\" out && copyfiles \"servers/**/src/resources/images/**\" out && copyfiles \"config/*.json\" out"
     },

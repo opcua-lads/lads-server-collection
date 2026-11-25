@@ -488,6 +488,7 @@ export interface LADSComponentOptions {
 const KnownManufacturerUris: [RegExp, string][] = [
     [/sartorius/i, "sartorius.com"], [/mettler/i, "mt.com"], [/brookfield/i, "brookfieldengineering.com"],
     [/eppendorf/i, "eppendorf.com"], [/liebherr/i, "liebherr.com"], [/memmert/i, "memmert.com"], [/aber/i, "aberinstruments.com"],
+    [/agilent/i, "agilent.com"],
 ]
 export function knownManufacturerUri(manufacturer?: string): string | undefined {
     return manufacturer ? KnownManufacturerUris.find(([pattern]) => pattern.test(manufacturer))?.[1] : undefined
