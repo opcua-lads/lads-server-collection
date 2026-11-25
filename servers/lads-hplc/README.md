@@ -48,17 +48,26 @@ adds the device to the Machinery `Machines` folder and builds the event notifier
 | `ColumnOven` (AnalogControlFunction) | PT1 of the oven compartment: towards TargetValue while Running, towards the ambient temperature while Stopped |
 | `Pump` (control function, CurrentValue = flow) | flow follows TargetValue with a short PT1 while Running, falls to 0 when Stopped |
 | `Pump/Pressure` (AnalogScalarSensorFunction) | SensorValue = flow × flow resistance |
+| `Pump/Solvent A`, `Pump/Solvent B` (AnalogControlFunctions) | no commands, TargetValue read-only: TargetValue = pump TargetValue × share, CurrentValue = pump CurrentValue × share (share of B = `PercentageSolventB`, default 10 %; A = the rest), CurrentValue historized; ControlFunctionState follows the pump |
 | `Valve` (MultiStateDiscreteControlFunction, Port 12 / 13 / 14) | no Start / Stop; writing TargetValue sets ControlFunctionState to Running, CurrentValue moves one port every 0.5 s towards it, Stopped on arrival |
+| `SamplePosition` (MultiStateDiscreteControlFunction, Position 1 … 24) | autosampler tray position, same behaviour as the valve (the injector itself is `SampleInjector`) |
+| `SampleInjector` (AnalogControlFunctionWithRelativeTargetValue, volume in µl) | Start runs one injection cycle: Running → aspirate (CurrentValue up to TargetValue with `IncreaseRate`, display name "Aspirate Rate", µl/s) → move the injector from the sample into the HPLC stream (`Injector Move Time`, 2 s) → dispense (CurrentValue down to 0 with `DecreaseRate`, display name "Inject Rate") → Stopped; Stop ends the cycle at once (the volume drawn so far stays); the mandatory `Operational` group of this type organizes state, methods and values |
 
 CurrentValue of the column oven and of the pump and the pressure SensorValue are historized (HistoryRead).
 
 Settable in `HPLCUnit/Simulator`: `Ambient Temperature` [°C] (22), `Oven Time Constant` [s] (60), `Flow Resistance`
-[bar per mL/min] (100), `Pump Time Constant` [s] (2). Start values: oven at ambient temperature, set point 40 °C; pump
-without flow, set point 1 mL/min.
+[bar per mL/min] (100), `Pump Time Constant` [s] (2), `Injector Move Time` [s] (2). Start values: oven at ambient temperature, set point 40 °C; pump
+without flow, set point 1 mL/min, 10 % solvent B; sample injector 50 µl.
 
 Both controllers can be started and stopped on their own (`ControlFunctionState/Start`, `Stop`; the lock of the unit
 applies, also to writes of their TargetValue). StartProgram (and Start) of the unit starts the controllers that are not
 running; the end of the run, Stop and Abort stop both.
+
+Link to the unit state (as in the viscometer): starting the column oven or the pump by hand sets the functional unit
+from Stopped to Running (manual operation; refused with BadInvalidState while the unit is Aborted, Stopping …); when
+the last of them is stopped by hand and no run is active, the unit goes back to Stopped. Stop / Abort of the unit in
+this state stop the controllers (Stopped / Aborted). During a program run the run owns the unit state: controllers can
+be stopped and started by hand without changing it.
 
 To turn the skeleton into a real instrument server: replace `runSteps()` in `unit.ts` by the device driver and fill the
 VariableSet / FileSet of the result; add sensor / control functions with the implementations of `@utils`

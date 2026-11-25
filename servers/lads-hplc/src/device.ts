@@ -93,7 +93,11 @@ export class HPLCDeviceImpl {
             this.units.push(impl)
             // 7. simulation loop of the unit with a column oven / pump, coupled to its program runs
             const fs = (unit as unknown as UAObject).getChildByName("FunctionSet") as UAObject | null
-            if (fs?.getChildByName("ColumnOven") || fs?.getChildByName("Pump")) impl.hooks = new HPLCSimulation(unit, this.locks.predicate(unit.browseName.name))
+            if (fs?.getChildByName("ColumnOven") || fs?.getChildByName("Pump")) {
+                const simulation = new HPLCSimulation(unit, this.locks.predicate(unit.browseName.name))
+                impl.hooks = simulation          // runs start / stop the controllers
+                simulation.unitLink = impl       // controllers started / stopped by hand drive the unit state
+            }
         }
     }
 }

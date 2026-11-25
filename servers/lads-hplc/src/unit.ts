@@ -12,6 +12,9 @@ Simulated functional unit with a ProgramManager (skeleton, generic for any LADS 
     properties, job / task ids and the program template, runs for the estimated runtime while ActiveProgram counts
     CurrentRuntime and the steps, then sets Stopped of the result; Abort deletes the result
   - hooks: startControllers() with the start of a run, stopControllers() when it ends, is stopped or aborted
+  - manual operation by the controllers (as the viscometer): a controller started by hand sets the unit from Stopped to
+    Running (refused in Aborted, Stopping ...); when the last linked controller is stopped by hand and no run is active,
+    the unit goes back to Stopped; Stop / Abort of the unit in that state stop the controllers
   - IsEnabled of every function of the unit is true
   - TODO for a real instrument: replace the simulated run (runSteps) by the device driver and fill the VariableSet / FileSet
     of the result with the measured data
@@ -53,7 +56,7 @@ interface Run {
 }
 
 /** what runs with a program of the unit (e.g. the controllers of the simulation) */
-export interface RunHooks { startControllers(): void; stopControllers(): void }
+export interface RunHooks { startControllers(): void; stopControllers(): void; anyControllerRunning(): boolean }
 
 export class SimulatedUnitImpl {
     readonly name: string
@@ -91,6 +94,24 @@ export class SimulatedUnitImpl {
     }
 
     private get state(): string { return this.stateMachine.getCurrentState() ?? "" }
+
+    /** a linked controller was started by hand: Stopped -> Running (manual operation); false if the unit state forbids it */
+    controllerStartedByHand(controller: string): boolean {
+        if (this.is(LADSFunctionalState.Stopped)) {
+            this.stateMachine.setState(LADSFunctionalState.Running)
+            raiseEvent(this.unit as unknown as UAObject, `Started by the ${controller}`, EventSeverity.Info)
+            return true
+        }
+        return this.is(LADSFunctionalState.Running)
+    }
+
+    /** a linked controller was stopped by hand: without a run and with no controller left, Running -> Stopped */
+    controllerStoppedByHand() {
+        if (!this.run && this.is(LADSFunctionalState.Running) && !this.hooks?.anyControllerRunning()) {
+            this.stateMachine.setState(LADSFunctionalState.Stopped)
+            raiseEvent(this.unit as unknown as UAObject, "Stopped, all controllers are off", EventSeverity.Info)
+        }
+    }
     private is(state: LADSFunctionalState) { return this.state.includes(state) }
 
     //---------------------------------------------------------------
@@ -157,7 +178,16 @@ export class SimulatedUnitImpl {
 
     private async stop(_args: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessible(context)) return { statusCode: StatusCodes.BadLocked }
-        if (!this.is(LADSFunctionalState.Running) || !this.run) return { statusCode: StatusCodes.BadInvalidState }
+        if (!this.is(LADSFunctionalState.Running)) return { statusCode: StatusCodes.BadInvalidState }
+        if (!this.run) {                // running by the controllers only: stop them, Stopping -> Stopped
+            this.hooks?.stopControllers()
+            this.stateMachine.setState(LADSFunctionalState.Stopping)
+            setTimeout(() => {
+                this.stateMachine.setState(LADSFunctionalState.Stopped)
+                raiseEvent(this.unit as unknown as UAObject, "Stopped, controllers off", EventSeverity.Info)
+            }, FunctionalStateDelayMilliSeconds)
+            return { statusCode: StatusCodes.Good }
+        }
         this.run.stopRequested = true   // a program ends after the current step (Stopping)
         this.stateMachine.setState(LADSFunctionalState.Stopping)
         if (this.run.manual) {          // manual operation: Stopping -> Stopped after a short delay
@@ -170,7 +200,13 @@ export class SimulatedUnitImpl {
 
     private async abort(_args: VariantLike[], context: ISessionContext): Promise<CallMethodResultOptions> {
         if (!this.isAccessible(context)) return { statusCode: StatusCodes.BadLocked }
-        if (!(this.is(LADSFunctionalState.Running) || this.is(LADSFunctionalState.Stopping)) || !this.run) return { statusCode: StatusCodes.BadInvalidState }
+        if (!(this.is(LADSFunctionalState.Running) || this.is(LADSFunctionalState.Stopping))) return { statusCode: StatusCodes.BadInvalidState }
+        if (!this.run) {                // running by the controllers only
+            this.hooks?.stopControllers()
+            this.stateMachine.setState(LADSFunctionalState.Aborting)
+            enterAborted(this.stateMachine, this.unit as unknown as UAObject, "Aborted, controllers off.")
+            return { statusCode: StatusCodes.Good }
+        }
         const run = this.run
         clearTimeout(run.timer)
         this.run = undefined
