@@ -23,15 +23,15 @@ VS Code: *LADS-LabWasher (Simulator, port 4852)*, also part of the compound *LAD
 
 - **StartProgram**: the template by name (`Universal`) or by Miele program number (`49`, the DeviceTemplateId).
   The door must not be open. The call creates a result (samples, properties, job and task ids, copy of the template).
-- **Phases**: each phase fills (cold, warm or AD = demineralised water), circulates with the spray arms, doses a chemical,
+- **Phases**: each phase fills (cold, warm or DI water = purified water, Miele "AD water"), circulates with the spray arms, doses a chemical,
   heats to the set point and holds it, then drains. The times are shortened to seconds.
   - Dispenser pumps: 1 = alkaline cleaner, 2 = neutraliser, 3 = additive.
 - **What the program drives**: no function has commands.
   - TemperatureController: target 30 … 95 °C, PT1 heating, Running while heating.
   - DispenserPump1–3: Running while dosing.
-  - Conductivity: tap water about 450 µS/cm, with chemicals up to about 900, AD water about 3.
+  - Conductivity: tap water about 450 µS/cm, with chemicals up to about 900, DI water about 3.
   - SprayArm1–5: Rotating while circulating.
-  - Valves ColdWater, WarmWater, AD: Opened while filling.
+  - Valves ColdWater, WarmWater, DIWater: Opened while filling.
   - Door: Closed → Locking → Locked → Unlocking → Closed.
   - TemperatureController CurrentValue and Conductivity record history.
 - **RunningStateMachine**: (Complete → Resetting →) Idle → Starting → Execute → Completing → Complete.

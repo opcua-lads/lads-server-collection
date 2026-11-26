@@ -11,8 +11,8 @@ Function set of the washer:
   Conductivity               AnalogScalarSensorFunction (µS/cm)
   Door                       CoverFunction, no methods
   SprayArm1 … 5              TwoStateDiscreteSensorFunction: False = Stopped, True = Rotating
-  ColdWater, WarmWater, AD   valves of the water inlets, TwoStateDiscreteSensorFunction: False = Closed, True = Opened
-                             (AD: Miele's connection for demineralised / VE water, "Aqua destillata")
+  ColdWater, WarmWater, DIWater   valves of the water inlets, TwoStateDiscreteSensorFunction: False = Closed, True = Opened
+                             (DIWater: purified water, Miele "AD water": deionised / demineralised / distilled)
   DispenserPump1 … 3         AnalogControlFunction, read only, no commands (10 … 100 %)
 FunctionalUnitState: StartProgram, Stop, Abort, Clear and the RunningStateMachine (sub state machine of Running).
 ProgramManager with the washing programs of the PG 8583 (DeviceTemplateId = Miele program number) and an ActiveProgram
@@ -143,7 +143,7 @@ PROGRAMS = [(49, 'Universal', 'Universal', 'Universal program for normally soile
             (58, 'Mini', 'Mini', 'Short program for slightly soiled items'),
             (30, 'Oil', 'Oil', 'Program for oily and greasy residues'),
             (10, 'Special93C10', "Special 93°C-10'", 'Special program: 10 minutes at 93 °C'),
-            (31, 'DIWaterRinse', 'DI Water Rinse', 'Rinse with deionised water (VE / AD water)'),
+            (31, 'DIWaterRinse', 'DI Water Rinse', 'Rinse with DI water (purified water, Miele AD water)'),
             (12, 'Rinse', 'Rinse', 'Rinse without cleaning'),
             (13, 'Drain', 'Drain', 'Drain the washing chamber')]
 
@@ -182,7 +182,7 @@ for i in range(1, 6):
     sensor_twostate(fs, f'SprayArm{i}', 'Stopped', 'Rotating', f'Spray arm {i}: rotation monitoring')
 sensor_twostate(fs, 'ColdWater', 'Closed', 'Opened', 'Inlet valve cold water (KW)')
 sensor_twostate(fs, 'WarmWater', 'Closed', 'Opened', 'Inlet valve warm water (WW)')
-sensor_twostate(fs, 'AD', 'Closed', 'Opened', 'Inlet valve AD water: Miele connection for demineralised water (VE water, "Aqua destillata")')
+sensor_twostate(fs, 'DIWater', 'Closed', 'Opened', 'Inlet valve DI water: purified water (deionised, demineralised or distilled water; Miele: AD water connection)')
 for i in range(1, 4):
     control_readonly(fs, f'DispenserPump{i}', U_PCT, (10, 100), f'Dispenser pump {i} for process chemicals; dosing rate set by the running program (10 … 100 %)')
 pm = unit_t.obj('ProgramManager', T['ProgramManager'], nsb=4)

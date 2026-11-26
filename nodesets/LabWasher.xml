@@ -749,9 +749,9 @@
             <uax:LocalizedText><uax:Text>Closed</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
-    <UAObject NodeId="ns=5;i=5016" BrowseName="5:AD" ParentNodeId="ns=5;i=5004">
-        <DisplayName>AD</DisplayName>
-        <Description>Inlet valve AD water: Miele connection for demineralised water (VE water, "Aqua destillata")</Description>
+    <UAObject NodeId="ns=5;i=5016" BrowseName="5:DIWater" ParentNodeId="ns=5;i=5004">
+        <DisplayName>DI Water</DisplayName>
+        <Description>Inlet valve DI water: purified water (deionised, demineralised or distilled water; Miele: AD water connection)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1031</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2133,7 +2133,7 @@
     </UAVariable>
     <UAObject NodeId="ns=5;i=5037" BrowseName="5:DI Water Rinse" ParentNodeId="ns=5;i=5025">
         <DisplayName>DI Water Rinse</DisplayName>
-        <Description>Rinse with deionised water (VE / AD water) (Miele program 31)</Description>
+        <Description>Rinse with DI water (purified water, Miele AD water) (Miele program 31)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1018</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -2176,7 +2176,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=5037</Reference>
         </References>
         <Value>
-            <uax:LocalizedText><uax:Text>Rinse with deionised water (VE / AD water) (Miele program 31)</uax:Text></uax:LocalizedText>
+            <uax:LocalizedText><uax:Text>Rinse with DI water (purified water, Miele AD water) (Miele program 31)</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=6145" BrowseName="4:DeviceTemplateId" ParentNodeId="ns=5;i=5037">
@@ -3474,9 +3474,9 @@
             <Reference ReferenceType="HasComponent">ns=5;i=10105</Reference>
         </References>
     </UAObject>
-    <UAObject NodeId="ns=5;i=10061" BrowseName="5:AD" ParentNodeId="ns=5;i=10004">
-        <DisplayName>AD</DisplayName>
-        <Description>Inlet valve AD water: Miele connection for demineralised water (VE water, "Aqua destillata")</Description>
+    <UAObject NodeId="ns=5;i=10061" BrowseName="5:DIWater" ParentNodeId="ns=5;i=10004">
+        <DisplayName>DI Water</DisplayName>
+        <Description>Inlet valve DI water: purified water (deionised, demineralised or distilled water; Miele: AD water connection)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1031</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -4380,7 +4380,7 @@
     </UAObject>
     <UAObject NodeId="ns=5;i=10141" BrowseName="5:DI Water Rinse" ParentNodeId="ns=5;i=10066">
         <DisplayName>DI Water Rinse</DisplayName>
-        <Description>Rinse with deionised water (VE / AD water) (Miele program 31)</Description>
+        <Description>Rinse with DI water (purified water, Miele AD water) (Miele program 31)</Description>
         <References>
             <Reference ReferenceType="HasTypeDefinition">ns=4;i=1018</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
@@ -5750,7 +5750,7 @@
             <Reference ReferenceType="HasProperty" IsForward="false">ns=5;i=10141</Reference>
         </References>
         <Value>
-            <uax:LocalizedText><uax:Text>Rinse with deionised water (VE / AD water) (Miele program 31)</uax:Text></uax:LocalizedText>
+            <uax:LocalizedText><uax:Text>Rinse with DI water (purified water, Miele AD water) (Miele program 31)</uax:Text></uax:LocalizedText>
         </Value>
     </UAVariable>
     <UAVariable DataType="i=12" NodeId="ns=5;i=10265" BrowseName="4:DeviceTemplateId" ParentNodeId="ns=5;i=10141">

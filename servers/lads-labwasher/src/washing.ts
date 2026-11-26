@@ -4,14 +4,14 @@
 /*
 Phases of the simulated washing programs of the PG 8583 (by Miele program number = DeviceTemplateId).
 
-A phase fills the chamber (cold water, warm water or AD = demineralised water), circulates with the spray arms, doses a
+A phase fills the chamber (cold water, warm water or DI water = purified water, Miele "AD water"), circulates with the spray arms, doses a
 process chemical, heats to its set point and holds it, then drains. The times are shortened for the demo (seconds
 instead of minutes); the order and temperatures follow typical Miele lab programs, not the exact factory settings.
 
 Dispenser pumps: 1 alkaline cleaner, 2 neutraliser (acid), 3 additive (emulsifier / rinse aid).
 */
 
-export type Water = "ColdWater" | "WarmWater" | "AD"
+export type Water = "ColdWater" | "WarmWater" | "DIWater"
 
 export interface Phase {
     name: string
@@ -40,7 +40,7 @@ const clean = (temperature: number, rate = 40, holdMs = 6000) => phase("Cleaning
 const acidClean = (temperature: number, rate = 40) => phase("Acid cleaning", "WarmWater", { temperature, dosing: { pump: 2, rate, conductivity: 300 } })
 const neutralise = (pump = 2, rate = 20) => phase("Neutralisation", "WarmWater", { dosing: { pump, rate, conductivity: 200 } })
 const rinse = (n?: number) => phase(n ? `Interim rinse ${n}` : "Interim rinse", "WarmWater")
-const finalRinse = (temperature?: number) => phase("Final rinse (AD)", "AD", temperature ? { temperature, holdMs: 4000 } : {})
+const finalRinse = (temperature?: number) => phase("Final rinse (DI water)", "DIWater", temperature ? { temperature, holdMs: 4000 } : {})
 
 const PROGRAMS: { [number: string]: Phase[] } = {
     "49": [prewash(), clean(55), neutralise(), rinse(), finalRinse(75)],                                    // Universal

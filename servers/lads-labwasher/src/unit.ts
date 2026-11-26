@@ -30,8 +30,8 @@ import { AccessPredicate } from "./locks"
 import { Phase, programPhases, Water } from "./washing"
 
 const TICK_MS = 500
-const INLET_TEMPERATURE: { [w in Water]: number } = { ColdWater: 15, WarmWater: 40, AD: 20 }
-const INLET_CONDUCTIVITY: { [w in Water]: number } = { ColdWater: 450, WarmWater: 450, AD: 3 }
+const INLET_TEMPERATURE: { [w in Water]: number } = { ColdWater: 15, WarmWater: 40, DIWater: 20 }
+const INLET_CONDUCTIVITY: { [w in Water]: number } = { ColdWater: 450, WarmWater: 450, DIWater: 3 }
 const AMBIENT = 22
 const CELSIUS = makeEUInformation("CEL", "°C", "degree Celsius")
 const SECOND = makeEUInformation("SEC", "s", "second")
@@ -135,7 +135,7 @@ export class WasherUnitImpl {
             const v = fn(`SprayArm${i}`)?.getChildByName("SensorValue") as UAVariable | null
             if (v) { setBooleanValue(v, false); this.sprayArms.push(v) }
         }
-        for (const w of ["ColdWater", "WarmWater", "AD"] as Water[]) {
+        for (const w of ["ColdWater", "WarmWater", "DIWater"] as Water[]) {
             const v = fn(w)?.getChildByName("SensorValue") as UAVariable | null
             if (v) { setBooleanValue(v, false); this.valves[w] = v }
         }
