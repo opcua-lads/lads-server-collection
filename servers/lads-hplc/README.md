@@ -94,12 +94,26 @@ wavelength (DAD1A 250, DAD1B 320, DAD1C 420, DAD1D 480 nm, unit mAU, every 250 m
 the spectrum 190 … 600 nm in 2 nm steps (its `Range` property stays empty: node-opcua cannot write a Range with
 ValueRank −2).
 
+The channel wavelengths come from the DAD component: `Components / DAD / Components / DAD1A … DAD1D` are sub-components
+of the type `DADChannelType` (HPLC namespace, derived from the LADS `ComponentType`) with the variable `Wavelength`
+(AnalogUnitRange, nm, 190 … 950); a channel without a value gets the default above.
+
 ## Program run (StartProgram)
 
 The samples of the call are measured one after the other (no samples: one, "Sample 1"): event "Processing sample <id>",
 the tray moves to position n (n = index in the list), the injector injects (TargetValue µl), then the chromatogram is
-recorded. ActiveProgram: one step per sample (`Sample <id>: moving to Position n / injecting / separation`), runtime
+recorded. ActiveProgram: one step per sample (`Sample <id>: moving to Position n / injecting … µl / separation`; the number of peaks is reported only after the separation), runtime
 estimate 90 s per sample. Stop ends the run after the current sample, Abort at once (result deleted).
+
+Templates and their optional properties (KeyValue, values 0 … 100 %; an invalid value refuses the start with
+BadInvalidArgument):
+
+| Template | Property | Effect |
+|---|---|---|
+| `Isocratic Run` | `PercentageSolventB` | share of solvent B for the whole run (without it the current value of the pump stays) |
+| `Gradient Run` | `GradientStart`, `GradientEnd` (10, 90) | per sample: %B rises linearly from start to end during the separation, back to start for the next sample |
+
+The composition changes the pump's `PercentageSolventB` and thus Solvent A / B; it does not change the simulated peaks.
 
 Result: `VariableSet / <sample id> / Peak n /` `Retention Time` [s], `Height` [mAU], `Width` (FWHM) [s], `Area` [mAU·s]
 at the DAD channel with the strongest signal, `Channel` (e.g. "DAD1B (320 nm)") and `Absorption Maximum` [nm].

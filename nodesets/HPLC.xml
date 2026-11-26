@@ -1602,6 +1602,10 @@
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5037</Reference>
             <Reference ReferenceType="HasComponent">ns=4;i=5039</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7868</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7872</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7876</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7880</Reference>
         </References>
     </UAObject>
     <UAObject NodeId="ns=4;i=5037" BrowseName="4:VisLamp" ParentNodeId="ns=4;i=5036">
@@ -1660,6 +1664,294 @@
             <Reference ReferenceType="HasProperty">ns=4;i=7672</Reference>
         </References>
     </UAObject>
+    <UAObject NodeId="ns=4;i=7868" BrowseName="4:DAD1A" ParentNodeId="ns=4;i=5036">
+        <DisplayName>DAD1A</DisplayName>
+        <Description>Detection channel A of the DAD (250 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5036</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7869</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=7900</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7901</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7902</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7869" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7868" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7868</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7870</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7871</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7870" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7869">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7869</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7871" BrowseName="EURange" ParentNodeId="ns=4;i=7869">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7869</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7872" BrowseName="4:DAD1B" ParentNodeId="ns=4;i=5036">
+        <DisplayName>DAD1B</DisplayName>
+        <Description>Detection channel B of the DAD (320 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5036</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7873</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=7903</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7904</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7905</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7873" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7872" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7872</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7874</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7875</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7874" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7873">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7873</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7875" BrowseName="EURange" ParentNodeId="ns=4;i=7873">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7873</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7876" BrowseName="4:DAD1C" ParentNodeId="ns=4;i=5036">
+        <DisplayName>DAD1C</DisplayName>
+        <Description>Detection channel C of the DAD (420 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5036</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7877</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=7906</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7907</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7908</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7877" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7876" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7876</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7878</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7879</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7878" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7877">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7877</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7879" BrowseName="EURange" ParentNodeId="ns=4;i=7877">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7877</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7880" BrowseName="4:DAD1D" ParentNodeId="ns=4;i=5036">
+        <DisplayName>DAD1D</DisplayName>
+        <Description>Detection channel D of the DAD (480 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5036</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7881</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=7909</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7910</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7911</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7881" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7880" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7880</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7882</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7883</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7882" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7881">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7881</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7883" BrowseName="EURange" ParentNodeId="ns=4;i=7881">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7881</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
     <UAVariable DataType="String" NodeId="ns=4;i=7672" BrowseName="1:ManufacturerUri" ParentNodeId="ns=4;i=5039">
         <DisplayName>Manufacturer Uri</DisplayName>
         <Description>ManufacturerUri provides a unique identifier for this company. This identifier should be a fully qualified domain name; however, it may be a GUID or similar construct that ensures global uniqueness.</Description>
@@ -2909,6 +3201,10 @@
         <References>
             <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=5061</Reference>
             <Reference ReferenceType="HasTypeDefinition">ns=3;i=1025</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7884</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7888</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7892</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7896</Reference>
         </References>
     </UAObject>
     <UAVariable DataType="String" NodeId="ns=4;i=6179" BrowseName="1:HardwareRevision" ParentNodeId="ns=4;i=5061">
@@ -3109,6 +3405,442 @@
             <Reference ReferenceType="HasProperty">ns=4;i=7692</Reference>
         </References>
     </UAObject>
+    <UAObject NodeId="ns=4;i=7884" BrowseName="4:DAD1A" ParentNodeId="ns=4;i=5067">
+        <DisplayName>DAD1A</DisplayName>
+        <Description>Detection channel A of the DAD (250 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5067</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7885</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7925</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7928</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7929</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7929" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7884">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7884</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7928" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7884">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7884</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7925" BrowseName="1:Identification" ParentNodeId="ns=4;i=7884">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7884</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7926</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7927</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7926" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7925">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7925</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7927" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7925">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7925</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7885" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7884" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7884</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7886</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7887</Reference>
+        </References>
+        <Value>
+            <uax:Double>250</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7886" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7885">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7885</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7887" BrowseName="EURange" ParentNodeId="ns=4;i=7885">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7885</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7888" BrowseName="4:DAD1B" ParentNodeId="ns=4;i=5067">
+        <DisplayName>DAD1B</DisplayName>
+        <Description>Detection channel B of the DAD (320 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5067</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7889</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7930</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7933</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7934</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7934" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7888">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7888</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7933" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7888">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7888</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7930" BrowseName="1:Identification" ParentNodeId="ns=4;i=7888">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7888</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7931</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7932</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7931" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7930">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7930</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7932" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7930">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7930</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7889" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7888" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7888</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7890</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7891</Reference>
+        </References>
+        <Value>
+            <uax:Double>320</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7890" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7889">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7889</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7891" BrowseName="EURange" ParentNodeId="ns=4;i=7889">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7889</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7892" BrowseName="4:DAD1C" ParentNodeId="ns=4;i=5067">
+        <DisplayName>DAD1C</DisplayName>
+        <Description>Detection channel C of the DAD (420 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5067</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7893</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7935</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7938</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7939</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7939" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7892">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7892</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7938" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7892">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7892</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7935" BrowseName="1:Identification" ParentNodeId="ns=4;i=7892">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7892</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7936</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7937</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7936" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7935">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7935</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7937" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7935">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7935</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7893" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7892" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7892</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7894</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7895</Reference>
+        </References>
+        <Value>
+            <uax:Double>420</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7894" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7893">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7893</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7895" BrowseName="EURange" ParentNodeId="ns=4;i=7893">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7893</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7896" BrowseName="4:DAD1D" ParentNodeId="ns=4;i=5067">
+        <DisplayName>DAD1D</DisplayName>
+        <Description>Detection channel D of the DAD (480 nm).</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=5067</Reference>
+            <Reference ReferenceType="HasTypeDefinition">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7897</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7940</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7943</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7944</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7944" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7896">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7896</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7943" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7896">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7896</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7940" BrowseName="1:Identification" ParentNodeId="ns=4;i=7896">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7896</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7941</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7942</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7941" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7940">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7940</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7942" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7940">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7940</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7897" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7896" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7896</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7898</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7899</Reference>
+        </References>
+        <Value>
+            <uax:Double>480</uax:Double>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7898" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7897">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7897</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7899" BrowseName="EURange" ParentNodeId="ns=4;i=7897">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7897</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
     <UAVariable DataType="String" NodeId="ns=4;i=7692" BrowseName="1:ManufacturerUri" ParentNodeId="ns=4;i=5073">
         <DisplayName>Manufacturer Uri</DisplayName>
         <Description>ManufacturerUri provides a unique identifier for this company. This identifier should be a fully qualified domain name; however, it may be a GUID or similar construct that ensures global uniqueness.</Description>
@@ -6469,6 +7201,76 @@
             <Reference ReferenceType="HasProperty">ns=4;i=7174</Reference>
         </References>
     </UAObjectType>
+    <UAObjectType NodeId="ns=4;i=7864" BrowseName="4:DADChannelType">
+        <DisplayName>DAD Channel Type</DisplayName>
+        <Description>A detection channel of a diode array detector: the absorbance at one wavelength (Wavelength). Derived from the LADS ComponentType.</Description>
+        <References>
+            <Reference ReferenceType="HasSubtype" IsForward="false">ns=3;i=1024</Reference>
+            <Reference ReferenceType="HasComponent">ns=4;i=7865</Reference>
+            <Reference ReferenceType="HasAddIn">ns=4;i=7912</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7913</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7914</Reference>
+        </References>
+    </UAObjectType>
+    <UAVariable DataType="Double" NodeId="ns=4;i=7865" BrowseName="4:Wavelength" ParentNodeId="ns=4;i=7864" UserAccessLevel="1" AccessLevel="1">
+        <DisplayName>Wavelength</DisplayName>
+        <Description>Detection wavelength of the DAD channel.</Description>
+        <References>
+            <Reference ReferenceType="HasComponent" IsForward="false">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=17570</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7866</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7867</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="EUInformation" NodeId="ns=4;i=7866" BrowseName="EngineeringUnits" ParentNodeId="ns=4;i=7865">
+        <DisplayName>EngineeringUnits</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7865</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=888</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:EUInformation>
+                        <uax:NamespaceUri>http://www.opcfoundation.org/UA/units/un/cefact</uax:NamespaceUri>
+                        <uax:UnitId>4404277</uax:UnitId>
+                        <uax:DisplayName>
+                            <uax:Text>nm</uax:Text>
+                        </uax:DisplayName>
+                        <uax:Description>
+                            <uax:Text>nanometre</uax:Text>
+                        </uax:Description>
+                    </uax:EUInformation>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
+    <UAVariable DataType="Range" NodeId="ns=4;i=7867" BrowseName="EURange" ParentNodeId="ns=4;i=7865">
+        <DisplayName>EURange</DisplayName>
+        <References>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7865</Reference>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+        </References>
+        <Value>
+            <uax:ExtensionObject>
+                <uax:TypeId>
+                    <uax:Identifier>i=885</uax:Identifier>
+                </uax:TypeId>
+                <uax:Body>
+                    <uax:Range>
+                        <uax:Low>190</uax:Low>
+                        <uax:High>950</uax:High>
+                    </uax:Range>
+                </uax:Body>
+            </uax:ExtensionObject>
+        </Value>
+    </UAVariable>
     <UAVariable DataType="Double" ValueRank="0" NodeId="ns=4;i=6027" BrowseName="3:SensorValue" ParentNodeId="ns=4;i=1014">
         <DisplayName>Sensor Value</DisplayName>
         <Description>SensorValue is the calibrated and optionally compensated/filtered array of measurement values.</Description>
@@ -13722,6 +14524,221 @@
             <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
             <Reference ReferenceType="HasModellingRule">i=78</Reference>
             <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7719</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7900" BrowseName="1:Identification" ParentNodeId="ns=4;i=7868">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7868</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7915</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7916</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7901" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7868">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7868</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7902" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7868">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7868</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7903" BrowseName="1:Identification" ParentNodeId="ns=4;i=7872">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7872</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7917</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7918</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7904" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7872">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7872</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7905" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7872">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7872</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7906" BrowseName="1:Identification" ParentNodeId="ns=4;i=7876">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7876</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7919</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7920</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7907" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7876">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7876</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7908" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7876">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7876</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7909" BrowseName="1:Identification" ParentNodeId="ns=4;i=7880">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7880</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7921</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7922</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7910" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7880">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7880</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7911" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7880">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7880</Reference>
+        </References>
+    </UAVariable>
+    <UAObject NodeId="ns=4;i=7912" BrowseName="1:Identification" ParentNodeId="ns=4;i=7864">
+        <DisplayName>Identification</DisplayName>
+        <Description>Identification provides properties to identify a device or component.</Description>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">ns=2;i=1005</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasAddIn" IsForward="false">ns=4;i=7864</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7923</Reference>
+            <Reference ReferenceType="HasProperty">ns=4;i=7924</Reference>
+        </References>
+    </UAObject>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7913" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7864">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7864</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7914" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7864">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7864</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7915" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7900">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7900</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7916" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7900">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7900</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7917" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7903">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7903</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7918" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7903">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7903</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7919" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7906">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7906</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7920" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7906">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7906</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7921" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7909">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7909</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7922" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7909">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7909</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=21" NodeId="ns=4;i=7923" BrowseName="1:Manufacturer" ParentNodeId="ns=4;i=7912">
+        <DisplayName>Manufacturer</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7912</Reference>
+        </References>
+    </UAVariable>
+    <UAVariable DataType="i=12" NodeId="ns=4;i=7924" BrowseName="1:SerialNumber" ParentNodeId="ns=4;i=7912">
+        <DisplayName>Serial Number</DisplayName>
+        <References>
+            <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
+            <Reference ReferenceType="HasModellingRule">i=78</Reference>
+            <Reference ReferenceType="HasProperty" IsForward="false">ns=4;i=7912</Reference>
         </References>
     </UAVariable>
 </UANodeSet>

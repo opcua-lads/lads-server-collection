@@ -38,11 +38,11 @@ export interface SimulatedProgram { identifier: string, description: string, ste
 
 export const PROGRAM_TEMPLATES: SimulatedProgram[] = [
     {
-        identifier: "Isocratic Run", description: "Isocratic separation of one sample: equilibrate, inject, separate, wash.",
+        identifier: "Isocratic Run", description: "Isocratic separation of the given samples, one after the other: tray position, injection, separation with constant composition. Optional property PercentageSolventB (0 … 100 %): share of solvent B for the whole run; without it the current value of the pump is kept.",
         steps: [{ name: "Equilibrate", seconds: 5 }, { name: "Inject", seconds: 2 }, { name: "Separate", seconds: 20 }, { name: "Wash", seconds: 5 }],
     },
     {
-        identifier: "Gradient Run", description: "Gradient separation of one sample: equilibrate, inject, gradient, re-equilibrate.",
+        identifier: "Gradient Run", description: "Gradient separation of the given samples, one after the other: tray position, injection, then the share of solvent B rises linearly during the separation of each sample from GradientStart to GradientEnd and is set back to GradientStart for the next sample. Optional properties GradientStart and GradientEnd (0 … 100 %, defaults 10 and 90).",
         steps: [{ name: "Equilibrate", seconds: 5 }, { name: "Inject", seconds: 2 }, { name: "Gradient", seconds: 30 }, { name: "Re-equilibrate", seconds: 8 }],
     },
 ]
@@ -65,14 +65,35 @@ export interface RunHooks {
     stopControllers(): void
     anyControllerRunning(): boolean
     /** one sample of a program run (HPLC: tray position, injection, chromatogram); without it the template steps are simulated */
-    processSample?(sampleId: string, position: number, step: (phase: string) => void, cancelled: () => boolean): Promise<Chromatogram | undefined>
+    processSample?(sampleId: string, position: number, step: (phase: string) => void, cancelled: () => boolean, composition?: Composition): Promise<Chromatogram | undefined>
     channels?: DetectorChannel[]
 }
 
 const SECOND = makeEUInformation("SEC", "s", "second")
 const NANOMETRE = makeEUInformation("C45", "nm", "nanometre")
 const MAU_S = new EUInformation({ namespaceUri: "http://www.opcfoundation.org/UA/units/un/cefact", unitId: -1, displayName: { text: "mAU·s" }, description: { text: "milli absorbance unit times second" } })
-const ESTIMATED_SAMPLE_MS = 90000   // per sample: position, injection, dead time, elution
+const ESTIMATED_SAMPLE_MS = 90000
+
+/** mobile phase composition of a run: constant %B (isocratic) or a linear gradient from → to during each separation */
+export interface Composition { percentB?: number, gradient?: { from: number, to: number } }
+
+/** composition from the template and its properties (keys case-insensitive) */
+function composition(template: string, properties: LADSProperty[]): { value: Composition, error?: string } {
+    const prop = (key: string) => {
+        const p = properties.find((x: any) => String(x?.key ?? x?.Key ?? "").toLowerCase() === key.toLowerCase()) as any
+        if (p === undefined) return undefined
+        const v = Number(p?.value ?? p?.Value)
+        return Number.isFinite(v) && v >= 0 && v <= 100 ? v : NaN
+    }
+    if (/gradient/i.test(template)) {
+        const from = prop("GradientStart") ?? 10, to = prop("GradientEnd") ?? 90
+        if (Number.isNaN(from) || Number.isNaN(to)) return { value: {}, error: "GradientStart / GradientEnd must be numbers from 0 to 100" }
+        return { value: { gradient: { from, to } } }
+    }
+    const b = prop("PercentageSolventB")
+    if (Number.isNaN(b)) return { value: {}, error: "PercentageSolventB must be a number from 0 to 100" }
+    return { value: b === undefined ? {} : { percentB: b } }
+}   // per sample: position, injection, dead time, elution
 
 export class SimulatedUnitImpl {
     readonly name: string
@@ -168,6 +189,11 @@ export class SimulatedUnitImpl {
 
         const properties = ((args[1]?.value as Variant[] | null) ?? []).map(x => x as unknown as LADSProperty)
         const samples = ((args[4]?.value as Variant[] | null) ?? []).map(x => x as unknown as LADSSampleInfo)
+        const comp = composition(template.identifier, properties)
+        if (comp.error) {
+            raiseEvent(this.unit as unknown as UAObject, `${template.identifier} not started: ${comp.error}`, EventSeverity.Warning)
+            return { statusCode: StatusCodes.BadInvalidArgument }
+        }
         const run: Run = { manual: false, properties, template, program, runId: createDeviceProgramRunId(template.identifier), started: new Date(), stopRequested: false }
         this.run = run
 
@@ -304,7 +330,7 @@ export class SimulatedUnitImpl {
             setNumericValue(ap?.currentStepNumber, i + 1)
             raiseEvent(unit, `Processing sample ${id} (${i + 1} of ${ids.length})`, EventSeverity.Info)
             const step = (phase: string) => ap?.currentStepName?.setValueFromSource({ dataType: DataType.LocalizedText, value: new LocalizedText({ text: `Sample ${id}: ${phase}` }) })
-            const chromatogram = await this.hooks!.processSample!(id, i + 1, step, () => this.run !== run)
+            const chromatogram = await this.hooks!.processSample!(id, i + 1, step, () => this.run !== run, composition(run.template?.identifier ?? "", run.properties).value)
             if (this.run !== run) return
             if (chromatogram && run.result) this.addPeaks(run.result, id, chromatogram)
             else raiseEvent(unit, `Sample ${id}: no chromatogram recorded`, EventSeverity.Warning)

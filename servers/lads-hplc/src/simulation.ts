@@ -32,7 +32,8 @@ Simulation loop of the HPLC unit: column oven and pump.
   - detectors (chromatography.ts): every completed injection creates a chromatogram (dead time = Dead Volume / flow, peaks
     within the Elution Window); the DAD channels DAD1A … D show its absorbance at their wavelength, DAD1I the spectrum
     (250 ms, SensorValues historized)
-  - processSample(): one sample of a program run: move to its tray position, inject, record the chromatogram
+  - processSample(): one sample of a program run: move to its tray position, inject, record the chromatogram; the
+    composition of the run sets PercentageSolventB (isocratic) or ramps it linearly during the separation (gradient)
 */
 
 import { AccessLevelFlag, CallMethodResultOptions, DataType, ISessionContext, makeEUInformation, StatusCodes, UAObject, UAVariable, VariantArrayType, VariantLike } from "node-opcua"
@@ -41,6 +42,7 @@ import { LADSAnalogControlFunction, LADSFunctionalUnit } from "@interfaces"
 import { AnalogControlFunctionImpl, AnalogScalarSensorFunctionImpl, EventSeverity, getNumericValue, installVariableHistory, promoteToFiniteStateMachine, raiseEvent, restrictAvailableStatesAndTransitions, setNumericValue } from "@utils"
 import { AccessPredicate, restrictWriteAccess } from "./locks"
 import { Chromatogram } from "./chromatography"
+import type { Composition } from "./unit"
 
 /** a detector channel of the DAD */
 export interface DetectorChannel { name: string, wavelength: number, sensorValue: UAVariable }
@@ -320,7 +322,18 @@ export class HPLCSimulation {
     // ---------------------------------------------------------------- detectors
     private installDetectors(dad: UAObject) {
         const fs = dad.getChildByName("FunctionSet") as UAObject | null
-        const wavelengths: { [name: string]: number } = { DAD1A: 250, DAD1B: 320, DAD1C: 420, DAD1D: 480 }   // the channels of the original model
+        // wavelengths: from the channel components (Components/DAD/Components/DAD1A … Wavelength, DADChannelType); defaults
+        // (the channels of the original model) are written there if a component has none
+        const defaults: { [name: string]: number } = { DAD1A: 250, DAD1B: 320, DAD1C: 420, DAD1D: 480 }
+        const device = ((this.unit as unknown as UAObject).parent as UAObject | null)?.parent as UAObject | null   // unit -> FunctionalUnitSet -> device
+        const channelComponents = (device?.getChildByName("Components") as UAObject | null)?.getChildByName("DAD")?.getChildByName("Components") as UAObject | null
+        const wavelengths: { [name: string]: number } = {}
+        for (const [name, d] of Object.entries(defaults)) {
+            const wl = (channelComponents?.getChildByName(name) as UAObject | null)?.getChildByName("Wavelength") as UAVariable | null
+            const v = wl ? getNumericValue(wl) : 0
+            if (wl && !v) setNumericValue(wl, d)
+            wavelengths[name] = v || d
+        }
         for (const f of (fs?.getComponents() ?? []) as UAObject[]) {
             const name = f.browseName.name!
             const sensorValue = f.getChildByName("SensorValue") as UAVariable | null
@@ -362,7 +375,7 @@ export class HPLCSimulation {
         const c = new Chromatogram(sample, { flow, deadVolume: this.param("Dead Volume"), elutionWindow: this.param("Elution Window") })
         this.chromatograms.push(c)
         this.lastChromatogram = c
-        raiseEvent(unit, `${sample}: ${c.peaks.length} peaks expected, dead time ${c.deadTime.toFixed(1)} s, end after ${c.end.toFixed(0)} s`, EventSeverity.Info)
+        raiseEvent(unit, `${sample}: injected, dead time ${c.deadTime.toFixed(1)} s`, EventSeverity.Info)
     }
 
     private evaluateDetectors() {
@@ -381,7 +394,10 @@ export class HPLCSimulation {
      * Moves the tray to the sample's position, injects it and records its chromatogram. step() reports the phase,
      * cancelled() is polled (abort). Returns the chromatogram, or undefined if cancelled or nothing could be measured.
      */
-    async processSample(sampleId: string, position: number, step: (phase: string) => void, cancelled: () => boolean): Promise<Chromatogram | undefined> {
+    async processSample(sampleId: string, position: number, step: (phase: string) => void, cancelled: () => boolean, composition: Composition = {}): Promise<Chromatogram | undefined> {
+        const setB = (v: number) => { if (this.percentB) setNumericValue(this.percentB, Math.round(v * 10) / 10) }
+        if (composition.percentB !== undefined) setB(composition.percentB)          // isocratic: constant %B
+        if (composition.gradient) setB(composition.gradient.from)                    // gradient: start composition
         const wait = async (done: () => boolean, timeoutMs: number) => {
             const t0 = Date.now()
             while (!done()) {
@@ -414,9 +430,15 @@ export class HPLCSimulation {
         const c = this.lastChromatogram
         if (!c || c.sampleId !== sampleId) return undefined
         // 3. separation: the peaks pass the detector
-        step(`separation (${c.peaks.length} peaks, ${c.end.toFixed(0)} s)`)
-        if (!(await wait(() => c.finished, (c.end + 30) * 1000))) return undefined
-        return c
+        const g = composition.gradient
+        step(g ? `separation, gradient ${g.from} → ${g.to} % B` : "separation")
+        const done = () => {
+            if (g) setB(g.from + (g.to - g.from) * Math.min(1, c.time / c.end))   // linear over the separation
+            return c.finished
+        }
+        const ok = await wait(done, (c.end + 30) * 1000)
+        if (g) setB(g.from)   // back to the start composition (re-equilibration) for the next sample
+        return ok ? c : undefined
     }
 
     dispose() { clearInterval(this.timer); clearInterval(this.detectorTimer) }
