@@ -27,20 +27,34 @@ Simulation loop of the HPLC unit: column oven and pump.
     cycle at once
   - both controllers can be started and stopped individually; linked to the unit as in the viscometer: a start by hand
     sets the unit from Stopped to Running (refused while the unit is Aborted, Stopping ...), stopping the last of them by
-    hand without a run sets it back to Stopped (SimulatedUnitImpl.controllerStartedByHand / controllerStoppedByHand) (ControlFunctionState Start / Stop, lock of the unit
-    checked); they are started together with a program run of the unit and stopped when the run ends, is stopped or aborted
+    hand without a run sets it back to Stopped (SimulatedUnitImpl.controllerStartedByHand / controllerStoppedByHand);
+    they are started together with a program run of the unit and stopped when the run ends, is stopped or aborted
+  - detectors (chromatography.ts): every completed injection creates a chromatogram (dead time = Dead Volume / flow, peaks
+    within the Elution Window); the DAD channels DAD1A … D show its absorbance at their wavelength, DAD1I the spectrum
+    (250 ms, SensorValues historized)
+  - processSample(): one sample of a program run: move to its tray position, inject, record the chromatogram
 */
 
-import { AccessLevelFlag, CallMethodResultOptions, DataType, ISessionContext, StatusCodes, UAObject, UAVariable, VariantLike } from "node-opcua"
+import { AccessLevelFlag, CallMethodResultOptions, DataType, ISessionContext, makeEUInformation, StatusCodes, UAObject, UAVariable, VariantArrayType, VariantLike } from "node-opcua"
+import { EUInformation, Range } from "node-opcua-types"
 import { LADSAnalogControlFunction, LADSFunctionalUnit } from "@interfaces"
 import { AnalogControlFunctionImpl, AnalogScalarSensorFunctionImpl, EventSeverity, getNumericValue, installVariableHistory, promoteToFiniteStateMachine, raiseEvent, restrictAvailableStatesAndTransitions, setNumericValue } from "@utils"
 import { AccessPredicate, restrictWriteAccess } from "./locks"
+import { Chromatogram } from "./chromatography"
+
+/** a detector channel of the DAD */
+export interface DetectorChannel { name: string, wavelength: number, sensorValue: UAVariable }
+
+/** mAU (no UNECE code) */
+export const mAU = new EUInformation({ namespaceUri: "http://www.opcfoundation.org/UA/units/un/cefact", unitId: -1, displayName: { text: "mAU" }, description: { text: "milli absorbance unit" } })
 
 /** the unit side of the link (SimulatedUnitImpl) */
 export interface UnitLink { controllerStartedByHand(controller: string): boolean; controllerStoppedByHand(): void }
 
 const TICK_MS = 500
 const VALVE_STEP_MS = 500
+const DETECTOR_MS = 250
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 
 export class HPLCSimulation {
     readonly oven?: AnalogControlFunctionImpl
@@ -54,6 +68,13 @@ export class HPLCSimulation {
     /** phase of the injection cycle of the sample injector (undefined while its controller is stopped) */
     private injection?: { phase: "aspirate" | "move" | "dispense", since: number }
     readonly parameters: { [name: string]: UAVariable } = {}
+    private steppers: { [name: string]: { target: UAVariable, current: UAVariable, sm: any, positions: number } } = {}
+    readonly channels: DetectorChannel[] = []
+    private spectrum?: { sensorValue: UAVariable, from: number, step: number, n: number }
+    private chromatograms: Chromatogram[] = []
+    private lastChromatogram?: Chromatogram
+    private injectedSample = "manual injection"
+    private detectorTimer: NodeJS.Timeout
     private timer: NodeJS.Timeout
     /** set by the device: the functional unit whose state follows the linked controllers (column oven, pump) */
     unitLink?: UnitLink
@@ -73,6 +94,8 @@ export class HPLCSimulation {
         }
         const injectorNode = fs?.getChildByName("SampleInjector") as unknown as LADSAnalogControlFunction
         if (injectorNode) this.injector = this.installDosing(injectorNode)
+        const dad = fs?.getChildByName("DAD") as UAObject | null
+        if (dad) this.installDetectors(dad)
 
         // simulator object with the settable parameters
         const ns = (unit as unknown as UAObject).namespace
@@ -89,6 +112,9 @@ export class HPLCSimulation {
         add("Flow Resistance", 100, "Flow resistance of the column [bar per mL/min]: pressure = flow × flow resistance")
         add("Pump Time Constant", 2, "Time constant of the pump flow [s] (PT1)")
         add("Injector Move Time", 2, "Time the sample injector needs to move from the sample into the HPLC stream [s]")
+        add("Dead Volume", 166.7, "Dead volume between injector and detector [µl]: dead time = dead volume / flow (10 s at 1 ml/min)")
+        add("Elution Window", 50, "Time span in which the peaks of a sample elute at 1 ml/min [s] (scales with 1 / flow)")
+        add("Detector Noise", 0.3, "Noise of the DAD signals [mAU] (peak to peak)")
 
         // start values: oven at ambient temperature, pump without flow; sensible set points if the nodeset has none
         const ambient = this.param("Ambient Temperature")
@@ -107,6 +133,7 @@ export class HPLCSimulation {
 
         let last = Date.now()
         this.timer = setInterval(() => { const now = Date.now(); this.evaluate((now - last) / 1000); last = now }, TICK_MS)
+        this.detectorTimer = setInterval(() => this.evaluateDetectors(), DETECTOR_MS)
     }
 
     /** control function with lock check on Start / Stop and on writes of its TargetValue */
@@ -152,6 +179,7 @@ export class HPLCSimulation {
         if (current.readValue().value.value == null) current.setValueFromSource({ dataType, value: 0 })
         if (target.readValue().value.value == null) target.setValueFromSource({ dataType, value: 0 })
         const ports = ((current.getChildByName("EnumStrings") as UAVariable)?.readValue().value.value as { text: string }[] | null) ?? []
+        this.steppers[valve.browseName.name!] = { target, current, sm, positions: ports.length }
         const label = (i: number) => ports[i]?.text ?? String(i)
         let timer: NodeJS.Timeout | undefined
         const step = () => {
@@ -283,10 +311,113 @@ export class HPLCSimulation {
                 if (ramp(0, getNumericValue(this.decreaseRate))) {
                     this.injection = undefined
                     this.stop(as, `${obj.getDisplayName()}: injection done`)
+                    this.startChromatogram()
                 }
                 break
         }
     }
 
-    dispose() { clearInterval(this.timer) }
+    // ---------------------------------------------------------------- detectors
+    private installDetectors(dad: UAObject) {
+        const fs = dad.getChildByName("FunctionSet") as UAObject | null
+        const wavelengths: { [name: string]: number } = { DAD1A: 250, DAD1B: 320, DAD1C: 420, DAD1D: 480 }   // the channels of the original model
+        for (const f of (fs?.getComponents() ?? []) as UAObject[]) {
+            const name = f.browseName.name!
+            const sensorValue = f.getChildByName("SensorValue") as UAVariable | null
+            if (!sensorValue) continue
+            const eu = sensorValue.getChildByName("EngineeringUnits") as UAVariable | null
+            eu?.setValueFromSource({ dataType: DataType.ExtensionObject, value: mAU })
+            if (name in wavelengths) {
+                const wl = sensorValue.getChildByName("Wavelength") as UAVariable | null
+                wl?.setValueFromSource({ dataType: DataType.Double, value: wavelengths[name] })
+                ;(wl?.getChildByName("EngineeringUnits") as UAVariable | null)?.setValueFromSource({ dataType: DataType.ExtensionObject, value: makeEUInformation("C45", "nm", "nanometre") })
+                setNumericValue(sensorValue, 0)
+                installVariableHistory(sensorValue)
+                this.channels.push({ name, wavelength: wavelengths[name], sensorValue })
+            } else if (name === "DAD1I") {   // spectrum 190 … 600 nm in 2 nm steps
+                const from = 190, step = 2, n = 206
+                try {   // Range (DataType Range, ValueRank -2): node-opcua refuses structures with ValueRank -2
+                    ;(sensorValue.getChildByName("Range") as UAVariable | null)?.setValueFromSource({ dataType: DataType.ExtensionObject, value: new Range({ low: from, high: from + (n - 1) * step }) })
+                } catch { console.warn(`DAD1I: Range not set (${from} … ${from + (n - 1) * step} nm)`) }
+                ;(sensorValue.getChildByName("Step") as UAVariable | null)?.setValueFromSource({ dataType: DataType.Double, value: step })
+                this.spectrum = { sensorValue, from, step, n }
+            }
+        }
+        this.channels.sort((a, b) => a.wavelength - b.wavelength)
+        console.log(`Detectors: ${this.channels.map(c => `${c.name} ${c.wavelength} nm`).join(", ")}${this.spectrum ? ", spectrum DAD1I" : ""}`)
+    }
+
+    /** a completed injection: the sample's chromatogram starts now */
+    private startChromatogram() {
+        const running = this.pump && this.running(this.pump)
+        const flow = running ? getNumericValue(this.pump!.currentValue) : 0
+        const sample = this.injectedSample
+        this.injectedSample = "manual injection"
+        const unit = this.unit as unknown as UAObject
+        if (flow < 0.05) {
+            raiseEvent(unit, `${sample}: injected without flow, the sample stays on the column`, EventSeverity.Warning)
+            this.lastChromatogram = undefined
+            return
+        }
+        const c = new Chromatogram(sample, { flow, deadVolume: this.param("Dead Volume"), elutionWindow: this.param("Elution Window") })
+        this.chromatograms.push(c)
+        this.lastChromatogram = c
+        raiseEvent(unit, `${sample}: ${c.peaks.length} peaks expected, dead time ${c.deadTime.toFixed(1)} s, end after ${c.end.toFixed(0)} s`, EventSeverity.Info)
+    }
+
+    private evaluateDetectors() {
+        this.chromatograms = this.chromatograms.filter(c => !c.finished || c === this.lastChromatogram && c.time < c.end + 5)
+        const noise = () => (Math.random() - 0.5) * this.param("Detector Noise")
+        for (const ch of this.channels) setNumericValue(ch.sensorValue, this.chromatograms.reduce((s, c) => s + c.signal(ch.wavelength), 0) + noise())
+        if (this.spectrum) {
+            const { sensorValue, from, step, n } = this.spectrum
+            const values = Float64Array.from({ length: n }, (_, i) => this.chromatograms.reduce((s, c) => s + c.signal(from + i * step), 0))
+            sensorValue.setValueFromSource({ dataType: DataType.Double, arrayType: VariantArrayType.Array, value: values })
+        }
+    }
+
+    // ---------------------------------------------------------------- one sample of a program run
+    /**
+     * Moves the tray to the sample's position, injects it and records its chromatogram. step() reports the phase,
+     * cancelled() is polled (abort). Returns the chromatogram, or undefined if cancelled or nothing could be measured.
+     */
+    async processSample(sampleId: string, position: number, step: (phase: string) => void, cancelled: () => boolean): Promise<Chromatogram | undefined> {
+        const wait = async (done: () => boolean, timeoutMs: number) => {
+            const t0 = Date.now()
+            while (!done()) {
+                if (cancelled() || Date.now() - t0 > timeoutMs) return false
+                await sleep(200)
+            }
+            return true
+        }
+        // 1. tray position
+        const tray = this.steppers["SamplePosition"]
+        if (tray) {
+            step(`moving to Position ${position}`)
+            const index = (position - 1) % Math.max(tray.positions, 1)
+            tray.target.setValueFromSource({ dataType: tray.current.readValue().value.dataType || DataType.UInt32, value: index })
+            const arrived = () => Number(tray.current.readValue().value.value) === index && (tray.sm.getCurrentState() ?? "").includes("Stopped")
+            if (!(await wait(arrived, 60000))) return undefined
+        }
+        // 2. injection (aspirate, move into the stream, dispense)
+        if (!this.injector) return undefined
+        step(`injecting ${getNumericValue(this.injector.targetValue)} µl`)
+        this.injectedSample = sampleId
+        this.lastChromatogram = undefined
+        if (this.running(this.injector)) this.stop(this.injector, "Sample Injector stopped for the next sample")
+        this.injection = undefined
+        this.start(this.injector, `Sample Injector: injecting sample ${sampleId}`)
+        if (!(await wait(() => !this.running(this.injector!), 120000))) {
+            if (this.running(this.injector)) this.stop(this.injector, "Sample Injector stopped (run aborted)")
+            return undefined
+        }
+        const c = this.lastChromatogram
+        if (!c || c.sampleId !== sampleId) return undefined
+        // 3. separation: the peaks pass the detector
+        step(`separation (${c.peaks.length} peaks, ${c.end.toFixed(0)} s)`)
+        if (!(await wait(() => c.finished, (c.end + 30) * 1000))) return undefined
+        return c
+    }
+
+    dispose() { clearInterval(this.timer); clearInterval(this.detectorTimer) }
 }

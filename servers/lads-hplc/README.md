@@ -56,7 +56,7 @@ adds the device to the Machinery `Machines` folder and builds the event notifier
 CurrentValue of the column oven and of the pump and the pressure SensorValue are historized (HistoryRead).
 
 Settable in `HPLCUnit/Simulator`: `Ambient Temperature` [°C] (22), `Oven Time Constant` [s] (60), `Flow Resistance`
-[bar per mL/min] (100), `Pump Time Constant` [s] (2), `Injector Move Time` [s] (2). Start values: oven at ambient temperature, set point 40 °C; pump
+[bar per mL/min] (100), `Pump Time Constant` [s] (2), `Injector Move Time` [s] (2), `Dead Volume` [µl] (166.7), `Elution Window` [s] (50), `Detector Noise` [mAU] (0.3). Start values: oven at ambient temperature, set point 40 °C; pump
 without flow, set point 1 mL/min, 10 % solvent B; sample injector 50 µl.
 
 Both controllers can be started and stopped on their own (`ControlFunctionState/Start`, `Stop`; the lock of the unit
@@ -79,3 +79,29 @@ Check the nodeset after changes:
 ```bash
 cd nodesets && python3 generators/check_modelling.py HPLC.xml Opc.Ua.NodeSet2.xml Opc.Ua.Di.NodeSet2.xml Opc.Ua.AMB.NodeSet2.xml Opc.Ua.Machinery.NodeSet2.xml Opc.Ua.LADS.NodeSet2.xml
 ```
+
+## Chromatography (simulated)
+
+`src/chromatography.ts`: after every completed injection the sample reaches the detector after the dead time
+t0 = `Dead Volume` / flow (166.7 µl → 10 s at 1 ml/min); its 3 … 8 components elute within the `Elution Window`
+(50 s at 1 ml/min, both scale with 1 / flow). Each component is a Lorentz peak with an absorption band:
+
+    signal(t, λ) = h · 1 / (1 + ((t − tR) / w)²) · exp(−(λ − λc)² / (2 σ²))
+
+w is the half width at half maximum (FWHM = 2 w), the area is π · h · w · band(λ). Height, width, retention time and
+band (λc 220 … 500 nm, σ 15 … 70 nm) are random per peak. The DAD channels show the sum of all peaks at their
+wavelength (DAD1A 250, DAD1B 320, DAD1C 420, DAD1D 480 nm, unit mAU, every 250 ms, historized, `Detector Noise`), DAD1I
+the spectrum 190 … 600 nm in 2 nm steps (its `Range` property stays empty: node-opcua cannot write a Range with
+ValueRank −2).
+
+## Program run (StartProgram)
+
+The samples of the call are measured one after the other (no samples: one, "Sample 1"): event "Processing sample <id>",
+the tray moves to position n (n = index in the list), the injector injects (TargetValue µl), then the chromatogram is
+recorded. ActiveProgram: one step per sample (`Sample <id>: moving to Position n / injecting / separation`), runtime
+estimate 90 s per sample. Stop ends the run after the current sample, Abort at once (result deleted).
+
+Result: `VariableSet / <sample id> / Peak n /` `Retention Time` [s], `Height` [mAU], `Width` (FWHM) [s], `Area` [mAU·s]
+at the DAD channel with the strongest signal, `Channel` (e.g. "DAD1B (320 nm)") and `Absorption Maximum` [nm].
+Open: ASM output (Allotrope liquid chromatography model: peak list per detection channel) and how the channels are
+reported (one peak list per channel instead of the strongest one).

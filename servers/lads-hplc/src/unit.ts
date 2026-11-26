@@ -28,6 +28,10 @@ import {
     setNumericValue, setPropertiesValue, setSamplesValue, setSessionInformation, setStringValue,
 } from "@utils"
 import { AccessPredicate } from "./locks"
+import { Chromatogram } from "./chromatography"
+import { DetectorChannel, mAU } from "./simulation"
+import { makeEUInformation, Namespace } from "node-opcua"
+import { EUInformation } from "node-opcua-types"
 
 /** program templates of the simulated unit: identifier, description, simulated steps (name, seconds) */
 export interface SimulatedProgram { identifier: string, description: string, steps: { name: string, seconds: number }[] }
@@ -56,7 +60,19 @@ interface Run {
 }
 
 /** what runs with a program of the unit (e.g. the controllers of the simulation) */
-export interface RunHooks { startControllers(): void; stopControllers(): void; anyControllerRunning(): boolean }
+export interface RunHooks {
+    startControllers(): void
+    stopControllers(): void
+    anyControllerRunning(): boolean
+    /** one sample of a program run (HPLC: tray position, injection, chromatogram); without it the template steps are simulated */
+    processSample?(sampleId: string, position: number, step: (phase: string) => void, cancelled: () => boolean): Promise<Chromatogram | undefined>
+    channels?: DetectorChannel[]
+}
+
+const SECOND = makeEUInformation("SEC", "s", "second")
+const NANOMETRE = makeEUInformation("C45", "nm", "nanometre")
+const MAU_S = new EUInformation({ namespaceUri: "http://www.opcfoundation.org/UA/units/un/cefact", unitId: -1, displayName: { text: "mAU·s" }, description: { text: "milli absorbance unit times second" } })
+const ESTIMATED_SAMPLE_MS = 90000   // per sample: position, injection, dead time, elution
 
 export class SimulatedUnitImpl {
     readonly name: string
@@ -172,7 +188,8 @@ export class SimulatedUnitImpl {
         raiseEvent(this.unit as unknown as UAObject, `Starting run ${run.runId} (${template.identifier}).`, EventSeverity.Info)
         this.stateMachine.setState(LADSFunctionalState.Running)
         this.hooks?.startControllers()
-        this.runSteps(run)
+        if (this.hooks?.processSample) this.runSamples(run, samples)
+        else this.runSteps(run)
         return { statusCode: StatusCodes.Good, outputArguments: [new Variant({ dataType: DataType.String, value: run.runId })] }
     }
 
@@ -208,7 +225,7 @@ export class SimulatedUnitImpl {
             return { statusCode: StatusCodes.Good }
         }
         const run = this.run
-        clearTimeout(run.timer)
+        clearTimeout(run.timer); clearInterval(run.timer)
         this.run = undefined
         if (run.result) run.result.namespace.deleteNode(run.result as unknown as UAObject)
         this.hooks?.stopControllers()
@@ -258,6 +275,70 @@ export class SimulatedUnitImpl {
             run.timer = setTimeout(tick, 500)
         }
         run.timer = setTimeout(tick, 500)
+    }
+
+    /**
+     * HPLC program run: the samples one after the other (tray position = index in the list, 1 …), each injected and
+     * measured; the peaks of every sample go into the VariableSet of the result. Stop: after the current sample.
+     */
+    private async runSamples(run: Run, samples: LADSSampleInfo[]) {
+        const unit = this.unit as unknown as UAObject
+        const ap = this.activeProgram
+        const ids = samples.map((x: any, i) => String(x?.sampleId ?? x?.SampleId ?? "") || `Sample ${i + 1}`)
+        if (ids.length === 0) ids.push("Sample 1")
+        setStringValue(ap?.deviceProgramRunId, run.runId)
+        setNumericValue(ap?.estimatedStepNumbers, ids.length)
+        setNumericValue(ap?.estimatedRuntime, ids.length * ESTIMATED_SAMPLE_MS)
+        setNumericValue(ap?.estimatedStepRuntime, ESTIMATED_SAMPLE_MS)
+        const t0 = Date.now()
+        let stepStart = t0
+        run.timer = setInterval(() => {
+            setNumericValue(ap?.currentRuntime, Date.now() - t0)
+            setNumericValue(ap?.currentStepRuntime, Date.now() - stepStart)
+        }, 500)
+        for (let i = 0; i < ids.length; i++) {
+            if (this.run !== run) return                 // aborted
+            if (run.stopRequested) break
+            const id = ids[i]
+            stepStart = Date.now()
+            setNumericValue(ap?.currentStepNumber, i + 1)
+            raiseEvent(unit, `Processing sample ${id} (${i + 1} of ${ids.length})`, EventSeverity.Info)
+            const step = (phase: string) => ap?.currentStepName?.setValueFromSource({ dataType: DataType.LocalizedText, value: new LocalizedText({ text: `Sample ${id}: ${phase}` }) })
+            const chromatogram = await this.hooks!.processSample!(id, i + 1, step, () => this.run !== run)
+            if (this.run !== run) return
+            if (chromatogram && run.result) this.addPeaks(run.result, id, chromatogram)
+            else raiseEvent(unit, `Sample ${id}: no chromatogram recorded`, EventSeverity.Warning)
+        }
+        clearInterval(run.timer)
+        this.finish(run)
+    }
+
+    /** VariableSet / <sample> / Peak n / Retention Time, Height, Width, Area (at the DAD channel with the strongest signal), Channel, Absorption Maximum */
+    private addPeaks(result: LADSResult, sampleId: string, c: Chromatogram) {
+        const variableSet = result.variableSet
+        if (!variableSet) return
+        const ns = variableSet.namespace as Namespace
+        const channels = this.hooks?.channels ?? []
+        const sample = ns.addObject({ componentOf: variableSet, browseName: sampleId.replace(/[^A-Za-z0-9_-]/g, "_"), displayName: sampleId,
+            description: `Peaks of sample ${sampleId}: dead time ${c.deadTime.toFixed(1)} s` })
+        const add = (parent: UAObject, name: string, value: number, eu: any) => ns.addAnalogDataItem({
+            componentOf: parent, browseName: name.replace(/ /g, ""), displayName: name, dataType: "Double",
+            engineeringUnits: eu, engineeringUnitsRange: { low: 0, high: Math.max(1, value * 2) },
+            value: { dataType: DataType.Double, value },
+        })
+        c.peaks.forEach((p, k) => {
+            const best = channels.reduce((b, ch) => Chromatogram.band(p, ch.wavelength) > Chromatogram.band(p, b.wavelength) ? ch : b, channels[0])
+            const v = Chromatogram.evaluate(p, best ? best.wavelength : p.wavelength)
+            const peak = ns.addObject({ componentOf: sample, browseName: `Peak${k + 1}`, displayName: `Peak ${k + 1}` })
+            add(peak, "Retention Time", +v.retentionTime.toFixed(3), SECOND)
+            add(peak, "Height", +v.height.toFixed(3), mAU)
+            add(peak, "Width", +v.width.toFixed(3), SECOND)
+            add(peak, "Area", +v.area.toFixed(3), MAU_S)
+            add(peak, "Absorption Maximum", +p.wavelength.toFixed(1), NANOMETRE)
+            ns.addVariable({ componentOf: peak, browseName: "Channel", dataType: DataType.String,
+                value: { dataType: DataType.String, value: best ? `${best.name} (${best.wavelength} nm)` : "" } })
+        })
+        raiseEvent(this.unit as unknown as UAObject, `Sample ${sampleId}: ${c.peaks.length} peaks recorded`, EventSeverity.Info)
     }
 
     private finish(run: Run) {
