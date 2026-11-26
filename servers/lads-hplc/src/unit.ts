@@ -29,6 +29,7 @@ import {
 } from "@utils"
 import { AccessPredicate } from "./locks"
 import { Chromatogram } from "./chromatography"
+import { addPeakReferences, addResultReferences } from "./afo"
 import { DetectorChannel, mAU } from "./simulation"
 import { makeEUInformation, Namespace } from "node-opcua"
 import { EUInformation } from "node-opcua-types"
@@ -210,6 +211,7 @@ export class SimulatedUnitImpl {
             setStringValue(result.deviceProgramRunId, run.runId)
             setDateTimeValue(result.started, run.started)
             copyProgramTemplate(template.programTemplate, result.programTemplate)
+            if (this.hooks?.processSample) addResultReferences(result, /gradient/i.test(template.identifier))
         }
         raiseEvent(this.unit as unknown as UAObject, `Starting run ${run.runId} (${template.identifier}).`, EventSeverity.Info)
         this.stateMachine.setState(LADSFunctionalState.Running)
@@ -352,10 +354,12 @@ export class SimulatedUnitImpl {
             engineeringUnits: eu, engineeringUnitsRange: { low: 0, high: Math.max(1, value * 2) },
             value: { dataType: DataType.Double, value },
         })
+        const peakObjects: UAObject[] = []
         c.peaks.forEach((p, k) => {
             const best = channels.reduce((b, ch) => Chromatogram.band(p, ch.wavelength) > Chromatogram.band(p, b.wavelength) ? ch : b, channels[0])
             const v = Chromatogram.evaluate(p, best ? best.wavelength : p.wavelength)
             const peak = ns.addObject({ componentOf: sample, browseName: `Peak${k + 1}`, displayName: `Peak ${k + 1}` })
+            peakObjects.push(peak)
             add(peak, "Retention Time", +v.retentionTime.toFixed(3), SECOND)
             add(peak, "Height", +v.height.toFixed(3), mAU)
             add(peak, "Width", +v.width.toFixed(3), SECOND)
@@ -364,6 +368,7 @@ export class SimulatedUnitImpl {
             ns.addVariable({ componentOf: peak, browseName: "Channel", dataType: DataType.String,
                 value: { dataType: DataType.String, value: best ? `${best.name} (${best.wavelength} nm)` : "" } })
         })
+        addPeakReferences(sample, peakObjects)
         raiseEvent(this.unit as unknown as UAObject, `Sample ${sampleId}: ${c.peaks.length} peaks recorded`, EventSeverity.Info)
     }
 

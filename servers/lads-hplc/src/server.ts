@@ -8,7 +8,9 @@ Loads the HPLC nodeset (nodesets/HPLC.xml) with its dependencies, uses the devic
 (DeviceSet/AgilentCompactLC) or creates one of HPLCDeviceType, and initialises it (device.ts): device type images,
 DI + Machinery nameplates, locations, device helper, locks, simulated functional units.
 
-    npm run lads-hplc [-- -p <port>] [-- --new]      --new: a new instance of HPLCDeviceType instead of the nodeset's instance
+    npm run lads-hplc [-- -p <port>] [-- --new] [-- --no-afo]
+        --new: a new instance of HPLCDeviceType instead of the nodeset's instance
+        --no-afo: without the AFO dictionary (faster start, no HasDictionaryEntry references)
 */
 
 import { join } from "path"
@@ -24,9 +26,9 @@ const NS_HPLC = "http://spectaris.de/HPLC/"
 class HPLCServerImpl {
     server: OPCUAServer
 
-    constructor(port: number) {
+    constructor(port: number, includeAFO: boolean) {
         const uri = "LADS-HPLC-Server"
-        console.log(`${uri} starting ..`)
+        console.log(`${uri} starting ${includeAFO ? "with AFO support (takes some time to load) " : ""}..`)
         const nodeset_path = join(process.cwd(), "nodesets")
         const nodeset_filenames = [
             join(nodeset_path, "Opc.Ua.NodeSet2.xml"),
@@ -34,6 +36,7 @@ class HPLCServerImpl {
             join(nodeset_path, "Opc.Ua.Machinery.NodeSet2.xml"),
             join(nodeset_path, "Opc.Ua.AMB.NodeSet2.xml"),
             join(nodeset_path, "Opc.Ua.LADS.NodeSet2.xml"),
+            ...(includeAFO ? [join(nodeset_path, "AFO_Dictionary.NodeSet2.xml")] : []),   // AFO terms (takes some time to load)
             join(nodeset_path, "HPLC.xml"),
         ]
         this.server = createServer({ applicationName: "LADS HPLC", applicationDirectory: __dirname, port, uri, nodeset_filenames })
@@ -73,7 +76,7 @@ export async function main() {
     const argv = process.argv
     const portIdx = argv.indexOf("-p")
     const port = portIdx !== -1 ? Number(argv[portIdx + 1]) : 4851
-    await new HPLCServerImpl(port).start(argv.includes("--new"))
+    await new HPLCServerImpl(port, !argv.includes("--no-afo")).start(argv.includes("--new"))
 }
 
 main()

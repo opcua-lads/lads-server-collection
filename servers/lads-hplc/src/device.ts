@@ -23,6 +23,7 @@ import { DefaultHierarchicalLocation, DefaultLocation, DeviceTypeImage, getLADSF
 import { DeviceLocks } from "./locks"
 import { SimulatedUnitImpl } from "./unit"
 import { HPLCSimulation } from "./simulation"
+import { addHPLCReferences } from "./afo"
 
 export interface HPLCDeviceOptions {
     serialNumber: string
@@ -99,5 +100,8 @@ export class HPLCDeviceImpl {
                 simulation.unitLink = impl       // controllers started / stopped by hand drive the unit state
             }
         }
+
+        // 8. Allotrope Foundation Ontology references (if the AFO dictionary is loaded)
+        addHPLCReferences(device)
     }
 }

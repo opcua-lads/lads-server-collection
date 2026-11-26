@@ -7,6 +7,7 @@ initialisation steps of the example servers in one small, generic place; the ins
 npm run lads-hplc                 # port 4851, uses the instance DeviceSet/AgilentCompactLC of the nodeset
 npm run lads-hplc -- -p 4860      # another port
 npm run lads-hplc -- --new        # a new instance of HPLCDeviceType instead
+npm run lads-hplc -- --no-afo     # without the AFO dictionary (faster start, no ontology references)
 ```
 
 | File | What it does |
@@ -119,3 +120,21 @@ Result: `VariableSet / <sample id> / Peak n /` `Retention Time` [s], `Height` [m
 at the DAD channel with the strongest signal, `Channel` (e.g. "DAD1B (320 nm)") and `Absorption Maximum` [nm].
 Open: ASM output (Allotrope liquid chromatography model: peak list per detection channel) and how the channels are
 reported (one peak list per channel instead of the strongest one).
+
+## Allotrope Foundation Ontology (`src/afo.ts`)
+
+With `AFO_Dictionary.NodeSet2.xml` loaded (default) the nodes get `HasDictionaryEntry` references, as in the other
+example servers: the LADS defaults (`AFODictionary.addDefaultDeviceReferences`: nameplates, states, functions,
+templates) plus chromatography terms, e.g.
+
+| Node | AFO terms |
+|---|---|
+| device / functional unit | high-performance liquid chromatograph, LC-UV system, chromatograph / high-performance liquid chromatography |
+| components | autosampler, pump, column compartment, HPLC column, diode array detector, UV / deuterium / visible lamp, DAD channels (detector, Wavelength: detector wavelength setting) |
+| Column Oven | temperature controller, temperature, column compartment (TargetValue: column compartment temperature setting) |
+| Pump | pump, flow rate, mobile phase delivery; Flow / PercentageSolventB: pump flow rate / mobile phase ratio setting (chromatography); Pressure: pressure sensor; Solvent A / B: solvent channel, mobile phase |
+| Sample Injector / Sample Position / Valve | injection device, injection of chromatography, injection volume setting / autosampler, tray, position / valve |
+| DAD channels | chromatographic detector, absorbance (wavelength: detector wavelength setting); DAD1I: absorption spectrum |
+| templates / results | LC-UV system method, gradient profile setting / chromatography result |
+| result peaks | chromatogram, peak list, chromatography peak, retention time, peak height, peak width at half height, peak area, wavelength, detector identifier |
+
