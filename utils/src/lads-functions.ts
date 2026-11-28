@@ -274,37 +274,44 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
     }
 }
 
+/**
+ * An AlarmMonitor declared in the nodeset is a static object without condition logic: it is replaced by a live condition
+ * of the same type with the same NodeId and BrowseName (as the DeviceHealthAlarms of the FUTURA server). Returns what the
+ * new instance needs, or undefined when there is no such object.
+ */
+function takeOverAlarmMonitorPlaceholder(parentFunction: LADSFunction): { nodeId: NodeId, browseName: QualifiedName, alarmType: any } | undefined {
+    const placeholder = (parentFunction as unknown as UAObject).getChildByName("AlarmMonitor") as UAObject | null
+    if (!placeholder) return undefined
+    const taken = { nodeId: placeholder.nodeId, browseName: placeholder.browseName, alarmType: placeholder.typeDefinitionObj }
+    parentFunction.addressSpace.deleteNode(placeholder.nodeId)
+    return taken
+}
+
 export class ExclusiveLimitAlarmImpl extends LimitAlarmImpl {
+    /** AlarmMonitor of an analog sensor function: ExclusiveLevelAlarmType (LADS 7.5.2), or the type of the nodeset's AlarmMonitor */
     constructor(sensorFunction: LADSAnalogScalarSensorFunction | LADSAnalogArraySensorFunction, alarmMonitorOptions: AlarmMonitorOptions) {
         if (!sensorFunction) return
         if (!alarmMonitorOptions) return
         super(sensorFunction, alarmMonitorOptions, sensorFunction.sensorValue)
-        if (sensorFunction.alarmMonitor) {
-            this.alarmMonitor = this.setAlarmMonitorOptions(sensorFunction.alarmMonitor as UAExclusiveLimitAlarmEx)
-        } else {
-            const addressSpace = sensorFunction.addressSpace
-            const namespace = getLADSNamespace(addressSpace) as Namespace
-            const alarmType = addressSpace.findEventType(makeNodeId(ObjectTypeIds.ExclusiveLimitAlarmType))
-            this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, this.options)
-        }
+        const addressSpace = sensorFunction.addressSpace
+        const namespace = getLADSNamespace(addressSpace) as Namespace
+        const taken = takeOverAlarmMonitorPlaceholder(sensorFunction)
+        const alarmType = taken?.alarmType ?? addressSpace.findEventType(makeNodeId(ObjectTypeIds.ExclusiveLevelAlarmType))
+        this.alarmMonitor = namespace.instantiateExclusiveLimitAlarm(alarmType, { ...this.options, ...(taken ? { nodeId: taken.nodeId, browseName: taken.browseName } : {}) } as any)
         this.postInitialize(alarmMonitorOptions)
     }
 }
 
 export class ExclusiveDeviationAlarmImpl extends LimitAlarmImpl {
-
+    /** AlarmMonitor of a control function: ExclusiveDeviationAlarmType (LADS 7.6.1), limits relative to TargetValue */
     constructor(controlFunction: LADSAnalogControlFunction, alarmMonitorOptions: AlarmMonitorOptions) {
         if (!controlFunction) return
         if (!alarmMonitorOptions) return
         super(controlFunction, alarmMonitorOptions, controlFunction.currentValue, controlFunction.targetValue)
-        if (controlFunction.alarmMonitor) {
-            this.alarmMonitor = this.setAlarmMonitorOptions(controlFunction.alarmMonitor as UAExclusiveDeviationAlarmEx)
-        } else {
-            const addressSpace = controlFunction.addressSpace
-            const namespace = getLADSNamespace(addressSpace) as Namespace
-            this.alarmMonitor = namespace.instantiateExclusiveDeviationAlarm(this.options)
-            this.postInitialize(alarmMonitorOptions)
-        }
+        const namespace = getLADSNamespace(controlFunction.addressSpace) as Namespace
+        const taken = takeOverAlarmMonitorPlaceholder(controlFunction)
+        this.alarmMonitor = namespace.instantiateExclusiveDeviationAlarm({ ...this.options, ...(taken ? { nodeId: taken.nodeId, browseName: taken.browseName } : {}) } as any)
+        this.postInitialize(alarmMonitorOptions)
     }
 }
 
