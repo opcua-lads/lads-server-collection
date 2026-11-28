@@ -43,6 +43,7 @@ import { AnalogControlFunctionImpl, AnalogScalarSensorFunctionImpl, EventSeverit
 import { AccessPredicate, restrictWriteAccess } from "./locks"
 import { Chromatogram } from "./chromatography"
 import type { Composition } from "./unit"
+import { ColumnOvenAlarm, PressureAlarm } from "./alarms"
 
 /** a detector channel of the DAD */
 export interface DetectorChannel { name: string, wavelength: number, sensorValue: UAVariable }
@@ -63,6 +64,8 @@ export class HPLCSimulation {
     readonly pump?: AnalogControlFunctionImpl
     readonly pressure?: AnalogScalarSensorFunctionImpl
     readonly injector?: AnalogControlFunctionImpl
+    readonly ovenAlarm?: ColumnOvenAlarm
+    readonly pressureAlarm?: PressureAlarm
     private percentB?: UAVariable
     private solvents: { share: (b: number) => number, target: UAVariable, current: UAVariable, state: any }[] = []
     private increaseRate?: UAVariable
@@ -90,6 +93,8 @@ export class HPLCSimulation {
         if (pumpNode) this.pump = this.controller(pumpNode, true)
         if (pressureNode) this.pressure = new AnalogScalarSensorFunctionImpl(pressureNode as any)   // historizes its SensorValue
         for (const c of [this.oven, this.pump]) if (c) installVariableHistory(c.currentValue as unknown as UAVariable)
+        if (ovenNode) this.ovenAlarm = new ColumnOvenAlarm(ovenNode)             // AlarmMonitor (ExclusiveDeviationAlarm)
+        if (pressureNode) this.pressureAlarm = new PressureAlarm(pressureNode as any)   // AlarmMonitor (ExclusiveLevelAlarm)
         for (const name of ["Valve", "SamplePosition"]) {
             const node = fs?.getChildByName(name) as UAObject | null
             if (node) this.installStepper(node)
@@ -253,16 +258,54 @@ export class HPLCSimulation {
     }
 
     private running(c: AnalogControlFunctionImpl): boolean { return (c.stateMachine.getCurrentState() ?? "").includes("Running") }
-    private start(c: AnalogControlFunctionImpl, message: string) { c.enterStart(); raiseEvent(c.controlFunction as unknown as UAObject, message, EventSeverity.Info) }
-    private stop(c: AnalogControlFunctionImpl, message: string) { c.enterStop(); raiseEvent(c.controlFunction as unknown as UAObject, message, EventSeverity.Info) }
+    private start(c: AnalogControlFunctionImpl, message: string) {
+        c.enterStart(); raiseEvent(c.controlFunction as unknown as UAObject, message, EventSeverity.Info)
+        if (c === this.oven && this.ovenAlarm) { this.ovenAlarm.restart(); this.ovenAlarm.setEnabledState(true) }
+    }
+    private stop(c: AnalogControlFunctionImpl, message: string) {
+        c.enterStop(); raiseEvent(c.controlFunction as unknown as UAObject, message, EventSeverity.Info)
+        if (c === this.oven && this.ovenAlarm?.getEnabledState()) this.ovenAlarm.setEnabledState(false)
+    }
     private param(name: string): number { return getNumericValue(this.parameters[name]) }
 
     /** with a program run of the unit: both controllers start (those not running yet) */
-    startControllers() { for (const c of [this.oven, this.pump]) if (c && !this.running(c)) this.start(c, `${c.controlFunction.getDisplayName()} started with the run`) }
+    startControllers() {
+        for (const c of [this.oven, this.pump]) if (c && !this.running(c)) this.start(c, `${c.controlFunction.getDisplayName()} started with the run`)
+        this.pressureAlarm?.arm()
+    }
     anyControllerRunning(): boolean { return [this.oven, this.pump].some(c => c && this.running(c)) }
 
     /** end, stop or abort of the run: both controllers stop */
-    stopControllers() { for (const c of [this.oven, this.pump]) if (c && this.running(c)) this.stop(c, `${c.controlFunction.getDisplayName()} stopped with the run`) }
+    stopControllers() {
+        this.pressureAlarm?.disarm()
+        for (const c of [this.oven, this.pump]) if (c && this.running(c)) this.stop(c, `${c.controlFunction.getDisplayName()} stopped with the run`)
+    }
+
+    /** default tolerance of the injection gate: the narrow band of the oven's AlarmMonitor (High / Low limit) */
+    get ovenTolerance(): number | undefined { return this.ovenAlarm?.band }
+
+    /**
+     * Injection gate: waits until the column oven runs and has stayed within ±tolerance of its TargetValue for hold
+     * seconds. progress() is called every tick; cancelled() ends the wait. ok = false after timeout seconds.
+     */
+    async waitForColumnOven(o: { tolerance: number, hold: number, timeout: number }, cancelled: () => boolean,
+        progress: (current: number, target: number) => void): Promise<{ ok: boolean, waited: number, current: number, target: number, cancelled?: boolean }> {
+        const t0 = Date.now()
+        let inBandSince: number | undefined
+        for (; ;) {
+            const oven = this.oven
+            const current = oven ? getNumericValue(oven.currentValue) : NaN, target = oven ? getNumericValue(oven.targetValue) : NaN
+            const waited = (Date.now() - t0) / 1000
+            if (!oven) return { ok: true, waited, current, target }
+            if (cancelled()) return { ok: false, waited, current, target, cancelled: true }
+            const inBand = this.running(oven) && Math.abs(current - target) <= o.tolerance
+            inBandSince = inBand ? (inBandSince ?? Date.now()) : undefined
+            if (inBandSince !== undefined && Date.now() - inBandSince >= o.hold * 1000) return { ok: true, waited, current, target }
+            if (waited >= o.timeout) return { ok: false, waited, current, target }
+            progress(current, target)
+            await sleep(TICK_MS)
+        }
+    }
 
     private evaluate(dt: number) {
         const pt1 = (value: number, target: number, tau: number) => value + (target - value) * Math.min(1, dt / Math.max(tau, 1e-3))

@@ -116,6 +116,38 @@ BadInvalidArgument):
 
 The composition changes the pump's `PercentageSolventB` and thus Solvent A / B; it does not change the simulated peaks.
 
+**Column oven before each injection** (both templates): the run waits until the column oven runs and has stayed within the
+tolerance of its set point for the hold time; the step shows "Sample <id>: waiting for column oven (35.2 → 40.0 °C, ±1 K)",
+events report when it settled. After the timeout the run stops before that sample (warning event; the result keeps the
+samples measured so far). An invalid value refuses the start with BadInvalidArgument.
+
+| Property | Default | Effect |
+|---|---|---|
+| `WaitForColumnOven` | `true` | `false`: inject at once |
+| `ColumnOvenTolerance` | High / Low limit of the oven's AlarmMonitor (1 K) | band around the set point [K] |
+| `ColumnOvenHoldTime` | 30 | seconds the temperature must stay in the band |
+| `ColumnOvenTimeout` | 600 | seconds until the run stops |
+
+The ASM has the set point, the tolerance and the waiting time per injection (custom information `column temperature
+setting`, `column temperature tolerance`, `column oven waiting time`).
+
+**Sample specific properties:** a sample can override the composition for itself only, in `SampleInfo.CustomData` as a
+JSON object with `properties`, either a list like the run properties or a map:
+
+```json
+{"properties": [{"key": "GradientEnd", "value": "70"}]}
+{"properties": {"GradientStart": 20, "GradientEnd": 70}}
+```
+
+- The effective value per sample = the run property, replaced by the sample's property with the same key
+  (case-insensitive); the next sample is back at the run property (or the default).
+- Allowed keys: `GradientStart`, `GradientEnd` (Gradient Run), `PercentageSolventB` (Isocratic Run); another key refuses
+  the start with BadInvalidArgument, as does a value outside 0 … 100. All samples are checked before the run starts; the
+  warning event names the sample.
+- Any other CustomData (free text, JSON without `properties`, invalid JSON) is no override and stays as it is.
+- The event "Processing sample <id> (n of m, GradientEnd=70 (sample))" names the overrides; the ASM has the effective
+  values per injection (custom information `gradient start`, `gradient end` or `solvent B`).
+
 Result: `VariableSet / <sample id> / Peak n /` `Retention Time` [s], `Height` [mAU], `Width` (FWHM) [s], `Area` [mAU·s]
 at the DAD channel with the strongest signal, `Channel` (e.g. "DAD1B (320 nm)") and `Absorption Maximum` [nm].
 
@@ -130,9 +162,28 @@ of every program run the same JSON goes to `VariableSet / ASM` (string) and `Fil
   chemistry), detector settings (wavelength, sampling rate 10 Hz), the chromatogram data cube (retention time [s] →
   absorbance [mAU], noise-free, from the injection to the end of the elution), the peak list at the channel wavelength
   (retention time, area, height, FWHM, start / end = tR ∓ 4 w, relative area / height; peaks below 1 mAU are left out)
-  and the conditions at the injection as custom information (flow rate, column temperature, solvent B, dead time).
+  and the conditions at the injection as custom information (flow rate, column temperature, solvent B, gradient start /
+  end for a gradient run, dead time).
 
 Check a file with `python3 lib/asm/tools/validate_asm.py <file.json>` (schema in `lib/asm/schemas`, no network needed).
+
+## Alarm monitors (`src/alarms.ts`)
+
+As OPC 30500-1 allows (AlarmMonitor of a control function: ExclusiveDeviationAlarmType, 7.6.1; of an analog sensor
+function: ExclusiveLevelAlarmType, 7.5.2). They are live conditions of node-opcua (`ExclusiveDeviationAlarmImpl` /
+`ExclusiveLimitAlarmImpl` of `utils`); an AlarmMonitor declared in the nodeset would be replaced by one with the same
+NodeId. The limits are writable; a change raises an event.
+
+| AlarmMonitor | Limits | Enabled |
+|---|---|---|
+| `ColumnOven/AlarmMonitor` (deviation from TargetValue) | LowLow −5 K, Low −1 K, High +1 K, HighHigh +5 K | while the oven runs |
+| `Pump/FunctionSet/Pressure/AlarmMonitor` (level) | LowLow 20 bar, Low 50 bar, High 550 bar, HighHigh 600 bar | during program runs, once the pressure has reached the Low limit (at the latest 60 s after the start) |
+
+- Column oven: High / Low (Warning, "not settled") is the band of the injection gate; HighHigh / LowLow is the Alarm.
+  After the oven starts or gets a new set point it is "settling" until it first reaches the band: meanwhile a larger
+  deviation is reported as Warning ("Column Oven settling (−18.0 K from the set point)"), so heating up raises no Alarm.
+- Pressure: 600 bar is the pressure limit of the 1260 Infinity II quaternary pump G7111B; Low 50 bar hints at a leak,
+  air or a missing column (the simulation gives flow × Flow Resistance, 100 bar at 1 mL/min).
 
 ## Allotrope Foundation Ontology (`src/afo.ts`)
 

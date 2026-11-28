@@ -42,11 +42,11 @@ export interface SimulatedProgram { identifier: string, description: string, ste
 
 export const PROGRAM_TEMPLATES: SimulatedProgram[] = [
     {
-        identifier: "Isocratic Run", description: "Isocratic separation of the given samples, one after the other: tray position, injection, separation with constant composition. Optional property PercentageSolventB (0 … 100 %): share of solvent B for the whole run; without it the current value of the pump is kept.",
+        identifier: "Isocratic Run", description: "Isocratic separation of the given samples, one after the other: tray position, injection, separation with constant composition. Optional property PercentageSolventB (0 … 100 %): share of solvent B for the whole run; without it the current value of the pump is kept. Per sample: SampleInfo.CustomData {\"properties\": [{\"key\": \"PercentageSolventB\", \"value\": \"40\"}]} overrides it for that sample only. Column oven: before each injection the run waits until the oven has stayed within ±ColumnOvenTolerance K of its set point (default: the High / Low limit of its AlarmMonitor, 1 K) for ColumnOvenHoldTime s (30); after ColumnOvenTimeout s (600) the run stops; WaitForColumnOven=false injects at once.",
         steps: [{ name: "Equilibrate", seconds: 5 }, { name: "Inject", seconds: 2 }, { name: "Separate", seconds: 20 }, { name: "Wash", seconds: 5 }],
     },
     {
-        identifier: "Gradient Run", description: "Gradient separation of the given samples, one after the other: tray position, injection, then the share of solvent B rises linearly during the separation of each sample from GradientStart to GradientEnd and is set back to GradientStart for the next sample. Optional properties GradientStart and GradientEnd (0 … 100 %, defaults 10 and 90).",
+        identifier: "Gradient Run", description: "Gradient separation of the given samples, one after the other: tray position, injection, then the share of solvent B rises linearly during the separation of each sample from GradientStart to GradientEnd and is set back to GradientStart for the next sample. Optional properties GradientStart and GradientEnd (0 … 100 %, defaults 10 and 90). Per sample: SampleInfo.CustomData {\"properties\": [{\"key\": \"GradientEnd\", \"value\": \"70\"}]} overrides them for that sample only. Column oven: before each injection the run waits until the oven has stayed within ±ColumnOvenTolerance K of its set point (default: the High / Low limit of its AlarmMonitor, 1 K) for ColumnOvenHoldTime s (30); after ColumnOvenTimeout s (600) the run stops; WaitForColumnOven=false injects at once.",
         steps: [{ name: "Equilibrate", seconds: 5 }, { name: "Inject", seconds: 2 }, { name: "Gradient", seconds: 30 }, { name: "Re-equilibrate", seconds: 8 }],
     },
 ]
@@ -62,7 +62,33 @@ interface Run {
     timer?: NodeJS.Timeout
     stopRequested: boolean
     recorder?: LiquidChromatographyRecorder   // LC ASM of the run (one injection per sample)
+    perSample?: SampleSettings[]        // effective composition of each sample (run properties + its CustomData overrides)
+    oven?: OvenGate                     // injection gate (column oven settled)
 }
+
+/** injection gate of a run: wait until the column oven has settled */
+interface OvenGate { wait: boolean, tolerance?: number, hold: number, timeout: number }
+
+/** WaitForColumnOven (true), ColumnOvenTolerance [K] (AlarmMonitor High / Low), ColumnOvenHoldTime [s] (30), ColumnOvenTimeout [s] (600) */
+function ovenGate(properties: LADSProperty[]): { value: OvenGate, error?: string } {
+    const get = (key: string) => { const p = properties.find(x => keyOf(x).toLowerCase() === key.toLowerCase()); return p === undefined ? undefined : valueOf(p).trim() }
+    const num = (key: string, def: number | undefined, min: number) => {
+        const v = get(key); if (v === undefined || v === "") return def
+        const n = Number(v); return Number.isFinite(n) && n >= min ? n : NaN
+    }
+    const w = get("WaitForColumnOven")?.toLowerCase()
+    if (w !== undefined && w !== "" && !["true", "false", "1", "0", "yes", "no"].includes(w)) return { value: { wait: true, hold: 30, timeout: 600 }, error: "WaitForColumnOven must be true or false" }
+    const value: OvenGate = { wait: !(w === "false" || w === "0" || w === "no"), tolerance: num("ColumnOvenTolerance", undefined, 0.01),
+        hold: num("ColumnOvenHoldTime", 30, 0)!, timeout: num("ColumnOvenTimeout", 600, 1)! }
+    if ([value.tolerance, value.hold, value.timeout].some(x => Number.isNaN(x))) return { value, error: "ColumnOvenTolerance (> 0 K), ColumnOvenHoldTime (≥ 0 s) and ColumnOvenTimeout (≥ 1 s) must be numbers" }
+    return { value }
+}
+
+/** the injection gate of one sample: waiting time, set point and tolerance */
+interface OvenWait { seconds: number, target: number, tolerance: number }
+
+/** what applies to one sample of a run */
+interface SampleSettings { composition: Composition, overrides: LADSProperty[] }
 
 /** what runs with a program of the unit (e.g. the controllers of the simulation) */
 export interface RunHooks {
@@ -72,6 +98,11 @@ export interface RunHooks {
     /** one sample of a program run (HPLC: tray position, injection, chromatogram); without it the template steps are simulated */
     processSample?(sampleId: string, position: number, step: (phase: string) => void, cancelled: () => boolean, composition?: Composition): Promise<Chromatogram | undefined>
     channels?: DetectorChannel[]
+    /** default tolerance of the injection gate [K] (narrow band of the oven's AlarmMonitor) */
+    ovenTolerance?: number
+    /** injection gate: wait until the column oven has settled */
+    waitForColumnOven?(o: { tolerance: number, hold: number, timeout: number }, cancelled: () => boolean,
+        progress: (current: number, target: number) => void): Promise<{ ok: boolean, waited: number, current: number, target: number, cancelled?: boolean }>
 }
 
 const SECOND = makeEUInformation("SEC", "s", "second")
@@ -102,6 +133,44 @@ function composition(template: string, properties: LADSProperty[]): { value: Com
     if (Number.isNaN(b)) return { value: {}, error: "PercentageSolventB must be a number from 0 to 100" }
     return { value: b === undefined ? {} : { percentB: b } }
 }   // per sample: position, injection, dead time, elution
+
+/** the keys a sample may override, per template (the composition of the mobile phase) */
+function sampleKeys(template: string): string[] {
+    return /gradient/i.test(template) ? ["GradientStart", "GradientEnd"] : ["PercentageSolventB"]
+}
+
+const keyOf = (p: any) => String(p?.key ?? p?.Key ?? "")
+const valueOf = (p: any) => String(p?.value ?? p?.Value ?? "")
+
+/**
+ * Sample specific properties from SampleInfo.CustomData: a JSON object with "properties", either a list as the run
+ * properties ([{"key": "GradientEnd", "value": "70"}]) or a map ({"GradientEnd": 70}). Any other CustomData (free text,
+ * JSON without "properties") is no override. They apply to this sample only, over the run properties with the same key.
+ */
+export function sampleOverrides(sample: LADSSampleInfo | undefined, template: string): { properties: LADSProperty[], error?: string } {
+    const text = String((sample as any)?.customData ?? (sample as any)?.CustomData ?? "").trim()
+    if (!text.startsWith("{")) return { properties: [] }
+    let json: any
+    try { json = JSON.parse(text) } catch { return { properties: [] } }
+    const raw = json?.properties ?? json?.Properties
+    if (raw === undefined) return { properties: [] }
+    const list: any[] = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.entries(raw).map(([key, value]) => ({ key, value })) : [])
+    if (!Array.isArray(raw) && (raw === null || typeof raw !== "object")) return { properties: [], error: `"properties" must be a list of {key, value} or an object` }
+    const allowed = sampleKeys(template)
+    const properties: LADSProperty[] = []
+    for (const p of list) {
+        const key = allowed.find(k => k.toLowerCase() === keyOf(p).toLowerCase())
+        if (!key) return { properties: [], error: `property "${keyOf(p)}" cannot be set per sample (allowed: ${allowed.join(", ")})` }
+        properties.push({ key, value: valueOf(p) } as LADSProperty)
+    }
+    return { properties }
+}
+
+/** the run properties with the overrides of one sample (same key, case-insensitive: the sample wins) */
+function withOverrides(run: LADSProperty[], overrides: LADSProperty[]): LADSProperty[] {
+    const keys = new Set(overrides.map(p => keyOf(p).toLowerCase()))
+    return [...run.filter(p => !keys.has(keyOf(p).toLowerCase())), ...overrides]
+}
 
 export class SimulatedUnitImpl {
     readonly name: string
@@ -202,7 +271,25 @@ export class SimulatedUnitImpl {
             raiseEvent(this.unit as unknown as UAObject, `${template.identifier} not started: ${comp.error}`, EventSeverity.Warning)
             return { statusCode: StatusCodes.BadInvalidArgument }
         }
-        const run: Run = { manual: false, properties, template, program, runId: createDeviceProgramRunId(template.identifier), started: new Date(), stopRequested: false }
+        // sample specific properties (CustomData): all checked before the run starts
+        const perSample: SampleSettings[] = []
+        for (let i = 0; i < Math.max(1, samples.length); i++) {
+            const s: any = samples[i]
+            const label = String(s?.sampleId ?? s?.SampleId ?? "") || `Sample ${i + 1}`
+            const o = sampleOverrides(samples[i], template.identifier)
+            const c = o.error ? o : composition(template.identifier, withOverrides(properties, o.properties))
+            if (c.error) {
+                raiseEvent(this.unit as unknown as UAObject, `${template.identifier} not started: sample ${label}: ${c.error}`, EventSeverity.Warning)
+                return { statusCode: StatusCodes.BadInvalidArgument }
+            }
+            perSample.push({ composition: (c as any).value, overrides: o.properties })
+        }
+        const gate = ovenGate(properties)
+        if (gate.error) {
+            raiseEvent(this.unit as unknown as UAObject, `${template.identifier} not started: ${gate.error}`, EventSeverity.Warning)
+            return { statusCode: StatusCodes.BadInvalidArgument }
+        }
+        const run: Run = { manual: false, properties, template, program, runId: createDeviceProgramRunId(template.identifier), started: new Date(), stopRequested: false, perSample, oven: gate.value }
         this.run = run
 
         // result
@@ -340,13 +427,30 @@ export class SimulatedUnitImpl {
             const id = ids[i]
             stepStart = Date.now()
             setNumericValue(ap?.currentStepNumber, i + 1)
-            raiseEvent(unit, `Processing sample ${id} (${i + 1} of ${ids.length})`, EventSeverity.Info)
+            const settings = run.perSample?.[i] ?? { composition: composition(run.template?.identifier ?? "", run.properties).value, overrides: [] }
+            const own = settings.overrides.length ? `, ${settings.overrides.map(p => `${keyOf(p)}=${valueOf(p)}`).join(", ")} (sample)` : ""
+            raiseEvent(unit, `Processing sample ${id} (${i + 1} of ${ids.length}${own})`, EventSeverity.Info)
             const step = (phase: string) => ap?.currentStepName?.setValueFromSource({ dataType: DataType.LocalizedText, value: new LocalizedText({ text: `Sample ${id}: ${phase}` }) })
-            const chromatogram = await this.hooks!.processSample!(id, i + 1, step, () => this.run !== run, composition(run.template?.identifier ?? "", run.properties).value)
+            // injection gate: the column oven must have settled
+            let ovenWait: OvenWait | undefined
+            if (run.oven?.wait && this.hooks?.waitForColumnOven) {
+                const tolerance = run.oven.tolerance ?? this.hooks.ovenTolerance ?? 1
+                const r = await this.hooks.waitForColumnOven({ tolerance, hold: run.oven.hold, timeout: run.oven.timeout }, () => this.run !== run || run.stopRequested,
+                    (cur, target) => step(`waiting for column oven (${cur.toFixed(1)} → ${target.toFixed(1)} °C, ±${tolerance} K)`))
+                if (this.run !== run) return
+                if (run.stopRequested) break
+                if (!r.ok) {
+                    raiseEvent(unit, `Run ${run.runId}: column oven not settled within ${run.oven.timeout} s (${r.current.toFixed(1)} °C, set point ${r.target.toFixed(1)} °C ±${tolerance} K): run stopped before sample ${id}`, EventSeverity.Warning)
+                    break
+                }
+                if (r.waited >= 1) raiseEvent(unit, `Sample ${id}: column oven settled at ${r.current.toFixed(1)} °C (set point ${r.target.toFixed(1)} °C ±${tolerance} K) after ${Math.round(r.waited)} s`, EventSeverity.Info)
+                ovenWait = { seconds: r.waited, target: r.target, tolerance }
+            }
+            const chromatogram = await this.hooks!.processSample!(id, i + 1, step, () => this.run !== run, settings.composition)
             if (this.run !== run) return
             if (chromatogram && run.result) {
                 this.addPeaks(run.result, id, chromatogram)
-                run.recorder?.addInjection(this.lcInjection(samples[i], id, i + 1, chromatogram))
+                run.recorder?.addInjection(this.lcInjection(samples[i], id, i + 1, chromatogram, settings.composition, ovenWait))
             }
             else raiseEvent(unit, `Sample ${id}: no chromatogram recorded`, EventSeverity.Warning)
         }
@@ -382,7 +486,7 @@ export class SimulatedUnitImpl {
     }
 
     /** one injection: every detector channel with its chromatogram and peaks at the channel wavelength */
-    private lcInjection(sample: LADSSampleInfo | undefined, sampleId: string, position: number, c: Chromatogram): LCInjection {
+    private lcInjection(sample: LADSSampleInfo | undefined, sampleId: string, position: number, c: Chromatogram, comp: Composition = {}, oven?: OvenWait): LCInjection {
         const s: any = sample ?? {}
         const info = { sampleId: String(s.sampleId ?? s.SampleId ?? "") || sampleId, containerId: String(s.containerId ?? s.ContainerId ?? ""),
             position: String(s.position ?? s.Position ?? "") || `Position ${position}`, customData: String(s.customData ?? s.CustomData ?? "") } as LADSSampleInfo
@@ -392,7 +496,10 @@ export class SimulatedUnitImpl {
         const model = column1?.model?.readValue()?.value?.value?.text ?? ""
         const conditions: LCInjection["conditions"] = [{ label: "flow rate", value: c.flow, unit: "mL/min" }]
         if (c.columnTemperature !== undefined) conditions.push({ label: "column temperature", value: c.columnTemperature, unit: "degC" })
+        if (oven) conditions.push({ label: "column temperature setting", value: oven.target, unit: "degC" },
+            { label: "column temperature tolerance", value: oven.tolerance, unit: "K" }, { label: "column oven waiting time", value: oven.seconds, unit: "s" })
         if (c.percentB !== undefined) conditions.push({ label: "solvent B", value: c.percentB, unit: "%" })
+        if (comp.gradient) conditions.push({ label: "gradient start", value: comp.gradient.from, unit: "%" }, { label: "gradient end", value: comp.gradient.to, unit: "%" })
         conditions.push({ label: "dead time", value: c.deadTime, unit: "s" })
         return {
             sample: info,
