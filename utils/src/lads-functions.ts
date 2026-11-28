@@ -27,7 +27,8 @@ import {
     UAConditionVariable,
     UAExclusiveLimitAlarm_Base,
     UAExclusiveLimitStateMachine,
-    ISessionContext} from "node-opcua";
+    ISessionContext,
+    Variant} from "node-opcua";
 import { getLADSNamespace, installVariableHistory, promoteToFiniteStateMachine } from "./lads-utils";
 import { getEUInformation, getNumericValue, setNumericValue, setStringArrayValue } from "./lads-variable-utils";
 import { raiseEvent } from "./lads-event-utils";
@@ -153,6 +154,10 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
         // install enable/dsiable functionality
         this.alarmMonitor_signalNewCondition = alarmMonitor._signalNewCondition.bind(alarmMonitor)
         alarmMonitor._signalNewCondition = this._signalNewCondition.bind(this)
+        // readable enable / disable events (see installEnabledStateEventHook)
+        this.installEnabledStateEventHook()
+        // SourceName: the display name of the function (as in the other events of the function), not "<ns>:<BrowseName>"
+        this.alarmMonitor.sourceName?.setValueFromSource({ dataType: DataType.String, value: this.parentFunction.getDisplayName() })
         // install improved data changed handler
         this.alarmMonitor_onInputDataValueChange = alarmMonitor._onInputDataValueChange.bind(alarmMonitor)
         const inputNodeId: NodeId = this.inputNode.readValue().value.value
@@ -165,6 +170,41 @@ export abstract class LimitAlarmImpl implements UAExclusiveLimitAlarm_Base {
             this.lowLowLimit?.on("value_changed", this.calculateMaxInputDataDelta.bind(this))
         }
 
+    }
+
+    /**
+     * node-opcua raises a condition event when the AlarmMonitor is enabled or disabled (UAConditionImpl._setEnabledState,
+     * used by setEnabledState and by the Enable / Disable methods). For a disabled condition every field except EventId,
+     * EventType, SourceNode, SourceName, Time, ConditionName ... is a StatusCode BadConditionDisabled (0x80990000), so
+     * clients show "StatusCode(value=2157510656)" as message and severity; Time is the time of the last condition change,
+     * not of the disable. Hook on the instance (the library stays unchanged): Time and ReceiveTime are set to now, and the
+     * disable event carries a readable Message ("<function> alarm monitor disabled"), Severity Info and Retain false (as the
+     * condition itself; node-opcua would publish Retain as BadConditionDisabled too).
+     */
+    private installEnabledStateEventHook() {
+        const am = this.alarmMonitor as any
+        const setEnabledState = am._setEnabledState?.bind(am)
+        if (!setEnabledState) return
+        const name = this.parentFunction.getDisplayName()
+        am._setEnabledState = (requested: boolean, options?: any) => {
+            const branch = am.currentBranch?.()
+            const now = new Date()
+            try { branch?.setTime(now); branch?.setReceiveTime(now) } catch { /* keep the old times */ }
+            const construct = branch?._constructEventData?.bind(branch)
+            if (branch && construct && !requested) {
+                branch._constructEventData = () => {
+                    const eventData = construct()
+                    const message = branch._node_index?.get("Message"), severity = branch._node_index?.get("Severity")
+                    if (message) eventData._createValue("Message", message, new Variant({ dataType: DataType.LocalizedText, value: new LocalizedText({ text: `${name} alarm monitor disabled` }) }))
+                    if (severity) eventData._createValue("Severity", severity, new Variant({ dataType: DataType.UInt16, value: EventSeverity.Info }))
+                    const retain = branch._node_index?.get("Retain")
+                    if (retain) eventData._createValue("Retain", retain, new Variant({ dataType: DataType.Boolean, value: false }))
+                    return eventData
+                }
+            }
+            try { return setEnabledState(requested, options) }
+            finally { if (branch && construct) branch._constructEventData = construct }
+        }
     }
 
     private calculateMaxInputDataDelta() {
