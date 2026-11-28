@@ -40,9 +40,15 @@ export class Chromatogram {
     readonly peaks: Peak[]
     readonly deadTime: number     // [s]
     readonly end: number          // [s] after the injection: last peak + tail
+    readonly flow: number         // [ml/min] at the injection
+    /** conditions at the injection, set by the simulation (for the ASM): volume [µl], column temperature [°C], share of solvent B [%] */
+    injectionVolume?: number
+    columnTemperature?: number
+    percentB?: number
 
     constructor(readonly sampleId: string, options: ChromatogramOptions) {
         const flow = Math.max(options.flow, 1e-3)
+        this.flow = options.flow
         this.deadTime = options.deadVolume / 1000 / flow * 60
         const window = options.elutionWindow / flow
         const n = Math.round(rnd(options.minPeaks ?? 3, (options.maxPeaks ?? 8) + 0.49))
@@ -66,6 +72,13 @@ export class Chromatogram {
     /** absorbance [mAU] at the given wavelength, now (or at time t after the injection) */
     signal(wavelength: number, t = this.time): number {
         return this.peaks.reduce((sum, p) => sum + p.height * Chromatogram.profile(p, t) * Chromatogram.band(p, wavelength), 0)
+    }
+
+    /** the chromatogram at a detector wavelength, sampled with the given rate [Hz] from the injection to the end */
+    trace(wavelength: number, rate = 10): { times: number[], values: number[] } {
+        const n = Math.floor(this.end * rate) + 1
+        const times = Array.from({ length: n }, (_, i) => i / rate)
+        return { times, values: times.map(t => this.signal(wavelength, t)) }
     }
 
     /** peak values at a detector wavelength: maximum time, height, width (FWHM), area */

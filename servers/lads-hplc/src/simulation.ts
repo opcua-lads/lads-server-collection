@@ -373,6 +373,9 @@ export class HPLCSimulation {
             return
         }
         const c = new Chromatogram(sample, { flow, deadVolume: this.param("Dead Volume"), elutionWindow: this.param("Elution Window") })
+        c.injectionVolume = this.injector ? getNumericValue(this.injector.targetValue) : undefined
+        c.columnTemperature = this.oven ? getNumericValue(this.oven.currentValue) : undefined
+        c.percentB = this.percentB ? getNumericValue(this.percentB) : undefined
         this.chromatograms.push(c)
         this.lastChromatogram = c
         raiseEvent(unit, `${sample}: injected, dead time ${c.deadTime.toFixed(1)} s`, EventSeverity.Info)

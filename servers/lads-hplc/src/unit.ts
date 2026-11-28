@@ -33,6 +33,9 @@ import { addPeakReferences, addResultReferences } from "./afo"
 import { DetectorChannel, mAU } from "./simulation"
 import { makeEUInformation, Namespace } from "node-opcua"
 import { EUInformation } from "node-opcua-types"
+import { join } from "path"
+import { DeviceInfo, LCInjection, LiquidChromatographyRecorder } from "@asm"
+import { AFODictionary, AFODictionaryIds } from "@afo"
 
 /** program templates of the simulated unit: identifier, description, simulated steps (name, seconds) */
 export interface SimulatedProgram { identifier: string, description: string, steps: { name: string, seconds: number }[] }
@@ -58,6 +61,7 @@ interface Run {
     result?: LADSResult
     timer?: NodeJS.Timeout
     stopRequested: boolean
+    recorder?: LiquidChromatographyRecorder   // LC ASM of the run (one injection per sample)
 }
 
 /** what runs with a program of the unit (e.g. the controllers of the simulation) */
@@ -74,6 +78,9 @@ const SECOND = makeEUInformation("SEC", "s", "second")
 const NANOMETRE = makeEUInformation("C45", "nm", "nanometre")
 const MAU_S = new EUInformation({ namespaceUri: "http://www.opcfoundation.org/UA/units/un/cefact", unitId: -1, displayName: { text: "mAU·s" }, description: { text: "milli absorbance unit times second" } })
 const ESTIMATED_SAMPLE_MS = 90000
+const ASM_SAMPLING_RATE = 10          // [Hz] of the chromatograms in the ASM
+const PEAK_DETECTION_LIMIT = 1        // [mAU] peaks lower than this at a channel are not in its ASM peak list
+const RESULTS_DIRECTORY = join(__dirname, "data", "results")
 
 /** mobile phase composition of a run: constant %B (isocratic) or a linear gradient from → to during each separation */
 export interface Composition { percentB?: number, gradient?: { from: number, to: number } }
@@ -211,7 +218,10 @@ export class SimulatedUnitImpl {
             setStringValue(result.deviceProgramRunId, run.runId)
             setDateTimeValue(result.started, run.started)
             copyProgramTemplate(template.programTemplate, result.programTemplate)
-            if (this.hooks?.processSample) addResultReferences(result, /gradient/i.test(template.identifier))
+            if (this.hooks?.processSample) {
+                addResultReferences(result, /gradient/i.test(template.identifier))
+                run.recorder = this.createRecorder(result, samples)
+            }
         }
         raiseEvent(this.unit as unknown as UAObject, `Starting run ${run.runId} (${template.identifier}).`, EventSeverity.Info)
         this.stateMachine.setState(LADSFunctionalState.Running)
@@ -334,11 +344,102 @@ export class SimulatedUnitImpl {
             const step = (phase: string) => ap?.currentStepName?.setValueFromSource({ dataType: DataType.LocalizedText, value: new LocalizedText({ text: `Sample ${id}: ${phase}` }) })
             const chromatogram = await this.hooks!.processSample!(id, i + 1, step, () => this.run !== run, composition(run.template?.identifier ?? "", run.properties).value)
             if (this.run !== run) return
-            if (chromatogram && run.result) this.addPeaks(run.result, id, chromatogram)
+            if (chromatogram && run.result) {
+                this.addPeaks(run.result, id, chromatogram)
+                run.recorder?.addInjection(this.lcInjection(samples[i], id, i + 1, chromatogram))
+            }
             else raiseEvent(unit, `Sample ${id}: no chromatogram recorded`, EventSeverity.Warning)
         }
         clearInterval(run.timer)
+        await this.writeASM(run)
+        if (this.run !== run) return
         this.finish(run)
+    }
+
+    //---------------------------------------------------------------
+    // Allotrope Simple Model (liquid chromatography) of a program run
+    //---------------------------------------------------------------
+    /** the device of the unit (Device/FunctionalUnitSet/<unit>) and its modules for the device documents */
+    private createRecorder(result: LADSResult, samples: LADSSampleInfo[]): LiquidChromatographyRecorder | undefined {
+        try {
+            const device = ((this.unit as unknown as UAObject).parent as any)?.parent as UAObject
+            const components = device?.getChildByName("Components") as UAObject | null
+            const module = (name: string, deviceType: string): DeviceInfo | undefined => {
+                const c = components?.getChildByName(name)
+                return c ? { device: c as any, deviceType } : undefined
+            }
+            const pump = module("Pump", "pump"), detector = module("DAD", "diode array detector")
+            const modules = [module("AutoSampler", "autosampler"), pump, module("ColumnCompartment", "column compartment"), detector].filter(Boolean) as DeviceInfo[]
+            const empty = { sampleId: "", containerId: "", position: "", customData: "" } as LADSSampleInfo
+            return new LiquidChromatographyRecorder({
+                result, sample: samples[0] ?? empty, pump, detector,
+                devices: [{ device: device as any, deviceType: "liquid chromatograph" }, ...modules],
+            })
+        } catch (err) {
+            console.warn(`Unit ${this.name}: no ASM recorder (${err})`)
+            return undefined
+        }
+    }
+
+    /** one injection: every detector channel with its chromatogram and peaks at the channel wavelength */
+    private lcInjection(sample: LADSSampleInfo | undefined, sampleId: string, position: number, c: Chromatogram): LCInjection {
+        const s: any = sample ?? {}
+        const info = { sampleId: String(s.sampleId ?? s.SampleId ?? "") || sampleId, containerId: String(s.containerId ?? s.ContainerId ?? ""),
+            position: String(s.position ?? s.Position ?? "") || `Position ${position}`, customData: String(s.customData ?? s.CustomData ?? "") } as LADSSampleInfo
+        const device = ((this.unit as unknown as UAObject).parent as any)?.parent as UAObject
+        const column = (device?.getChildByName("Components") as UAObject | null)?.getChildByName("ColumnCompartment")
+        const column1 = (column?.getChildByName("Components") as UAObject | null)?.getChildByName("Column1") as any
+        const model = column1?.model?.readValue()?.value?.value?.text ?? ""
+        const conditions: LCInjection["conditions"] = [{ label: "flow rate", value: c.flow, unit: "mL/min" }]
+        if (c.columnTemperature !== undefined) conditions.push({ label: "column temperature", value: c.columnTemperature, unit: "degC" })
+        if (c.percentB !== undefined) conditions.push({ label: "solvent B", value: c.percentB, unit: "%" })
+        conditions.push({ label: "dead time", value: c.deadTime, unit: "s" })
+        return {
+            sample: info,
+            injectionIdentifier: `Injection ${position}`,
+            injectionTime: new Date(c.injected),
+            injectionVolume: c.injectionVolume ?? 0,
+            column: column1 ? {
+                name: model || column1.getDisplayName(),
+                manufacturer: column1.manufacturer?.readValue()?.value?.value?.text,
+                serialNumber: column1.serialNumber?.readValue()?.value?.value,
+                chemistry: /\b(C18|C8|C4|phenyl|HILIC|CN|NH2)\b/i.exec(model)?.[1],
+            } : undefined,
+            conditions,
+            channels: (this.hooks?.channels ?? []).map(ch => {
+                const trace = c.trace(ch.wavelength, ASM_SAMPLING_RATE)
+                return {
+                    identifier: ch.name, wavelength: ch.wavelength, samplingRate: ASM_SAMPLING_RATE,
+                    retentionTimes: trace.times, absorbances: trace.values,
+                    peaks: c.peaks.map(p => ({ p, v: Chromatogram.evaluate(p, ch.wavelength) })).filter(x => x.v.height >= PEAK_DETECTION_LIMIT).map(({ p, v }) => ({
+                        retentionTime: v.retentionTime, height: v.height, area: v.area, widthAtHalfHeight: v.width,
+                        start: Math.max(0, p.retentionTime - 4 * p.halfWidth), end: Math.min(c.end, p.retentionTime + 4 * p.halfWidth),
+                    })),
+                }
+            }),
+        }
+    }
+
+    /** FileSet/ASM (<run id>.json in data/results) and VariableSet/ASM (the same JSON as a string) */
+    private async writeASM(run: Run) {
+        const result = run.result, recorder = run.recorder
+        if (!result || !recorder || recorder.injections.length === 0) return
+        try {
+            const model = recorder.createModel()
+            await recorder.writeResultFile(result.fileSet as unknown as UAObject, "ASM", RESULTS_DIRECTORY, run.runId, model)
+            if (result.variableSet) {
+                const asm = result.namespace.addVariable({
+                    propertyOf: result.variableSet, browseName: "ASM", dataType: DataType.String,
+                    description: "Allotrope Simple Model (liquid chromatography, REC/2026/09) of the run: one LC document per injection, one measurement document per detector channel",
+                    value: { dataType: DataType.String, value: JSON.stringify(model, null, 2) },
+                })
+                AFODictionary.addReferences(asm, AFODictionaryIds.ASM_file, AFODictionaryIds.liquid_chromatography_aggregate_document, AFODictionaryIds.chromatogram, AFODictionaryIds.peak_list)
+            }
+            raiseEvent(this.unit as unknown as UAObject, `Run ${run.runId}: ASM written (${recorder.injections.length} injections)`, EventSeverity.Info)
+        } catch (err) {
+            console.warn(`Run ${run.runId}: ASM not written (${err})`)
+            raiseEvent(this.unit as unknown as UAObject, `Run ${run.runId}: ASM not written (${err})`, EventSeverity.Warning)
+        }
     }
 
     /** VariableSet / <sample> / Peak n / Retention Time, Height, Width, Area (at the DAD channel with the strongest signal), Channel, Absorption Maximum */

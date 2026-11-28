@@ -51,3 +51,6 @@ servers/lads-balance/src/config.json
 
 __pycache__/
 *.pyc
+
+# - Result files written by the servers (ASM, CSV …)
+servers/*/src/data/

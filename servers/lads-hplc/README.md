@@ -118,8 +118,21 @@ The composition changes the pump's `PercentageSolventB` and thus Solvent A / B; 
 
 Result: `VariableSet / <sample id> / Peak n /` `Retention Time` [s], `Height` [mAU], `Width` (FWHM) [s], `Area` [mAU·s]
 at the DAD channel with the strongest signal, `Channel` (e.g. "DAD1B (320 nm)") and `Absorption Maximum` [nm].
-Open: ASM output (Allotrope liquid chromatography model: peak list per detection channel) and how the channels are
-reported (one peak list per channel instead of the strongest one).
+
+**ASM** (Allotrope Simple Model, liquid chromatography REC/2026/09, `LiquidChromatographyRecorder` of `lib/asm`): at the end
+of every program run the same JSON goes to `VariableSet / ASM` (string) and `FileSet / ASM` (`src/data/results/<run id>.json`):
+
+- device system document: the LC system and its modules (autosampler, pump, column compartment, DAD) with nameplates,
+  pump and detector model number;
+- one liquid chromatography document per injection (sample), analyst = user of the run, method = template;
+- one measurement document per DAD channel (DAD1A … D): sample document (sample id, batch = job-task, tray position),
+  injection document (identifier, time, volume), column document (Column 1: name, manufacturer, serial number,
+  chemistry), detector settings (wavelength, sampling rate 10 Hz), the chromatogram data cube (retention time [s] →
+  absorbance [mAU], noise-free, from the injection to the end of the elution), the peak list at the channel wavelength
+  (retention time, area, height, FWHM, start / end = tR ∓ 4 w, relative area / height; peaks below 1 mAU are left out)
+  and the conditions at the injection as custom information (flow rate, column temperature, solvent B, dead time).
+
+Check a file with `python3 lib/asm/tools/validate_asm.py <file.json>` (schema in `lib/asm/schemas`, no network needed).
 
 ## Allotrope Foundation Ontology (`src/afo.ts`)
 
